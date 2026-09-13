@@ -75,4 +75,17 @@ class ServiceLocatorTest {
                     .first()
             assertEquals("Weather Watch", nowNext.getValue("news-one-1.fixture").now?.details?.title)
         }
+
+    @Test
+    fun `playback deps wire the kv store, engine factory and clock`() {
+        val deps = ServiceLocator.playbackDeps(context)
+
+        deps.keyValueStore.putLong("lastChannelId", 7)
+        assertEquals(7L, ServiceLocator.keyValueStore(context).getLong("lastChannelId"))
+
+        val engine = deps.engineFactory()
+        assertSame(deps.channelDao, ServiceLocator.database(context).channelDao())
+        engine.release()
+        assertTrue(deps.clock() > 0)
+    }
 }

@@ -22,6 +22,7 @@
     <string name="wizard_error_invalid_url">Enter a valid http(s) URL</string>
     <string name="wizard_error_load_failed">Could not load the playlist. Check the URL and try again.</string>
 
-    <string name="channels_loaded">Channels loaded: %1$d</string>
-    <string name="channels_loaded_hint">The TV guide arrives in an upcoming update</string>
+    <string name="playback_card_tv_guide">TV guide</string>
+    <string name="playback_card_history">History</string>
+    <string name="playback_coming_soon">Coming soon to telly</string>
 </resources>

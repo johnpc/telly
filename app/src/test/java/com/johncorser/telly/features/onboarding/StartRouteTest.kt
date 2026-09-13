@@ -13,7 +13,7 @@ class StartRouteTest {
     }
 
     @Test
-    fun `persisted channels skip onboarding to the loaded screen`() {
-        assertEquals(Route.ChannelsLoaded(30), StartRoute.forChannelCount(30))
+    fun `persisted channels skip onboarding straight to playback`() {
+        assertEquals(Route.Playback, StartRoute.forChannelCount(30))
     }
 }

@@ -11,8 +11,6 @@ sealed interface Route {
     /** The add-playlist wizard (type chooser -> URL -> processing). */
     data object AddPlaylistWizard : Route
 
-    /** Post-wizard stub main screen showing how many channels were parsed. */
-    data class ChannelsLoaded(
-        val channelCount: Int,
-    ) : Route
+    /** Fullscreen playback of the last-watched channel; the app's main screen. */
+    data object Playback : Route
 }

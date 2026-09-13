@@ -25,6 +25,7 @@ class MainActivity : ComponentActivity() {
                 navigator = navigator,
                 repository = repository,
                 fetchPlaylist = fetcher::fetch,
+                playbackDeps = ServiceLocator.playbackDeps(this),
             )
         }
     }

@@ -24,14 +24,14 @@ fun WizardScreen(
     repository: PlaylistRepository,
     fetchPlaylist: suspend (String) -> String,
     onExit: () -> Unit,
-    onComplete: (Int) -> Unit,
+    onComplete: () -> Unit,
 ) {
     val scope = rememberCoroutineScope()
     val viewModel = remember { AddPlaylistViewModel(scope, fetchPlaylist, repository) }
     val state by viewModel.state.collectAsState()
     BackHandler { if (!viewModel.back()) onExit() }
     LaunchedEffect(state.step) {
-        if (state.step == WizardStep.DONE) onComplete(state.channelCount)
+        if (state.step == WizardStep.DONE) onComplete()
     }
     Row(
         modifier =

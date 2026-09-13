@@ -4,9 +4,13 @@ import android.content.Context
 import android.util.Xml
 import androidx.room.Room
 import com.johncorser.telly.core.db.TellyDatabase
+import com.johncorser.telly.core.kv.KeyValueStore
+import com.johncorser.telly.core.kv.SharedPrefsKeyValueStore
 import com.johncorser.telly.features.epg.EpgRefresher
 import com.johncorser.telly.features.epg.EpgRepository
 import com.johncorser.telly.features.epg.RefreshScheduler
+import com.johncorser.telly.features.playback.PlaybackDeps
+import com.johncorser.telly.features.player.Media3PlayerEngine
 import com.johncorser.telly.features.playlist.PlaylistRepository
 import com.johncorser.telly.features.playlist.RoomPlaylistRepository
 
@@ -41,6 +45,20 @@ object ServiceLocator {
             clock = clock,
             refresh = epgRepository(context)::refresh,
         )
+
+    fun keyValueStore(context: Context): KeyValueStore =
+        SharedPrefsKeyValueStore(context.applicationContext.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE))
+
+    fun playbackDeps(context: Context): PlaybackDeps =
+        PlaybackDeps(
+            channelDao = database(context).channelDao(),
+            epgRepository = epgRepository(context),
+            keyValueStore = keyValueStore(context),
+            engineFactory = { Media3PlayerEngine.create(context.applicationContext) },
+            clock = clock,
+        )
+
+    private const val PREFS_NAME = "telly"
 
     private val clock: () -> Long = { System.currentTimeMillis() }
 

@@ -2,7 +2,6 @@ package com.johncorser.telly.core.navigation
 
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
-import org.junit.Assert.assertNotEquals
 import org.junit.Assert.assertTrue
 import org.junit.Test
 
@@ -50,20 +49,9 @@ class NavigatorTest {
         val navigator = Navigator()
         navigator.push(Route.AddPlaylistWizard)
 
-        navigator.replaceAll(Route.ChannelsLoaded(channelCount = 30))
+        navigator.replaceAll(Route.Playback)
 
-        assertEquals(listOf(Route.ChannelsLoaded(channelCount = 30)), navigator.stack.value)
+        assertEquals(listOf(Route.Playback), navigator.stack.value)
         assertFalse(navigator.pop())
-    }
-
-    @Test
-    fun `channels loaded routes behave as value objects`() {
-        val route = Route.ChannelsLoaded(channelCount = 5)
-
-        assertEquals(5, route.channelCount)
-        assertEquals(route, route.copy())
-        assertNotEquals(route, route.copy(channelCount = 6))
-        assertEquals(route.hashCode(), Route.ChannelsLoaded(5).hashCode())
-        assertTrue(route.toString().contains("5"))
     }
 }
