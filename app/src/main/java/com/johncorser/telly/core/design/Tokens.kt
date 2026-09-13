@@ -23,3 +23,9 @@ const val TELLY_TEXT_GUIDANCE_MUTED = 0xFF919394
 const val TELLY_PANE_DIVIDER = 0xFF222527
 const val TELLY_FIELD_UNDERLINE = 0xFF3D4042
 const val TELLY_ERROR_TEXT = 0xFFE57373
+
+// Settings panel palette (uidump 18: panel #232629 = TELLY_GUIDANCE_PANE,
+// header strip #333639, focused row pill #E0E2E4, accent #2196F3).
+const val TELLY_SETTINGS_HEADER = 0xFF333639
+const val TELLY_SETTINGS_FOCUS_FILL = 0xFFE0E2E4
+const val TELLY_ACCENT_BLUE = 0xFF2196F3
