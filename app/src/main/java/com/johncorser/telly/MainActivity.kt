@@ -6,6 +6,7 @@ import androidx.activity.compose.setContent
 import androidx.lifecycle.lifecycleScope
 import com.johncorser.telly.core.ServiceLocator
 import com.johncorser.telly.core.navigation.Navigator
+import com.johncorser.telly.core.navigation.Route
 import com.johncorser.telly.core.settings.ParentalControls
 import com.johncorser.telly.core.settings.TellySettings
 import com.johncorser.telly.features.onboarding.StartRoute
@@ -18,7 +19,7 @@ import kotlinx.coroutines.launch
 
 /** Single-activity entry point; all UI is Compose for TV. */
 class MainActivity : ComponentActivity() {
-    private val navigator = Navigator()
+    private val navigator = Navigator(start = Route.Boot)
     private val fetcher = M3uFetcher()
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -59,11 +60,11 @@ class MainActivity : ComponentActivity() {
         runCatching { packageManager.getPackageInfo(packageName, 0).versionName }
             .getOrNull() ?: "unknown"
 
-    /** Channels persist in Room: skip onboarding when some already exist. */
+    /** Boot stays blank until Room answers; then playback or onboarding. */
     private fun restoreStartRoute() {
         lifecycleScope.launch {
             val channelCount = ServiceLocator.database(this@MainActivity).channelDao().totalCount()
-            StartRoute.forChannelCount(channelCount)?.let(navigator::replaceAll)
+            navigator.replaceAll(StartRoute.forChannelCount(channelCount))
         }
     }
 

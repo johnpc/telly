@@ -2,6 +2,9 @@ package com.johncorser.telly.core.navigation
 
 /** Typed destinations for the app's hand-rolled back stack. */
 sealed interface Route {
+    /** Cold-start skeleton (#131619 frame) shown while Room resolves. */
+    data object Boot : Route
+
     /** First-run landing screen ("telly doesn't provide any sources..."). */
     data object Welcome : Route
 

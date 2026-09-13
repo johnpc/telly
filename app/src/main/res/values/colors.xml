@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- TELLY_ONBOARDING_BACKGROUND: the app-wide dark background; also the
+         cold-start window background so no black/white frame ever flashes. -->
+    <color name="telly_background">#FF131619</color>
+</resources>

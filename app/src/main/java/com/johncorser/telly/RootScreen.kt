@@ -1,9 +1,13 @@
 package com.johncorser.telly
 
 import androidx.activity.compose.BackHandler
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.tv.material3.MaterialTheme
 import androidx.tv.material3.darkColorScheme
@@ -44,6 +48,7 @@ fun RootScreen(
         ) {
             ScreenCrossfade(route) { target ->
                 when (target) {
+                    Route.Boot -> BootScreen()
                     Route.Welcome ->
                         WelcomeScreen(
                             onAddPlaylist = { navigator.push(Route.AddPlaylistWizard) },
@@ -66,4 +71,14 @@ fun RootScreen(
             }
         }
     }
+}
+
+/** TiviMate-style boot skeleton: nothing but the app background (round3 P0 3). */
+@Composable
+private fun BootScreen() {
+    Box(
+        Modifier
+            .fillMaxSize()
+            .background(Color(TELLY_ONBOARDING_BACKGROUND)),
+    )
 }
