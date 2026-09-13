@@ -88,3 +88,22 @@ Local SDK note: `local.properties` must contain
 - **2026-09-13** Compose UI files are named `*Screen*.kt` (e.g. `WizardScreenUrlStep.kt`)
   so the existing JaCoCo `**/*Screen*` exclusion keeps thin composables out of
   coverage; all logic stays in plain classes that are fully unit-tested.
+- **2026-09-13** All guide timestamps are epoch-millis `Long`s. XMLTV stamps are
+  parsed with a regex + `GregorianCalendar` (UTC) in `XmltvTimestamp` — java.time
+  would need API 26 or core-library desugaring at minSdk 23, and epoch longs keep
+  Room queries and window math trivial. No wall-clock reads in logic: every
+  repository/policy takes an injected `clock: () -> Long`.
+- **2026-09-13** XMLTV parsing uses `XmlPullParser` injected as a factory:
+  devices pass `android.util.Xml.newPullParser()` (only inside `ServiceLocator`),
+  JVM tests pass kxml2's `KXmlParser` (`testImplementation` only). No production
+  XML dependency added.
+- **2026-09-13** Channel identity across playlist refreshes = `tvg-id` when
+  non-blank, else `streamUrl|name` (`ChannelImporter.identityOf`). Favorite and
+  hidden flags are carried over by this key; channel numbers are reassigned
+  sequentially from playlist order on every import (TiviMate default numbering).
+- **2026-09-13** No DI framework: `core/ServiceLocator` is the hand-rolled
+  application-scoped composition root (Room database, repositories, refresher).
+  It is the only place logic meets the wall clock and Android XML services.
+- **2026-09-13** Room schema JSON is exported to `app/schemas` (KSP
+  `room.schemaLocation`) and checked in; DAO/repository tests run headless on
+  the JVM via Robolectric against in-memory databases.

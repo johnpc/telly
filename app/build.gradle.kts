@@ -3,6 +3,7 @@ plugins {
     alias(libs.plugins.kotlin.android)
     alias(libs.plugins.kotlin.compose)
     alias(libs.plugins.kotlin.serialization)
+    alias(libs.plugins.ksp)
     alias(libs.plugins.detekt)
     alias(libs.plugins.ktlint)
     jacoco
@@ -37,6 +38,8 @@ android {
         compose = true
     }
     testOptions {
+        // Robolectric (Room DAO/repository tests on the JVM) needs the manifest + resources.
+        unitTests.isIncludeAndroidResources = true
         unitTests.all { test ->
             test.extensions.configure(JacocoTaskExtension::class) {
                 isIncludeNoLocationClasses = true
@@ -48,6 +51,11 @@ android {
 
 jacoco {
     toolVersion = libs.versions.jacoco.get()
+}
+
+ksp {
+    // Room schema JSON is exported and checked in under app/schemas.
+    arg("room.schemaLocation", "$projectDir/schemas")
 }
 
 detekt {
@@ -121,10 +129,15 @@ dependencies {
     implementation(libs.kotlinx.serialization.json)
     implementation(libs.androidx.room.runtime)
     implementation(libs.androidx.room.ktx)
+    ksp(libs.androidx.room.compiler)
 
     testImplementation(libs.junit)
     testImplementation(libs.mockwebserver)
     testImplementation(libs.mockk)
     testImplementation(libs.turbine)
     testImplementation(libs.kotlinx.coroutines.test)
+    testImplementation(libs.robolectric)
+    testImplementation(libs.androidx.test.core)
+    // Real XmlPullParser implementation for JVM tests (android.util.Xml is Android-only).
+    testImplementation(libs.kxml2)
 }

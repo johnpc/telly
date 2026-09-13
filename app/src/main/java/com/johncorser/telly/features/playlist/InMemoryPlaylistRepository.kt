@@ -5,7 +5,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 
-/** Process-lifetime playlist store; persistence lands in a later slice. */
+/** Process-lifetime playlist store, kept for fast JVM tests. */
 class InMemoryPlaylistRepository : PlaylistRepository {
     private val mutablePlaylists = MutableStateFlow(emptyList<StoredPlaylist>())
 
