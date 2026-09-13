@@ -1,0 +1,61 @@
+#EXTM3U url-tvg="http://10.0.2.2:8090/epg.xml"
+#EXTINF:-1 tvg-id="news-one-1.fixture" tvg-name="News One" tvg-logo="http://10.0.2.2:8090/logos/news-one.png" group-title="News",News One
+http://10.0.2.2:8090/streams/news-one.ts
+#EXTINF:-1 tvg-id="news-one-2.fixture" tvg-name="News One HD" tvg-logo="http://10.0.2.2:8090/logos/news-one.png" group-title="News",News One HD
+http://10.0.2.2:8090/streams/news-one.ts
+#EXTINF:-1 tvg-id="news-one-3.fixture" tvg-name="News One +1" tvg-logo="http://10.0.2.2:8090/logos/news-one.png" group-title="News",News One +1
+http://10.0.2.2:8090/streams/news-one.ts
+#EXTINF:-1 tvg-id="news-one-4.fixture" tvg-name="News One Extra" tvg-logo="http://10.0.2.2:8090/logos/news-one.png" group-title="News",News One Extra
+http://10.0.2.2:8090/streams/news-one.ts
+#EXTINF:-1 tvg-id="news-one-5.fixture" tvg-name="News One 2" tvg-logo="http://10.0.2.2:8090/logos/news-one.png" group-title="News",News One 2
+http://10.0.2.2:8090/streams/news-one.ts
+#EXTINF:-1 tvg-id="news-one-6.fixture" tvg-name="News One 24" tvg-logo="http://10.0.2.2:8090/logos/news-one.png" group-title="News",News One 24
+http://10.0.2.2:8090/streams/news-one.ts
+#EXTINF:-1 tvg-id="sports-arena-1.fixture" tvg-name="Sports Arena" tvg-logo="http://10.0.2.2:8090/logos/sports-arena.png" group-title="Sports",Sports Arena
+http://10.0.2.2:8090/streams/sports-arena.ts
+#EXTINF:-1 tvg-id="sports-arena-2.fixture" tvg-name="Sports Arena HD" tvg-logo="http://10.0.2.2:8090/logos/sports-arena.png" group-title="Sports",Sports Arena HD
+http://10.0.2.2:8090/streams/sports-arena.ts
+#EXTINF:-1 tvg-id="sports-arena-3.fixture" tvg-name="Sports Arena +1" tvg-logo="http://10.0.2.2:8090/logos/sports-arena.png" group-title="Sports",Sports Arena +1
+http://10.0.2.2:8090/streams/sports-arena.ts
+#EXTINF:-1 tvg-id="sports-arena-4.fixture" tvg-name="Sports Arena Extra" tvg-logo="http://10.0.2.2:8090/logos/sports-arena.png" group-title="Sports",Sports Arena Extra
+http://10.0.2.2:8090/streams/sports-arena.ts
+#EXTINF:-1 tvg-id="sports-arena-5.fixture" tvg-name="Sports Arena 2" tvg-logo="http://10.0.2.2:8090/logos/sports-arena.png" group-title="Sports",Sports Arena 2
+http://10.0.2.2:8090/streams/sports-arena.ts
+#EXTINF:-1 tvg-id="sports-arena-6.fixture" tvg-name="Sports Arena 24" tvg-logo="http://10.0.2.2:8090/logos/sports-arena.png" group-title="Sports",Sports Arena 24
+http://10.0.2.2:8090/streams/sports-arena.ts
+#EXTINF:-1 tvg-id="movie-house-1.fixture" tvg-name="Movie House" tvg-logo="http://10.0.2.2:8090/logos/movie-house.png" group-title="Movies",Movie House
+http://10.0.2.2:8090/streams/movie-house.ts
+#EXTINF:-1 tvg-id="movie-house-2.fixture" tvg-name="Movie House HD" tvg-logo="http://10.0.2.2:8090/logos/movie-house.png" group-title="Movies",Movie House HD
+http://10.0.2.2:8090/streams/movie-house.ts
+#EXTINF:-1 tvg-id="movie-house-3.fixture" tvg-name="Movie House +1" tvg-logo="http://10.0.2.2:8090/logos/movie-house.png" group-title="Movies",Movie House +1
+http://10.0.2.2:8090/streams/movie-house.ts
+#EXTINF:-1 tvg-id="movie-house-4.fixture" tvg-name="Movie House Extra" tvg-logo="http://10.0.2.2:8090/logos/movie-house.png" group-title="Movies",Movie House Extra
+http://10.0.2.2:8090/streams/movie-house.ts
+#EXTINF:-1 tvg-id="movie-house-5.fixture" tvg-name="Movie House 2" tvg-logo="http://10.0.2.2:8090/logos/movie-house.png" group-title="Movies",Movie House 2
+http://10.0.2.2:8090/streams/movie-house.ts
+#EXTINF:-1 tvg-id="movie-house-6.fixture" tvg-name="Movie House 24" tvg-logo="http://10.0.2.2:8090/logos/movie-house.png" group-title="Movies",Movie House 24
+http://10.0.2.2:8090/streams/movie-house.ts
+#EXTINF:-1 tvg-id="kids-zone-1.fixture" tvg-name="Kids Zone" tvg-logo="http://10.0.2.2:8090/logos/kids-zone.png" group-title="Kids",Kids Zone
+http://10.0.2.2:8090/streams/kids-zone.ts
+#EXTINF:-1 tvg-id="kids-zone-2.fixture" tvg-name="Kids Zone HD" tvg-logo="http://10.0.2.2:8090/logos/kids-zone.png" group-title="Kids",Kids Zone HD
+http://10.0.2.2:8090/streams/kids-zone.ts
+#EXTINF:-1 tvg-id="kids-zone-3.fixture" tvg-name="Kids Zone +1" tvg-logo="http://10.0.2.2:8090/logos/kids-zone.png" group-title="Kids",Kids Zone +1
+http://10.0.2.2:8090/streams/kids-zone.ts
+#EXTINF:-1 tvg-id="kids-zone-4.fixture" tvg-name="Kids Zone Extra" tvg-logo="http://10.0.2.2:8090/logos/kids-zone.png" group-title="Kids",Kids Zone Extra
+http://10.0.2.2:8090/streams/kids-zone.ts
+#EXTINF:-1 tvg-id="kids-zone-5.fixture" tvg-name="Kids Zone 2" tvg-logo="http://10.0.2.2:8090/logos/kids-zone.png" group-title="Kids",Kids Zone 2
+http://10.0.2.2:8090/streams/kids-zone.ts
+#EXTINF:-1 tvg-id="kids-zone-6.fixture" tvg-name="Kids Zone 24" tvg-logo="http://10.0.2.2:8090/logos/kids-zone.png" group-title="Kids",Kids Zone 24
+http://10.0.2.2:8090/streams/kids-zone.ts
+#EXTINF:-1 tvg-id="music-box-1.fixture" tvg-name="Music Box" tvg-logo="http://10.0.2.2:8090/logos/music-box.png" group-title="Music",Music Box
+http://10.0.2.2:8090/streams/music-box.ts
+#EXTINF:-1 tvg-id="music-box-2.fixture" tvg-name="Music Box HD" tvg-logo="http://10.0.2.2:8090/logos/music-box.png" group-title="Music",Music Box HD
+http://10.0.2.2:8090/streams/music-box.ts
+#EXTINF:-1 tvg-id="music-box-3.fixture" tvg-name="Music Box +1" tvg-logo="http://10.0.2.2:8090/logos/music-box.png" group-title="Music",Music Box +1
+http://10.0.2.2:8090/streams/music-box.ts
+#EXTINF:-1 tvg-id="music-box-4.fixture" tvg-name="Music Box Extra" tvg-logo="http://10.0.2.2:8090/logos/music-box.png" group-title="Music",Music Box Extra
+http://10.0.2.2:8090/streams/music-box.ts
+#EXTINF:-1 tvg-id="music-box-5.fixture" tvg-name="Music Box 2" tvg-logo="http://10.0.2.2:8090/logos/music-box.png" group-title="Music",Music Box 2
+http://10.0.2.2:8090/streams/music-box.ts
+#EXTINF:-1 tvg-id="music-box-6.fixture" tvg-name="Music Box 24" tvg-logo="http://10.0.2.2:8090/logos/music-box.png" group-title="Music",Music Box 24
+http://10.0.2.2:8090/streams/music-box.ts
