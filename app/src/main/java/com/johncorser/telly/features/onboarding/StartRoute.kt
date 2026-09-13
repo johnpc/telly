@@ -8,5 +8,13 @@ import com.johncorser.telly.core.navigation.Route
  * the welcome flow (null = keep the navigator's current stack).
  */
 object StartRoute {
-    fun forChannelCount(channelCount: Int): Route? = if (channelCount > 0) Route.ChannelsLoaded(channelCount) else null
+    fun forCounts(
+        channelCount: Int,
+        groupCount: Int,
+    ): Route? =
+        if (channelCount > 0) {
+            Route.ChannelsLoaded(channelCount, groupCount)
+        } else {
+            null
+        }
 }

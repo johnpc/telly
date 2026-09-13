@@ -14,9 +14,10 @@ class InMemoryPlaylistRepository : PlaylistRepository {
     override suspend fun add(
         sourceUrl: String,
         playlist: M3uPlaylist,
+        name: String?,
     ) {
         mutablePlaylists.update { current ->
-            current.filterNot { it.sourceUrl == sourceUrl } + StoredPlaylist(sourceUrl, playlist)
+            current.filterNot { it.sourceUrl == sourceUrl } + StoredPlaylist(sourceUrl, playlist, name)
         }
     }
 }

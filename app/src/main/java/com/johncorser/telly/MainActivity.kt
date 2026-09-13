@@ -32,8 +32,10 @@ class MainActivity : ComponentActivity() {
     /** Channels persist in Room: skip onboarding when some already exist. */
     private fun restoreStartRoute() {
         lifecycleScope.launch {
-            val channelCount = ServiceLocator.database(this@MainActivity).channelDao().totalCount()
-            StartRoute.forChannelCount(channelCount)?.let(navigator::replaceAll)
+            val channelDao = ServiceLocator.database(this@MainActivity).channelDao()
+            StartRoute
+                .forCounts(channelDao.totalCount(), channelDao.totalGroupCount())
+                ?.let(navigator::replaceAll)
         }
     }
 

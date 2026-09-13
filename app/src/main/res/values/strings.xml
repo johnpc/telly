@@ -19,9 +19,15 @@
     <string name="wizard_next">Next</string>
     <string name="wizard_back">Back</string>
     <string name="wizard_processing">Processing playlist</string>
+    <string name="wizard_processed">Playlist is processed</string>
+    <string name="wizard_channels_count">Channels: %1$d</string>
+    <string name="wizard_movies_count">Movies: %1$d</string>
+    <string name="wizard_playlist_name">Playlist name</string>
+    <string name="wizard_tv_playlist">TV playlist</string>
+    <string name="wizard_vod_playlist">VOD playlist (no TV channels)</string>
     <string name="wizard_error_invalid_url">Enter a valid http(s) URL</string>
     <string name="wizard_error_load_failed">Could not load the playlist. Check the URL and try again.</string>
 
     <string name="channels_loaded">Channels loaded: %1$d</string>
-    <string name="channels_loaded_hint">The TV guide arrives in an upcoming update</string>
+    <string name="channels_loaded_hint">Groups: %1$d — the TV guide arrives in an upcoming update</string>
 </resources>

@@ -7,9 +7,12 @@ import com.johncorser.telly.core.ui.OnboardingScreenMessage
 
 /** Stub main screen shown once the wizard finishes; TV guide is a later slice. */
 @Composable
-fun ChannelsLoadedScreen(channelCount: Int) {
+fun ChannelsLoadedScreen(
+    channelCount: Int,
+    groupCount: Int,
+) {
     OnboardingScreenMessage(
         headline = stringResource(R.string.channels_loaded, channelCount),
-        subtitle = stringResource(R.string.channels_loaded_hint),
+        subtitle = stringResource(R.string.channels_loaded_hint, groupCount),
     )
 }

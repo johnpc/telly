@@ -70,7 +70,7 @@ class AddPlaylistViewModelTest {
         }
 
     @Test
-    fun `a valid url is fetched parsed stored and completes the wizard`() =
+    fun `a valid url is fetched parsed and lands on the processed step`() =
         runTest {
             val vm = viewModel()
             vm.chooseType(PlaylistType.M3U)
@@ -80,11 +80,66 @@ class AddPlaylistViewModelTest {
             assertEquals(WizardStep.PROCESSING, vm.state.value.step)
             advanceUntilIdle()
 
+            val state = vm.state.value
+            assertEquals(WizardStep.PROCESSED, state.step)
+            assertEquals("example.com", state.name)
+            assertEquals(2, state.liveCount)
+            assertEquals(0, state.movieCount)
+            assertEquals(2, state.channelCount)
+            assertEquals(2, state.groupCount)
+            assertEquals(PlaylistKind.TV, state.kind)
+            // Nothing is persisted until the processed step is confirmed.
+            assertTrue(repository.playlists.value.isEmpty())
+        }
+
+    @Test
+    fun `confirming the processed step stores the playlist under the chosen name`() =
+        runTest {
+            val vm = viewModel()
+            vm.chooseType(PlaylistType.M3U)
+            vm.setUrl("http://example.com/playlist.m3u")
+            vm.submitUrl()
+            advanceUntilIdle()
+
+            vm.setName("My IPTV")
+            vm.chooseKind(PlaylistKind.VOD)
+            vm.confirm()
+            advanceUntilIdle()
+
             assertEquals(WizardStep.DONE, vm.state.value.step)
-            assertEquals(2, vm.state.value.channelCount)
+            assertEquals(PlaylistKind.VOD, vm.state.value.kind)
             val stored = repository.playlists.value.single()
             assertEquals("http://example.com/playlist.m3u", stored.sourceUrl)
             assertEquals("http://epg.example/g.xml", stored.playlist.epgUrl)
+            assertEquals("My IPTV", stored.name)
+        }
+
+    @Test
+    fun `a blank name falls back to the repository default`() =
+        runTest {
+            val vm = viewModel()
+            vm.chooseType(PlaylistType.M3U)
+            vm.setUrl("http://example.com/playlist.m3u")
+            vm.submitUrl()
+            advanceUntilIdle()
+
+            vm.setName("   ")
+            vm.confirm()
+            advanceUntilIdle()
+
+            assertNull(repository.playlists.value.single().name)
+        }
+
+    @Test
+    fun `confirm before processing finished is a no-op`() =
+        runTest {
+            val vm = viewModel()
+
+            vm.confirm()
+            advanceUntilIdle()
+
+            assertEquals(WizardStep.TYPE_CHOOSER, vm.state.value.step)
+            assertTrue(repository.playlists.value.isEmpty())
         }
 
     @Test
@@ -115,6 +170,25 @@ class AddPlaylistViewModelTest {
         }
 
     @Test
+    fun `back from the processed step discards the parse and returns to url entry`() =
+        runTest {
+            val vm = viewModel()
+            vm.chooseType(PlaylistType.M3U)
+            vm.setUrl("http://example.com/playlist.m3u")
+            vm.submitUrl()
+            advanceUntilIdle()
+            assertEquals(WizardStep.PROCESSED, vm.state.value.step)
+
+            assertTrue(vm.back())
+            assertEquals(WizardStep.URL_ENTRY, vm.state.value.step)
+
+            // The discarded parse can no longer be confirmed.
+            vm.confirm()
+            advanceUntilIdle()
+            assertTrue(repository.playlists.value.isEmpty())
+        }
+
+    @Test
     fun `back during processing cancels the load and returns to url entry`() =
         runTest {
             val vm = viewModel(fetch = { awaitCancellation() })
@@ -133,7 +207,17 @@ class AddPlaylistViewModelTest {
 
     @Test
     fun `ui state behaves as a value object`() {
-        val state = WizardUiState(step = WizardStep.URL_ENTRY, url = "http://a", error = null, channelCount = 1)
+        val state =
+            WizardUiState(
+                step = WizardStep.URL_ENTRY,
+                url = "http://a",
+                error = null,
+                name = "n",
+                kind = PlaylistKind.VOD,
+                liveCount = 1,
+                movieCount = 2,
+                groupCount = 3,
+            )
 
         assertEquals(state, state.copy())
         assertEquals(state.hashCode(), state.copy().hashCode())
@@ -141,7 +225,12 @@ class AddPlaylistViewModelTest {
         assertEquals(WizardStep.URL_ENTRY, state.component1())
         assertEquals("http://a", state.component2())
         assertNull(state.component3())
-        assertEquals(1, state.component4())
+        assertEquals("n", state.component4())
+        assertEquals(PlaylistKind.VOD, state.component5())
+        assertEquals(1, state.component6())
+        assertEquals(2, state.component7())
+        assertEquals(3, state.component8())
+        assertEquals(3, state.channelCount)
         assertTrue(state.toString().contains("URL_ENTRY"))
     }
 }

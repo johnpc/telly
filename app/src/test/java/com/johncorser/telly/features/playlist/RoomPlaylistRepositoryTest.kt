@@ -114,6 +114,18 @@ class RoomPlaylistRepositoryTest {
         }
 
     @Test
+    fun `an explicit name is persisted and survives a nameless re-add`() =
+        runTest {
+            repository.add("http://p/playlist.m3u", playlist, name = "My IPTV")
+            assertEquals("My IPTV", database.playlistDao().all().single().name)
+            assertEquals("My IPTV", repository.playlists.first().single().name)
+
+            // A refresh without a name (e.g. background update) keeps the custom name.
+            repository.add("http://p/playlist.m3u", playlist)
+            assertEquals("My IPTV", database.playlistDao().all().single().name)
+        }
+
+    @Test
     fun `playlist names use the last path segment ignoring queries`() =
         runTest {
             repository.add("http://host/lists/tv.m3u?token=abc", M3uPlaylist())

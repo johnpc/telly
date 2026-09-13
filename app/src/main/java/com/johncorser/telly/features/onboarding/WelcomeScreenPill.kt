@@ -33,10 +33,10 @@ fun WelcomeScreenPill(
             modifier =
                 Modifier
                     .fillMaxHeight()
-                    .padding(horizontal = 20.dp),
+                    .padding(horizontal = 16.5.dp),
             contentAlignment = Alignment.Center,
         ) {
-            Text(text = text, fontSize = 16.sp)
+            Text(text = text, fontSize = 14.sp, letterSpacing = 0.sp)
         }
     }
 }

@@ -37,6 +37,9 @@ interface ChannelDao {
     @Query("SELECT COUNT(*) FROM channels")
     suspend fun totalCount(): Int
 
+    @Query("SELECT COUNT(DISTINCT groupTitle) FROM channels WHERE hidden = 0")
+    suspend fun totalGroupCount(): Int
+
     @Query("SELECT * FROM channels WHERE playlistId = :playlistId ORDER BY sortIndex")
     suspend fun forPlaylist(playlistId: Long): List<ChannelEntity>
 

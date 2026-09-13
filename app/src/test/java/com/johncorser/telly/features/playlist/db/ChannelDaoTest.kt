@@ -48,6 +48,14 @@ class ChannelDaoTest {
     }
 
     @Test
+    fun `total group count is distinct visible groups`() =
+        runTest {
+            seed()
+            // "News" + "Sports" (the null group and hidden channels don't count).
+            assertEquals(2, channelDao.totalGroupCount())
+        }
+
+    @Test
     fun `channels come back ordered by number`() =
         runTest {
             val playlistId = seed()

@@ -25,6 +25,7 @@ class RoomPlaylistRepository(
     override suspend fun add(
         sourceUrl: String,
         playlist: M3uPlaylist,
+        name: String?,
     ) {
         database.withTransaction {
             val existing = playlistDao.byUrl(sourceUrl)
@@ -33,7 +34,7 @@ class RoomPlaylistRepository(
                 playlistDao.upsert(
                     PlaylistEntity(
                         id = existing?.id ?: 0,
-                        name = nameFor(sourceUrl),
+                        name = name ?: existing?.name ?: nameFor(sourceUrl),
                         url = sourceUrl,
                         epgUrl = playlist.epgUrl,
                         lastUpdatedMs = clock(),
@@ -48,6 +49,7 @@ class RoomPlaylistRepository(
     private suspend fun toStored(row: PlaylistEntity): StoredPlaylist =
         StoredPlaylist(
             sourceUrl = row.url,
+            name = row.name,
             playlist =
                 M3uPlaylist(
                     epgUrl = row.epgUrl,

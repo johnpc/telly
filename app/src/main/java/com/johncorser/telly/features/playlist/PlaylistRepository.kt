@@ -6,6 +6,7 @@ import kotlinx.coroutines.flow.Flow
 data class StoredPlaylist(
     val sourceUrl: String,
     val playlist: M3uPlaylist,
+    val name: String? = null,
 )
 
 /**
@@ -16,9 +17,13 @@ interface PlaylistRepository {
     /** All stored playlists, in insertion order. */
     val playlists: Flow<List<StoredPlaylist>>
 
-    /** Adds [playlist]; re-adding the same [sourceUrl] replaces the old copy. */
+    /**
+     * Adds [playlist]; re-adding the same [sourceUrl] replaces the old copy.
+     * A null [name] keeps the existing name (or derives a default).
+     */
     suspend fun add(
         sourceUrl: String,
         playlist: M3uPlaylist,
+        name: String? = null,
     )
 }

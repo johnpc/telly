@@ -13,13 +13,20 @@ Feature: Add playlist onboarding
     When I press dpad right
     Then "Settings" has focus
 
-  Scenario: Adding a valid M3U URL lands on the channels screen
+  Scenario: Adding a valid M3U URL processes it and lands on the channels screen
     When I select "Add playlist"
     And I select "M3U playlist"
     And I select "Enter URL"
     And I type "http://10.0.2.2:8090/playlist.m3u"
     And I select "Next"
+    Then I see "Playlist is processed"
+    And I see "Channels: 30"
+    And I see "Playlist name"
+    And I see "10.0.2.2"
+    And I see "TV playlist"
+    When I select "Next"
     Then I see "Channels loaded: 30"
+    And I see "Groups: 5"
 
   Scenario: A non-http URL is rejected on the URL step
     When I select "Add playlist"

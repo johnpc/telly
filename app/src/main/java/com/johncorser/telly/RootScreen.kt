@@ -12,6 +12,7 @@ import com.johncorser.telly.core.design.TELLY_GUIDANCE_PANE
 import com.johncorser.telly.core.design.TELLY_ONBOARDING_BACKGROUND
 import com.johncorser.telly.core.navigation.Navigator
 import com.johncorser.telly.core.navigation.Route
+import com.johncorser.telly.core.ui.ScreenCrossfade
 import com.johncorser.telly.features.onboarding.ChannelsLoadedScreen
 import com.johncorser.telly.features.onboarding.SettingsScreen
 import com.johncorser.telly.features.onboarding.WelcomeScreen
@@ -36,21 +37,25 @@ fun RootScreen(
                 surface = Color(TELLY_GUIDANCE_PANE),
             ),
     ) {
-        when (route) {
-            Route.Welcome ->
-                WelcomeScreen(
-                    onAddPlaylist = { navigator.push(Route.AddPlaylistWizard) },
-                    onOpenSettings = { navigator.push(Route.Settings) },
-                )
-            Route.Settings -> SettingsScreen()
-            Route.AddPlaylistWizard ->
-                WizardScreen(
-                    repository = repository,
-                    fetchPlaylist = fetchPlaylist,
-                    onExit = { navigator.pop() },
-                    onComplete = { navigator.replaceAll(Route.ChannelsLoaded(it)) },
-                )
-            is Route.ChannelsLoaded -> ChannelsLoadedScreen(route.channelCount)
+        ScreenCrossfade(route) { target ->
+            when (target) {
+                Route.Welcome ->
+                    WelcomeScreen(
+                        onAddPlaylist = { navigator.push(Route.AddPlaylistWizard) },
+                        onOpenSettings = { navigator.push(Route.Settings) },
+                    )
+                Route.Settings -> SettingsScreen()
+                Route.AddPlaylistWizard ->
+                    WizardScreen(
+                        repository = repository,
+                        fetchPlaylist = fetchPlaylist,
+                        onExit = { navigator.pop() },
+                        onComplete = { channels, groups ->
+                            navigator.replaceAll(Route.ChannelsLoaded(channels, groups))
+                        },
+                    )
+                is Route.ChannelsLoaded -> ChannelsLoadedScreen(target.channelCount, target.groupCount)
+            }
         }
     }
 }

@@ -40,14 +40,25 @@ class InMemoryPlaylistRepositoryTest {
         }
 
     @Test
+    fun `add records the caller-provided name`() =
+        runTest {
+            val repository = InMemoryPlaylistRepository()
+
+            repository.add("http://a.example/a.m3u", playlist, name = "My IPTV")
+
+            assertEquals("My IPTV", repository.playlists.value.single().name)
+        }
+
+    @Test
     fun `stored playlists behave as value objects`() {
-        val stored = StoredPlaylist(sourceUrl = "http://a.example/a.m3u", playlist = playlist)
+        val stored = StoredPlaylist(sourceUrl = "http://a.example/a.m3u", playlist = playlist, name = "n")
 
         assertEquals(stored, stored.copy())
         assertEquals(stored.hashCode(), stored.copy().hashCode())
         assertNotEquals(stored, stored.copy(sourceUrl = "http://b.example/b.m3u"))
         assertEquals("http://a.example/a.m3u", stored.component1())
         assertEquals(playlist, stored.component2())
+        assertEquals("n", stored.component3())
         assertTrue(stored.toString().contains("a.m3u"))
     }
 }

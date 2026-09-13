@@ -50,20 +50,21 @@ class NavigatorTest {
         val navigator = Navigator()
         navigator.push(Route.AddPlaylistWizard)
 
-        navigator.replaceAll(Route.ChannelsLoaded(channelCount = 30))
+        navigator.replaceAll(Route.ChannelsLoaded(channelCount = 30, groupCount = 5))
 
-        assertEquals(listOf(Route.ChannelsLoaded(channelCount = 30)), navigator.stack.value)
+        assertEquals(listOf(Route.ChannelsLoaded(channelCount = 30, groupCount = 5)), navigator.stack.value)
         assertFalse(navigator.pop())
     }
 
     @Test
     fun `channels loaded routes behave as value objects`() {
-        val route = Route.ChannelsLoaded(channelCount = 5)
+        val route = Route.ChannelsLoaded(channelCount = 5, groupCount = 2)
 
         assertEquals(5, route.channelCount)
         assertEquals(route, route.copy())
         assertNotEquals(route, route.copy(channelCount = 6))
-        assertEquals(route.hashCode(), Route.ChannelsLoaded(5).hashCode())
+        assertEquals(2, route.groupCount)
+        assertEquals(route.hashCode(), Route.ChannelsLoaded(5, 2).hashCode())
         assertTrue(route.toString().contains("5"))
     }
 }
