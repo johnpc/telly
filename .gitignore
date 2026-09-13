@@ -1,0 +1,25 @@
+# Gradle / Kotlin tooling
+.gradle/
+build/
+**/build/
+.kotlin/
+
+# Local environment
+local.properties
+.DS_Store
+
+# IDE
+.idea/
+*.iml
+.vscode/
+captures/
+
+# Node (gate scripts use npx, nothing installed locally)
+node_modules/
+
+# jscpd output
+report/
+
+# Signing
+*.keystore
+*.jks

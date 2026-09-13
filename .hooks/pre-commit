@@ -1,0 +1,5 @@
+#!/usr/bin/env bash
+# Pre-commit: run the full quality gate. Installed via scripts/install-hooks.sh
+# (git config core.hooksPath .hooks).
+set -euo pipefail
+exec "$(git rev-parse --show-toplevel)/scripts/quality.sh"

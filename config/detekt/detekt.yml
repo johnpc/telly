@@ -1,0 +1,37 @@
+# Overrides on top of detekt's default config (buildUponDefaultConfig = true).
+# Unused-code rules are escalated to errors; complexity math is enforced by
+# scripts/crap-check.mjs and scripts/check-halstead.mjs, so detekt complexity
+# thresholds stay at their defaults.
+
+build:
+  maxIssues: 0
+
+style:
+  UnusedPrivateMember:
+    active: true
+    severity: error
+  UnusedPrivateProperty:
+    active: true
+    severity: error
+  UnusedParameter:
+    active: true
+    severity: error
+  UnusedImports:
+    active: true
+    severity: error
+  ReturnCount:
+    active: true
+    excludeGuardClauses: true
+  MagicNumber:
+    ignorePropertyDeclaration: true
+    ignoreAnnotated: ['Composable']
+
+naming:
+  FunctionNaming:
+    ignoreAnnotated: ['Composable']
+
+complexity:
+  LongMethod:
+    ignoreAnnotated: ['Composable']
+  LongParameterList:
+    ignoreAnnotated: ['Composable']

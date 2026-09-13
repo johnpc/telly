@@ -1,0 +1,15 @@
+{
+  "threshold": 0,
+  "minLines": 8,
+  "minTokens": 70,
+  "format": ["kotlin"],
+  "ignore": [
+    "**/build/**",
+    "**/test/**",
+    "**/androidTest/**",
+    "**/generated/**",
+    "**/*Test*.kt"
+  ],
+  "reporters": ["consoleFull"],
+  "gitignore": true
+}
