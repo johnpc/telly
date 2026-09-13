@@ -13,13 +13,13 @@ Feature: Add playlist onboarding
     When I press dpad right
     Then "Settings" has focus
 
-  Scenario: Adding a valid M3U URL lands on the channels screen
+  Scenario: Adding a valid M3U URL lands on fullscreen playback
     When I select "Add playlist"
     And I select "M3U playlist"
     And I select "Enter URL"
     And I type "http://10.0.2.2:8090/playlist.m3u"
     And I select "Next"
-    Then I see "Channels loaded: 30"
+    Then playback starts fullscreen on channel 1 "News One"
 
   Scenario: A non-http URL is rejected on the URL step
     When I select "Add playlist"
