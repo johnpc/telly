@@ -46,6 +46,21 @@ class RoomPlaylistRepository(
         }
     }
 
+    override suspend fun rename(
+        sourceUrl: String,
+        name: String,
+    ) {
+        playlistDao.rename(sourceUrl, name)
+    }
+
+    override suspend fun delete(sourceUrl: String) {
+        database.withTransaction {
+            val existing = playlistDao.byUrl(sourceUrl) ?: return@withTransaction
+            channelDao.deleteForPlaylist(existing.id)
+            playlistDao.delete(existing.id)
+        }
+    }
+
     private suspend fun toStored(row: PlaylistEntity): StoredPlaylist =
         StoredPlaylist(
             sourceUrl = row.url,

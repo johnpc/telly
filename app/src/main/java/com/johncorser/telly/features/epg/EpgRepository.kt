@@ -22,6 +22,7 @@ class EpgRepository(
     private val programDao: ProgramDao,
     private val newParser: () -> XmlPullParser,
     private val client: OkHttpClient = OkHttpClient(),
+    private val storeDescriptions: () -> Boolean = { true },
 ) {
     /** Downloads + stores the EPG at [epgUrl]; returns the programme count. */
     suspend fun refresh(epgUrl: String): Int =
@@ -51,15 +52,19 @@ class EpgRepository(
             .observeAiringOrUpcoming(tvgIds, atMs)
             .map { NowNextResolver.resolve(it, atMs) }
 
+    /** Trims history; honors Settings -> EPG -> "Past days to keep EPG". */
+    suspend fun trimEndedBefore(cutoffMs: Long) = programDao.deleteEndedBefore(cutoffMs)
+
     /** Replace semantics per refresh: old rows of the refreshed channels go away. */
     private suspend fun store(document: XmltvDocument): Int {
+        val keepDescriptions = storeDescriptions()
         val entities =
             document.programs.map { program ->
                 ProgramEntity(
                     channelTvgId = program.channelId,
                     startMs = program.startMs,
                     endMs = program.endMs,
-                    details = program.details,
+                    details = if (keepDescriptions) program.details else program.details.copy(description = null),
                 )
             }
         programDao.deleteFor(entities.map { it.channelTvgId }.distinct())

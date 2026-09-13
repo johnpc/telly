@@ -26,4 +26,13 @@ interface PlaylistRepository {
         playlist: M3uPlaylist,
         name: String? = null,
     )
+
+    /** Renames the playlist stored under [sourceUrl] (settings: rename). */
+    suspend fun rename(
+        sourceUrl: String,
+        name: String,
+    )
+
+    /** Deletes the playlist stored under [sourceUrl] and its channels. */
+    suspend fun delete(sourceUrl: String)
 }

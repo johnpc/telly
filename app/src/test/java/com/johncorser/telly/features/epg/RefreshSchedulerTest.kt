@@ -43,10 +43,35 @@ class RefreshSchedulerTest {
     @Test
     fun `non-positive intervals are rejected`() {
         try {
-            RefreshScheduler(intervalMs = 0)
+            RefreshScheduler(intervalMs = 0L)
             throw AssertionError("expected IllegalArgumentException")
         } catch (expected: IllegalArgumentException) {
             assertTrue(expected.message!!.contains("intervalMs"))
         }
+    }
+
+    @Test
+    fun `a provider interval is re-read on every isDue check`() {
+        var hours = 0
+        val scheduler = RefreshScheduler(intervalMs = { RefreshScheduler.hoursToMs(hours) })
+
+        assertFalse(scheduler.isDue(lastUpdatedMs = 1_000, nowMs = 1_000 + dayMs))
+        hours = 6
+        assertTrue(scheduler.isDue(lastUpdatedMs = 1_000, nowMs = 1_000 + 6 * 3_600_000))
+        assertFalse(scheduler.isDue(lastUpdatedMs = 1_000, nowMs = 1_000 + 6 * 3_600_000 - 1))
+    }
+
+    @Test
+    fun `interval None refreshes only never-fetched data`() {
+        val never = RefreshScheduler(intervalMs = { RefreshScheduler.NEVER_MS })
+        assertTrue(never.isDue(lastUpdatedMs = 0, nowMs = 1))
+        assertFalse(never.isDue(lastUpdatedMs = 1, nowMs = Long.MAX_VALUE))
+    }
+
+    @Test
+    fun `hoursToMs maps the settings value`() {
+        assertEquals(0L, RefreshScheduler.hoursToMs(0))
+        assertEquals(0L, RefreshScheduler.hoursToMs(-1))
+        assertEquals(24 * 3_600_000L, RefreshScheduler.hoursToMs(24))
     }
 }

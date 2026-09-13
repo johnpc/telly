@@ -81,4 +81,40 @@ class EpgRefresherTest {
             coEvery { playlistDao.all() } returns emptyList()
             assertEquals(emptyList<Long>(), refresher().refreshDue())
         }
+
+    @Test
+    fun `refreshAllNow ignores freshness for the Update EPG action`() =
+        runTest {
+            coEvery { playlistDao.all() } returns
+                listOf(playlist(1, "http://e/1.xml", epgLastUpdatedMs = nowMs - 1), playlist(2, epgUrl = null))
+
+            assertEquals(listOf(1L), refresher().refreshAllNow())
+            assertEquals(listOf("http://e/1.xml"), refreshedUrls)
+        }
+
+    @Test
+    fun `every run trims programmes past the keep horizon`() =
+        runTest {
+            coEvery { playlistDao.all() } returns emptyList()
+            val cutoffs = mutableListOf<Long>()
+            val refresher =
+                EpgRefresher(
+                    playlistDao = playlistDao,
+                    scheduler = RefreshScheduler(),
+                    clock = { nowMs },
+                    refresh = { 1 },
+                    keepPastMs = { EpgRefresher.daysToMs(2) },
+                    trim = { cutoffs += it },
+                )
+
+            refresher.refreshDue()
+
+            assertEquals(listOf(nowMs - 2 * dayMs), cutoffs)
+        }
+
+    @Test
+    fun `daysToMs clamps negatives to zero`() {
+        assertEquals(0L, EpgRefresher.daysToMs(-3))
+        assertEquals(7 * dayMs, EpgRefresher.DEFAULT_KEEP_PAST_MS)
+    }
 }

@@ -138,4 +138,34 @@ class RoomPlaylistRepositoryTest {
             repository.add("?token=abc", M3uPlaylist())
             assertEquals("?token=abc", database.playlistDao().all().single().name)
         }
+
+    @Test
+    fun `rename persists across a fresh repository instance`() =
+        runTest {
+            repository.add("http://p/playlist.m3u", playlist)
+
+            repository.rename("http://p/playlist.m3u", "Living room")
+
+            assertEquals("Living room", RoomPlaylistRepository(database) { nowMs }.playlists.first().single().name)
+        }
+
+    @Test
+    fun `delete removes the playlist and all of its channels`() =
+        runTest {
+            repository.add("http://p/playlist.m3u", playlist)
+            repository.add("http://p/other.m3u", M3uPlaylist())
+
+            repository.delete("http://p/playlist.m3u")
+
+            assertEquals(listOf("http://p/other.m3u"), repository.playlists.first().map { it.sourceUrl })
+            assertEquals(0, database.channelDao().totalCount())
+        }
+
+    @Test
+    fun `deleting an unknown url is a no-op`() =
+        runTest {
+            repository.add("http://p/playlist.m3u", playlist)
+            repository.delete("http://p/unknown.m3u")
+            assertEquals(1, repository.playlists.first().size)
+        }
 }
