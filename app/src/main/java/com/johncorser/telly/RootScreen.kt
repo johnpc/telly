@@ -13,10 +13,11 @@ import com.johncorser.telly.core.design.TELLY_ONBOARDING_BACKGROUND
 import com.johncorser.telly.core.navigation.Navigator
 import com.johncorser.telly.core.navigation.Route
 import com.johncorser.telly.core.ui.ScreenCrossfade
-import com.johncorser.telly.features.onboarding.ChannelsLoadedScreen
 import com.johncorser.telly.features.onboarding.SettingsScreen
 import com.johncorser.telly.features.onboarding.WelcomeScreen
 import com.johncorser.telly.features.onboarding.WizardScreen
+import com.johncorser.telly.features.playback.PlaybackDeps
+import com.johncorser.telly.features.playback.PlaybackScreen
 import com.johncorser.telly.features.playlist.PlaylistRepository
 
 /** Renders the top of the navigator's back stack and owns global BACK. */
@@ -25,6 +26,7 @@ fun RootScreen(
     navigator: Navigator,
     repository: PlaylistRepository,
     fetchPlaylist: suspend (String) -> String,
+    playbackDeps: PlaybackDeps,
 ) {
     val stack by navigator.stack.collectAsState()
     val route = stack.last()
@@ -50,11 +52,9 @@ fun RootScreen(
                         repository = repository,
                         fetchPlaylist = fetchPlaylist,
                         onExit = { navigator.pop() },
-                        onComplete = { channels, groups ->
-                            navigator.replaceAll(Route.ChannelsLoaded(channels, groups))
-                        },
+                        onComplete = { navigator.replaceAll(Route.Playback) },
                     )
-                is Route.ChannelsLoaded -> ChannelsLoadedScreen(target.channelCount, target.groupCount)
+                Route.Playback -> PlaybackScreen(playbackDeps)
             }
         }
     }

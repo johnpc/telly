@@ -9,9 +9,9 @@ Feature: EPG data foundation
 
   Scenario: Channels persist across an app restart
     Given I added the playlist "http://10.0.2.2:8090/playlist.m3u"
-    And I see "Channels loaded: 30"
+    And playback starts fullscreen on channel 1 "News One"
     When I relaunch telly
-    Then I see "Channels loaded: 30"
+    Then playback starts fullscreen on channel 1 "News One"
 
   Scenario: The EPG referenced by url-tvg is fetched and stored
     Given I added the playlist "http://10.0.2.2:8090/playlist.m3u"

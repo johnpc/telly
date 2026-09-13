@@ -23,3 +23,14 @@ const val TELLY_TEXT_GUIDANCE_MUTED = 0xFF919394
 const val TELLY_PANE_DIVIDER = 0xFF222527
 const val TELLY_FIELD_UNDERLINE = 0xFF3D4042
 const val TELLY_ERROR_TEXT = 0xFFE57373
+
+// Playback + channel-panel palette, sampled from the TiviMate reference
+// captures (docs/reference/screens 24, 34, 47 and the capture catalogue's
+// token table): Material Blue 500 accent, Blue 200 clock, dark overlay cards.
+const val TELLY_PLAYBACK_ACCENT = 0xFF2196F3
+const val TELLY_CLOCK_BLUE = 0xFF90CAF9
+const val TELLY_OVERLAY_CARD = 0xFF1B1D21
+const val TELLY_PROGRESS_TRACK = 0xFF666666
+const val TELLY_MENU_SHEET = 0xFF1B1D21
+const val TELLY_BADGE_FILL = 0xFF3A3D40
+const val TELLY_LOGO_TILE = 0xFF2C5F8A

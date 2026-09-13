@@ -107,3 +107,30 @@ Local SDK note: `local.properties` must contain
 - **2026-09-13** Room schema JSON is exported to `app/schemas` (KSP
   `room.schemaLocation`) and checked in; DAO/repository tests run headless on
   the JVM via Robolectric against in-memory databases.
+- **2026-09-13** Playback engine seam: logic talks to `features/player/PlayerEngine`
+  (state + video-details StateFlows, load/stop/release). `Media3PlayerEngine`
+  wraps an injected `ExoPlayer` (MockK-able interface) so its listener mapping is
+  JVM-tested; the real player is built only in `Media3PlayerEngine.create`
+  (audio focus via AudioAttributes, HLS+progressive+TS via the default media
+  source factory) and hosted by the thin `PlayerScreenSurface` AndroidView.
+- **2026-09-13** Tiny key-value store for scalars (`core/kv/KeyValueStore`,
+  currently just `lastChannelId`): SharedPreferences-backed
+  (`SharedPrefsKeyValueStore`), not Room — one scalar doesn't justify a schema
+  bump + migration, and reads must be cheap at cold start. Logic only sees the
+  interface; tests use an in-memory map.
+- **2026-09-13** Playback key map follows the device-verified catalogue (§3):
+  OK/DOWN = info overlay, UP = channel panel at the previous channel
+  (wraps 1↔N), long-OK/MENU = context menu, LEFT/RIGHT = no-op at bare
+  playback. Deviations, on purpose: CH+/CH− zap directly (the catalogue flags
+  its emulator no-zap observation as unreliable), and BACK at bare playback
+  opens the channel panel as the stand-in for "return to TV guide" until the
+  guide slice exists (so BACK never exits from playback). Info overlay
+  auto-hide = 5 s (TiviMate's default panel timeout; premium-tunable, not
+  capturable) driven by injected-scheduler `delay`, no wall clock.
+- **2026-09-13** The 5.2.0 "channel panel" is really the guide overlay
+  (capture 47). This slice ships it as groups column + channel rows
+  (number/logo/name/now-programme/progress, 39 dp rows = 78 px pitch) with the
+  focused row expanded into the detail card; the timeline grid arrives with
+  the guide slice. Group renumbering restarts from 1 (capture 74); favorites
+  and hide are the only live context-menu actions, every other captured row
+  routes to a branded coming-soon placeholder.
