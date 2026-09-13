@@ -79,6 +79,15 @@ class ChannelDaoTest {
         }
 
     @Test
+    fun `observeVisible spans playlists, skips hidden and orders by number`() =
+        runTest {
+            seed()
+            val visible = channelDao.observeVisible().first()
+            assertEquals(listOf("News One", "Sports Arena", "Loose Channel"), visible.map { it.source.name })
+            assertEquals(listOf(1, 3, 4), visible.map { it.number })
+        }
+
+    @Test
     fun `updating a row persists user flags`() =
         runTest {
             val playlistId = seed()

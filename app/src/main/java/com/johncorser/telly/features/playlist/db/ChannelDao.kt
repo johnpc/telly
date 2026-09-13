@@ -34,6 +34,10 @@ interface ChannelDao {
     )
     fun observeGroups(playlistId: Long): Flow<List<ChannelGroupCount>>
 
+    /** All visible channels across playlists in "All channels" zap order. */
+    @Query("SELECT * FROM channels WHERE hidden = 0 ORDER BY number")
+    fun observeVisible(): Flow<List<ChannelEntity>>
+
     @Query("SELECT COUNT(*) FROM channels")
     suspend fun totalCount(): Int
 
