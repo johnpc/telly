@@ -1,3 +1,27 @@
 <resources>
     <string name="app_name">telly</string>
+
+    <string name="welcome_headline">telly doesn\'t provide any sources of TV channels</string>
+    <string name="welcome_subtitle">To watch TV channels, please add a playlist provided by your IPTV service</string>
+    <string name="welcome_add_playlist">Add playlist</string>
+    <string name="welcome_settings">Settings</string>
+
+    <string name="settings_title">Settings</string>
+
+    <string name="wizard_playlist_type">Playlist type</string>
+    <string name="wizard_m3u_playlist">M3U playlist</string>
+    <string name="wizard_xtream_codes">Xtream Codes</string>
+    <string name="wizard_stalker_portal">Stalker Portal</string>
+    <string name="wizard_cancel">Cancel</string>
+    <string name="wizard_enter_url">Enter URL</string>
+    <string name="wizard_paste_from_clipboard">Paste from clipboard</string>
+    <string name="wizard_select_local_playlist">Select local playlist</string>
+    <string name="wizard_next">Next</string>
+    <string name="wizard_back">Back</string>
+    <string name="wizard_processing">Processing playlist</string>
+    <string name="wizard_error_invalid_url">Enter a valid http(s) URL</string>
+    <string name="wizard_error_load_failed">Could not load the playlist. Check the URL and try again.</string>
+
+    <string name="channels_loaded">Channels loaded: %1$d</string>
+    <string name="channels_loaded_hint">The TV guide arrives in an upcoming update</string>
 </resources>

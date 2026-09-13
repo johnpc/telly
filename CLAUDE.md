@@ -77,3 +77,14 @@ Local SDK note: `local.properties` must contain
 - **2026-09-13** Media3/ExoPlayer (+ HLS) is the playback engine.
 - **2026-09-13** JUnit4 (not JUnit5) for unit tests — first-class AGP support, no extra
   platform wiring; MockK + Turbine for mocks/flows.
+- **2026-09-13** Navigation is a hand-rolled typed back stack (`core/navigation`:
+  sealed `Route` + `Navigator` exposing a `StateFlow` stack) instead of
+  androidx.navigation-compose — four routes don't justify the dependency and the
+  plain class keeps back-stack semantics JVM-testable.
+- **2026-09-13** Reference px→dp: the 1920×1080 uidumps are xhdpi, so 2 px = 1 dp.
+  Verified against known metrics: welcome buttons 72 px = 36 dp, guided-action rows
+  88 px = 44 dp, pill corner radius 8 px = 4 dp, wizard guidance title cap height
+  50 px ≈ 36 sp (leanback GuidedStep default).
+- **2026-09-13** Compose UI files are named `*Screen*.kt` (e.g. `WizardScreenUrlStep.kt`)
+  so the existing JaCoCo `**/*Screen*` exclusion keeps thin composables out of
+  coverage; all logic stays in plain classes that are fully unit-tested.
