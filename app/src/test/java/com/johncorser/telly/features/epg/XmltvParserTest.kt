@@ -31,6 +31,7 @@ class XmltvParserTest {
         assertEquals(1_789_302_600_000L, program.startMs) // 20260913123000 +0000
         assertEquals(1_789_307_100_000L, program.endMs) // 20260913134500 +0000
         assertEquals("Weather Watch", program.details.title)
+        assertEquals("Weather Watch Special", program.details.subTitle)
         assertEquals("News", program.details.category)
         assertTrue(program.details.description!!.startsWith("A fan-favorite returns"))
         assertNull(program.details.episode)
@@ -42,7 +43,8 @@ class XmltvParserTest {
             javaClass.getResourceAsStream("/fixtures/epg.xml")!!.use { stream ->
                 XmltvParser.parse(KXmlParser(), InputStreamReader(stream, Charsets.UTF_8))
             }.programs.first { it.details.episode != null }
-        assertEquals("0.1.", withEpisode.details.episode)
+        assertEquals("S1 E2", withEpisode.details.episode)
+        assertEquals("Episode 2", withEpisode.details.subTitle)
     }
 
     @Test

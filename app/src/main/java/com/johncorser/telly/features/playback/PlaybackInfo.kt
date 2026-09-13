@@ -1,7 +1,7 @@
 package com.johncorser.telly.features.playback
 
 import com.johncorser.telly.features.epg.NowNext
-import com.johncorser.telly.features.epg.db.ProgramDetails
+import com.johncorser.telly.features.epg.ProgramTitle
 import com.johncorser.telly.features.player.VideoDetails
 import com.johncorser.telly.features.playlist.db.ChannelEntity
 import java.util.TimeZone
@@ -17,6 +17,7 @@ data class PlaybackInfoData(
     val timeRange: String?,
     val remaining: String?,
     val progressPermille: Int,
+    val description: String?,
     val nextLine: String?,
     val badges: List<String>,
 )
@@ -37,15 +38,16 @@ object PlaybackInfoBuilder {
             logoUrl = channel.source.logoUrl,
             group = channel.source.groupTitle,
             clockText = ProgramTimes.clock(atMs, zone),
-            title = now?.details?.let(::displayTitle),
+            title = now?.details?.let(ProgramTitle::of),
             timeRange = now?.let { ProgramTimes.range(it.startMs, it.endMs, zone) },
             remaining = now?.let { "${ProgramTimes.remainingMinutes(it.endMs, atMs)} min" },
             progressPermille = now?.let { ProgramTimes.progressPermille(it.startMs, it.endMs, atMs) } ?: 0,
-            nextLine = next?.let { "${ProgramTimes.range(it.startMs, it.endMs, zone)}  ${displayTitle(it.details)}" },
+            description = now?.details?.description,
+            nextLine =
+                next?.let {
+                    "${ProgramTimes.range(it.startMs, it.endMs, zone)}  ${ProgramTitle.of(it.details)}"
+                },
             badges = PlaybackBadges.badges(video),
         )
     }
-
-    /** TiviMate renders "Title. S1 E7" when an episode number is known. */
-    fun displayTitle(details: ProgramDetails): String = listOfNotNull(details.title, details.episode).joinToString(". ")
 }

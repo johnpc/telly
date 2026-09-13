@@ -98,5 +98,6 @@ object ServiceLocator {
     private fun buildDatabase(context: Context): TellyDatabase =
         Room
             .databaseBuilder(context.applicationContext, TellyDatabase::class.java, DATABASE_NAME)
+            .addMigrations(TellyDatabase.MIGRATION_1_2)
             .build()
 }

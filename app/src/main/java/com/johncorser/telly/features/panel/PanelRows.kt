@@ -1,7 +1,7 @@
 package com.johncorser.telly.features.panel
 
 import com.johncorser.telly.features.epg.NowNext
-import com.johncorser.telly.features.playback.PlaybackInfoBuilder
+import com.johncorser.telly.features.epg.ProgramTitle
 import com.johncorser.telly.features.playback.ProgramTimes
 import com.johncorser.telly.features.playlist.db.ChannelEntity
 import java.util.TimeZone
@@ -31,11 +31,11 @@ object PanelRows {
             PanelRow(
                 channel = channel,
                 displayNumber = if (group == PanelViewModel.ALL_CHANNELS) channel.number else index + 1,
-                nowTitle = now?.details?.let(PlaybackInfoBuilder::displayTitle),
+                nowTitle = now?.details?.let(ProgramTitle::of),
                 nowRange = now?.let { ProgramTimes.range(it.startMs, it.endMs, zone) },
                 remaining = now?.let { "${ProgramTimes.remainingMinutes(it.endMs, atMs)} min" },
                 description = now?.details?.description,
-                nextTitle = nowNext.next?.details?.let(PlaybackInfoBuilder::displayTitle),
+                nextTitle = nowNext.next?.details?.let(ProgramTitle::of),
                 progressPermille = now?.let { ProgramTimes.progressPermille(it.startMs, it.endMs, atMs) } ?: 0,
             )
         }

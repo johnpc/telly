@@ -6,7 +6,7 @@ import org.xmlpull.v1.XmlPullParser
 /** Reads single `<channel>` / `<programme>` elements for [XmltvParser]. */
 internal object XmltvElementReader {
     private val channelTextTags = setOf("display-name")
-    private val programTextTags = setOf("title", "desc", "category", "episode-num")
+    private val programTextTags = setOf("title", "sub-title", "desc", "category")
 
     /** Returns the channel, or null when the mandatory `id` is missing. */
     fun readChannel(parser: XmlPullParser): XmltvChannel? {
@@ -26,6 +26,7 @@ internal object XmltvElementReader {
             children["title"]?.takeIf { it.isNotBlank() }?.let { title ->
                 ProgramDetails(
                     title = title,
+                    subTitle = children["sub-title"],
                     description = children["desc"],
                     category = children["category"],
                     episode = children["episode-num"],
@@ -59,6 +60,8 @@ internal object XmltvElementReader {
     ): String? =
         when {
             tag == "icon" -> parser.getAttributeValue(null, "src")
+            tag == "episode-num" ->
+                XmltvEpisodeNum.display(parser.getAttributeValue(null, "system"), parser.nextText())
             tag in textTags -> parser.nextText()
             else -> null
         }

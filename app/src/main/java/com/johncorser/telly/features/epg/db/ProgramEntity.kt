@@ -5,9 +5,13 @@ import androidx.room.Entity
 import androidx.room.Index
 import androidx.room.PrimaryKey
 
-/** Descriptive programme fields shared by the XMLTV parser and the DB row. */
+/**
+ * Descriptive programme fields shared by the XMLTV parser and the DB row.
+ * [episode] is already converted to display form ("S1 E10") by the parser.
+ */
 data class ProgramDetails(
     val title: String,
+    val subTitle: String? = null,
     val description: String? = null,
     val category: String? = null,
     val episode: String? = null,

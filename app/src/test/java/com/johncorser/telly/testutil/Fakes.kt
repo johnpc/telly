@@ -181,7 +181,7 @@ fun testProgram(
         channelTvgId = tvgId,
         startMs = startMs,
         endMs = endMs,
-        details = ProgramDetails(title = title, episode = episode),
+        details = ProgramDetails(title = title, episode = episode, description = "Description of $title"),
     )
 
 fun ProgramEntity.describedAs(text: String): ProgramEntity = copy(details = details.copy(description = text))

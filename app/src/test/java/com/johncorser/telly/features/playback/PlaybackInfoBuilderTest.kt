@@ -1,7 +1,6 @@
 package com.johncorser.telly.features.playback
 
 import com.johncorser.telly.features.epg.NowNext
-import com.johncorser.telly.features.epg.db.ProgramDetails
 import com.johncorser.telly.features.player.VideoDetails
 import com.johncorser.telly.testutil.testChannel
 import com.johncorser.telly.testutil.testProgram
@@ -49,23 +48,24 @@ class PlaybackInfoBuilderTest {
     }
 
     @Test
+    fun `the description of the airing programme feeds the zap overlay`() {
+        val nowNext = NowNext(now = testProgram("tvg-1", at(14, 30), at(15, 45), "Business Hour"))
+
+        val data = PlaybackInfoBuilder.build(testChannel(1, 1, "News One"), nowNext, null, at(14, 45), utc)
+
+        assertEquals("Description of Business Hour", data.description)
+    }
+
+    @Test
     fun `a channel without guide data keeps every line empty`() {
         val data = PlaybackInfoBuilder.build(testChannel(1, 1, "News One"), NowNext(), null, at(14, 45), utc)
 
         assertNull(data.title)
+        assertNull(data.description)
         assertNull(data.timeRange)
         assertNull(data.remaining)
         assertNull(data.nextLine)
         assertEquals(0, data.progressPermille)
         assertEquals(emptyList<String>(), data.badges)
-    }
-
-    @Test
-    fun `display titles append the episode when present`() {
-        assertEquals(
-            "Business Hour. S1 E7",
-            PlaybackInfoBuilder.displayTitle(ProgramDetails("Business Hour", episode = "S1 E7")),
-        )
-        assertEquals("Business Hour", PlaybackInfoBuilder.displayTitle(ProgramDetails("Business Hour")))
     }
 }
