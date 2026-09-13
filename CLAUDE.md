@@ -134,3 +134,28 @@ Local SDK note: `local.properties` must contain
   the guide slice. Group renumbering restarts from 1 (capture 74); favorites
   and hide are the only live context-menu actions, every other captured row
   routes to a branded coming-soon placeholder.
+- **2026-09-13** Settings persistence = SharedPreferences behind
+  `core/settings/KeyValueStore` (string values only) with a typed
+  `SettingsRepository` + `Setting<T>` descriptors (`TellySettings` catalog)
+  on top — DataStore would add a dependency for no testability gain; the
+  in-memory store keeps every settings test plain-JVM. Captured TiviMate
+  defaults are the `Setting` defaults (EPG interval "None"=0, past days 7,
+  stats toggle on, …).
+- **2026-09-13** Settings UI = two-pane shell (left section list drives the
+  right rows pane on focus) rendered from pure `SettingsRow` builders per
+  section; row activations dispatch through generic tables
+  (`SettingsToggles`, `SettingsPickers`) so the tree stays data, not code.
+  Premium-locked reference rows telly cannot honor yet render dimmed +
+  padlock and are skipped by focus, exactly like the capture.
+- **2026-09-13** Parental PIN is stored salted-SHA-256 (`PinHasher`), never
+  raw; `ParentalControls` gates locked groups/settings only while the master
+  toggle is on. Backup/restore = pretty JSON (`BackupCodec`, version field,
+  kotlinx.serialization) of the raw settings map + playlist identities;
+  restored playlists re-fetch channels via "Update playlist". SAF intent
+  wiring lives in thin `SettingsScreenHost` (untested; logic fully tested).
+- **2026-09-13** Accent color: `LocalAccentColor` CompositionLocal (default
+  sampled #2196F3) fed from Settings -> Appearance -> Color theme via
+  `ProvideAccentColor`; `AccentPalette` maps captured-style accent names to
+  ARGB. `RefreshScheduler` now takes an interval *provider* (settings-driven,
+  0 = "None" = only never-fetched data is due) and `EpgRefresher` trims
+  programmes past the "Past days to keep EPG" horizon after every run.

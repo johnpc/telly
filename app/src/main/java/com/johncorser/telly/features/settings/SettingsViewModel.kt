@@ -1,0 +1,99 @@
+package com.johncorser.telly.features.settings
+
+import com.johncorser.telly.core.settings.ParentalControls
+import com.johncorser.telly.core.settings.SettingsRepository
+import com.johncorser.telly.features.playlist.PlaylistRepository
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.flow.update
+
+/**
+ * Plain JVM-testable state holder for the two-pane settings shell. Rows are
+ * rebuilt from the store + playlists on every change; row activations are
+ * dispatched generically (toggle table, picker table) with the leftovers in
+ * SettingsViewModelActions.kt.
+ */
+class SettingsViewModel(
+    internal val scope: CoroutineScope,
+    graph: SettingsGraph,
+    internal val callbacks: SettingsCallbacks,
+) {
+    internal val settings: SettingsRepository = graph.settings
+    internal val playlistRepository: PlaylistRepository = graph.playlists
+    internal val parental: ParentalControls = graph.parental
+    internal val updater: PlaylistUpdater = graph.actions.updater
+    internal val updateEpgNow: suspend () -> Unit = graph.actions.updateEpgNow
+    internal val backup: SettingsBackupManager = graph.actions.backup
+    private val versionName: String = graph.versionName
+
+    internal val mutableState = MutableStateFlow(SettingsUiState())
+    val state: StateFlow<SettingsUiState> = mutableState.asStateFlow()
+
+    val playlistItems: StateFlow<List<PlaylistItem>> =
+        playlistRepository.playlists
+            .map { stored ->
+                stored.map {
+                    PlaylistItem(
+                        url = it.sourceUrl,
+                        name = it.name ?: it.sourceUrl,
+                        channelCount = it.playlist.channels.size,
+                        epgUrl = it.playlist.epgUrl,
+                    )
+                }
+            }.stateIn(scope, SharingStarted.Eagerly, emptyList())
+
+    /** The right pane's rows for whatever is focused/pushed right now. */
+    val rows: StateFlow<List<SettingsRow>> =
+        combine(mutableState, playlistItems, settings.changes) { uiState, playlists, _ ->
+            rowsFor(uiState.activePane, settings, playlists, versionName)
+        }.stateIn(scope, SharingStarted.Eagerly, emptyList())
+
+    /** Left-pane focus drives the right pane (and drops any pushed panes). */
+    fun selectSection(section: SettingsSection) {
+        mutableState.update { it.copy(section = section, subPanes = emptyList()) }
+    }
+
+    /** OK on a row. Locked rows are unfocusable and never reach this. */
+    fun activate(rowId: String) {
+        val toggle = SettingsToggles.byRowId[rowId]
+        val picker = SettingsPickers.byRowId[rowId]
+        when {
+            rowId == RowIds.PARENTAL_MASTER -> toggleParentalMaster()
+            toggle != null -> flip(toggle)
+            picker != null ->
+                showOverlay(
+                    SettingsOverlay.Picker(picker, SettingsPickers.currentRaw(picker, settings.snapshot())),
+                )
+            rowId.startsWith(
+                RowIds.PLAYLIST_PREFIX,
+            ) -> push(SettingsPane.PlaylistDetail(rowId.removePrefix(RowIds.PLAYLIST_PREFIX)))
+            else -> runAction(rowId)
+        }
+    }
+
+    /** BACK inside settings: overlay first, then pushed panes. False = leave. */
+    fun back(): Boolean {
+        val current = mutableState.value
+        return when {
+            current.overlay != null -> {
+                dismissOverlay()
+                true
+            }
+            current.subPanes.isNotEmpty() -> {
+                mutableState.update { it.copy(subPanes = it.subPanes.dropLast(1)) }
+                true
+            }
+            else -> false
+        }
+    }
+
+    fun dismissOverlay() {
+        mutableState.update { it.copy(overlay = null) }
+    }
+}

@@ -7,18 +7,19 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.graphics.Color
 import androidx.tv.material3.MaterialTheme
 import androidx.tv.material3.darkColorScheme
-import com.johncorser.telly.core.design.TELLY_ACCENT
 import com.johncorser.telly.core.design.TELLY_GUIDANCE_PANE
 import com.johncorser.telly.core.design.TELLY_ONBOARDING_BACKGROUND
 import com.johncorser.telly.core.navigation.Navigator
 import com.johncorser.telly.core.navigation.Route
+import com.johncorser.telly.core.ui.ProvideAccentColor
 import com.johncorser.telly.core.ui.ScreenCrossfade
-import com.johncorser.telly.features.onboarding.SettingsScreen
 import com.johncorser.telly.features.onboarding.WelcomeScreen
 import com.johncorser.telly.features.onboarding.WizardScreen
 import com.johncorser.telly.features.playback.PlaybackDeps
 import com.johncorser.telly.features.playback.PlaybackScreen
 import com.johncorser.telly.features.playlist.PlaylistRepository
+import com.johncorser.telly.features.settings.SettingsGraph
+import com.johncorser.telly.features.settings.SettingsScreenHost
 
 /** Renders the top of the navigator's back stack and owns global BACK. */
 @Composable
@@ -27,34 +28,41 @@ fun RootScreen(
     repository: PlaylistRepository,
     fetchPlaylist: suspend (String) -> String,
     playbackDeps: PlaybackDeps,
+    settingsGraph: SettingsGraph,
 ) {
     val stack by navigator.stack.collectAsState()
     val route = stack.last()
     BackHandler(enabled = stack.size > 1 && route != Route.AddPlaylistWizard) { navigator.pop() }
-    MaterialTheme(
-        colorScheme =
-            darkColorScheme(
-                primary = Color(TELLY_ACCENT),
-                background = Color(TELLY_ONBOARDING_BACKGROUND),
-                surface = Color(TELLY_GUIDANCE_PANE),
-            ),
-    ) {
-        ScreenCrossfade(route) { target ->
-            when (target) {
-                Route.Welcome ->
-                    WelcomeScreen(
-                        onAddPlaylist = { navigator.push(Route.AddPlaylistWizard) },
-                        onOpenSettings = { navigator.push(Route.Settings) },
-                    )
-                Route.Settings -> SettingsScreen()
-                Route.AddPlaylistWizard ->
-                    WizardScreen(
-                        repository = repository,
-                        fetchPlaylist = fetchPlaylist,
-                        onExit = { navigator.pop() },
-                        onComplete = { navigator.replaceAll(Route.Playback) },
-                    )
-                Route.Playback -> PlaybackScreen(playbackDeps)
+    ProvideAccentColor(settingsGraph.settings) { accent ->
+        MaterialTheme(
+            colorScheme =
+                darkColorScheme(
+                    primary = accent,
+                    background = Color(TELLY_ONBOARDING_BACKGROUND),
+                    surface = Color(TELLY_GUIDANCE_PANE),
+                ),
+        ) {
+            ScreenCrossfade(route) { target ->
+                when (target) {
+                    Route.Welcome ->
+                        WelcomeScreen(
+                            onAddPlaylist = { navigator.push(Route.AddPlaylistWizard) },
+                            onOpenSettings = { navigator.push(Route.Settings) },
+                        )
+                    Route.Settings ->
+                        SettingsScreenHost(
+                            graph = settingsGraph,
+                            onAddPlaylist = { navigator.push(Route.AddPlaylistWizard) },
+                        )
+                    Route.AddPlaylistWizard ->
+                        WizardScreen(
+                            repository = repository,
+                            fetchPlaylist = fetchPlaylist,
+                            onExit = { navigator.pop() },
+                            onComplete = { navigator.replaceAll(Route.Playback) },
+                        )
+                    Route.Playback -> PlaybackScreen(playbackDeps)
+                }
             }
         }
     }

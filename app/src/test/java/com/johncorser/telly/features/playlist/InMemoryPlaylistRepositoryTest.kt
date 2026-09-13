@@ -50,6 +50,40 @@ class InMemoryPlaylistRepositoryTest {
         }
 
     @Test
+    fun `re-adding without a name keeps the stored name`() =
+        runTest {
+            val repository = InMemoryPlaylistRepository()
+            repository.add("http://a.example/a.m3u", playlist, name = "My IPTV")
+
+            repository.add("http://a.example/a.m3u", M3uPlaylist())
+
+            assertEquals("My IPTV", repository.playlists.value.single().name)
+        }
+
+    @Test
+    fun `rename changes only the matching playlist`() =
+        runTest {
+            val repository = InMemoryPlaylistRepository()
+            repository.add("http://a.example/a.m3u", playlist, name = "Old")
+            repository.add("http://b.example/b.m3u", M3uPlaylist(), name = "Other")
+
+            repository.rename("http://a.example/a.m3u", "New")
+
+            assertEquals(listOf("New", "Other"), repository.playlists.value.map { it.name })
+        }
+
+    @Test
+    fun `delete removes the playlist by url`() =
+        runTest {
+            val repository = InMemoryPlaylistRepository()
+            repository.add("http://a.example/a.m3u", playlist)
+
+            repository.delete("http://a.example/a.m3u")
+
+            assertTrue(repository.playlists.value.isEmpty())
+        }
+
+    @Test
     fun `stored playlists behave as value objects`() {
         val stored = StoredPlaylist(sourceUrl = "http://a.example/a.m3u", playlist = playlist, name = "n")
 

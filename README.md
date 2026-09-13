@@ -25,7 +25,9 @@ M3U playlist and XMLTV guide, get a fast, gorgeous, remote-first live-TV UI.
 | Favorites | ⬜ |
 | Channel groups | ⬜ |
 | Picture-in-guide preview | ⬜ |
-| Settings | ⬜ |
+| Settings | ✅ |
+| Parental controls (PIN) | ✅ |
+| Backup / restore | ✅ |
 
 ## Install
 

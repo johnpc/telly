@@ -17,8 +17,8 @@ import androidx.compose.ui.unit.sp
 import androidx.tv.material3.LocalContentColor
 import androidx.tv.material3.Surface
 import androidx.tv.material3.Text
-import com.johncorser.telly.core.design.TELLY_PLAYBACK_ACCENT
 import com.johncorser.telly.core.ui.FocusScreenDefaults
+import com.johncorser.telly.core.ui.LocalAccentColor
 import com.johncorser.telly.core.ui.TellyScreenLogoTile
 import com.johncorser.telly.core.ui.TellyScreenProgressBar
 
@@ -73,7 +73,7 @@ internal fun ChannelPanelScreenRow(
                 overflow = TextOverflow.Ellipsis,
             )
             if (playing) {
-                Text(text = "▶", color = Color(TELLY_PLAYBACK_ACCENT), fontSize = 11.sp)
+                Text(text = "▶", color = LocalAccentColor.current, fontSize = 11.sp)
             }
             Spacer(Modifier.width(10.dp))
             Text(
@@ -90,4 +90,4 @@ internal fun ChannelPanelScreenRow(
 }
 
 @Composable
-private fun rowColor(playing: Boolean): Color = if (playing) Color(TELLY_PLAYBACK_ACCENT) else LocalContentColor.current
+private fun rowColor(playing: Boolean): Color = if (playing) LocalAccentColor.current else LocalContentColor.current

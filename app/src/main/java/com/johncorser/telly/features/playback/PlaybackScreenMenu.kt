@@ -22,7 +22,7 @@ import androidx.compose.ui.unit.sp
 import androidx.tv.material3.Text
 import com.johncorser.telly.R
 import com.johncorser.telly.core.design.TELLY_MENU_SHEET
-import com.johncorser.telly.core.design.TELLY_PLAYBACK_ACCENT
+import com.johncorser.telly.core.ui.LocalAccentColor
 import com.johncorser.telly.core.ui.TellyScreenMenuRow
 
 /**
@@ -72,7 +72,7 @@ private fun PlaybackScreenMenuHeader(text: String) {
     Text(
         text = text,
         modifier = Modifier.padding(start = 16.dp, top = 14.dp, end = 16.dp, bottom = 4.dp),
-        color = Color(TELLY_PLAYBACK_ACCENT),
+        color = LocalAccentColor.current,
         fontSize = 14.sp,
         maxLines = 1,
     )

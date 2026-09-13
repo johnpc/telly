@@ -27,4 +27,13 @@ interface PlaylistDao {
         id: Long,
         updatedMs: Long,
     )
+
+    @Query("UPDATE playlists SET name = :name WHERE url = :url")
+    suspend fun rename(
+        url: String,
+        name: String,
+    )
+
+    @Query("DELETE FROM playlists WHERE id = :id")
+    suspend fun delete(id: Long)
 }

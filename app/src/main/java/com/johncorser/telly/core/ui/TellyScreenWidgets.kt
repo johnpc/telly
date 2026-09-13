@@ -19,7 +19,6 @@ import androidx.compose.ui.unit.sp
 import androidx.tv.material3.Text
 import coil.compose.AsyncImage
 import com.johncorser.telly.core.design.TELLY_LOGO_TILE
-import com.johncorser.telly.core.design.TELLY_PLAYBACK_ACCENT
 import com.johncorser.telly.core.design.TELLY_PROGRESS_TRACK
 
 /**
@@ -47,14 +46,14 @@ fun TellyScreenProgressBar(
             Modifier
                 .fillMaxWidth(fraction)
                 .height(2.dp)
-                .background(Color(TELLY_PLAYBACK_ACCENT)),
+                .background(LocalAccentColor.current),
         )
         if (thumb) {
             Box(Modifier.fillMaxWidth(fraction), contentAlignment = Alignment.CenterEnd) {
                 Box(
                     Modifier
                         .size(8.dp)
-                        .background(Color(TELLY_PLAYBACK_ACCENT), CircleShape),
+                        .background(LocalAccentColor.current, CircleShape),
                 )
             }
         }

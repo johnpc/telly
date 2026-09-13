@@ -24,8 +24,8 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.tv.material3.Text
 import com.johncorser.telly.R
-import com.johncorser.telly.core.design.TELLY_PLAYBACK_ACCENT
 import com.johncorser.telly.core.design.TELLY_TEXT_MUTED
+import com.johncorser.telly.core.ui.LocalAccentColor
 import com.johncorser.telly.core.ui.TellyScreenLogoTile
 import com.johncorser.telly.core.ui.TellyScreenProgressBar
 
@@ -51,7 +51,7 @@ internal fun PlaybackScreenInfoOverlay(viewModel: PlaybackViewModel) {
                     logoUrl = data.logoUrl,
                     name = data.name,
                     size = 79.dp,
-                    modifier = Modifier.border(2.dp, Color(TELLY_PLAYBACK_ACCENT), RoundedCornerShape(4.dp)),
+                    modifier = Modifier.border(2.dp, LocalAccentColor.current, RoundedCornerShape(4.dp)),
                 )
                 Spacer(Modifier.width(16.dp))
                 PlaybackScreenInfoLines(data)

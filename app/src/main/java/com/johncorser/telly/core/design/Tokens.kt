@@ -34,3 +34,9 @@ const val TELLY_PROGRESS_TRACK = 0xFF666666
 const val TELLY_MENU_SHEET = 0xFF1B1D21
 const val TELLY_BADGE_FILL = 0xFF3A3D40
 const val TELLY_LOGO_TILE = 0xFF2C5F8A
+
+// Settings panel palette (uidump 18: panel #232629 = TELLY_GUIDANCE_PANE,
+// header strip #333639, focused row pill #E0E2E4, accent #2196F3).
+const val TELLY_SETTINGS_HEADER = 0xFF333639
+const val TELLY_SETTINGS_FOCUS_FILL = 0xFFE0E2E4
+const val TELLY_ACCENT_BLUE = 0xFF2196F3
