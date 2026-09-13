@@ -160,3 +160,91 @@ capture), "Paste from clipboard" / "Select local playlist" behavior, and steps 1
 - **P1: 6** (items 2–7; worst visual offenders: 64 px column shift, 15% oversized labels,
   missing transitions, no focus-jump on commit)
 - **P2: 9** (items 8–16)
+
+---
+
+## Round 2 resolution (2026-09-13, fixed on main)
+
+Evidence: `round2/telly-*.png` (same emulator, fixture URL, fresh install per run).
+All measurements below were re-taken with ImageMagick bounding boxes / pixel
+profiles against the reference PNGs; "exact" means identical bbox, "±Npx"
+means within N px.
+
+1. **FIXED (P0).** `res/xml/network_security_config.xml` (cleartext permitted for all
+   domains) + `android:networkSecurityConfig` in the manifest. Full wizard completes
+   end-to-end against `http://10.0.2.2:8090/playlist.m3u`; Room ends with 30 channels /
+   5 groups and the playlist row (name `10.0.2.2`, epgUrl from `url-tvg`) — verified by
+   pulling the DB. Evidence: `telly-11/12/14`.
+2. **FIXED.** `WizardScreenDims.guidanceWidth = 470.dp`. Painted pane edge now at
+   x=940 exactly (last `#232629` pixel at 939 in both); option labels x=1008, focused
+   pill `[980,378]` 595–596 px wide (ref 595); divider within 1 px of x=1615.
+3. **FIXED.** Action/label text is 14 sp — and, discovered while fixing: TiviMate renders
+   guided-action labels in **Roboto Condensed** (leanback's guided-action style).
+   With `sans-serif-condensed` + `letterSpacing 0`: "Xtream Codes" 153x22 **exact**,
+   "M3U playlist" 132x27 **exact**, "Stalker Portal" 147x22 **exact**, "Cancel" 73x22,
+   welcome "Add playlist" 143x27 **exact** (welcome buttons stay regular Roboto, which
+   matches). Descriptions are 12 sp (uidump: 33 px line vs 38 px title line).
+4. **FIXED.** ENTER commit hides the IME and moves focus to **Next**
+   (`WizardScreenEditState`); `telly-10-m3u-after-url-commit.png` shows the white pill
+   on Next, matching ref 10.
+5. **FIXED — with a correction to this item's assumption.** TiviMate's GuidedStep
+   transition was re-measured frame-by-frame on the emulator (screenrecord of
+   settings-root → guided step and BACK, 60 fps extraction): it is **not a slide** —
+   both steps render at their final positions and cross-fade in ~100–130 ms (old
+   fully visible → settled in 6–8 frames, both directions). telly now uses a matching
+   120 ms linear `Crossfade` between wizard steps *and* top-level routes
+   (`core/ui/CrossfadeScreen.kt`). Mid-fade frame: `telly-motion-midcrossfade.png`.
+6. **FIXED.** Circular indeterminate spinner (rotating 270° arc) replaces the actions
+   column during processing; guidance shows the download icon + "Processing playlist".
+   `telly-11-m3u-processing.png`. Still no reference capture of this state exists, so
+   spinner size/position remain best-effort per the catalogue description.
+7. **FIXED (was KNOWN divergence).** The full processed/name step now exists
+   (`WizardScreenNameStep` + `WizardStep.PROCESSED`): guidance "Playlist is processed"
+   + "Channels: 30" (or "Movies: N" when all streams are `.mp4`/`.mkv`, per catalogue
+   parser behavior), editable **Playlist name** pre-filled with the URL host
+   ("10.0.2.2"), **TV playlist** / **VOD playlist (no TV channels)** radios, Next/Back.
+   Name persists through `PlaylistRepository.add(url, playlist, name)`; a nameless
+   background re-add keeps the custom name. Measured vs ref 12: pill 125 px tall at
+   `[980,378]` **exact**, title glyphs **exact**, value glyphs **exact** (incl. focused
+   value color `#6F7071` / resting `#5D5F61`), radio rows within 1 px.
+   Remaining divergence, per direction: after Next, TiviMate shows the EPG-source
+   step (ref 13) and then the TV guide; telly has neither yet, so it lands on a
+   branded placeholder stating channel + group counts
+   (`telly-14-channels-loaded-landing.png`). The EPG URL is already consumed from
+   `url-tvg` by the EPG slice, and the TV/VOD radio is UI state only (nothing to
+   persist until a VOD slice exists). Both arrive in later slices.
+8. **FIXED.** Welcome pill horizontal padding 16.5 dp + 14 sp label: Add playlist pill
+   209–210 px wide at y=603 (ref 209 px at y=604); label glyphs 143x27 **exact**.
+9. **FIXED.** `letterSpacing = 0.sp`: subtitle glyph run 1178x35 at y=487 — **exact**
+   width and position (ref 1178x35 @ 487).
+10. **FIXED.** Guidance title: +6 dp down (`padding top 28.dp`) and `(-0.01).em`
+    tracking → "Playlist type" 369 px wide at y=373 (ref 368 px at y=374).
+11. **PARTIALLY FIXED.** The IME action key is now the →| Next key (ref 08/09): the
+    inline editor is a real `EditText` (like leanback's) with
+    `imeOptions = IME_ACTION_NEXT`. The floating Gboard-TV panel, however, still
+    docks screen-center instead of right-anchored: the panel position is chosen by
+    the IME and did not follow even with a real EditText reporting identical editor
+    bounds `[1008..1547]`. Not app-controllable as far as investigated — **deferred**
+    (cosmetic; keyboard layout, keys and behavior match).
+12. **FIXED.** Edit-mode metrics re-derived from ref 08/09 and matched: label glyphs
+    **exact**, value text 12 sp condensed `#5D5F61` at (1017,464) (ref exact),
+    underline at y=501–502 spanning x=1016→1616 (to the divider; ref 601 px vs telly
+    600 px), rows below pushed to the same push (Paste glyphs land at identical y).
+13. **FIXED.** Disabled actions are now unfocusable (`focusProperties.canFocus`),
+    matching leanback: RIGHT from the options column lands on **Back**
+    (`telly-07b-disabled-next-focus-skipped.png`); the invented outline treatment is
+    gone.
+14. **FIXED (masked by item 5, as predicted).** The incoming step's focus pill is
+    already present during the cross-fade (`telly-motion-midcrossfade.png`); no
+    visible pop-in at 60 Hz.
+15. **FIXED.** Two-line row: 12 sp description, 4.5 dp title→description gap, 2.5 dp
+    description bottom inset → committed/name pill is 125 px tall (378..502),
+    **identical** to ref 12's pill profile.
+16. **RESOLVED AS INTENDED.** "telly doesn't provide any sources of TV channels" is a
+    deliberate brand substitution; all other copy is word-for-word. Headline block
+    position matched via a measured 3.5 dp offset (same-substring "TV channels"
+    glyphs align within 1 px).
+
+Not fixed / out of scope this round: floating-IME panel x-position (item 11, IME-owned);
+EPG-source wizard step + TV guide landing (item 7 note — later slices); error-state
+presentation and "Select local playlist" remain unreferenced/unbuilt as before.
