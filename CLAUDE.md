@@ -25,7 +25,7 @@ Run everything with `./scripts/quality.sh`. CI and the pre-commit hook
 | --- | --- | --- |
 | Lint/format | zero findings | ktlint (ktlint_official) via `./gradlew ktlintCheck` |
 | Static analysis | zero findings; unused-code rules are errors | detekt (`config/detekt/detekt.yml`) |
-| File length | every logic `.kt` under `app/src/main` ≤ 100 lines (tests/generated exempt) | `scripts/check-file-lines.mjs` |
+| File length | every logic `.kt` under `app/src/main` ≤ 100 logic lines — comments/blank lines excluded (tests/generated exempt) | `scripts/check-file-lines.mjs` |
 | CRAP | per-method CRAP = c²·(1−cov)³ + c ≤ 15 (generated/synthetic skipped) | `scripts/crap-check.mjs` over JaCoCo XML |
 | Halstead | per-function difficulty D = (n1/2)·(N2/n2) ≤ 20 (tests exempt) | `scripts/check-halstead.mjs` |
 | Duplication | threshold 0 (minLines 8, minTokens 70) | `npx -y jscpd app/src` (`.jscpd.json`) |

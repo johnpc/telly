@@ -23,13 +23,23 @@ function walk(dir, out = []) {
   return out;
 }
 
+// Counts LOGIC lines only: comments (// line, /* block */, KDoc) and blank
+// lines are excluded, so documentation never competes with the limit.
+function countLogicLines(text) {
+  const noBlockComments = text.replace(/\/\*[\s\S]*?\*\//g, (m) =>
+    m.replace(/[^\n]/g, ''),
+  );
+  return noBlockComments
+    .split('\n')
+    .map((line) => line.trim())
+    .filter((line) => line !== '' && !line.startsWith('//')).length;
+}
+
 const offenders = [];
 for (const file of walk(TARGET)) {
-  const text = readFileSync(file, 'utf8');
-  const lines = text.split('\n');
-  if (lines.at(-1) === '') lines.pop(); // ignore trailing newline
-  if (lines.length > MAX_LINES) {
-    offenders.push({ file: relative(ROOT, file), lines: lines.length });
+  const lines = countLogicLines(readFileSync(file, 'utf8'));
+  if (lines > MAX_LINES) {
+    offenders.push({ file: relative(ROOT, file), lines });
   }
 }
 
