@@ -157,9 +157,16 @@ Local SDK note: `local.properties` must contain
   `Route.Search`, reached from the playback quick-bar's Search slot. Room
   queries live in a dedicated `features/search/db/SearchDao` (LIKE with
   `ESCAPE '\'`; `SearchQuery` escapes `%`/`_`/`\`): channels by name
-  substring OR number prefix (digits-only queries) in zap order, programmes
-  by title substring still airing/upcoming, soonest first (LIMIT 100 — the
-  reference cap is not capturable). Programme rows drop hidden/unknown
+  substring OR number prefix (digits-only queries) in case-insensitive
+  name order — live 5.2.0 side-by-side (`tm-02`) showed name order, not
+  the zap order originally guessed when the cap was "not capturable" —
+  programmes by title substring still airing/upcoming, soonest first
+  (LIMIT 100 — the reference cap is not capturable). Currently-airing
+  programme rows append the shared dash progress + "N min" remaining to
+  the times and tint the title light blue, and the first programme hit is
+  preselected into the right-side detail card while the IME is still up
+  (`tm-03`, ref 50) — state only, never moving D-pad focus off the query
+  field. Programme rows drop hidden/unknown
   channels and share one channel card per consecutive same-channel run
   (capture 50's card-to-rows ratio). Air times: bare "03:45 — 05:15 PM"
   today, "Mon, Sep 14, …" prefix otherwise. Search history = newline-joined

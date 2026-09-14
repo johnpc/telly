@@ -54,6 +54,34 @@ class SearchResultsBuilderTest {
     }
 
     @Test
+    fun `airing programme rows carry dash progress and remaining minutes`() {
+        val hits =
+            SearchResultsBuilder.programs(
+                matches = listOf(testProgram("one", now - hour, now + hour, "Newsroom Live")),
+                channels = listOf(newsOne),
+                atMs = now,
+                zone = zone,
+            )
+
+        assertEquals(500, hits[0].progressPermille)
+        assertEquals("60 min", hits[0].remaining)
+    }
+
+    @Test
+    fun `upcoming programme rows carry no progress or remaining`() {
+        val hits =
+            SearchResultsBuilder.programs(
+                matches = listOf(testProgram("one", now + hour, now + 2 * hour, "Newsroom Live")),
+                channels = listOf(newsOne),
+                atMs = now,
+                zone = zone,
+            )
+
+        assertEquals(0, hits[0].progressPermille)
+        assertNull(hits[0].remaining)
+    }
+
+    @Test
     fun `only the first row of a same-channel run shows the channel card`() {
         val hits =
             SearchResultsBuilder.programs(

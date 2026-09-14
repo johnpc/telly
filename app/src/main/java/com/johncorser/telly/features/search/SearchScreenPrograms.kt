@@ -21,7 +21,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.tv.material3.Text
 import com.johncorser.telly.R
-import com.johncorser.telly.core.design.TELLY_TEXT_MUTED
+import com.johncorser.telly.core.design.TELLY_CLOCK_BLUE
 import com.johncorser.telly.core.ui.TellyScreenLogoTile
 import com.johncorser.telly.features.search.SearchScreenDims as Dims
 
@@ -65,8 +65,16 @@ private fun SearchScreenProgramRow(
                     .onFocusChanged { if (it.isFocused) viewModel.onProgramFocused(hit) },
         ) {
             Column(Modifier.padding(horizontal = 8.dp, vertical = 6.dp)) {
-                Text(text = hit.title, fontSize = 17.sp, maxLines = 1, overflow = TextOverflow.Ellipsis)
-                Text(text = hit.timeText, color = Color(TELLY_TEXT_MUTED), fontSize = 14.sp, maxLines = 1)
+                // Airing rows tint the title light blue and append the dash
+                // progress + remaining minutes to the times (live tm-03).
+                Text(
+                    text = hit.title,
+                    color = if (hit.remaining != null) Color(TELLY_CLOCK_BLUE) else Color.Unspecified,
+                    fontSize = 17.sp,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                )
+                SearchScreenAirTime(hit, fontSize = 14.sp)
             }
         }
     }

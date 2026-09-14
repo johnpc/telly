@@ -65,7 +65,7 @@ private fun SearchScreenChannelCard(
             Spacer(Modifier.height(6.dp))
             Text(
                 text = hit.channel.source.name,
-                fontSize = 15.sp,
+                fontSize = 19.sp,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
                 modifier = Modifier.fillMaxWidth(),

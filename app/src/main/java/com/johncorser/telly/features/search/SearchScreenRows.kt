@@ -9,12 +9,18 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.PlatformTextStyle
+import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.style.LineHeightStyle
+import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.tv.material3.Surface
 import androidx.tv.material3.Text
+import com.johncorser.telly.core.design.TELLY_TEXT_MUTED
 import com.johncorser.telly.core.design.TELLY_TEXT_PRIMARY
 import com.johncorser.telly.core.ui.FocusScreenDefaults
+import com.johncorser.telly.core.ui.TellyScreenTimesLine
 import com.johncorser.telly.features.search.SearchScreenDims as Dims
 
 /**
@@ -27,12 +33,34 @@ internal fun SearchScreenHeader(
     textRes: Int,
     modifier: Modifier = Modifier.padding(start = Dims.edgePad, top = Dims.headerTop),
 ) {
+    // 19 sp with the line box trimmed to the em: the reference header is
+    // 38 px tall (tm-02 uidump); Compose's default font padding inflated
+    // the same 19 sp to a 44 px (~22 sp) box.
     Text(
         text = stringResource(textRes),
         color = Color(TELLY_TEXT_PRIMARY),
-        fontSize = 19.sp,
+        style =
+            TextStyle(
+                fontSize = 19.sp,
+                lineHeight = 19.sp,
+                platformStyle = PlatformTextStyle(includeFontPadding = false),
+                lineHeightStyle = LineHeightStyle(LineHeightStyle.Alignment.Center, LineHeightStyle.Trim.Both),
+            ),
         modifier = modifier,
     )
+}
+
+/** Air-time line: "12:45 — 01:45 AM ▬▬ 50 min" while airing (live tm-03), bare times otherwise. */
+@Composable
+internal fun SearchScreenAirTime(
+    hit: SearchProgramHit,
+    fontSize: TextUnit = 15.sp,
+) {
+    if (hit.remaining == null) {
+        Text(text = hit.timeText, color = Color(TELLY_TEXT_MUTED), fontSize = fontSize, maxLines = 1)
+    } else {
+        TellyScreenTimesLine(range = hit.timeText, permille = hit.progressPermille, remaining = hit.remaining)
+    }
 }
 
 /** TiviMate's universal focus pill around arbitrary row/card content. */

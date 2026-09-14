@@ -8,7 +8,7 @@ import java.util.TimeZone
 
 /**
  * Runs one search over Room: channels by name substring or number prefix
- * (zap order, catalogue §4), programmes by title substring still airing or
+ * (name order, live tm-02), programmes by title substring still airing or
  * upcoming (soonest first). Escaping, filtering and formatting live in the
  * pure [SearchQuery]/[SearchResultsBuilder]; this class only orchestrates.
  */

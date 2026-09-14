@@ -18,6 +18,7 @@ import androidx.tv.material3.ClickableSurfaceColors
 import androidx.tv.material3.ClickableSurfaceDefaults
 import com.johncorser.telly.R
 import com.johncorser.telly.core.design.TELLY_FOCUS_FILL
+import com.johncorser.telly.core.ui.LocalAccentColor
 import com.johncorser.telly.core.ui.TellyScreenIconCircle
 import com.johncorser.telly.core.ui.rememberAutoFocus
 import com.johncorser.telly.features.search.SearchScreenDims as Dims
@@ -58,16 +59,18 @@ internal fun SearchScreenTopBar(viewModel: SearchViewModel) {
     }
 }
 
-/** The orb stays a light disc even unfocused (captures 49/50). */
+/** Light disc at rest (captures 49/50); focus fills it accent blue (live tm-01). */
 @Composable
-private fun orbColors(): ClickableSurfaceColors =
-    ClickableSurfaceDefaults.colors(
+private fun orbColors(): ClickableSurfaceColors {
+    val accent = LocalAccentColor.current
+    return ClickableSurfaceDefaults.colors(
         containerColor = Color(TELLY_FOCUS_FILL),
         contentColor = Color.Black,
-        focusedContainerColor = Color.White,
-        focusedContentColor = Color.Black,
-        pressedContainerColor = Color.White,
-        pressedContentColor = Color.Black,
+        focusedContainerColor = accent,
+        focusedContentColor = Color.White,
+        pressedContainerColor = accent,
+        pressedContentColor = Color.White,
         disabledContainerColor = Color(TELLY_FOCUS_FILL),
         disabledContentColor = Color.Black,
     )
+}

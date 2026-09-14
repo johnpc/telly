@@ -9,6 +9,7 @@ import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.mapLatest
+import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.stateIn
 
 /**
@@ -34,11 +35,17 @@ class SearchViewModel(
     /** Feeds the right-side detail card (captures 50/51). */
     val focusedProgram: StateFlow<SearchProgramHit?> = mutableFocusedProgram.asStateFlow()
 
-    /** Results recompute on every keystroke; TiviMate searches as you type. */
+    /**
+     * Results recompute on every keystroke; TiviMate searches as you type.
+     * Each batch preselects its first programme so the detail card is
+     * already visible while the IME is still up (ref 50, live tm-03) —
+     * state only, D-pad focus stays wherever it is (the query field).
+     */
     @OptIn(ExperimentalCoroutinesApi::class)
     val results: StateFlow<SearchResults> =
         mutableQuery
             .mapLatest { deps.repository.search(it, deps.clock(), deps.zone) }
+            .onEach { mutableFocusedProgram.value = it.programs.firstOrNull() }
             .stateIn(scope, SharingStarted.Eagerly, SearchResults())
 
     fun onQueryChange(text: String) {
