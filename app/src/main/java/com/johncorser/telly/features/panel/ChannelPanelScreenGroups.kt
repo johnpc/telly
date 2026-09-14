@@ -9,14 +9,20 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import com.johncorser.telly.core.design.TELLY_BUTTON_RESTING
 import com.johncorser.telly.core.ui.TellyScreenMenuRow
 
 /**
- * Groups column (capture 25): Favorites, All channels, then playlist groups.
- * The selected group keeps a dark pill; focus is the usual white pill. The
- * guide overlay asks the selected row to grab focus when the column opens.
+ * Groups column (captures 25/47): Favorites, All channels, then playlist
+ * groups. The selected group keeps a dark pill; focus is the usual white
+ * pill. The guide overlay asks the selected row to grab focus when the
+ * column opens and passes the guide's own metrics (252 dp panel, 36 dp
+ * pills at a 38.5 dp pitch, 18 sp labels, list top under the preview
+ * line — uidump 25); the playback panel keeps the defaults.
  */
 @Composable
 internal fun ChannelPanelScreenGroups(
@@ -24,22 +30,33 @@ internal fun ChannelPanelScreenGroups(
     selected: String,
     onSelect: (String) -> Unit,
     autoFocusSelected: Boolean = false,
+    metrics: GroupColumnMetrics = GroupColumnMetrics(),
 ) {
     LazyColumn(
         Modifier
-            .width(220.dp)
+            .width(metrics.width)
             .fillMaxHeight()
-            .padding(start = 16.dp, top = 40.dp, end = 16.dp),
-        verticalArrangement = Arrangement.spacedBy(4.dp),
+            .padding(start = 16.dp, top = metrics.topPadding, end = 16.dp),
+        verticalArrangement = Arrangement.spacedBy(metrics.rowSpacing),
     ) {
         items(groups, key = { it }) { group ->
             TellyScreenMenuRow(
                 label = group,
                 onClick = { onSelect(group) },
-                height = 39.dp,
+                height = metrics.rowHeight,
+                fontSize = metrics.fontSize,
                 restingContainer = if (group == selected) Color(TELLY_BUTTON_RESTING) else Color.Transparent,
                 requestFocus = autoFocusSelected && group == selected,
             )
         }
     }
 }
+
+/** Geometry knobs for the groups column; defaults = the playback panel. */
+data class GroupColumnMetrics(
+    val width: Dp = 220.dp,
+    val topPadding: Dp = 40.dp,
+    val rowHeight: Dp = 39.dp,
+    val rowSpacing: Dp = 4.dp,
+    val fontSize: TextUnit = 15.sp,
+)

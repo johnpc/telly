@@ -14,6 +14,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.tv.material3.Icon
@@ -31,6 +32,7 @@ fun TellyScreenMenuRow(
     modifier: Modifier = Modifier,
     icon: Int? = null,
     height: Dp = 36.dp,
+    fontSize: TextUnit = 15.sp,
     restingContainer: Color = Color.Transparent,
     requestFocus: Boolean = false,
 ) {
@@ -55,7 +57,7 @@ fun TellyScreenMenuRow(
                 Icon(painter = painterResource(it), contentDescription = null, modifier = Modifier.size(18.dp))
                 Spacer(Modifier.width(12.dp))
             }
-            Text(text = label, fontSize = 15.sp, maxLines = 1)
+            Text(text = label, fontSize = fontSize, maxLines = 1)
         }
     }
 }

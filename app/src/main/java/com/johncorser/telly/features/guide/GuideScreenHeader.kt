@@ -18,8 +18,8 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clipToBounds
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.tv.material3.Text
@@ -78,16 +78,21 @@ private fun GuideScreenTimelineTicks(
     modifier: Modifier = Modifier,
 ) {
     val viewport = GuideGeometry.TIME_VIEWPORT_DP
-    Box(modifier.clipToBounds()) {
+    // Labels are centered on their half-hour tick (uidump 24: each 160 dp
+    // slot straddles the tick, the first hanging into the channel column).
+    val halfSlot = GuideGeometry.DP_PER_30_MIN / 2
+    Box(modifier) {
         GuideTimeline.ticks(controller.originMs, scrollX, viewport, controller.zone).forEach { tick ->
             Text(
                 text = tick.label,
                 modifier =
                     Modifier
-                        .offset(x = tick.offsetDp.dp)
+                        .offset(x = (tick.offsetDp - halfSlot).dp)
+                        .width(GuideGeometry.DP_PER_30_MIN.dp)
                         .align(Alignment.CenterStart),
                 color = Color(TELLY_TEXT_MUTED),
                 fontSize = 13.sp,
+                textAlign = TextAlign.Center,
             )
         }
         GuideTimeline.nowLineOffset(controller.nowMs, controller.originMs, scrollX, viewport)?.let { nowX ->

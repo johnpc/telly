@@ -9,26 +9,39 @@ import androidx.compose.ui.unit.sp
 import androidx.tv.material3.Text
 import com.johncorser.telly.core.design.TELLY_TEXT_MUTED
 
-/** 17 sp semibold single-line programme title with TiviMate's fallback. */
+/**
+ * Semibold single-line programme title with TiviMate's fallback: 17 sp on
+ * the overlay/panel cards, 23 sp in the guide's info pane (uidump 24).
+ */
 @Composable
-fun TellyScreenProgramTitle(title: String?) {
+fun TellyScreenProgramTitle(
+    title: String?,
+    fontSize: TextUnit = 17.sp,
+) {
     Text(
         text = title ?: "No information",
         color = Color.White,
-        fontSize = 17.sp,
+        fontSize = fontSize,
         fontWeight = FontWeight.SemiBold,
         maxLines = 1,
         overflow = TextOverflow.Ellipsis,
     )
 }
 
-/** Plain white body text (group labels, glyph markers). */
+/** Plain white single-line text (group labels, glyph markers). */
 @Composable
 fun TellyScreenWhiteText(
     text: String,
     fontSize: TextUnit = 14.sp,
 ) {
-    Text(text = text, color = Color.White, fontSize = fontSize)
+    Text(
+        text = text,
+        color = Color.White,
+        fontSize = fontSize,
+        maxLines = 1,
+        softWrap = false,
+        overflow = TextOverflow.Clip,
+    )
 }
 
 /** Grey supporting text (times, descriptions, next-programme lines). */

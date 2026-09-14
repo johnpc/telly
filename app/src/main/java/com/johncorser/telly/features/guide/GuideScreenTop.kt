@@ -30,7 +30,7 @@ internal fun GuideScreenTop(
     Row(
         Modifier
             .fillMaxWidth()
-            .padding(start = 16.dp, top = 12.dp, end = 12.dp)
+            .padding(start = 16.dp, top = 12.dp, end = 24.dp)
             .height(180.dp),
     ) {
         PlayerScreenSurface(

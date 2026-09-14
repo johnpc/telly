@@ -62,6 +62,8 @@ class GuideController(
             .map(PanelRows::groupNames)
             .stateIn(scope, SharingStarted.Eagerly, PanelRows.groupNames(emptyList()))
 
+    val hint: StateFlow<Boolean> = GuideHint(env.store).startIn(scope)
+
     val info: StateFlow<GuideInfoData?> =
         combine(rows, focusEngine.focus) { list, focused -> GuideInfoBuilder.buildFor(list, focused, nowMs, zone) }
             .stateIn(scope, SharingStarted.Eagerly, null)

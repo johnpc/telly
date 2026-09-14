@@ -50,7 +50,7 @@ class GuideFocusEngineTest {
         engine.moveRight(rows)
 
         assertEquals("A2", title(engine.focus.value))
-        // A2 ends at 17:15 = x 880 > 770: the window pans right to show more.
+        // A2 ends at 17:15 = x 880 > the 690 viewport: the window pans right.
         assertEquals(880f - GuideGeometry.TIME_VIEWPORT_DP, engine.scrollX.value)
     }
 

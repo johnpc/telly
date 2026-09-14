@@ -10,8 +10,9 @@ data class GuideCellPlacement(
 /**
  * Cell layout math: startMs→x at 160 dp per 30 min, cells that started
  * before the window clamp to its left edge (uidump 24 row 2: a running
- * programme renders from x=380 with its label at the visible edge), and
- * widths clamp to the viewport so a long programme can't blow the row up.
+ * programme renders from the column edge x=540 with its label at the
+ * visible edge), and widths clamp to the viewport so a long programme
+ * can't blow the row up.
  */
 object GuideCellLayout {
     /** Smallest rendered width so a sliver of cell stays visible/legible. */

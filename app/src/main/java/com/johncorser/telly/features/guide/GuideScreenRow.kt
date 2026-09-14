@@ -25,13 +25,16 @@ import com.johncorser.telly.core.ui.TellyScreenLogoTile
  * One 39 dp grid row (uidump 24, 78 px pitch): number, 45×30 dp logo tile
  * and name in the fixed channel column, then the cell strip clipped to the
  * time viewport. The previewed channel's number/name go accent blue with a
- * ▶ marker.
+ * ▶ marker right-aligned at the column edge (capture 32). [dimFocus] drops
+ * the focused cell to the grey "selected" pill while the groups column
+ * owns the white focus (capture 25).
  */
 @Composable
 internal fun GuideScreenRow(
     row: GuideRow,
     focusedCell: GuideCell?,
     playing: Boolean,
+    dimFocus: Boolean,
     scrollXDp: Float,
     originMs: Long,
     nowMs: Long,
@@ -55,6 +58,7 @@ internal fun GuideScreenRow(
                         cell = cell,
                         placement = placement,
                         focused = cell.startMs == focusedCell?.startMs,
+                        dimFocus = dimFocus,
                         past = cell.endMs <= nowMs,
                     )
                 }
@@ -73,15 +77,16 @@ private fun GuideScreenChannelColumn(
         Modifier
             .width(GuideGeometry.CHANNEL_COLUMN_DP.dp)
             .fillMaxHeight()
-            .padding(start = 16.dp, end = 6.dp),
+            .padding(start = 16.dp, end = 10.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Text(
             text = row.displayNumber.toString(),
-            modifier = Modifier.width(26.dp),
+            modifier = Modifier.width(28.dp),
             color = if (playing) LocalAccentColor.current else Color(TELLY_TEXT_MUTED),
-            fontSize = 14.sp,
+            fontSize = 17.sp,
         )
+        Spacer(Modifier.width(8.dp))
         TellyScreenLogoTile(
             logoUrl = row.channel.source.logoUrl,
             name = row.channel.source.name,
@@ -93,7 +98,7 @@ private fun GuideScreenChannelColumn(
             text = row.channel.source.name,
             modifier = Modifier.weight(1f),
             color = nameColor,
-            fontSize = 14.sp,
+            fontSize = 16.sp,
             maxLines = 1,
             overflow = TextOverflow.Ellipsis,
         )

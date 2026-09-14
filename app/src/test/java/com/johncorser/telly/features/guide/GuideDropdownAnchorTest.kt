@@ -47,6 +47,6 @@ class GuideDropdownAnchorTest {
         val anchor = anchorFor(farRight, firstVisibleRow = 14)
 
         assertEquals(GuideGeometry.CHANNEL_COLUMN_DP + viewport - GuideDropdownAnchor.MENU_WIDTH_DP, anchor.xDp)
-        assertEquals(gridHeight - 200f, anchor.yDp)
+        assertEquals(gridHeight - 5 * GuideDropdownAnchor.MENU_ROW_DP, anchor.yDp)
     }
 }

@@ -10,6 +10,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import com.johncorser.telly.core.design.TELLY_ONBOARDING_BACKGROUND
@@ -44,7 +45,7 @@ fun GuideScreen(
                 Column(Modifier.fillMaxSize()) {
                     GuideScreenTop(controller, engine)
                     GuideScreenHeader(controller)
-                    GuideScreenGrid(controller, Modifier.weight(1f))
+                    GuideScreenGrid(controller, dimFocus = layer == GuideLayer.Groups, Modifier.weight(1f))
                 }
                 if (layer == GuideLayer.Grid) {
                     TellyScreenKeyAnchor { event -> mapGuideKey(event, detectors)?.let(controller::onKey) ?: false }
@@ -52,6 +53,7 @@ fun GuideScreen(
                 GuideScreenCellMenu(controller, layer)
             }
         }
+        GuideScreenHintToast(controller, Modifier.align(Alignment.BottomEnd))
         GuideScreenPaywallLayer(controller, layer)
     }
 }

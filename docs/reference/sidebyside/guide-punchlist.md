@@ -19,7 +19,10 @@ Colors sampled and matching the capture: screen bg `#131619`, cell
 `#A7A8A9`. Row pitch 78 px, 30 min = 320 px, dropdown anchored at the cell's
 left edge — all match uidump 24 / capture 27.
 
-## Visual deltas (logged, NOT fixed in this pass)
+## Visual deltas — ALL FIXED in round 2 (2026-09-13, evidence: `guide-round2/`)
+
+Round-2 uidump measurements against uidump 24/25 unless noted. All ten
+items below are FIXED; per-item resolution follows the table.
 
 | Sev | Item | telly | TiviMate reference |
 | --- | --- | --- | --- |
@@ -34,6 +37,37 @@ left edge — all match uidump 24 / capture 27.
 | P3 | Channel-name font | 33 px bounds (~16 sp) | 38 px bounds (~19 sp) (uidump 24) |
 | P3 | Dropdown metrics slightly off | 356 px wide, 80 px rows | 368 px wide, 78 px rows (capture 27) |
 | P3 | Nav rail (search/DVR/bookmark/settings icons at far left of the guide+groups view) | absent | present (captures 16/17/25) — separate slice, not part of the guide grid |
+
+### Round-2 resolutions
+
+| Sev | Item | Fix | Round-2 evidence |
+| --- | --- | --- | --- |
+| P1 | Channel column 190→270 dp | `GuideGeometry.CHANNEL_COLUMN_DP=270`, `TIME_VIEWPORT_DP=690`; column internals re-pinned (number [32,88], logo [104,194], name x=214) | `01-guide.png`; uidump: name `News One` [214,488], cells start x=540 — exact match to uidump 24 |
+| P2 | Info-pane title size | guide pane titles 23 sp via `TellyScreenProgramTitle(fontSize)` (overlay/panel keep 17 sp) | uidump: title [716,37][1520,91] → 54 px tall = ref [716,36][1812,90] |
+| P2 | Group label placement | times row is full-width; group name right-aligned 16 sp white | uidump: `News` right edge x=1872 = ref |
+| P2 | Double focus pill with groups open | grid drops to grey `TELLY_GUIDE_CELL_SELECTED` #424547 while `layer == Groups` | `02-groups.png` — one white pill (groups row) |
+| P2 | Groups column vertical alignment | guide passes `GroupColumnMetrics` (252 dp panel, 36 dp pills, 2.5 dp gap, 18 sp, top 213 dp) | uidump: Favorites [176,441], pitch 77 px = ref 25 (440/517/594/…) within 1 px |
+| P3 | Past-cell dimming | past cells keep `#1B1E21` fill; only text dims (35% white) | `GuideScreenCell` (visual spot-check `01-guide.png`) |
+| P3 | ► marker position | right-aligned at the column edge (name takes `weight(1)`); end padding 10 dp | `04-group-news.png` row 2, marker ≈ x=510-520 |
+| P3 | First-open hint toast | `GuideHint` (store-once flag + 15 s auto-hide) + `GuideScreenHintToast`, light #B5B7B9, bold key names, bottom-right | `01-guide.png`; box [1314,901][1887,1047] vs ref [1366,896][1888,1048] |
+| P3 | Channel-name font | name 16 sp (number 17 sp to match ref bounds) | uidump: name 38 px tall, number [32,487][88,527] = ref |
+| P3 | Dropdown metrics | `MENU_WIDTH_DP=184`, rows 39 dp | `03-dropdown.png`; uidump rows pitch 78 px, width 368 px |
+
+Also fixed while in there (needed for the 270 dp column to match): timeline
+labels are now centered on their half-hour tick in 160 dp slots (uidump 24:
+`02:30 PM` spans [380,700] straddling the x=540 tick; telly used to
+left-align labels at the tick). Round-2 uidump: `10:00 PM` [380,420][700,450].
+
+Residual (accepted): with groups open TiviMate keeps the guide pane at full
+width and lets the screen edge clip it, so its group label ("News") stays
+readable at x=1797; telly compresses the pane into the remaining width, so
+the right-aligned group label clips at x=1872. Revisit only if a later
+slice needs the overflow-pane model.
+
+Playback-overlay regression check after the shared-text changes
+(`TellyScreenProgramTitle`/`TellyScreenTimesLine`/`TellyScreenWhiteText`
+gained parameters, defaults unchanged): `05-overlay-regression.png` —
+identical to round4.
 
 ## Round-4 playback regression sweep post-merge (all match round4 evidence)
 

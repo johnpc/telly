@@ -27,6 +27,7 @@ import com.johncorser.telly.core.design.TELLY_NOW_LINE
 @Composable
 internal fun GuideScreenGrid(
     controller: GuideController,
+    dimFocus: Boolean,
     modifier: Modifier = Modifier,
 ) {
     val rows by controller.rows.collectAsState()
@@ -43,6 +44,7 @@ internal fun GuideScreenGrid(
                     row = row,
                     focusedCell = focus?.takeIf { it.rowIndex == index }?.cell,
                     playing = row.channel.id == preview?.id,
+                    dimFocus = dimFocus,
                     scrollXDp = scrollX,
                     originMs = controller.originMs,
                     nowMs = controller.nowMs,

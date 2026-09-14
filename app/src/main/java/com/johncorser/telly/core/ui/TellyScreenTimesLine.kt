@@ -25,9 +25,11 @@ fun TellyScreenTimesLine(
     range: String?,
     permille: Int,
     remaining: String?,
+    modifier: Modifier = Modifier,
     trailing: @Composable RowScope.() -> Unit = {},
 ) {
     Row(
+        modifier,
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(10.dp),
     ) {

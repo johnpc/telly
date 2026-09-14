@@ -18,29 +18,35 @@ import androidx.tv.material3.Text
 import com.johncorser.telly.core.design.TELLY_FOCUS_FILL
 import com.johncorser.telly.core.design.TELLY_FOCUS_TEXT
 import com.johncorser.telly.core.design.TELLY_GUIDE_CELL
+import com.johncorser.telly.core.design.TELLY_GUIDE_CELL_SELECTED
 import com.johncorser.telly.features.epg.ProgramTitle
 
 /**
  * One programme cell (uidump 24): rounded #1B1E21 pill with a 2 dp gap,
- * single-line ellipsized "Title: Subtitle" text, past programmes dimmed,
- * the focused cell the universal white pill; a cell that started before
- * the window clamps to its left edge so the label stays visible.
+ * single-line ellipsized "Title: Subtitle" text, past programmes keeping
+ * the cell fill with only their text dimmed (capture 24), the focused
+ * cell the universal white pill — or the grey "selected" pill while the
+ * groups column holds the white focus (capture 25, [dimFocus]); a cell
+ * that started before the window clamps to its left edge so the label
+ * stays visible.
  */
 @Composable
 internal fun GuideScreenCell(
     cell: GuideCell,
     placement: GuideCellPlacement,
     focused: Boolean,
+    dimFocus: Boolean,
     past: Boolean,
 ) {
     val container =
         when {
+            focused && dimFocus -> Color(TELLY_GUIDE_CELL_SELECTED)
             focused -> Color(TELLY_FOCUS_FILL)
-            past -> Color(TELLY_GUIDE_CELL).copy(alpha = 0.55f)
             else -> Color(TELLY_GUIDE_CELL)
         }
     val content =
         when {
+            focused && dimFocus -> Color.White
             focused -> Color(TELLY_FOCUS_TEXT)
             past -> Color.White.copy(alpha = 0.35f)
             else -> Color.White.copy(alpha = 0.9f)

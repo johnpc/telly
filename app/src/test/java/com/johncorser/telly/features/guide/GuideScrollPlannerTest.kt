@@ -18,7 +18,7 @@ class GuideScrollPlannerTest {
 
     @Test
     fun `a cell past the right edge scrolls its start into view`() {
-        // 17:30 starts at x=960 > viewport 770: align its end when it fits.
+        // 17:30 starts at x=960 > viewport 690: align its end when it fits.
         val ahead = cell(at(17, 30), at(18, 0))
 
         val target = GuideScrollPlanner.horizontalTarget(ahead, originMs, 0f, viewport)
