@@ -54,6 +54,68 @@ Feature: TV guide
     Then the "Sports Arena" row shows number 1
     And the groups column is dismissed
 
+  Scenario: Long-OK on a guide row opens the row context sheet over the grid
+    When I long-press ok
+    Then a right-side sheet opens with the guide grid still visible behind it
+    And I see the menu rows "Search" and "Settings"
+    And I see a blue programme section with "Open in external player", "Record", "Custom recording", "Add to My list" and "Program description"
+    And I see a blue "News One" section with "Add to Favorites", "Block channel", "Hide channel", "Assign EPG" and "Channel options"
+    And I see a blue "All channels" section with "Manage Favorites", "Manage blocking", "Manage visibility", "Reorder channels", "Copy channels", "Create group" and "Group options"
+    When I press back
+    Then the programme grid is focused again
+
+  Scenario: MENU opens the same row context sheet
+    When I press menu
+    Then I see the menu rows "Search" and "Settings"
+
+  Scenario: The sheet's favorites toggle relabels and its hide row removes the channel
+    When I long-press ok
+    And I select "Add to Favorites"
+    Then the programme grid is focused again
+    When I long-press ok
+    Then I see the menu row "Remove from Favorites"
+    When I press back
+    And I press dpad down
+    And I long-press ok
+    And I select "Hide channel"
+    Then the channel column no longer lists "News One HD"
+
+  Scenario: Premium sheet rows open the Unlock Premium screen and BACK pops back to the sheet
+    When I long-press ok
+    And I select "Record"
+    Then I see the "Unlock Premium" screen
+    When I press back
+    Then I see the menu rows "Search" and "Settings"
+
+  Scenario: Program description shows the focused programme's synopsis
+    When I long-press ok
+    And I select "Program description"
+    Then I see "All-new episode featuring special guests and exclusive behind-the-scenes footage."
+    When I press back
+    Then I see the menu rows "Search" and "Settings"
+
+  Scenario: The sheet's Search row opens the search screen
+    When I long-press ok
+    And I select "Search"
+    Then the query bar shows the hint "Speak to search"
+
+  Scenario: The sheet's Settings row opens the settings sheet
+    When I long-press ok
+    And I select "Settings"
+    Then I see "All features are available in Premium version"
+    And I see the sections "General, Playlists, EPG, Appearance, Playback, Remote control, Parental controls, Other, About" in order
+
+  Scenario: Channel options pushes the locked premium pane and BACK pops one level
+    When I long-press ok
+    And I select "Channel options"
+    Then a right pane titled "News One" opens
+    And I see "All features are available in Premium version"
+    And the locked rows list "Channel name", "Restore channel name", "Channel names editor", "Audio decoder", "Video decoder", "Use external player", "EPG time offset, h:min", "Block channel" and "Hide channel"
+    When I press back
+    Then I see the menu rows "Search" and "Settings"
+    When I press back
+    Then the programme grid is focused again
+
   Scenario: BACK at the guide root exits the app without confirmation
     When I press back
     Then telly exits to the launcher
