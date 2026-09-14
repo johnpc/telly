@@ -1,5 +1,7 @@
 package com.johncorser.telly.features.playback
 
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.core.MutableTransitionState
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxHeight
@@ -12,6 +14,7 @@ import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -29,7 +32,11 @@ import com.johncorser.telly.core.ui.TellyScreenMenuRow
  * wide, 8 dp off the screen's top/right edge, 40 dp row pitch, the focus
  * pill inset 8 dp from the sheet edges; blue section headers. The first
  * row takes focus like TiviMate's Search row, unless [restore] re-lands
- * focus on the row whose pushed screen was just popped by BACK.
+ * focus on the row whose pushed screen was just popped by BACK. The sheet
+ * enters with the reference's decelerating fade + 5 dp slide-in from the
+ * right (ref-round6 §A, [playerMenuSheetEnter]); its close is an instant
+ * cut — the host just stops composing it — with only the backdrop scrim
+ * ([PlaybackScreenMenuScrim], owned by the hosts) fading back out.
  */
 @Composable
 internal fun PlaybackScreenMenu(
@@ -46,29 +53,32 @@ internal fun PlaybackScreenMenu(
         val index = PlayerMenu.flatIndexOf(sections, target)
         if (listState.layoutInfo.visibleItemsInfo.none { it.index == index }) listState.scrollToItem(index)
     }
+    val entrance = remember { MutableTransitionState(false).apply { targetState = true } }
     Box(Modifier.fillMaxSize(), contentAlignment = Alignment.TopEnd) {
-        LazyColumn(
-            Modifier
-                .padding(top = 8.dp, end = 8.dp, bottom = 8.dp)
-                .width(256.dp)
-                .fillMaxHeight()
-                .clip(RoundedCornerShape(4.dp))
-                .background(Color(TELLY_MENU_SHEET)),
-            state = listState,
-        ) {
-            sections.forEach { section ->
-                section.header?.let { header ->
-                    item { PlaybackScreenMenuHeader(header) }
-                }
-                items(section.items) { menuItem ->
-                    TellyScreenMenuRow(
-                        label = menuItem.labelFor(favorite),
-                        onClick = { onItem(menuItem) },
-                        modifier = Modifier.padding(horizontal = 8.dp),
-                        icon = menuIcon(menuItem),
-                        height = 40.dp,
-                        requestFocus = menuItem == target,
-                    )
+        AnimatedVisibility(visibleState = entrance, enter = playerMenuSheetEnter()) {
+            LazyColumn(
+                Modifier
+                    .padding(top = 8.dp, end = 8.dp, bottom = 8.dp)
+                    .width(256.dp)
+                    .fillMaxHeight()
+                    .clip(RoundedCornerShape(4.dp))
+                    .background(Color(TELLY_MENU_SHEET)),
+                state = listState,
+            ) {
+                sections.forEach { section ->
+                    section.header?.let { header ->
+                        item { PlaybackScreenMenuHeader(header) }
+                    }
+                    items(section.items) { menuItem ->
+                        TellyScreenMenuRow(
+                            label = menuItem.labelFor(favorite),
+                            onClick = { onItem(menuItem) },
+                            modifier = Modifier.padding(horizontal = 8.dp),
+                            icon = menuIcon(menuItem),
+                            height = 40.dp,
+                            requestFocus = menuItem == target,
+                        )
+                    }
                 }
             }
         }
