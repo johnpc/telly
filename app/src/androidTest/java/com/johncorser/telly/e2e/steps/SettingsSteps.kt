@@ -126,10 +126,14 @@ class SettingsSteps(
 
     @Then("the playlists section lists {string}")
     fun playlistsSectionLists(name: String) {
-        if (world.nodeCount(hasText("Add playlist")) == 0) {
-            world.pressKey(KeyEvent.KEYCODE_BACK)
+        driver.awaitCondition("back at the Playlists pane") {
+            if (world.nodeCount(hasText("Add playlist")) > 0) {
+                true
+            } else {
+                world.pressKey(KeyEvent.KEYCODE_BACK)
+                false
+            }
         }
-        world.waitForText("Add playlist")
         world.waitForText(name)
     }
 

@@ -94,6 +94,7 @@ class CommonSteps(
         if (world.nodeCount(setTextNodes()) > 0) {
             world.compose.onAllNodes(setTextNodes()).onFirst().performTextReplacement(text)
             world.compose.onAllNodes(setTextNodes()).onFirst().performImeAction()
+            driver.awaitCondition("IME hidden") { !world.imeVisible() }
             world.compose.waitForIdle()
         } else {
             driver.typeIntoEditor(text)

@@ -3,9 +3,11 @@ package com.johncorser.telly.e2e
 import android.content.Context
 import android.os.SystemClock
 import android.view.KeyEvent
+import android.view.WindowInsets
 import androidx.compose.ui.semantics.SemanticsActions
 import androidx.compose.ui.test.SemanticsMatcher
 import androidx.compose.ui.test.SemanticsNodeInteraction
+import androidx.compose.ui.test.hasContentDescription
 import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.isFocused
 import androidx.compose.ui.test.junit4.ComposeTestRule
@@ -157,11 +159,21 @@ class TellyWorld(
     }
 
     fun focus(text: String) {
-        val focusable = hasText(text) and SemanticsMatcher.keyIsDefined(SemanticsActions.RequestFocus)
+        val labelled = hasText(text).or(hasContentDescription(text))
+        val focusable = labelled and SemanticsMatcher.keyIsDefined(SemanticsActions.RequestFocus)
         waitFor(focusable)
         focusedNodeOrNull(focusable)?.let { return }
         compose.onAllNodes(focusable).onFirst().performSemanticsAction(SemanticsActions.RequestFocus)
         waitFor(focusable and isFocused())
+    }
+
+    /** True while the soft keyboard covers the activity (first IME show lags). */
+    fun imeVisible(): Boolean {
+        var visible = false
+        scenario?.onActivity { activity ->
+            visible = activity.window.decorView.rootWindowInsets?.isVisible(WindowInsets.Type.ime()) == true
+        }
+        return visible
     }
 
     private fun focusedNodeOrNull(matcher: SemanticsMatcher): SemanticsNodeInteraction? =

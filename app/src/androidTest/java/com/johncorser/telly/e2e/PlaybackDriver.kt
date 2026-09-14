@@ -62,11 +62,15 @@ class PlaybackDriver(
         }
         onView(editor).perform(pressImeActionButton())
         // The IME NEXT action commits and closes the inline editor; wait for
-        // the EditText to leave the hierarchy so the next D-pad press cannot
-        // land on it while view focus settles back on the compose tree.
+        // the EditText to leave the hierarchy AND the keyboard window to be
+        // fully gone, so the next D-pad press cannot be swallowed while view
+        // focus settles back on the compose tree (the first IME show/hide of
+        // a process is slow enough to eat the following key otherwise).
         awaitCondition("inline editor closed") {
             runCatching { onView(editor).check(doesNotExist()) }.isSuccess
         }
+        awaitCondition("IME hidden") { !world.imeVisible() }
+        SystemClock.sleep(IME_SETTLE_MS)
         world.compose.waitForIdle()
     }
 
@@ -194,6 +198,7 @@ class PlaybackDriver(
         private const val LONG_TIMEOUT_MS = 60_000L
         private const val MAX_BACK_PRESSES = 6
         private const val SETTLE_MS = 400L
+        private const val IME_SETTLE_MS = 500L
         private const val POLL_MS = 250L
     }
 }
