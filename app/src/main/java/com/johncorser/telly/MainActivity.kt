@@ -5,8 +5,11 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.lifecycle.lifecycleScope
 import com.johncorser.telly.core.ServiceLocator
+import com.johncorser.telly.core.guideDeps
 import com.johncorser.telly.core.navigation.Navigator
 import com.johncorser.telly.core.navigation.Route
+import com.johncorser.telly.core.playbackDeps
+import com.johncorser.telly.core.searchDeps
 import com.johncorser.telly.core.settings.ParentalControls
 import com.johncorser.telly.core.settings.TellySettings
 import com.johncorser.telly.features.onboarding.StartRoute
@@ -35,6 +38,7 @@ class MainActivity : ComponentActivity() {
                 playbackDeps = ServiceLocator.playbackDeps(this),
                 guideDeps = ServiceLocator.guideDeps(this),
                 settingsGraph = settingsGraph(),
+                searchDeps = ServiceLocator.searchDeps(this),
             )
         }
     }

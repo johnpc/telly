@@ -25,6 +25,7 @@ import com.johncorser.telly.features.player.PlayerScreenSurface
 fun PlaybackScreen(
     deps: PlaybackDeps,
     onExitToGuide: () -> Unit = {},
+    onOpenSearch: () -> Unit = {},
 ) {
     val scope = rememberCoroutineScope()
     val engine = remember { deps.engineFactory() }
@@ -41,6 +42,7 @@ fun PlaybackScreen(
                     ),
                 scope = scope,
                 onExitToGuide = onExitToGuide,
+                openSearch = onOpenSearch,
             )
         }
     DisposableEffect(Unit) { onDispose { viewModel.close() } }

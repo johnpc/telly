@@ -76,7 +76,7 @@ jobs:
       matrix:
         # One entry per e2e feature area. scripts/check-feature-coverage.mjs
         # enforces that every e2e/features/**/*.feature file is listed here.
-        feature: [add-playlist, epg-data, watch-and-zap, channel-panel, settings, tv-guide]
+        feature: [add-playlist, epg-data, watch-and-zap, channel-panel, settings, tv-guide, search]
     steps:
       - uses: actions/checkout@v4
 

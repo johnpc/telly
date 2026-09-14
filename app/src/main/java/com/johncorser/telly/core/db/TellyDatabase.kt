@@ -10,6 +10,7 @@ import com.johncorser.telly.features.playlist.db.ChannelDao
 import com.johncorser.telly.features.playlist.db.ChannelEntity
 import com.johncorser.telly.features.playlist.db.PlaylistDao
 import com.johncorser.telly.features.playlist.db.PlaylistEntity
+import com.johncorser.telly.features.search.db.SearchDao
 
 /** The single app database; schema JSON is exported to app/schemas. */
 @Database(
@@ -23,6 +24,8 @@ abstract class TellyDatabase : RoomDatabase() {
     abstract fun channelDao(): ChannelDao
 
     abstract fun programDao(): ProgramDao
+
+    abstract fun searchDao(): SearchDao
 
     companion object {
         /** v2 adds the programme `<sub-title>` column (round3 P0 item 1). */

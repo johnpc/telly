@@ -19,4 +19,7 @@ sealed interface Route {
 
     /** The TV guide: preview window + info pane over the programme grid. */
     data object Guide : Route
+
+    /** TiviMate-style search screen (catalogue §4, captures 49-51). */
+    data object Search : Route
 }

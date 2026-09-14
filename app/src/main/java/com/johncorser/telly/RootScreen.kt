@@ -19,6 +19,7 @@ import com.johncorser.telly.core.ui.ProvideAccentColor
 import com.johncorser.telly.features.guide.GuideDeps
 import com.johncorser.telly.features.playback.PlaybackDeps
 import com.johncorser.telly.features.playlist.PlaylistRepository
+import com.johncorser.telly.features.search.SearchDeps
 import com.johncorser.telly.features.settings.SettingsGraph
 import com.johncorser.telly.features.settings.SettingsScreenHost
 
@@ -31,6 +32,7 @@ fun RootScreen(
     playbackDeps: PlaybackDeps,
     guideDeps: GuideDeps,
     settingsGraph: SettingsGraph,
+    searchDeps: SearchDeps,
 ) {
     val stack by navigator.stack.collectAsState()
     val route = stack.last()
@@ -49,7 +51,16 @@ fun RootScreen(
                 ),
         ) {
             Box(Modifier.fillMaxSize()) {
-                RootScreenRoutes(baseRoute, settingsOpen, navigator, repository, fetchPlaylist, playbackDeps, guideDeps)
+                RootScreenRoutes(
+                    baseRoute,
+                    settingsOpen,
+                    navigator,
+                    repository,
+                    fetchPlaylist,
+                    playbackDeps,
+                    guideDeps,
+                    searchDeps,
+                )
                 if (settingsOpen) {
                     SettingsScreenHost(
                         graph = settingsGraph,

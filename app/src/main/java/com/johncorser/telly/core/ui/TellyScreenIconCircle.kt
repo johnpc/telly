@@ -11,6 +11,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import androidx.tv.material3.ClickableSurfaceColors
 import androidx.tv.material3.ClickableSurfaceDefaults
 import androidx.tv.material3.Icon
 import androidx.tv.material3.Surface
@@ -27,13 +28,14 @@ fun TellyScreenIconCircle(
     modifier: Modifier = Modifier,
     size: Dp = 40.dp,
     iconSize: Dp = 22.dp,
+    colors: ClickableSurfaceColors = FocusScreenDefaults.colors(restingContainer = Color.Transparent),
 ) {
     Surface(
         onClick = onClick,
         modifier = modifier.size(size),
         shape = ClickableSurfaceDefaults.shape(shape = CircleShape),
         scale = FocusScreenDefaults.scale(),
-        colors = FocusScreenDefaults.colors(restingContainer = Color.Transparent),
+        colors = colors,
     ) {
         Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
             Icon(

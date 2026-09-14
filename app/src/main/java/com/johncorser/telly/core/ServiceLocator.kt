@@ -11,9 +11,6 @@ import com.johncorser.telly.core.settings.TellySettings
 import com.johncorser.telly.features.epg.EpgRefresher
 import com.johncorser.telly.features.epg.EpgRepository
 import com.johncorser.telly.features.epg.RefreshScheduler
-import com.johncorser.telly.features.guide.GuideDeps
-import com.johncorser.telly.features.playback.PlaybackDeps
-import com.johncorser.telly.features.player.Media3PlayerEngine
 import com.johncorser.telly.features.playlist.PlaylistRepository
 import com.johncorser.telly.features.playlist.RoomPlaylistRepository
 import com.johncorser.telly.core.settings.SharedPrefsKeyValueStore as SettingsPrefsStore
@@ -35,12 +32,20 @@ object ServiceLocator {
 
     fun database(context: Context): TellyDatabase =
         database ?: synchronized(this) {
-            database ?: buildDatabase(context).also { database = it }
+            database ?: Room
+                .databaseBuilder(context.applicationContext, TellyDatabase::class.java, DATABASE_NAME)
+                .addMigrations(TellyDatabase.MIGRATION_1_2)
+                .build()
+                .also { database = it }
         }
 
     fun settingsRepository(context: Context): SettingsRepository =
         settings ?: synchronized(this) {
-            settings ?: buildSettings(context).also { settings = it }
+            settings ?: SettingsRepository(
+                SettingsPrefsStore(
+                    context.applicationContext.getSharedPreferences(SETTINGS_PREFS_NAME, Context.MODE_PRIVATE),
+                ),
+            ).also { settings = it }
         }
 
     fun playlistRepository(context: Context): PlaylistRepository = RoomPlaylistRepository(database(context), clock)
@@ -73,39 +78,11 @@ object ServiceLocator {
         )
     }
 
-    private fun buildSettings(context: Context): SettingsRepository =
-        SettingsRepository(
-            SettingsPrefsStore(
-                context.applicationContext.getSharedPreferences(SETTINGS_PREFS_NAME, Context.MODE_PRIVATE),
-            ),
-        )
-
     fun keyValueStore(context: Context): KeyValueStore =
         SharedPrefsKeyValueStore(context.applicationContext.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE))
 
-    fun playbackDeps(context: Context): PlaybackDeps =
-        PlaybackDeps(
-            channelDao = database(context).channelDao(),
-            epgRepository = epgRepository(context),
-            keyValueStore = keyValueStore(context),
-            engineFactory = { Media3PlayerEngine.create(context.applicationContext) },
-            clock = clock,
-        )
-
-    /** Guide slice = the playback bundle + the settings the grid honors. */
-    fun guideDeps(context: Context): GuideDeps =
-        GuideDeps(
-            playback = playbackDeps(context),
-            pastDays = { settingsRepository(context).get(TellySettings.EPG_PAST_DAYS_TO_KEEP) },
-        )
-
     private const val PREFS_NAME = "telly"
 
-    private val clock: () -> Long = { System.currentTimeMillis() }
-
-    private fun buildDatabase(context: Context): TellyDatabase =
-        Room
-            .databaseBuilder(context.applicationContext, TellyDatabase::class.java, DATABASE_NAME)
-            .addMigrations(TellyDatabase.MIGRATION_1_2)
-            .build()
+    /** The one wall clock; feature dep bundles (ServiceLocatorDeps) inject it. */
+    internal val clock: () -> Long = { System.currentTimeMillis() }
 }

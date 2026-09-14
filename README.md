@@ -18,6 +18,7 @@ M3U playlist and XMLTV guide, get a fast, gorgeous, remote-first live-TV UI.
 | --- | :---: |
 | Live playback (Media3, HLS/TS) | ✅ |
 | Channel list panel | ✅ |
+| Search (channels + programmes) | ✅ |
 | EPG guide (XMLTV) | ✅ |
 | TV guide grid (timeline, preview, two-stage tune) | ✅ |
 | Archive / catch-up | ⬜ |

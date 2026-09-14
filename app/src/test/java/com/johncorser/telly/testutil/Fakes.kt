@@ -13,6 +13,7 @@ import com.johncorser.telly.features.playlist.db.ChannelEntity
 import com.johncorser.telly.features.playlist.db.ChannelFlags
 import com.johncorser.telly.features.playlist.db.ChannelGroupCount
 import com.johncorser.telly.features.playlist.db.ChannelSource
+import com.johncorser.telly.features.search.db.SearchDao
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.map
@@ -108,6 +109,55 @@ class FakeProgramDao(
     }
 
     override suspend fun count(): Int = programs.value.size
+}
+
+/** In-memory [SearchDao] over the channel/programme fakes. */
+class FakeSearchDao(
+    private val channelDao: FakeChannelDao,
+    private val programDao: FakeProgramDao,
+) : SearchDao {
+    override suspend fun channels(
+        nameLike: String,
+        numberLike: String,
+    ): List<ChannelEntity> =
+        channelDao.channels.value
+            .filter { !it.flags.hidden }
+            .filter { sqlLike(nameLike, it.source.name) || sqlLike(numberLike, it.number.toString()) }
+            .sortedBy { it.number }
+
+    override suspend fun programs(
+        titleLike: String,
+        atMs: Long,
+        limit: Int,
+    ): List<ProgramEntity> =
+        programDao.programs.value
+            .filter { it.endMs > atMs && sqlLike(titleLike, it.details.title) }
+            .sortedWith(compareBy({ it.startMs }, { it.channelTvgId }))
+            .take(limit)
+}
+
+/** Minimal SQLite LIKE (ESCAPE '\') emulation so fakes match the real DAOs. */
+fun sqlLike(
+    pattern: String,
+    value: String,
+): Boolean {
+    val regex =
+        buildString {
+            var i = 0
+            while (i < pattern.length) {
+                when (val c = pattern[i]) {
+                    '\\' -> {
+                        append(Regex.escape(pattern[i + 1].toString()))
+                        i++
+                    }
+                    '%' -> append(".*")
+                    '_' -> append(".")
+                    else -> append(Regex.escape(c.toString()))
+                }
+                i++
+            }
+        }
+    return Regex(regex, RegexOption.IGNORE_CASE).matches(value)
 }
 
 /** Recording [PlayerEngine] fake: no Media3, just observable state. */
