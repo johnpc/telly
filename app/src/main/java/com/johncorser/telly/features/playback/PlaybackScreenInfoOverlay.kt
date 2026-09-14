@@ -50,7 +50,7 @@ internal fun PlaybackScreenInfoOverlay(
         Spacer(Modifier.height(30.dp))
         Box(Modifier.fillMaxWidth()) {
             PlaybackScreenCards(
-                onGuide = { viewModel.openPanel() },
+                onGuide = { viewModel.exitToGuide() },
                 onHistory = { viewModel.showComingSoon(historyLabel) },
             )
             // The chevron sits centered at y≈1036 px, overlapping the card

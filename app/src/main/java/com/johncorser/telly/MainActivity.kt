@@ -33,6 +33,7 @@ class MainActivity : ComponentActivity() {
                 repository = repository,
                 fetchPlaylist = fetcher::fetch,
                 playbackDeps = ServiceLocator.playbackDeps(this),
+                guideDeps = ServiceLocator.guideDeps(this),
                 settingsGraph = settingsGraph(),
             )
         }

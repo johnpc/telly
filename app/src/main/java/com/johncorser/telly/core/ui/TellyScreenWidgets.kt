@@ -69,10 +69,11 @@ fun TellyScreenLogoTile(
     name: String,
     size: Dp,
     modifier: Modifier = Modifier,
+    width: Dp = size,
 ) {
     Box(
         modifier
-            .size(size)
+            .size(width = width, height = size)
             .clip(RoundedCornerShape(4.dp))
             .background(Color(TELLY_LOGO_TILE)),
         contentAlignment = Alignment.Center,

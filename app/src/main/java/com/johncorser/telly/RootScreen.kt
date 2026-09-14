@@ -17,6 +17,8 @@ import com.johncorser.telly.core.navigation.Navigator
 import com.johncorser.telly.core.navigation.Route
 import com.johncorser.telly.core.ui.ProvideAccentColor
 import com.johncorser.telly.core.ui.ScreenCrossfade
+import com.johncorser.telly.features.guide.GuideDeps
+import com.johncorser.telly.features.guide.GuideScreen
 import com.johncorser.telly.features.onboarding.WelcomeScreen
 import com.johncorser.telly.features.onboarding.WizardScreen
 import com.johncorser.telly.features.playback.PlaybackDeps
@@ -32,6 +34,7 @@ fun RootScreen(
     repository: PlaylistRepository,
     fetchPlaylist: suspend (String) -> String,
     playbackDeps: PlaybackDeps,
+    guideDeps: GuideDeps,
     settingsGraph: SettingsGraph,
 ) {
     val stack by navigator.stack.collectAsState()
@@ -66,7 +69,19 @@ fun RootScreen(
                             onExit = { navigator.pop() },
                             onComplete = { navigator.replaceAll(Route.Playback) },
                         )
-                    Route.Playback -> PlaybackScreen(playbackDeps)
+                    // BACK/TV-guide card leave playback for the guide as its
+                    // new root: BACK at guide root then exits the app with no
+                    // confirmation, the device-verified free-tier BACK chain.
+                    Route.Playback ->
+                        PlaybackScreen(
+                            deps = playbackDeps,
+                            onExitToGuide = { navigator.replaceAll(Route.Guide) },
+                        )
+                    Route.Guide ->
+                        GuideScreen(
+                            deps = guideDeps,
+                            onFullscreen = { navigator.push(Route.Playback) },
+                        )
                 }
             }
         }

@@ -14,13 +14,14 @@ class PlaybackCommands(
     private val panel: PanelViewModel,
     private val instant: MutableStateFlow<Long>,
     private val clock: () -> Long,
+    private val exitToGuide: () -> Unit,
 ) {
     fun execute(command: PlaybackCommand) {
         when (command) {
             PlaybackCommand.ShowInfo -> showInfo()
             PlaybackCommand.ShowTransport ->
                 overlays.showAutoHiding(PlaybackOverlay.InfoTransport, PlaybackViewModel.INFO_OVERLAY_TIMEOUT_MS)
-            PlaybackCommand.OpenPanelAtCurrent -> openPanel()
+            PlaybackCommand.ExitToGuide -> exitToGuide()
             is PlaybackCommand.Zap -> zap(command.delta)
             PlaybackCommand.OpenQuickBar ->
                 overlays.showAutoHiding(PlaybackOverlay.QuickBar, PlaybackViewModel.QUICK_BAR_TIMEOUT_MS)
@@ -29,7 +30,7 @@ class PlaybackCommands(
         }
     }
 
-    /** The overlay's "TV guide" card / BACK open the panel at the tuned row. */
+    /** The quick-bar's Channels list opens the panel at the tuned row. */
     fun openPanel() {
         panel.openFocusedOn(tuner.current.value?.id)
         overlays.set(PlaybackOverlay.Panel)

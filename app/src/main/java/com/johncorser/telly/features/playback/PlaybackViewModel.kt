@@ -31,6 +31,7 @@ class PlaybackEnv(
 class PlaybackViewModel(
     env: PlaybackEnv,
     scope: CoroutineScope,
+    onExitToGuide: () -> Unit = {},
 ) {
     private val clock = env.clock
 
@@ -55,7 +56,7 @@ class PlaybackViewModel(
         tuner.start()
     }
 
-    private val commands = PlaybackCommands(tuner, overlays, panel, instant, clock)
+    private val commands = PlaybackCommands(tuner, overlays, panel, instant, clock, onExitToGuide)
 
     /** Routes a key through the catalogue's key-by-context map; true = consumed. */
     fun onKey(key: PlaybackKey): Boolean {
@@ -86,7 +87,10 @@ class PlaybackViewModel(
 
     fun close() = tuner.release()
 
-    /** The overlay's "TV guide" card opens the panel at the tuned row. */
+    /** BACK at bare playback + the overlay's TV-guide card both leave here. */
+    val exitToGuide: () -> Unit = onExitToGuide
+
+    /** The quick-bar's Channels list opens the panel at the tuned row. */
     fun openPanel() = commands.openPanel()
 
     companion object {

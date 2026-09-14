@@ -13,6 +13,7 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.key.onPreviewKeyEvent
+import com.johncorser.telly.core.input.HoldKeyDetector
 import com.johncorser.telly.features.player.PlayerScreenSurface
 
 /**
@@ -21,7 +22,10 @@ import com.johncorser.telly.features.player.PlayerScreenSurface
  * catalogue key map.
  */
 @Composable
-fun PlaybackScreen(deps: PlaybackDeps) {
+fun PlaybackScreen(
+    deps: PlaybackDeps,
+    onExitToGuide: () -> Unit = {},
+) {
     val scope = rememberCoroutineScope()
     val engine = remember { deps.engineFactory() }
     val viewModel =
@@ -36,11 +40,12 @@ fun PlaybackScreen(deps: PlaybackDeps) {
                         clock = deps.clock,
                     ),
                 scope = scope,
+                onExitToGuide = onExitToGuide,
             )
         }
     DisposableEffect(Unit) { onDispose { viewModel.close() } }
     val overlay by viewModel.overlay.collectAsState()
-    val previewDetector = remember { OkLongPressDetector() }
+    val previewDetector = remember { HoldKeyDetector(PlaybackKey.OK, PlaybackKey.LONG_OK) }
     BackHandler { viewModel.onKey(PlaybackKey.BACK) }
     Box(
         Modifier

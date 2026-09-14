@@ -41,6 +41,15 @@ class TuneController(
         }
     }
 
+    /** Tunes only the stored last-watched channel (guide preview resume). */
+    fun resumeStored() {
+        scope.launch {
+            val list = channels.first { it.isNotEmpty() }
+            val storedId = store.getLong(LAST_CHANNEL_KEY) ?: return@launch
+            list.firstOrNull { it.id == storedId }?.let(::tune)
+        }
+    }
+
     fun tune(channel: ChannelEntity) {
         mutableCurrent.value = channel
         engine.load(channel.source.streamUrl)

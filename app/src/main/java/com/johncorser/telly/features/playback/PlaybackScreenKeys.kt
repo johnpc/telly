@@ -1,32 +1,20 @@
 package com.johncorser.telly.features.playback
 
-import androidx.compose.foundation.focusable
-import androidx.compose.foundation.layout.Box
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.remember
-import androidx.compose.ui.Modifier
-import androidx.compose.ui.focus.FocusRequester
-import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.input.key.Key
 import androidx.compose.ui.input.key.KeyEvent
 import androidx.compose.ui.input.key.KeyEventType
 import androidx.compose.ui.input.key.key
-import androidx.compose.ui.input.key.onKeyEvent
 import androidx.compose.ui.input.key.type
+import com.johncorser.telly.core.input.HoldKeyDetector
+import com.johncorser.telly.core.ui.TellyScreenKeyAnchor
 
 /** Invisible focus holder that turns raw key events into [PlaybackKey]s. */
 @Composable
 internal fun PlaybackScreenKeyAnchor(onKey: (PlaybackKey) -> Boolean) {
-    val focusRequester = remember { FocusRequester() }
-    val detector = remember { OkLongPressDetector() }
-    LaunchedEffect(Unit) { focusRequester.requestFocus() }
-    Box(
-        Modifier
-            .focusRequester(focusRequester)
-            .focusable()
-            .onKeyEvent { event -> mapKeyEvent(event, detector)?.let(onKey) ?: false },
-    )
+    val detector = remember { HoldKeyDetector(PlaybackKey.OK, PlaybackKey.LONG_OK) }
+    TellyScreenKeyAnchor { event -> mapKeyEvent(event, detector)?.let(onKey) ?: false }
 }
 
 /**
@@ -38,7 +26,7 @@ internal fun onPreviewKey(
     event: KeyEvent,
     overlay: PlaybackOverlay,
     viewModel: PlaybackViewModel,
-    detector: OkLongPressDetector,
+    detector: HoldKeyDetector<PlaybackKey>,
 ): Boolean {
     if (event.type == KeyEventType.KeyDown) viewModel.onOverlayInteraction()
     if (overlay != PlaybackOverlay.Info && overlay != PlaybackOverlay.InfoTransport) return false
@@ -54,7 +42,7 @@ internal fun onPreviewKey(
 private fun onPreviewCenter(
     event: KeyEvent,
     viewModel: PlaybackViewModel,
-    detector: OkLongPressDetector,
+    detector: HoldKeyDetector<PlaybackKey>,
 ): Boolean {
     if (event.type != KeyEventType.KeyDown) return detector.onUp() == null
     detector.onDown(event.nativeKeyEvent.repeatCount)?.let(viewModel::onKey)
@@ -71,7 +59,7 @@ private fun previewKeyOf(key: Key): PlaybackKey =
 
 private fun mapKeyEvent(
     event: KeyEvent,
-    detector: OkLongPressDetector,
+    detector: HoldKeyDetector<PlaybackKey>,
 ): PlaybackKey? {
     val down = event.type == KeyEventType.KeyDown
     return when (event.key) {

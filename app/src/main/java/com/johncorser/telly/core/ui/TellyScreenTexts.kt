@@ -22,6 +22,15 @@ fun TellyScreenProgramTitle(title: String?) {
     )
 }
 
+/** Plain white body text (group labels, glyph markers). */
+@Composable
+fun TellyScreenWhiteText(
+    text: String,
+    fontSize: TextUnit = 14.sp,
+) {
+    Text(text = text, color = Color.White, fontSize = fontSize)
+}
+
 /** Grey supporting text (times, descriptions, next-programme lines). */
 @Composable
 fun TellyScreenMutedText(

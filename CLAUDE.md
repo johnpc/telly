@@ -159,3 +159,36 @@ Local SDK note: `local.properties` must contain
   ARGB. `RefreshScheduler` now takes an interval *provider* (settings-driven,
   0 = "None" = only never-fetched data is due) and `EpgRefresher` trims
   programmes past the "Past days to keep EPG" horizon after every run.
+- **2026-09-13** TV-guide grid engine is pure logic + thin Compose: the grid
+  renders NO focusable cells. A single invisible key anchor feeds
+  `GuideController`, whose `GuideFocusEngine`/`GuideFocusNav`/
+  `GuideScrollPlanner` own focus + the one horizontal scroll offset that the
+  timeline header and every row pan from in lockstep (160 dp per 30 min,
+  190 dp channel column, 39 dp rows — uidump 24). Overlaid layers (groups
+  column, cell dropdown, paywall) use regular Compose focus and only close
+  keys route through `GuideKeyPolicy`. Cells materialize per row via
+  `GuideCellLayout` over a `ProgramDao.observeWindow` span quantized to the
+  30-min grid (+3 h prefetch); EPG gaps become 30-min "No information"
+  filler cells.
+- **2026-09-13** Guide semantics, per catalogue §2 + device answers: OK on an
+  airing cell = two-stage (tune preview → fullscreen push); OK on any
+  non-airing cell = anchored dropdown (Remind/Record/Custom recording/Add to
+  My list/Program description), every row opening the shared Unlock Premium
+  screen (capture 31); LEFT at the window's left edge = groups column with
+  per-group renumbering from 1; UP/DOWN keep the focused time anchor
+  (standard TiviMate feel; not capture-verifiable); plain LEFT/RIGHT never
+  pan left of "now" (capture 25 reached groups with one LEFT despite 6 h of
+  past EPG); long-LEFT/RIGHT jump ±24 h (the hint toast's "navigate to past
+  programs"; emulator-inconclusive, clamped to the "Past days to keep EPG"
+  setting). No elapsed fill on the current cell — the device answers verify
+  progress is conveyed only by the now-line + info-pane pill.
+- **2026-09-13** BACK chain now matches the device-verified free build:
+  bare-playback BACK and the info overlay's TV-guide card both
+  `replaceAll(Route.Guide)` (the guide is always the stack root when
+  visible), stage-two OK pushes `Route.Playback`, and BACK at guide root
+  exits the app with no confirmation (the guide's BackHandler is disabled at
+  the grid layer). The panel stays on UP/overlay keys. Cold start still
+  lands on playback per the watch-and-zap spec; the guide therefore always
+  resumes the last-watched channel in its preview window.
+  `OkLongPressDetector` generalized into `core/input/HoldKeyDetector<T>` so
+  LEFT/RIGHT holds can drive day jumps without duplicate detector code.

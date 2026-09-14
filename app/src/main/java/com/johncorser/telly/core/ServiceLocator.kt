@@ -11,6 +11,7 @@ import com.johncorser.telly.core.settings.TellySettings
 import com.johncorser.telly.features.epg.EpgRefresher
 import com.johncorser.telly.features.epg.EpgRepository
 import com.johncorser.telly.features.epg.RefreshScheduler
+import com.johncorser.telly.features.guide.GuideDeps
 import com.johncorser.telly.features.playback.PlaybackDeps
 import com.johncorser.telly.features.player.Media3PlayerEngine
 import com.johncorser.telly.features.playlist.PlaylistRepository
@@ -89,6 +90,13 @@ object ServiceLocator {
             keyValueStore = keyValueStore(context),
             engineFactory = { Media3PlayerEngine.create(context.applicationContext) },
             clock = clock,
+        )
+
+    /** Guide slice = the playback bundle + the settings the grid honors. */
+    fun guideDeps(context: Context): GuideDeps =
+        GuideDeps(
+            playback = playbackDeps(context),
+            pastDays = { settingsRepository(context).get(TellySettings.EPG_PAST_DAYS_TO_KEEP) },
         )
 
     private const val PREFS_NAME = "telly"

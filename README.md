@@ -18,13 +18,14 @@ M3U playlist and XMLTV guide, get a fast, gorgeous, remote-first live-TV UI.
 | --- | :---: |
 | Live playback (Media3, HLS/TS) | ✅ |
 | Channel list panel | ✅ |
-| EPG guide (XMLTV) | ⬜ |
+| EPG guide (XMLTV) | ✅ |
+| TV guide grid (timeline, preview, two-stage tune) | ✅ |
 | Archive / catch-up | ⬜ |
 | Recording | ⬜ |
 | Multi-playlist support | ⬜ |
 | Favorites | ⬜ |
-| Channel groups | ⬜ |
-| Picture-in-guide preview | ⬜ |
+| Channel groups | ✅ |
+| Picture-in-guide preview | ✅ |
 | Settings | ✅ |
 | Parental controls (PIN) | ✅ |
 | Backup / restore | ✅ |

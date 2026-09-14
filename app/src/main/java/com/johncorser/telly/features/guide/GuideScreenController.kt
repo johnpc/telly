@@ -1,0 +1,36 @@
+package com.johncorser.telly.features.guide
+
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
+import com.johncorser.telly.features.playback.PlaybackEnv
+import com.johncorser.telly.features.player.Media3PlayerEngine
+
+/** Builds the guide's controller over [engine]; closes it on dispose. */
+@Composable
+internal fun rememberGuideController(
+    deps: GuideDeps,
+    engine: Media3PlayerEngine,
+    onFullscreen: () -> Unit,
+): GuideController {
+    val scope = rememberCoroutineScope()
+    val controller =
+        remember {
+            GuideController(
+                env =
+                    PlaybackEnv(
+                        channelDao = deps.playback.channelDao,
+                        epgRepository = deps.playback.epgRepository,
+                        engine = engine,
+                        store = deps.playback.keyValueStore,
+                        clock = deps.playback.clock,
+                    ),
+                pastDays = deps.pastDays,
+                scope = scope,
+                onFullscreen = onFullscreen,
+            )
+        }
+    DisposableEffect(Unit) { onDispose { controller.close() } }
+    return controller
+}

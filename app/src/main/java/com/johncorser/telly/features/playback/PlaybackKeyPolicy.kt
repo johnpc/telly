@@ -6,7 +6,7 @@ sealed interface PlaybackCommand {
 
     data object ShowTransport : PlaybackCommand
 
-    data object OpenPanelAtCurrent : PlaybackCommand
+    data object ExitToGuide : PlaybackCommand
 
     data class Zap(
         val delta: Int,
@@ -25,8 +25,8 @@ sealed interface PlaybackCommand {
  * expands the transport row; long-OK/MENU open the bottom icon quick-bar;
  * LEFT/RIGHT do nothing at bare playback. CH+/CH- zap directly (the
  * catalogue flags its no-zap observation as an emulator artifact). BACK at
- * bare playback stands in for "return to the TV guide" by opening the panel
- * until the guide slice exists.
+ * bare playback returns to the TV guide (device-verified BACK chain:
+ * playback → guide → app exit).
  */
 object PlaybackKeyPolicy {
     fun commandFor(
@@ -48,7 +48,7 @@ object PlaybackKeyPolicy {
             PlaybackKey.CHANNEL_UP -> PlaybackCommand.Zap(+1)
             PlaybackKey.CHANNEL_DOWN -> PlaybackCommand.Zap(-1)
             PlaybackKey.LONG_OK, PlaybackKey.MENU -> PlaybackCommand.OpenQuickBar
-            PlaybackKey.BACK -> PlaybackCommand.OpenPanelAtCurrent
+            PlaybackKey.BACK -> PlaybackCommand.ExitToGuide
             PlaybackKey.LEFT, PlaybackKey.RIGHT -> null
         }
 

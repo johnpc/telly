@@ -24,9 +24,12 @@ internal fun SettingsScreenConfirmDelete(
     )
 }
 
-/** The Unlock Premium paywall, verbatim from capture 28. */
+/**
+ * The Unlock Premium paywall, verbatim from capture 28. Shared with the
+ * guide slice, whose future-cell dropdown rows are all premium-gated.
+ */
 @Composable
-internal fun SettingsScreenPaywall(model: SettingsViewModel) {
+internal fun SettingsScreenPaywall(onClose: () -> Unit) {
     SettingsScreenGuidedStep(
         iconRes = R.drawable.ic_settings_lock,
         title = "Unlock Premium",
@@ -45,8 +48,8 @@ internal fun SettingsScreenPaywall(model: SettingsViewModel) {
             ),
         actions =
             listOf(
-                "Next" to { model.dismissOverlay() },
-                "Cancel" to { model.dismissOverlay() },
+                "Next" to onClose,
+                "Cancel" to onClose,
             ),
     )
 }
