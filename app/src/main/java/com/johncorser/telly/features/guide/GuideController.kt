@@ -73,6 +73,7 @@ class GuideController(
             focusedRow = ::focusedRow,
             info = { info.value },
             callbacks = callbacks,
+            focusMemory = GuideFocusMemory(focusEngine) { rows.value },
         )
 
     val layer: StateFlow<GuideLayer> = menu.layer
@@ -86,11 +87,7 @@ class GuideController(
     }
 
     /** Routes a key through the layer map; true = consumed. */
-    fun onKey(key: GuideKey): Boolean {
-        val command = GuideKeyPolicy.commandFor(layer.value, key) ?: return false
-        execute(command)
-        return true
-    }
+    fun onKey(key: GuideKey): Boolean = GuideKeyPolicy.commandFor(layer.value, key)?.also(::execute) != null
 
     /** OK on a group filters the grid and renumbers from 1 (capture 74). */
     fun selectGroup(group: String) {

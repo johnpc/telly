@@ -45,17 +45,21 @@ class GuideFocusEngine(
         return cell?.let { GuideFocus(rowIndex, it, current.anchorMs) } ?: current
     }
 
-    fun reset() {
-        mutableFocus.value = null
-        mutableScroll.value = 0f
-        mutableFirstRow.value = 0
+    fun reset() = apply(GuideFocusState(focus = null, scrollX = 0f, firstRow = 0))
+
+    /** Re-asserts a remembered focus + scroll ([GuideFocusMemory.restore]). */
+    fun apply(state: GuideFocusState) {
+        mutableFocus.value = state.focus
+        mutableScroll.value = state.scrollX
+        mutableFirstRow.value = state.firstRow
     }
 
     /** False = focus already touches the left edge (open the groups column). */
     fun moveLeft(rows: List<GuideRow>): Boolean {
         val current = mutableFocus.value ?: return false
+        val cells = rows.getOrNull(current.rowIndex)?.cells.orEmpty()
         val windowStartMs = GuideGeometry.timeAt(mutableScroll.value, originMs)
-        val target = GuideFocusNav.leftOf(cellsAt(rows, current), current.cell, windowStartMs) ?: return false
+        val target = GuideFocusNav.leftOf(cells, current.cell, windowStartMs) ?: return false
         moveHorizontal(current, target)
         return true
     }
@@ -63,7 +67,8 @@ class GuideFocusEngine(
     /** At the materialized edge the window pans on so more cells load. */
     fun moveRight(rows: List<GuideRow>) {
         val current = mutableFocus.value ?: return
-        val target = GuideFocusNav.rightOf(cellsAt(rows, current), current.cell)
+        val cells = rows.getOrNull(current.rowIndex)?.cells.orEmpty()
+        val target = GuideFocusNav.rightOf(cells, current.cell)
         if (target == null) {
             mutableScroll.value = clampScroll(mutableScroll.value + GuideGeometry.DP_PER_30_MIN)
         } else {
@@ -119,9 +124,4 @@ class GuideFocusEngine(
         val floor = if (mutableScroll.value < 0f) pastFloorDp() else 0f
         return target.coerceIn(floor, GuideWindowMath.scrollCeilDp())
     }
-
-    private fun cellsAt(
-        rows: List<GuideRow>,
-        focus: GuideFocus,
-    ): List<GuideCell> = rows.getOrNull(focus.rowIndex)?.cells.orEmpty()
 }

@@ -21,6 +21,15 @@ class PlaybackMenuHandler(
     private val openSearch: () -> Unit = {},
     private val rowOf: (Long) -> PanelRow? = { null },
 ) {
+    /** Which sheet row BACK from a pushed screen re-focuses. */
+    val sheetFocus = PlayerMenuFocus()
+
+    /** Long-OK on a panel row: a fresh sheet, focus reset to the first row. */
+    fun openChannelMenu(channelId: Long) {
+        sheetFocus.clear()
+        overlays.set(PlaybackOverlay.ChannelMenu(channelId))
+    }
+
     /**
      * The channel a menu action applies to: the panel row's or the tuned one,
      * re-resolved from the live list so repeated actions see fresh flags.
@@ -35,13 +44,15 @@ class PlaybackMenuHandler(
 
     fun onMenuItem(item: PlayerMenuItem) {
         val channel = menuChannel() ?: return
+        sheetFocus.onActivated(item)
         when (PlayerMenuRouting.routeOf(item)) {
             PlayerMenuRoute.SEARCH -> openScreen(openSearch)
             PlayerMenuRoute.SETTINGS -> openScreen(openSettings)
             PlayerMenuRoute.TOGGLE_FAVORITE -> toggleFavorite(channel)
             PlayerMenuRoute.HIDE_CHANNEL -> hide(channel)
             PlayerMenuRoute.DESCRIPTION -> push { back -> description(channel, back) }
-            PlayerMenuRoute.CHANNEL_OPTIONS -> push { back -> channelOptions(channel, back) }
+            PlayerMenuRoute.CHANNEL_OPTIONS ->
+                push { back -> PlaybackOverlay.ChannelOptions(channel.source.name, back) }
             PlayerMenuRoute.PAYWALL -> push { back -> PlaybackOverlay.Paywall(item.label, back) }
             PlayerMenuRoute.COMING_SOON -> push { back -> PlaybackOverlay.ComingSoon(item.label, back) }
         }
@@ -65,11 +76,6 @@ class PlaybackMenuHandler(
         overlays.set(PlaybackOverlay.None)
         open()
     }
-
-    private fun channelOptions(
-        channel: ChannelEntity,
-        back: PlaybackOverlay,
-    ): PlaybackOverlay = PlaybackOverlay.ChannelOptions(channel.source.name, back)
 
     /** The sheet row's airing programme: title + synopsis (dump 40). */
     private fun description(

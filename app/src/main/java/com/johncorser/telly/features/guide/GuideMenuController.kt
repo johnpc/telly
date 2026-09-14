@@ -1,6 +1,7 @@
 package com.johncorser.telly.features.guide
 
 import com.johncorser.telly.features.playback.ChannelActions
+import com.johncorser.telly.features.playback.PlayerMenuFocus
 import com.johncorser.telly.features.playback.PlayerMenuItem
 import com.johncorser.telly.features.playback.PlayerMenuRoute
 import com.johncorser.telly.features.playback.PlayerMenuRouting
@@ -25,11 +26,17 @@ class GuideMenuController(
     private val focusedRow: () -> GuideRow?,
     private val info: () -> GuideInfoData?,
     private val callbacks: GuideCallbacks,
+    private val focusMemory: GuideFocusMemory? = null,
 ) {
     private val mutable = MutableStateFlow<GuideLayer>(GuideLayer.Grid)
     val layer: StateFlow<GuideLayer> = mutable.asStateFlow()
 
+    /** Which sheet row BACK from a pushed screen re-focuses. */
+    val sheetFocus = PlayerMenuFocus()
+
+    /** Closing back to the grid re-asserts the saved grid focus first. */
     fun show(next: GuideLayer) {
+        if (next == GuideLayer.Grid) focusMemory?.restore()
         mutable.value = next
     }
 
@@ -40,7 +47,10 @@ class GuideMenuController(
 
     /** Long-OK / MENU with a focused row opens the sheet (round3-ref 05). */
     fun openRowMenu() {
-        if (focusedRow() != null) show(GuideLayer.RowMenu)
+        if (focusedRow() == null) return
+        focusMemory?.save()
+        sheetFocus.clear()
+        show(GuideLayer.RowMenu)
     }
 
     /** Every dropdown row is premium in the free reference (capture 31). */
@@ -53,6 +63,7 @@ class GuideMenuController(
 
     fun onMenuItem(item: PlayerMenuItem) {
         val row = focusedRow() ?: return
+        sheetFocus.onActivated(item)
         when (PlayerMenuRouting.routeOf(item)) {
             PlayerMenuRoute.SEARCH -> {
                 reset()

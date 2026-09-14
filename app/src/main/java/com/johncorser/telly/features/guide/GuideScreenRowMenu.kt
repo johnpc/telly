@@ -31,6 +31,7 @@ internal fun GuideScreenRowMenu(
         sections = PlayerMenu.sections(info?.title, row.channel.source.name),
         favorite = row.channel.flags.favorite,
         onItem = controller.menu::onMenuItem,
+        restore = controller.menu.sheetFocus.restore,
     )
 }
 

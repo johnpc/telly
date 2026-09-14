@@ -73,6 +73,21 @@ object PlayerMenu {
             PlayerMenuItem.GROUP_OPTIONS,
         )
 
+    /** The sheet's LazyColumn position of [item], headers counted as rows. */
+    fun flatIndexOf(
+        sections: List<PlayerMenuSection>,
+        item: PlayerMenuItem,
+    ): Int {
+        var index = 0
+        sections.forEach { section ->
+            if (section.header != null) index += 1
+            val at = section.items.indexOf(item)
+            if (at >= 0) return index + at
+            index += section.items.size
+        }
+        return 0
+    }
+
     /** The full long-OK sheet on a panel/guide row (round3-ref 05). */
     fun sections(
         programTitle: String?,

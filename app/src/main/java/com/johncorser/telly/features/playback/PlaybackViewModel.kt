@@ -96,7 +96,7 @@ class PlaybackViewModel(
         commands.showZapInfo()
     }
 
-    fun showChannelMenu(channel: ChannelEntity) = overlays.set(PlaybackOverlay.ChannelMenu(channel.id))
+    fun showChannelMenu(channel: ChannelEntity) = menu.openChannelMenu(channel.id)
 
     fun showComingSoon(feature: String) = overlays.set(PlaybackOverlay.ComingSoon(feature))
 

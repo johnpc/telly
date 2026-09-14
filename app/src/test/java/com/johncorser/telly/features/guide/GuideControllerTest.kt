@@ -98,6 +98,9 @@ class GuideControllerTest {
             ?.details
             ?.title
 
+    private fun focusedChannel(controller: GuideController): String? =
+        controller.focus.value?.let { controller.rows.value.getOrNull(it.rowIndex)?.channel?.source?.name }
+
     @Test
     fun `rows load for all channels with epg-less strips and focus lands on the airing cell`() {
         runTest {
@@ -243,6 +246,42 @@ class GuideControllerTest {
 
             assertTrue(controller.onKey(GuideKey.MENU))
             assertEquals(GuideLayer.RowMenu, controller.layer.value)
+        }
+    }
+
+    @Test
+    fun `back from the sheet leaves focus and scroll on the originating cell`() {
+        runTest {
+            val controller = buildController()
+            controller.onKey(GuideKey.DOWN)
+            controller.onKey(GuideKey.RIGHT)
+            val focusBefore = controller.focus.value
+            val scrollBefore = controller.scrollX.value
+
+            controller.onKey(GuideKey.LONG_OK)
+            controller.onKey(GuideKey.BACK)
+
+            assertEquals(GuideLayer.Grid, controller.layer.value)
+            assertEquals(focusBefore, controller.focus.value)
+            assertEquals(scrollBefore, controller.scrollX.value)
+        }
+    }
+
+    @Test
+    fun `back from the sheet re-finds the originating channel after rows shift under it`() {
+        runTest {
+            val controller = buildController()
+            controller.onKey(GuideKey.DOWN)
+            assertEquals("News One HD", focusedChannel(controller))
+
+            controller.onKey(GuideKey.LONG_OK)
+            // A playlist refresh under the open sheet drops channel 1,
+            // sliding another channel into the focused row INDEX.
+            dao.channels.value = dao.channels.value.filterNot { it.id == 1L }
+            controller.onKey(GuideKey.BACK)
+
+            assertEquals("News One HD", focusedChannel(controller))
+            assertEquals(0, controller.focus.value?.rowIndex)
         }
     }
 

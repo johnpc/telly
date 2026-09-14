@@ -65,6 +65,16 @@ Feature: TV guide
     When I press back
     Then the programme grid is focused again
 
+  Scenario: BACK from the row sheet restores focus to the originating row
+    Then the info pane shows the focused programme title, time range and description
+    When I press dpad down
+    Then the focused cell is on channel 2 at roughly the same time
+    When I long-press ok
+    Then a right-side sheet opens with the guide grid still visible behind it
+    When I press back
+    Then the programme grid is focused again
+    And the focused cell is on channel 2 at roughly the same time
+
   Scenario: MENU opens the same row context sheet
     When I press menu
     Then I see the menu rows "Search" and "Settings"
