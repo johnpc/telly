@@ -1,8 +1,10 @@
 package com.johncorser.telly.features.playback
 
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.runtime.Composable
@@ -46,20 +48,24 @@ internal fun PlaybackScreenInfoOverlay(
             PlaybackScreenTransportRow(data) { feature -> viewModel.showComingSoon(feature) }
         }
         Spacer(Modifier.height(30.dp))
-        PlaybackScreenCards(
-            onGuide = { viewModel.openPanel() },
-            onHistory = { viewModel.showComingSoon(historyLabel) },
-        )
-        Spacer(Modifier.height(2.dp))
-        Icon(
-            painter = painterResource(R.drawable.ic_chevron_down),
-            contentDescription = null,
-            modifier =
-                Modifier
-                    .align(Alignment.CenterHorizontally)
-                    .padding(bottom = 8.dp)
-                    .size(28.dp),
-            tint = Color.White.copy(alpha = 0.9f),
-        )
+        Box(Modifier.fillMaxWidth()) {
+            PlaybackScreenCards(
+                onGuide = { viewModel.openPanel() },
+                onHistory = { viewModel.showComingSoon(historyLabel) },
+            )
+            // The chevron sits centered at y≈1036 px, overlapping the card
+            // row's bottom edge (round3-ref 02 + item 20).
+            Icon(
+                painter = painterResource(R.drawable.ic_chevron_down),
+                contentDescription = null,
+                modifier =
+                    Modifier
+                        .align(Alignment.BottomCenter)
+                        .offset(y = 11.dp)
+                        .size(28.dp),
+                tint = Color.White.copy(alpha = 0.9f),
+            )
+        }
+        Spacer(Modifier.height(19.dp))
     }
 }

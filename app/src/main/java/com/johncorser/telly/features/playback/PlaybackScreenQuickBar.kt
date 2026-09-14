@@ -70,7 +70,7 @@ private fun PlaybackScreenQuickBarSlot(
             modifier = focusRequester?.let { Modifier.focusRequester(it) } ?: Modifier,
         )
         Spacer(Modifier.height(6.dp))
-        Text(text = item.label, color = Color.White, fontSize = 14.sp, maxLines = 1)
+        Text(text = item.label, color = Color.White, fontSize = 12.sp, maxLines = 1)
     }
 }
 

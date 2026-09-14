@@ -1,6 +1,7 @@
 package com.johncorser.telly.features.playback
 
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.snap
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
@@ -29,7 +30,9 @@ internal fun PlaybackScreenOverlays(
     val info = overlay == PlaybackOverlay.Info || overlay == PlaybackOverlay.InfoTransport
     AnimatedVisibility(
         visible = info,
-        enter = fadeIn(tween(INFO_FADE_MS)) + slideInVertically(tween(INFO_FADE_MS)) { INFO_SLIDE_PX },
+        enter =
+            fadeIn(tween(INFO_FADE_MS, easing = LinearEasing)) +
+                slideInVertically(tween(INFO_FADE_MS)) { INFO_SLIDE_PX },
         exit = fadeOut(snap()),
     ) {
         PlaybackScreenInfoOverlay(viewModel, transport = overlay == PlaybackOverlay.InfoTransport)

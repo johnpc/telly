@@ -73,7 +73,7 @@ private fun PlaybackScreenMenuHeader(text: String) {
         modifier = Modifier.padding(start = 16.dp, top = 14.dp, end = 16.dp, bottom = 4.dp),
         color = LocalAccentColor.current,
         fontSize = 14.sp,
-        maxLines = 1,
+        maxLines = 2,
     )
 }
 

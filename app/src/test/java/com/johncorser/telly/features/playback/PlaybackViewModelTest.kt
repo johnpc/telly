@@ -109,7 +109,7 @@ class PlaybackViewModelTest {
             advanceTimeBy(4_000)
             assertEquals(PlaybackOverlay.Info, vm.overlay.value)
 
-            advanceTimeBy(1_200)
+            advanceTimeBy(1_500)
             assertEquals(PlaybackOverlay.None, vm.overlay.value)
         }
 

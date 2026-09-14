@@ -90,8 +90,13 @@ class PlaybackViewModel(
     fun openPanel() = commands.openPanel()
 
     companion object {
-        /** Hide begins ≈5.1 s after the keypress (tm-ov4.webm, round3). */
-        const val INFO_OVERLAY_TIMEOUT_MS = 5_100L
+        /**
+         * Tuned so the overlay is VISIBLE ~5.13 s like TiviMate's
+         * (tm-ov4.webm): the ~250 ms key-to-first-frame latency plus the
+         * 350 ms fade-in mean the hide must start a bit after TiviMate's
+         * ≈5.1 s-after-keypress mark (measured in round4/ty4-ov.webm).
+         */
+        const val INFO_OVERLAY_TIMEOUT_MS = 5_350L
 
         /** The compact zap overlay stays ~5.5 s after the zap (tm-zap.webm). */
         const val ZAP_OVERLAY_TIMEOUT_MS = 5_500L
