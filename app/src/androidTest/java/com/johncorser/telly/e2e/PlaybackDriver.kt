@@ -13,6 +13,7 @@ import androidx.compose.ui.test.performSemanticsAction
 import androidx.test.espresso.Espresso.onView
 import androidx.test.espresso.action.ViewActions.pressImeActionButton
 import androidx.test.espresso.action.ViewActions.replaceText
+import androidx.test.espresso.assertion.ViewAssertions.doesNotExist
 import androidx.test.espresso.matcher.ViewMatchers.isAssignableFrom
 import androidx.test.espresso.matcher.ViewMatchers.isDisplayed
 import androidx.test.espresso.matcher.ViewMatchers.withText
@@ -60,6 +61,12 @@ class PlaybackDriver(
             runCatching { onView(allOf(editor, withText(text))).check { view, _ -> requireNotNull(view) } }.isSuccess
         }
         onView(editor).perform(pressImeActionButton())
+        // The IME NEXT action commits and closes the inline editor; wait for
+        // the EditText to leave the hierarchy so the next D-pad press cannot
+        // land on it while view focus settles back on the compose tree.
+        awaitCondition("inline editor closed") {
+            runCatching { onView(editor).check(doesNotExist()) }.isSuccess
+        }
         world.compose.waitForIdle()
     }
 

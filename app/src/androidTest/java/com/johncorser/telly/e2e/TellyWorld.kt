@@ -10,6 +10,7 @@ import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.isFocused
 import androidx.compose.ui.test.junit4.ComposeTestRule
 import androidx.compose.ui.test.onFirst
+import androidx.compose.ui.test.performScrollToNode
 import androidx.compose.ui.test.performSemanticsAction
 import androidx.test.core.app.ActivityScenario
 import androidx.test.platform.app.InstrumentationRegistry
@@ -118,8 +119,21 @@ class TellyWorld(
         atLeast: Int = 1,
         unmerged: Boolean = false,
     ) {
+        if (nodeCount(matcher, unmerged) < atLeast) scrollTowards(matcher)
         compose.waitUntil("expected >=$atLeast of ${matcher.description}", timeoutMs) {
             nodeCount(matcher, unmerged) >= atLeast
+        }
+    }
+
+    /** Lazy lists on a 540 dp TV only compose visible rows: scroll to reveal. */
+    private fun scrollTowards(matcher: SemanticsMatcher) {
+        val scrollable = SemanticsMatcher.keyIsDefined(SemanticsActions.ScrollToIndex)
+        repeat(nodeCount(scrollable)) { index ->
+            val found =
+                runCatching {
+                    compose.onAllNodes(scrollable)[index].performScrollToNode(matcher)
+                }.isSuccess
+            if (found) return
         }
     }
 
