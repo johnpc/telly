@@ -16,17 +16,21 @@ sealed interface GuideCommand {
         val days: Int,
     ) : GuideCommand
 
+    data object OpenRowMenu : GuideCommand
+
     data object CloseLayer : GuideCommand
 }
 
 /**
  * Key-by-layer map for the guide (catalogue §2): D-pad moves the grid
- * focus, OK activates the focused cell, long-LEFT/RIGHT jump a day (the
- * hint toast's "navigate to past programs"). BACK on the grid is
- * unconsumed on purpose: at guide root TiviMate free exits the app with
- * no confirmation (device-verified BACK chain). Overlaid layers own their
- * own focus; the policy only closes them (RIGHT also leaves the groups
- * column back to the grid, capture 25).
+ * focus, OK activates the focused cell, long-OK / MENU open the row
+ * context sheet (catalogue §3 38-40 + round3-ref 05), long-LEFT/RIGHT
+ * jump a day (the hint toast's "navigate to past programs"). BACK on the
+ * grid is unconsumed on purpose: at guide root TiviMate free exits the
+ * app with no confirmation (device-verified BACK chain). Overlaid layers
+ * own their own focus; the policy only closes them (RIGHT also leaves
+ * the groups column back to the grid, capture 25) and the close pops one
+ * level at a time (Channel options → sheet → grid).
  */
 object GuideKeyPolicy {
     private const val DAY = 1
@@ -38,7 +42,7 @@ object GuideKeyPolicy {
         when (layer) {
             GuideLayer.Grid -> onGrid(key)
             GuideLayer.Groups -> closeOn(key, GuideKey.BACK, GuideKey.RIGHT)
-            is GuideLayer.CellMenu, is GuideLayer.Paywall -> closeOn(key, GuideKey.BACK)
+            else -> closeOn(key, GuideKey.BACK)
         }
 
     private fun onGrid(key: GuideKey): GuideCommand? =
@@ -48,6 +52,7 @@ object GuideKeyPolicy {
             GuideKey.UP -> GuideCommand.FocusUp
             GuideKey.DOWN -> GuideCommand.FocusDown
             GuideKey.OK -> GuideCommand.Activate
+            GuideKey.LONG_OK, GuideKey.MENU -> GuideCommand.OpenRowMenu
             GuideKey.LONG_LEFT -> GuideCommand.DayJump(-DAY)
             GuideKey.LONG_RIGHT -> GuideCommand.DayJump(DAY)
             GuideKey.BACK -> null

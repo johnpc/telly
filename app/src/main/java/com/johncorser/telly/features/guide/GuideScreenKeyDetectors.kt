@@ -9,11 +9,12 @@ import com.johncorser.telly.core.input.HoldKeyDetector
 
 /**
  * Per-key hold detectors for the grid: LEFT/RIGHT holds become day jumps
- * (the hint toast's "Long Left: navigate to past programs"), an OK hold is
- * swallowed so a long press never mis-fires stage-one tuning.
+ * (the hint toast's "Long Left: navigate to past programs") and an OK hold
+ * opens the row context sheet (catalogue §3 38-40) without mis-firing
+ * stage-one tuning on release.
  */
 internal class GuideScreenKeyDetectors {
-    val ok = HoldKeyDetector<GuideKey>(GuideKey.OK, hold = null)
+    val ok = HoldKeyDetector(GuideKey.OK, GuideKey.LONG_OK)
     val left = HoldKeyDetector(GuideKey.LEFT, GuideKey.LONG_LEFT)
     val right = HoldKeyDetector(GuideKey.RIGHT, GuideKey.LONG_RIGHT)
 }
@@ -31,6 +32,7 @@ internal fun mapGuideKey(
         Key.DirectionRight -> detectors.right.route(down, repeat)
         Key.DirectionUp -> GuideKey.UP.takeIf { down }
         Key.DirectionDown -> GuideKey.DOWN.takeIf { down }
+        Key.Menu -> GuideKey.MENU.takeIf { down }
         else -> null
     }
 }

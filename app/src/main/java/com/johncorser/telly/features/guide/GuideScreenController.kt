@@ -12,7 +12,7 @@ import com.johncorser.telly.features.player.Media3PlayerEngine
 internal fun rememberGuideController(
     deps: GuideDeps,
     engine: Media3PlayerEngine,
-    onFullscreen: () -> Unit,
+    callbacks: GuideCallbacks,
 ): GuideController {
     val scope = rememberCoroutineScope()
     val controller =
@@ -28,7 +28,7 @@ internal fun rememberGuideController(
                     ),
                 pastDays = deps.pastDays,
                 scope = scope,
-                onFullscreen = onFullscreen,
+                callbacks = callbacks,
             )
         }
     DisposableEffect(Unit) { onDispose { controller.close() } }

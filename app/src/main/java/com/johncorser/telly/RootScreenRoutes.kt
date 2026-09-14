@@ -60,6 +60,7 @@ internal fun RootScreenRoutes(
                 GuideScreen(
                     deps = guideDeps,
                     onFullscreen = { navigator.push(Route.Playback) },
+                    onOpenSearch = { navigator.push(Route.Search) },
                     onOpenSettings = { navigator.push(Route.Settings) },
                     settingsOpen = settingsOpen,
                 )

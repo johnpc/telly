@@ -47,14 +47,34 @@ sealed interface GuideLayer {
         val cell: GuideCell,
     ) : GuideLayer
 
-    /** Unlock Premium screen a dropdown row opened (capture 28/31). */
+    /** Long-OK/MENU row context sheet over the grid (round3-ref 05, 38-40). */
+    data object RowMenu : GuideLayer
+
+    /** Unlock Premium screen (capture 28/31); BACK returns to [back]. */
     data class Paywall(
         val feature: String,
+        val back: GuideLayer = Grid,
+    ) : GuideLayer
+
+    /** Branded placeholder for sheet rows whose feature is a later slice. */
+    data class ComingSoon(
+        val feature: String,
+    ) : GuideLayer
+
+    /** The sheet's working "Program description" row. */
+    data class Description(
+        val title: String,
+        val text: String,
+    ) : GuideLayer
+
+    /** "Channel options" sub-pane, every row premium-locked (captures 41-42). */
+    data class ChannelOptions(
+        val channelName: String,
     ) : GuideLayer
 }
 
 /** D-pad keys the guide reacts to (mapped from KeyEvents in the UI). */
-enum class GuideKey { OK, BACK, UP, DOWN, LEFT, RIGHT, LONG_LEFT, LONG_RIGHT }
+enum class GuideKey { OK, LONG_OK, MENU, BACK, UP, DOWN, LEFT, RIGHT, LONG_LEFT, LONG_RIGHT }
 
 /**
  * The five rows of the future-cell dropdown, verbatim from capture 27.
