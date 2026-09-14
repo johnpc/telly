@@ -139,20 +139,9 @@ jobs:
           force-avd-creation: false
           emulator-options: -no-snapshot-save -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -camera-back none
           disable-animations: true
-          script: |
-            mkdir -p artifacts
-            adb logcat -c || true
-            adb logcat > artifacts/logcat-${{ matrix.feature }}.txt 2>&1 &
-            set +e
-            ./gradlew connectedDebugAndroidTest \
-              -Pandroid.testInstrumentationRunnerArguments.tags=@${{ matrix.feature }}
-            status=$?
-            if [ $status -ne 0 ]; then
-              adb exec-out screencap -p > artifacts/final-screen-${{ matrix.feature }}.png || true
-              adb pull /sdcard/Android/data/com.johncorser.telly/files/screenshots \
-                artifacts/screenshots-${{ matrix.feature }} || true
-            fi
-            exit $status
+          # NOTE: the runner action executes each script line as its own
+          # command — keep this a single line (no shell continuations).
+          script: bash scripts/ci-acceptance.sh ${{ matrix.feature }}
 
       - name: Upload acceptance artifacts
         if: failure()
