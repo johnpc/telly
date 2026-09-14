@@ -44,8 +44,8 @@ class PanelViewModel(
 
     val groups: StateFlow<List<String>> =
         channels
-            .map { list -> listOf(FAVORITES, ALL_CHANNELS) + list.mapNotNull { it.source.groupTitle }.distinct() }
-            .stateIn(scope, SharingStarted.Eagerly, listOf(FAVORITES, ALL_CHANNELS))
+            .map(PanelRows::groupNames)
+            .stateIn(scope, SharingStarted.Eagerly, PanelRows.groupNames(emptyList()))
 
     @OptIn(ExperimentalCoroutinesApi::class)
     val rows: StateFlow<List<PanelRow>> =

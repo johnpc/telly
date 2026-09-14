@@ -67,7 +67,7 @@ internal fun PlaybackScreenInfoOverlay(viewModel: PlaybackViewModel) {
             )
             Spacer(Modifier.height(12.dp))
             PlaybackScreenCards(
-                onGuide = { viewModel.openPanel() },
+                onGuide = { viewModel.exitToGuide() },
                 onHistory = { viewModel.showComingSoon(historyLabel) },
             )
             Text(

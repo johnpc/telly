@@ -57,11 +57,9 @@ Feature: Watch live TV and zap between channels
     When I press back
     Then no chrome is visible over the video
 
-  Scenario: Back walks the overlay chain one layer at a time
+  Scenario: Back walks the overlay chain then leaves for the TV guide
     When I press ok
     And I press back
     Then no chrome is visible over the video
     When I press back
-    Then the channel list panel opens over the dimmed video
-    When I press back
-    Then no chrome is visible over the video
+    Then the TV guide opens with the programme grid

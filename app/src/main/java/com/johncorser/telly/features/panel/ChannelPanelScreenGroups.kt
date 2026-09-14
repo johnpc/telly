@@ -15,13 +15,15 @@ import com.johncorser.telly.core.ui.TellyScreenMenuRow
 
 /**
  * Groups column (capture 25): Favorites, All channels, then playlist groups.
- * The selected group keeps a dark pill; focus is the usual white pill.
+ * The selected group keeps a dark pill; focus is the usual white pill. The
+ * guide overlay asks the selected row to grab focus when the column opens.
  */
 @Composable
 internal fun ChannelPanelScreenGroups(
     groups: List<String>,
     selected: String,
     onSelect: (String) -> Unit,
+    autoFocusSelected: Boolean = false,
 ) {
     LazyColumn(
         Modifier
@@ -36,6 +38,7 @@ internal fun ChannelPanelScreenGroups(
                 onClick = { onSelect(group) },
                 height = 39.dp,
                 restingContainer = if (group == selected) Color(TELLY_BUTTON_RESTING) else Color.Transparent,
+                requestFocus = autoFocusSelected && group == selected,
             )
         }
     }

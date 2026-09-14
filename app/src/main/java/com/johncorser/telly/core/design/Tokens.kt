@@ -35,6 +35,11 @@ const val TELLY_MENU_SHEET = 0xFF1B1D21
 const val TELLY_BADGE_FILL = 0xFF3A3D40
 const val TELLY_LOGO_TILE = 0xFF2C5F8A
 
+// TV-guide grid palette (capture catalogue token table, uidump 24):
+// unfocused cell fill and the thin alpha-blue now-line.
+const val TELLY_GUIDE_CELL = 0xFF1B1E21
+const val TELLY_NOW_LINE = 0xFF384C5C
+
 // Settings panel palette (uidump 18: panel #232629 = TELLY_GUIDANCE_PANE,
 // header strip #333639, focused row pill #E0E2E4, accent #2196F3).
 const val TELLY_SETTINGS_HEADER = 0xFF333639

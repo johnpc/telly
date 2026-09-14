@@ -35,6 +35,8 @@ class PlaybackViewModelTest {
     private val store = FakeKeyValueStore()
     private val programs = FakeProgramDao()
 
+    private var exitedToGuide = 0
+
     private fun TestScope.buildVm(clock: () -> Long = { 1_000_000L }): PlaybackViewModel =
         PlaybackViewModel(
             env =
@@ -47,6 +49,7 @@ class PlaybackViewModelTest {
                     zone = TimeZone.getTimeZone("UTC"),
                 ),
             scope = CoroutineScope(SupervisorJob() + UnconfinedTestDispatcher(testScheduler)),
+            onExitToGuide = { exitedToGuide += 1 },
         )
 
     @Test
@@ -138,14 +141,25 @@ class PlaybackViewModelTest {
         }
 
     @Test
-    fun `back at bare playback opens the panel at the tuned channel`() =
+    fun `back at bare playback returns to the TV guide`() =
         runTest {
             val vm = buildVm()
 
             assertTrue(vm.onKey(PlaybackKey.BACK))
 
-            assertEquals(PlaybackOverlay.Panel, vm.overlay.value)
-            assertEquals(0, vm.panel.focusIndex.value)
+            assertEquals(1, exitedToGuide)
+            assertEquals(PlaybackOverlay.None, vm.overlay.value)
+        }
+
+    @Test
+    fun `the overlay's TV guide card leaves for the guide too`() =
+        runTest {
+            val vm = buildVm()
+            vm.onKey(PlaybackKey.OK)
+
+            vm.exitToGuide()
+
+            assertEquals(1, exitedToGuide)
         }
 
     @Test
@@ -208,7 +222,7 @@ class PlaybackViewModelTest {
     fun `hiding the tuned channel from its channel menu retunes and returns to the panel`() =
         runTest {
             val vm = buildVm()
-            vm.onKey(PlaybackKey.BACK)
+            vm.openPanel()
             vm.showChannelMenu(channels[0])
 
             assertEquals(PlaybackOverlay.ChannelMenu(1L), vm.overlay.value)
@@ -226,7 +240,7 @@ class PlaybackViewModelTest {
     fun `back from a channel menu returns to the panel`() =
         runTest {
             val vm = buildVm()
-            vm.onKey(PlaybackKey.BACK)
+            vm.openPanel()
             vm.showChannelMenu(channels[1])
 
             vm.onKey(PlaybackKey.BACK)

@@ -31,6 +31,7 @@ class PlaybackViewModel(
     env: PlaybackEnv,
     scope: CoroutineScope,
     overlayTimeoutMs: Long = INFO_OVERLAY_TIMEOUT_MS,
+    private val onExitToGuide: () -> Unit = {},
 ) {
     private val clock = env.clock
 
@@ -76,11 +77,14 @@ class PlaybackViewModel(
 
     fun close() = tuner.release()
 
+    /** BACK at bare playback + the overlay's TV-guide card both leave here. */
+    val exitToGuide: () -> Unit = onExitToGuide
+
     private fun execute(command: PlaybackCommand) {
         when (command) {
             PlaybackCommand.ShowInfo -> showInfo()
             PlaybackCommand.OpenPanelAtPrevious -> openPanel(offset = -1)
-            PlaybackCommand.OpenPanelAtCurrent -> openPanel(offset = 0)
+            PlaybackCommand.ExitToGuide -> exitToGuide()
             is PlaybackCommand.Zap -> zap(command.delta)
             PlaybackCommand.OpenMenu -> overlays.set(PlaybackOverlay.Menu)
             PlaybackCommand.Dismiss -> overlays.set(PlaybackOverlay.None)

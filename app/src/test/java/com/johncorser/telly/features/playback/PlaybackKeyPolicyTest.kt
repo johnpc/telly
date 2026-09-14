@@ -19,7 +19,8 @@ class PlaybackKeyPolicyTest {
         assertEquals(PlaybackCommand.Zap(-1), at(PlaybackOverlay.None, PlaybackKey.CHANNEL_DOWN))
         assertEquals(PlaybackCommand.OpenMenu, at(PlaybackOverlay.None, PlaybackKey.LONG_OK))
         assertEquals(PlaybackCommand.OpenMenu, at(PlaybackOverlay.None, PlaybackKey.MENU))
-        assertEquals(PlaybackCommand.OpenPanelAtCurrent, at(PlaybackOverlay.None, PlaybackKey.BACK))
+        // Device-verified BACK chain: from clean playback BACK returns to the TV guide.
+        assertEquals(PlaybackCommand.ExitToGuide, at(PlaybackOverlay.None, PlaybackKey.BACK))
     }
 
     @Test

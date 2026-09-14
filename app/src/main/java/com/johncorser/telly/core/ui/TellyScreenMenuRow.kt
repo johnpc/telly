@@ -32,11 +32,13 @@ fun TellyScreenMenuRow(
     icon: Int? = null,
     height: Dp = 36.dp,
     restingContainer: Color = Color.Transparent,
+    requestFocus: Boolean = false,
 ) {
     Surface(
         onClick = onClick,
         modifier =
             modifier
+                .focusOnAppear(requestFocus)
                 .fillMaxWidth()
                 .height(height),
         shape = FocusScreenDefaults.shape(),

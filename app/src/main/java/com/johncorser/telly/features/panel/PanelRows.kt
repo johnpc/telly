@@ -8,6 +8,11 @@ import java.util.TimeZone
 
 /** Pure row assembly for the channel panel: filtering, renumbering, formatting. */
 object PanelRows {
+    /** Groups column order (capture 25): Favorites, All channels, playlist groups. */
+    fun groupNames(channels: List<ChannelEntity>): List<String> =
+        listOf(PanelViewModel.FAVORITES, PanelViewModel.ALL_CHANNELS) +
+            channels.mapNotNull { it.source.groupTitle }.distinct()
+
     fun channelsIn(
         list: List<ChannelEntity>,
         group: String,

@@ -1,0 +1,59 @@
+Feature: TV guide
+  The signature TiviMate screen (captures 24-27, 32, 74): live preview
+  window + focused-programme info pane on top, a 30-min timeline header and
+  the virtualized programme grid below, all panning in lockstep.
+  Reference: capture catalogue §2 and the device-verified answers.
+
+  Background:
+    Given the fixture playlist and EPG are served from "http://10.0.2.2:8090"
+    And I completed the add-playlist wizard
+    And I press back
+
+  Scenario: The guide renders the grid with fixture EPG titles
+    Then I see the preview window playing channel 1 "News One"
+    And the info pane shows the focused programme title, time range and description
+    And the channel column lists number, logo and name for "News One" and "Sports Arena"
+    And the grid shows the programme cell "Business Hour"
+    And channels without EPG show "No information" cells
+
+  Scenario: The timeline header shows half-hour ticks around now
+    Then the header clock shows today's date and time
+    And the timeline shows labels every 30 minutes
+    And the now-line marks the current time in the grid
+
+  Scenario: Focus moves across programmes and time scrolls in lockstep
+    When I press dpad right
+    Then the next programme cell of channel 1 is focused
+    And the info pane shows that programme's title
+    When I press dpad down
+    Then the focused cell is on channel 2 at roughly the same time
+    When I press dpad right 6 times
+    Then the timeline header has scrolled forward with the cells
+
+  Scenario: Two-stage OK tunes the preview then goes fullscreen
+    When I press dpad down
+    And I press ok on the airing programme
+    Then the preview window plays channel 2 "News One HD"
+    And the channel name of row 2 renders in accent blue with a play marker
+    When I press ok
+    Then playback goes fullscreen on channel 2 "News One HD"
+
+  Scenario: OK on a future programme opens the premium dropdown
+    When I press dpad right
+    And I press ok
+    Then a dropdown anchored under the cell lists exactly "Remind", "Record", "Custom recording", "Add to My list", "Program description"
+    When I select "Remind"
+    Then I see the "Unlock Premium" screen
+    When I press back
+    Then the programme grid is focused again
+
+  Scenario: LEFT at the grid edge opens the groups column
+    When I press dpad left
+    Then the groups column lists "Favorites", "All channels", "News", "Sports", "Movies", "Kids", "Music"
+    When I select "Sports"
+    Then the "Sports Arena" row shows number 1
+    And the groups column is dismissed
+
+  Scenario: BACK at the guide root exits the app without confirmation
+    When I press back
+    Then telly exits to the launcher

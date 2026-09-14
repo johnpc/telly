@@ -13,4 +13,7 @@ sealed interface Route {
 
     /** Fullscreen playback of the last-watched channel; the app's main screen. */
     data object Playback : Route
+
+    /** The TV guide: preview window + info pane over the programme grid. */
+    data object Guide : Route
 }
