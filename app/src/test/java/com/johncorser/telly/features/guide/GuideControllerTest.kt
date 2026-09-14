@@ -3,6 +3,9 @@ package com.johncorser.telly.features.guide
 import com.johncorser.telly.features.guide.GuideTestData.at
 import com.johncorser.telly.features.guide.GuideTestData.nowMs
 import com.johncorser.telly.features.guide.GuideTestData.utc
+import com.johncorser.telly.features.history.HistoryGroup
+import com.johncorser.telly.features.history.WatchHistory
+import com.johncorser.telly.features.history.db.WatchHistoryEntity
 import com.johncorser.telly.features.panel.PanelViewModel
 import com.johncorser.telly.features.playback.PlaybackEnv
 import com.johncorser.telly.features.playback.TuneController
@@ -10,6 +13,7 @@ import com.johncorser.telly.testutil.FakeChannelDao
 import com.johncorser.telly.testutil.FakeKeyValueStore
 import com.johncorser.telly.testutil.FakePlayerEngine
 import com.johncorser.telly.testutil.FakeProgramDao
+import com.johncorser.telly.testutil.FakeWatchHistoryDao
 import com.johncorser.telly.testutil.describedAs
 import com.johncorser.telly.testutil.testChannel
 import com.johncorser.telly.testutil.testEpgRepository
@@ -56,8 +60,9 @@ class GuideControllerTest {
         )
     private var fullscreens = 0
     private var pastDays = 7
+    private val historyDao = FakeWatchHistoryDao()
 
-    private fun TestScope.buildController(): GuideController =
+    private fun TestScope.buildController(initialGroup: String = PanelViewModel.ALL_CHANNELS): GuideController =
         GuideController(
             env =
                 PlaybackEnv(
@@ -68,10 +73,17 @@ class GuideControllerTest {
                     clock = { nowMs },
                     zone = utc,
                 ),
+            history = WatchHistory(historyDao) { nowMs },
             pastDays = { pastDays },
             scope = CoroutineScope(SupervisorJob() + UnconfinedTestDispatcher(testScheduler)),
             onFullscreen = { fullscreens += 1 },
+            initialGroup = initialGroup,
         )
+
+    private suspend fun watched(
+        tvgId: String,
+        atMs: Long,
+    ) = historyDao.upsert(WatchHistoryEntity(tvgId, atMs))
 
     private fun focusedTitle(controller: GuideController): String? =
         controller.focus.value
@@ -181,6 +193,7 @@ class GuideControllerTest {
             assertEquals(2L, controller.preview.value?.id)
             assertEquals("http://s/2.ts", engine.loaded.last())
             assertEquals(2L, store.getLong(TuneController.LAST_CHANNEL_KEY))
+            assertEquals(setOf("tvg-2"), historyDao.events.value.keys)
             assertEquals(0, fullscreens)
 
             assertTrue(controller.onKey(GuideKey.OK))
@@ -276,6 +289,54 @@ class GuideControllerTest {
             val controller = buildController()
 
             assertEquals(PanelViewModel.ALL_CHANNELS, controller.selectedGroup.value)
+        }
+    }
+
+    @Test
+    fun `the history source group opens selected with newest-first rows renumbered from one`() {
+        runTest {
+            watched("tvg-1", at(14, 0))
+            watched("tvg-3", at(14, 20))
+
+            val controller = buildController(initialGroup = HistoryGroup.NAME)
+
+            assertEquals(HistoryGroup.NAME, controller.selectedGroup.value)
+            assertEquals(listOf("Sports Arena", "News One"), controller.rows.value.map { it.channel.source.name })
+            assertEquals(listOf(1, 2), controller.rows.value.map { it.displayNumber })
+            assertEquals("Boxing Classics", focusedTitle(controller))
+        }
+    }
+
+    @Test
+    fun `history leads the groups column only while it is the source group`() {
+        runTest {
+            watched("tvg-1", at(14, 0))
+            val controller = buildController(initialGroup = HistoryGroup.NAME)
+
+            assertEquals(
+                listOf("History", "Favorites", "All channels", "News", "Sports", "Music"),
+                controller.groups.value,
+            )
+
+            controller.selectGroup("Sports")
+
+            assertEquals(
+                listOf("Favorites", "All channels", "News", "Sports", "Music"),
+                controller.groups.value,
+            )
+            assertEquals(listOf(1), controller.rows.value.map { it.displayNumber })
+        }
+    }
+
+    @Test
+    fun `history keys without a matching channel drop from the rows`() {
+        runTest {
+            watched("tvg-gone", at(14, 30))
+            watched("tvg-2", at(14, 0))
+
+            val controller = buildController(initialGroup = HistoryGroup.NAME)
+
+            assertEquals(listOf("News One HD"), controller.rows.value.map { it.channel.source.name })
         }
     }
 

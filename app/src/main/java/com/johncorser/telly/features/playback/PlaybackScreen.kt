@@ -25,6 +25,7 @@ import com.johncorser.telly.features.player.PlayerScreenSurface
 fun PlaybackScreen(
     deps: PlaybackDeps,
     onExitToGuide: () -> Unit = {},
+    onExitToHistory: () -> Unit = {},
     onOpenSearch: () -> Unit = {},
 ) {
     val scope = rememberCoroutineScope()
@@ -40,8 +41,10 @@ fun PlaybackScreen(
                         store = deps.keyValueStore,
                         clock = deps.clock,
                     ),
+                history = deps.history,
                 scope = scope,
                 onExitToGuide = onExitToGuide,
+                onExitToHistory = onExitToHistory,
                 openSearch = onOpenSearch,
             )
         }

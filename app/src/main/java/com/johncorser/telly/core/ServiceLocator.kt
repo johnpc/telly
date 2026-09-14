@@ -34,7 +34,7 @@ object ServiceLocator {
         database ?: synchronized(this) {
             database ?: Room
                 .databaseBuilder(context.applicationContext, TellyDatabase::class.java, DATABASE_NAME)
-                .addMigrations(TellyDatabase.MIGRATION_1_2)
+                .addMigrations(TellyDatabase.MIGRATION_1_2, TellyDatabase.MIGRATION_2_3)
                 .build()
                 .also { database = it }
         }

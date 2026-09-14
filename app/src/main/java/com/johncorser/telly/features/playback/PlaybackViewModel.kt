@@ -2,6 +2,7 @@ package com.johncorser.telly.features.playback
 
 import com.johncorser.telly.core.kv.KeyValueStore
 import com.johncorser.telly.features.epg.EpgRepository
+import com.johncorser.telly.features.history.WatchHistory
 import com.johncorser.telly.features.panel.PanelViewModel
 import com.johncorser.telly.features.player.PlayerEngine
 import com.johncorser.telly.features.player.PlayerState
@@ -30,15 +31,17 @@ class PlaybackEnv(
  */
 class PlaybackViewModel(
     env: PlaybackEnv,
+    history: WatchHistory,
     scope: CoroutineScope,
     onExitToGuide: () -> Unit = {},
+    onExitToHistory: () -> Unit = {},
     private val openSearch: () -> Unit = {},
 ) {
     private val clock = env.clock
 
     val panel = PanelViewModel(env.channelDao, env.epgRepository, clock, scope, env.zone)
 
-    private val tuner = TuneController(env.engine, env.store, scope, env.channelDao)
+    private val tuner = TuneController(env.engine, env.store, scope, env.channelDao, history)
     private val overlays = OverlayState(scope)
     private val instant = MutableStateFlow(clock())
 
@@ -94,6 +97,9 @@ class PlaybackViewModel(
 
     /** BACK at bare playback + the overlay's TV-guide card both leave here. */
     val exitToGuide: () -> Unit = onExitToGuide
+
+    /** The overlay's History card: the guide with History as source group. */
+    val exitToHistory: () -> Unit = onExitToHistory
 
     /** The quick-bar's Channels list opens the panel at the tuned row. */
     fun openPanel() = commands.openPanel()

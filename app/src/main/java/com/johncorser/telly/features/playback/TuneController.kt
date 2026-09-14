@@ -1,6 +1,7 @@
 package com.johncorser.telly.features.playback
 
 import com.johncorser.telly.core.kv.KeyValueStore
+import com.johncorser.telly.features.history.WatchHistory
 import com.johncorser.telly.features.player.PlayerEngine
 import com.johncorser.telly.features.playlist.db.ChannelDao
 import com.johncorser.telly.features.playlist.db.ChannelEntity
@@ -15,14 +16,15 @@ import kotlinx.coroutines.launch
 
 /**
  * Owns which channel is tuned: restores the last-watched channel on start,
- * pushes streams into the [PlayerEngine], persists the last channel id, and
- * zaps with wrap-around.
+ * pushes streams into the [PlayerEngine], persists the last channel id plus
+ * a watch-history event, and zaps with wrap-around.
  */
 class TuneController(
     private val engine: PlayerEngine,
     private val store: KeyValueStore,
     private val scope: CoroutineScope,
     channelDao: ChannelDao,
+    private val history: WatchHistory,
 ) {
     /** All visible channels in TiviMate "All channels" order. */
     val channels: StateFlow<List<ChannelEntity>> =
@@ -54,6 +56,7 @@ class TuneController(
         mutableCurrent.value = channel
         engine.load(channel.source.streamUrl)
         store.putLong(LAST_CHANNEL_KEY, channel.id)
+        scope.launch { history.record(channel) }
     }
 
     /** Tunes the channel [delta] steps away (wraps); false when impossible. */

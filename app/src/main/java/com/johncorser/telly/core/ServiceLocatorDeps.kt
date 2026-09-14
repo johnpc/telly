@@ -3,6 +3,7 @@ package com.johncorser.telly.core
 import android.content.Context
 import com.johncorser.telly.core.settings.TellySettings
 import com.johncorser.telly.features.guide.GuideDeps
+import com.johncorser.telly.features.history.WatchHistory
 import com.johncorser.telly.features.playback.PlaybackDeps
 import com.johncorser.telly.features.player.Media3PlayerEngine
 import com.johncorser.telly.features.search.SearchDeps
@@ -17,6 +18,7 @@ fun ServiceLocator.playbackDeps(context: Context): PlaybackDeps =
         channelDao = database(context).channelDao(),
         epgRepository = epgRepository(context),
         keyValueStore = keyValueStore(context),
+        history = WatchHistory(database(context).watchHistoryDao(), clock),
         engineFactory = { Media3PlayerEngine.create(context.applicationContext) },
         clock = clock,
     )

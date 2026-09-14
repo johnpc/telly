@@ -53,15 +53,17 @@ internal fun RootScreenRoutes(
             Route.Playback ->
                 PlaybackScreen(
                     deps = playbackDeps,
-                    onExitToGuide = { navigator.replaceAll(Route.Guide) },
+                    onExitToGuide = { navigator.replaceAll(Route.Guide()) },
+                    onExitToHistory = { navigator.replaceAll(Route.Guide(historySource = true)) },
                     onOpenSearch = { navigator.push(Route.Search) },
                 )
-            Route.Guide ->
+            is Route.Guide ->
                 GuideScreen(
                     deps = guideDeps,
                     onFullscreen = { navigator.push(Route.Playback) },
                     onOpenSettings = { navigator.push(Route.Settings) },
                     settingsOpen = settingsOpen,
+                    historySource = target.historySource,
                 )
             // Tuning from search adopts the guide-root BACK chain: the
             // guide becomes the stack root with fullscreen playback above.
@@ -69,7 +71,7 @@ internal fun RootScreenRoutes(
                 SearchScreen(
                     deps = searchDeps,
                     onTuned = {
-                        navigator.replaceAll(Route.Guide)
+                        navigator.replaceAll(Route.Guide())
                         navigator.push(Route.Playback)
                     },
                 )

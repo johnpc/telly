@@ -31,9 +31,10 @@ fun GuideScreen(
     onFullscreen: () -> Unit,
     onOpenSettings: () -> Unit = {},
     settingsOpen: Boolean = false,
+    historySource: Boolean = false,
 ) {
     val engine = remember { deps.playback.engineFactory() }
-    val controller = rememberGuideController(deps, engine, onFullscreen)
+    val controller = rememberGuideController(deps, engine, onFullscreen, historySource)
     val detectors = remember { GuideScreenKeyDetectors() }
     val layer by controller.layer.collectAsState()
     BackHandler(enabled = layer != GuideLayer.Grid && !settingsOpen) { controller.onKey(GuideKey.BACK) }

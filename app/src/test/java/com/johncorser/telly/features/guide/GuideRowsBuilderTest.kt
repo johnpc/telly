@@ -1,6 +1,7 @@
 package com.johncorser.telly.features.guide
 
 import com.johncorser.telly.features.guide.GuideTestData.at
+import com.johncorser.telly.features.history.HistoryGroup
 import com.johncorser.telly.features.panel.PanelViewModel
 import com.johncorser.telly.testutil.asFavorite
 import com.johncorser.telly.testutil.testChannel
@@ -24,9 +25,14 @@ class GuideRowsBuilderTest {
             testProgram("tvg-2", at(14, 0), at(17, 0), "Boxing Classics"),
         )
 
+    private fun build(
+        group: String,
+        historyKeys: List<String> = emptyList(),
+    ): List<GuideRow> = GuideRowsBuilder.build(GuideRowsInput(channels, group, historyKeys, span), programs)
+
     @Test
     fun `all channels keeps playlist numbers`() {
-        val rows = GuideRowsBuilder.build(channels, PanelViewModel.ALL_CHANNELS, programs, span)
+        val rows = build(PanelViewModel.ALL_CHANNELS)
 
         assertEquals(listOf(1, 2, 3, 4), rows.map { it.displayNumber })
         assertEquals("Business Hour", rows[0].cells.first { it.hasInfo }.program?.details?.title)
@@ -34,7 +40,7 @@ class GuideRowsBuilderTest {
 
     @Test
     fun `groups renumber from one like capture 74`() {
-        val rows = GuideRowsBuilder.build(channels, "Sports", programs, span)
+        val rows = build("Sports")
 
         assertEquals(listOf("Sports Arena", "Sports Extra"), rows.map { it.channel.source.name })
         assertEquals(listOf(1, 2), rows.map { it.displayNumber })
@@ -42,17 +48,25 @@ class GuideRowsBuilderTest {
 
     @Test
     fun `the favorites group filters to favorite channels`() {
-        val rows = GuideRowsBuilder.build(channels, PanelViewModel.FAVORITES, programs, span)
+        val rows = build(PanelViewModel.FAVORITES)
 
         assertEquals(listOf(2L), rows.map { it.channel.id })
     }
 
     @Test
     fun `EPG-less channels get no-information strips covering the span`() {
-        val rows = GuideRowsBuilder.build(channels, PanelViewModel.ALL_CHANNELS, programs, span)
+        val rows = build(PanelViewModel.ALL_CHANNELS)
 
         val silent = rows.last()
         assertTrue(silent.cells.isNotEmpty())
         assertTrue(silent.cells.none { it.hasInfo })
+    }
+
+    @Test
+    fun `the history group orders by watch recency and renumbers from one`() {
+        val rows = build(HistoryGroup.NAME, historyKeys = listOf("http://s/4.ts|Silent", "tvg-1", "tvg-9"))
+
+        assertEquals(listOf("Silent", "News One"), rows.map { it.channel.source.name })
+        assertEquals(listOf(1, 2), rows.map { it.displayNumber })
     }
 }

@@ -212,3 +212,19 @@ Local SDK note: `local.properties` must contain
   resumes the last-watched channel in its preview window.
   `OkLongPressDetector` generalized into `core/input/HoldKeyDetector<T>` so
   LEFT/RIGHT holds can drive day jumps without duplicate detector code.
+- **2026-09-14** History card (capture 34's second 150×110 card): capture 48's
+  uidump — taken right after the History press — is bare playback (zero text
+  nodes, one focused full-screen ViewGroup), so 5.2.0 free has no History
+  screen; per the capture-47 note ("opens the same overlay with History as
+  source group when it exists") and §2 (no persistent History group, capture
+  25), the card opens the guide (`Route.Guide(historySource = true)`, same
+  replaceAll-root BACK chain as the TV-guide card) on a synthetic
+  **History** source group: recently watched channels newest-first, deduped
+  per channel, renumbered from 1 like every non-All group, leading the
+  groups column only while it is the selected source group. Persistence =
+  Room `watch_history` table (v3, MIGRATION_2_3), keyed by the
+  playlist-refresh-stable channel identity (`ChannelImporter.identityOf` —
+  row ids are reassigned on import), stamped by the injected clock, capped
+  at 30 (`WatchHistory.CAP`; the reference cap is not capturable). Events
+  are recorded in `TuneController.tune`, the same commit point as
+  `lastChannelId`, so guide preview tunes count as watches too.
