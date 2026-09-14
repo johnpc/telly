@@ -13,7 +13,14 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.focus.FocusDirection
 import androidx.compose.ui.graphics.SolidColor
+import androidx.compose.ui.input.key.Key
+import androidx.compose.ui.input.key.KeyEventType
+import androidx.compose.ui.input.key.key
+import androidx.compose.ui.input.key.onPreviewKeyEvent
+import androidx.compose.ui.input.key.type
+import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.input.ImeAction
@@ -44,6 +51,10 @@ internal fun SearchScreenQueryField(
         if (query.isEmpty()) {
             Text(text = stringResource(R.string.search_hint), color = Dims.barHint, fontSize = 20.sp)
         }
+        // Compose text fields consume DPAD_DOWN as a cursor move, which
+        // would trap D-pad focus in the bar (device-verified); hand the key
+        // to the focus manager so DOWN reaches the results like TiviMate.
+        val focusManager = LocalFocusManager.current
         BasicTextField(
             value = query,
             onValueChange = viewModel::onQueryChange,
@@ -52,7 +63,14 @@ internal fun SearchScreenQueryField(
             cursorBrush = SolidColor(Dims.barText),
             keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
             keyboardActions = KeyboardActions(onSearch = { viewModel.commit(query) }),
-            modifier = Modifier.fillMaxWidth(),
+            modifier =
+                Modifier.fillMaxWidth().onPreviewKeyEvent { event ->
+                    if (event.type == KeyEventType.KeyDown && event.key == Key.DirectionDown) {
+                        focusManager.moveFocus(FocusDirection.Down)
+                    } else {
+                        false
+                    }
+                },
         )
     }
 }
