@@ -40,6 +40,7 @@ internal fun ChannelPanelScreenList(
 ) {
     val rows by panel.rows.collectAsState()
     val focusIndex by panel.focusIndex.collectAsState()
+    val command by panel.focusCommand.collectAsState()
     var target by remember { mutableIntStateOf(panel.focusIndex.value) }
     val requester = remember { FocusRequester() }
     val listState = rememberLazyListState(initialFirstVisibleItemIndex = target)
@@ -50,6 +51,11 @@ internal fun ChannelPanelScreenList(
             listState.scrollToItem(index)
             target = index
         }
+    }
+    // Group switches / panel opens command the list to scroll + refocus
+    // (per-group focus memory, capture 74 behavior).
+    LaunchedEffect(command) {
+        if (command.index != target) wrapTo(command.index)
     }
     LazyColumn(state = listState) {
         itemsIndexed(rows, key = { _, row -> row.channel.id }) { index, row ->

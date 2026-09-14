@@ -1,5 +1,8 @@
 package com.johncorser.telly.features.panel
 
+import com.johncorser.telly.core.settings.InMemoryKeyValueStore
+import com.johncorser.telly.core.settings.ParentalControls
+import com.johncorser.telly.core.settings.SettingsRepository
 import com.johncorser.telly.testutil.FakeChannelDao
 import com.johncorser.telly.testutil.FakeProgramDao
 import com.johncorser.telly.testutil.asFavorite
@@ -18,6 +21,7 @@ import org.junit.Assert.assertNull
 import org.junit.Test
 import java.util.GregorianCalendar
 import java.util.TimeZone
+import kotlin.random.Random
 
 @OptIn(ExperimentalCoroutinesApi::class)
 class PanelViewModelTest {
@@ -43,14 +47,26 @@ class PanelViewModelTest {
                 set(GregorianCalendar.MILLISECOND, 0)
             }.timeInMillis
 
-    private fun TestScope.buildPanel(clock: () -> Long = { at(14, 45) }): PanelViewModel =
+    private fun TestScope.buildPanel(
+        clock: () -> Long = { at(14, 45) },
+        lock: PanelLock = PanelLock(),
+    ): PanelViewModel =
         PanelViewModel(
             channelDao = dao,
             epgRepository = testEpgRepository(programs),
             clock = clock,
             scope = CoroutineScope(SupervisorJob() + UnconfinedTestDispatcher(testScheduler)),
             zone = utc,
+            lock = lock,
         )
+
+    private fun lockedMusic(): PanelLock {
+        val parental = ParentalControls(SettingsRepository(InMemoryKeyValueStore()), Random(seed = 7))
+        parental.setEnabled(true)
+        parental.setPin("2468")
+        parental.setGroupLocked("Music", true)
+        return PanelLock(parental)
+    }
 
     @Test
     fun `groups start with favorites and all channels then playlist order`() =
@@ -161,13 +177,81 @@ class PanelViewModelTest {
     fun `the clock refreshes each time the panel opens`() =
         runTest {
             var now = at(14, 45)
-            val panel = buildPanel { now }
+            val panel = buildPanel(clock = { now })
             assertEquals("Sun, Sep 13, 2:45 PM", panel.clockText.value)
 
             now = at(15, 2)
             panel.openFocusedOn(null)
 
             assertEquals("Sun, Sep 13, 3:02 PM", panel.clockText.value)
+        }
+
+    @Test
+    fun `group switches command the list to scroll and refocus`() =
+        runTest {
+            val panel = buildPanel()
+            val opening = panel.focusCommand.value.version
+            panel.onRowFocused(2)
+
+            panel.selectGroup("Sports")
+
+            assertEquals(opening + 1, panel.focusCommand.value.version)
+            assertEquals(0, panel.focusCommand.value.index)
+
+            panel.selectGroup(PanelViewModel.ALL_CHANNELS)
+
+            assertEquals(opening + 2, panel.focusCommand.value.version)
+            assertEquals(2, panel.focusCommand.value.index)
+        }
+
+    @Test
+    fun `opening focused on a channel commands the list too`() =
+        runTest {
+            val panel = buildPanel()
+            val opening = panel.focusCommand.value.version
+
+            panel.openFocusedOn(2)
+
+            assertEquals(opening + 1, panel.focusCommand.value.version)
+            assertEquals(1, panel.focusCommand.value.index)
+        }
+
+    @Test
+    fun `selecting a locked group prompts for the pin instead of switching`() =
+        runTest {
+            val panel = buildPanel(lock = lockedMusic())
+
+            panel.selectGroup("Music")
+
+            assertEquals("Music", panel.pinPrompt.value)
+            assertEquals(PanelViewModel.ALL_CHANNELS, panel.selectedGroup.value)
+        }
+
+    @Test
+    fun `the verified pin unlocks the pending group`() =
+        runTest {
+            val panel = buildPanel(lock = lockedMusic())
+            panel.selectGroup("Music")
+
+            panel.submitPin("1111")
+            assertEquals("Music", panel.pinPrompt.value)
+            assertEquals(PanelViewModel.ALL_CHANNELS, panel.selectedGroup.value)
+
+            panel.submitPin("2468")
+            assertNull(panel.pinPrompt.value)
+            assertEquals("Music", panel.selectedGroup.value)
+        }
+
+    @Test
+    fun `dismissing the prompt keeps the previous group`() =
+        runTest {
+            val panel = buildPanel(lock = lockedMusic())
+            panel.selectGroup("Music")
+
+            panel.dismissPinPrompt()
+
+            assertNull(panel.pinPrompt.value)
+            assertEquals(PanelViewModel.ALL_CHANNELS, panel.selectedGroup.value)
         }
 
     @Test
