@@ -14,6 +14,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.key.onPreviewKeyEvent
 import com.johncorser.telly.core.input.HoldKeyDetector
+import com.johncorser.telly.features.panel.PanelLock
 import com.johncorser.telly.features.player.PlayerScreenSurface
 
 /**
@@ -27,6 +28,7 @@ fun PlaybackScreen(
     onExitToGuide: () -> Unit = {},
     onExitToHistory: () -> Unit = {},
     onOpenSearch: () -> Unit = {},
+    onOpenSettings: () -> Unit = {},
 ) {
     val scope = rememberCoroutineScope()
     val engine = remember { deps.engineFactory() }
@@ -39,7 +41,12 @@ fun PlaybackScreen(
                         epgRepository = deps.epgRepository,
                         engine = engine,
                         store = deps.keyValueStore,
-                        clock = deps.clock,
+                        time = PlaybackTime(deps.clock),
+                        hooks =
+                            PlaybackHooks(
+                                panelLock = PanelLock(deps.parental),
+                                onOpenSettings = onOpenSettings,
+                            ),
                     ),
                 history = deps.history,
                 scope = scope,

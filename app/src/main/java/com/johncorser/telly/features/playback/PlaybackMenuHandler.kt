@@ -4,13 +4,15 @@ import com.johncorser.telly.features.playlist.db.ChannelEntity
 
 /**
  * Executes context-menu selections. Favorites and hide are real (persisted
- * via [ChannelActions]); every other captured row routes to a branded
- * "coming soon" placeholder until its slice ships.
+ * via [ChannelActions]) and Settings opens the settings shell; every other
+ * captured row routes to a branded "coming soon" placeholder until its
+ * slice ships.
  */
 class PlaybackMenuHandler(
     private val actions: ChannelActions,
     private val overlays: OverlayState,
     private val tuner: TuneController,
+    private val openSettings: () -> Unit = {},
 ) {
     /**
      * The channel a menu action applies to: the panel row's or the tuned one,
@@ -29,6 +31,7 @@ class PlaybackMenuHandler(
         when (item) {
             PlayerMenuItem.ADD_TO_FAVORITES -> toggleFavorite(channel)
             PlayerMenuItem.HIDE_CHANNEL -> hide(channel)
+            PlayerMenuItem.SETTINGS -> openSettings()
             else -> overlays.set(PlaybackOverlay.ComingSoon(item.label))
         }
     }

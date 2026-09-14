@@ -3,6 +3,7 @@ package com.johncorser.telly.features.playback
 import com.johncorser.telly.core.kv.KeyValueStore
 import com.johncorser.telly.features.epg.EpgRepository
 import com.johncorser.telly.features.history.WatchHistory
+import com.johncorser.telly.features.panel.PanelLock
 import com.johncorser.telly.features.panel.PanelViewModel
 import com.johncorser.telly.features.player.PlayerEngine
 import com.johncorser.telly.features.player.PlayerState
@@ -13,14 +14,26 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import java.util.TimeZone
 
+/** Cross-slice hooks the playback surface plugs into (nav + parental). */
+class PlaybackHooks(
+    val panelLock: PanelLock = PanelLock(),
+    val onOpenSettings: () -> Unit = {},
+)
+
+/** The injected wall clock + zone (no wall-clock reads in logic). */
+class PlaybackTime(
+    val clock: () -> Long,
+    val zone: TimeZone = TimeZone.getDefault(),
+)
+
 /** Everything [PlaybackViewModel] needs injected, bundled for readability. */
 class PlaybackEnv(
     val channelDao: ChannelDao,
     val epgRepository: EpgRepository,
     val engine: PlayerEngine,
     val store: KeyValueStore,
-    val clock: () -> Long,
-    val zone: TimeZone = TimeZone.getDefault(),
+    val time: PlaybackTime,
+    val hooks: PlaybackHooks = PlaybackHooks(),
 )
 
 /**
@@ -37,16 +50,16 @@ class PlaybackViewModel(
     onExitToHistory: () -> Unit = {},
     private val openSearch: () -> Unit = {},
 ) {
-    private val clock = env.clock
+    private val clock = env.time.clock
 
-    val panel = PanelViewModel(env.channelDao, env.epgRepository, clock, scope, env.zone)
+    val panel = PanelViewModel(env.channelDao, env.epgRepository, clock, scope, env.time.zone, env.hooks.panelLock)
 
     private val tuner = TuneController(env.engine, env.store, scope, env.channelDao, history)
     private val overlays = OverlayState(scope)
     private val instant = MutableStateFlow(clock())
 
     /** Executes context-menu rows; also resolves the channel they act on. */
-    val menu = PlaybackMenuHandler(ChannelActions(env.channelDao, scope), overlays, tuner)
+    val menu = PlaybackMenuHandler(ChannelActions(env.channelDao, scope), overlays, tuner, env.hooks.onOpenSettings)
 
     private val video = env.engine.video
 
@@ -54,7 +67,7 @@ class PlaybackViewModel(
     val overlay: StateFlow<PlaybackOverlay> = overlays.overlay
     val playerState: StateFlow<PlayerState> = env.engine.state
     val info: StateFlow<PlaybackInfoData?> =
-        PlaybackInfoFeed(tuner.current, instant, env.engine.video, env.epgRepository, env.zone, scope).info
+        PlaybackInfoFeed(tuner.current, instant, env.engine.video, env.epgRepository, env.time.zone, scope).info
 
     init {
         tuner.start()

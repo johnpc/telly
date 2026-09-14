@@ -1,6 +1,7 @@
 package com.johncorser.telly.core
 
 import android.content.Context
+import com.johncorser.telly.core.settings.ParentalControls
 import com.johncorser.telly.core.settings.TellySettings
 import com.johncorser.telly.features.guide.GuideDeps
 import com.johncorser.telly.features.history.WatchHistory
@@ -21,6 +22,7 @@ fun ServiceLocator.playbackDeps(context: Context): PlaybackDeps =
         history = WatchHistory(database(context).watchHistoryDao(), clock),
         engineFactory = { Media3PlayerEngine.create(context.applicationContext) },
         clock = clock,
+        parental = ParentalControls(settingsRepository(context)),
     )
 
 /** Guide slice = the playback bundle + the settings the grid honors. */
