@@ -1,12 +1,16 @@
 package com.johncorser.telly.features.settings
 
 import androidx.activity.compose.BackHandler
+import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.key
 import androidx.compose.runtime.remember
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
@@ -46,13 +50,22 @@ fun SettingsScreen(
             state.overlay is SettingsOverlay.PinSetup
     Box(Modifier.fillMaxSize().focusProperties { exit = { FocusRequester.Cancel } }) {
         if (!sheetOverlay) {
-            key(state.activePane) {
-                SettingsScreenSheet(title = paneTitle(state.activePane, playlists)) {
+            // Pushing/popping a section cross-fades the sheet content in
+            // place over ~300 ms while the frame stays static (settings
+            // punch list: frame-scan of the reference screenrecord). The
+            // pane+rows pair keeps the outgoing sheet rendering its own
+            // rows; only pane changes animate.
+            AnimatedContent(
+                targetState = state.activePane to rows,
+                transitionSpec = { fadeIn(tween(PANE_FADE_MS)) togetherWith fadeOut(tween(PANE_FADE_MS)) },
+                contentKey = { it.first },
+            ) { (pane, paneRows) ->
+                SettingsScreenSheet(title = paneTitle(pane, playlists)) {
                     SettingsScreenRows(
-                        rows = rows,
+                        rows = paneRows,
                         onActivate = model::activate,
-                        initialFocusId = focusMemory[state.activePane] ?: rows.firstFocusableId(),
-                        onRowFocused = { focusMemory[state.activePane] = it },
+                        initialFocusId = focusMemory[pane] ?: paneRows.firstFocusableId(),
+                        onRowFocused = { focusMemory[pane] = it },
                     )
                 }
             }
@@ -60,6 +73,8 @@ fun SettingsScreen(
         SettingsScreenOverlay(model = model, overlay = state.overlay)
     }
 }
+
+private const val PANE_FADE_MS = 300
 
 /** The row a fresh sheet should focus: its first focusable row. */
 internal fun List<SettingsRow>.firstFocusableId(): String? =
