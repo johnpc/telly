@@ -185,6 +185,14 @@ class PlaybackDriver(
         while (SystemClock.uptimeMillis() < deadline) {
             if (runCatching(condition).getOrDefault(false)) return
             SystemClock.sleep(POLL_MS)
+            // Drive the compose test clock between polls, exactly like
+            // ComposeTestRule.waitUntil does. The app's window recomposer
+            // runs on the rule's test clock, so composition-scoped
+            // coroutines (e.g. the wizard's post-persist DONE hand-off)
+            // resume only when a frame is pumped; a pure SystemClock poll
+            // loop would otherwise strand them forever once the previous
+            // waitForIdle returned.
+            runCatching { world.compose.mainClock.advanceTimeByFrame() }
         }
         if (!runCatching(condition).getOrDefault(false)) fail("Timed out waiting for: $description")
     }
