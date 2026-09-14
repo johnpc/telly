@@ -13,6 +13,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -37,7 +38,7 @@ fun TellyScreenProgressBar(
     thickness: Dp = 2.dp,
 ) {
     val fraction = permille / PERMILLE
-    Box(modifier, contentAlignment = Alignment.CenterStart) {
+    Box(modifier.testTag("progress-bar"), contentAlignment = Alignment.CenterStart) {
         Box(
             Modifier
                 .fillMaxWidth()
@@ -80,7 +81,7 @@ fun TellyScreenLogoTile(
     ) {
         Text(text = initialsOf(name), color = Color.White, fontSize = (size.value / 3).sp)
         logoUrl?.let {
-            AsyncImage(model = it, contentDescription = null, modifier = Modifier.fillMaxSize())
+            AsyncImage(model = it, contentDescription = "$name logo", modifier = Modifier.fillMaxSize())
         }
     }
 }
