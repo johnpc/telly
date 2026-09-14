@@ -44,8 +44,8 @@ fun PlaybackScreen(
             PlaybackViewModel(
                 env =
                     PlaybackEnv(
-                        channelDao = deps.channelDao,
-                        epgRepository = deps.epgRepository,
+                        channelDao = deps.sources.channelDao,
+                        epgRepository = deps.sources.epgRepository,
                         engine = engine,
                         store = deps.keyValueStore,
                         time = PlaybackTime(deps.clock),
@@ -55,7 +55,7 @@ fun PlaybackScreen(
                                 onOpenSettings = onOpenSettings,
                             ),
                     ),
-                history = deps.history,
+                history = deps.sources.history,
                 scope = scope,
                 onExitToGuide = onExitToGuide,
                 onExitToHistory = onExitToHistory,

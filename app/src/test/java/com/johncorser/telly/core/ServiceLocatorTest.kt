@@ -84,7 +84,7 @@ class ServiceLocatorTest {
         assertEquals(7L, ServiceLocator.keyValueStore(context).getLong("lastChannelId"))
 
         val engine = deps.engineFactory()
-        assertSame(deps.channelDao, ServiceLocator.database(context).channelDao())
+        assertSame(deps.sources.channelDao, ServiceLocator.database(context).channelDao())
         engine.release()
         assertTrue(deps.clock() > 0)
     }

@@ -30,13 +30,13 @@ internal fun rememberGuideController(
             GuideController(
                 env =
                     PlaybackEnv(
-                        channelDao = deps.playback.channelDao,
-                        epgRepository = deps.playback.epgRepository,
+                        channelDao = deps.playback.sources.channelDao,
+                        epgRepository = deps.playback.sources.epgRepository,
                         engine = engine,
                         store = deps.playback.keyValueStore,
                         time = PlaybackTime(deps.playback.clock),
                     ),
-                history = deps.playback.history,
+                history = deps.playback.sources.history,
                 pastDays = deps.pastDays,
                 scope = scope,
                 callbacks = callbacks,
