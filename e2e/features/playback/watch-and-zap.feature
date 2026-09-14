@@ -1,7 +1,11 @@
+@watch-and-zap
 Feature: Watch live TV and zap between channels
   After setup, telly is a TV: it cold-starts straight into fullscreen
   playback of the last-watched channel and the remote drives everything.
-  Reference: TiviMate captures 33-46 and the catalogue's key map (§3).
+  Reference: TiviMate captures 33-46 and the catalogue's key map (§3), as
+  corrected by the round3/round4 on-device verification: OK/DOWN/UP all open
+  the info overlay, long-OK/MENU open the quick-bar, and BACK stands in for
+  "return to the TV guide" by opening the channel panel.
 
   Background:
     Given the fixture playlist and EPG are served from "http://10.0.2.2:8090"
@@ -25,9 +29,9 @@ Feature: Watch live TV and zap between channels
     And I see stream badges like "HD", "25 FPS" and "MONO"
     And I see the "TV guide" and "History" cards
 
-  Scenario: The info overlay auto-hides after five seconds
+  Scenario: The info overlay auto-hides after its five-second timeout
     When I press ok
-    And I wait 6 seconds
+    And I wait 7 seconds
     Then no chrome is visible over the video
 
   Scenario: Channel up and down zap with wrap-around
@@ -37,22 +41,20 @@ Feature: Watch live TV and zap between channels
     And I press channel down
     Then playback switches to channel 30 "Music Box 24"
 
-  Scenario: Up opens the channel panel focused on the previous channel
-    When I press dpad up
+  Scenario: Back opens the channel panel focused on the playing channel
+    When I press back
     Then the channel list panel opens over the dimmed video
-    And the focused channel row is number 30 "Music Box 24"
+    And the focused channel row is number 1 "News One"
 
-  Scenario: Long-press OK opens the player context menu verbatim
+  Scenario: Long-press OK opens the quick-bar with live stream slots
     When I long-press ok
-    Then I see the menu rows "Search" and "Settings"
-    And I see a blue programme section with "Record" and "Program description"
-    And I see a blue channel section with "Add to Favorites" and "Hide channel"
-    And I see a blue "All channels" section with "Manage Favorites" and "Group options"
+    Then I see the quick-bar slots "Search", "Channels list", "Recordings", "Multiview" and "Picture-in-picture"
+    And I see the live stream slots "1280 × 720", "Mono", "0 ms" and "Off"
 
-  Scenario: Unbuilt menu rows open a branded placeholder
+  Scenario: Unbuilt quick-bar slots open a branded placeholder
     When I long-press ok
-    And I select "Record"
-    Then I see "Record"
+    And I select "Recordings"
+    Then I see "Recordings"
     And I see "Coming soon to telly"
     When I press back
     Then no chrome is visible over the video

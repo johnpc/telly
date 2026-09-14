@@ -19,6 +19,14 @@ android {
         targetSdk = 36
         versionCode = 1
         versionName = "0.1.0"
+        // Gherkin acceptance harness: cucumber-android drives the real app.
+        testInstrumentationRunner = "com.johncorser.telly.e2e.TellyCucumberRunner"
+    }
+
+    sourceSets {
+        // Feature files + binary fixtures live under e2e/ (single source of
+        // truth); a Sync task stages them into the androidTest assets.
+        getByName("androidTest").assets.srcDir(layout.buildDirectory.dir("generated/e2eAssets"))
     }
 
     buildTypes {
@@ -141,4 +149,29 @@ dependencies {
     testImplementation(libs.androidx.test.core)
     // Real XmlPullParser implementation for JVM tests (android.util.Xml is Android-only).
     testImplementation(libs.kxml2)
+
+    // Gherkin acceptance harness (e2e/features executed on an Android TV emulator).
+    androidTestImplementation(libs.cucumber.android)
+    androidTestImplementation(libs.cucumber.picocontainer)
+    androidTestImplementation(libs.androidx.test.runner)
+    androidTestImplementation(libs.androidx.espresso.core)
+    androidTestImplementation(libs.androidx.uiautomator)
+    androidTestImplementation(platform(libs.androidx.compose.bom))
+    androidTestImplementation(libs.androidx.compose.ui.test.junit4)
+    androidTestImplementation(libs.mockwebserver)
 }
+
+// Stage e2e feature files + stream/logo fixtures as androidTest assets so the
+// suite is hermetic on the emulator (playlist.m3u/epg.xml are generated at
+// test runtime with fresh timestamps — see e2e/fixtures/gen-fixtures.mjs).
+val syncE2eAssets by tasks.registering(Sync::class) {
+    into(layout.buildDirectory.dir("generated/e2eAssets"))
+    from(rootProject.file("e2e/features")) { into("features") }
+    from(rootProject.file("e2e/fixtures/streams")) {
+        include("*.ts")
+        into("fixtures/streams")
+    }
+    from(rootProject.file("e2e/fixtures/logos")) { into("fixtures/logos") }
+}
+
+tasks.matching { it.name.contains("AndroidTestAssets") }.configureEach { dependsOn(syncE2eAssets) }

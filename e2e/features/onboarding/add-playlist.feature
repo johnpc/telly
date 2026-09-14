@@ -1,7 +1,11 @@
+@add-playlist
 Feature: Add playlist onboarding
   telly ships no content: on first run the user must add an M3U playlist URL
   before anything else can happen. Reference: TiviMate screens 02-12.
 
+  # Fixture URLs are written for the dev python server (10.0.2.2:8090). The
+  # harness serves the same fixtures from inside the instrumentation process
+  # and rewrites the host, so the scenarios stay dev-runnable verbatim.
   Background:
     Given a fresh install of telly
     And the fixture playlist is served at "http://10.0.2.2:8090/playlist.m3u"
