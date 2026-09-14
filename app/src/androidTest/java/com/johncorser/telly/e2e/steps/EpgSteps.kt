@@ -79,8 +79,7 @@ class EpgSteps(
     @Given("I marked channel {string} as a favorite")
     fun markFavorite(name: String) {
         driver.openPanel()
-        driver.focusRow(name)
-        world.longPressOk()
+        driver.longPressRow(name)
         world.select("Add to Favorites")
         driver.awaitCondition("favorite flag persisted") { storedChannel(name).flags.favorite }
         driver.dismissChrome()
@@ -90,8 +89,7 @@ class EpgSteps(
     fun refreshPlaylist() {
         val before = runBlocking { database.playlistDao().observeAll().first() }.single().lastUpdatedMs
         driver.openPanel()
-        driver.focusRow(driver.currentChannel.name)
-        world.longPressOk()
+        driver.longPressRow(driver.currentChannel.name)
         world.select("Settings")
         world.focus("Playlists")
         world.select("127.0.0.1")

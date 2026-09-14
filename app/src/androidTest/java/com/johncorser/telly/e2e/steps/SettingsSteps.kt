@@ -27,8 +27,7 @@ class SettingsSteps(
     @Given("I open Settings")
     fun openSettings() {
         driver.openPanel()
-        driver.focusRow(driver.currentChannel.name)
-        world.longPressOk()
+        driver.longPressRow(driver.currentChannel.name)
         world.select("Settings")
         world.waitForText("All features are available in Premium version")
     }

@@ -84,10 +84,8 @@ class PanelSteps(
 
     @When("I long-press ok on the row {string}")
     fun longPressRow(name: String) {
-        driver.focusRow(name)
         menuChannelName = name
-        world.longPressOk()
-        world.waitForText("Search")
+        driver.longPressRow(name)
     }
 
     @Then("the panel is dismissed and the zap overlay announces channel {int} {string}")

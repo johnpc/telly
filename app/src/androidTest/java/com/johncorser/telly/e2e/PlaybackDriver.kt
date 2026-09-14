@@ -149,6 +149,21 @@ class PlaybackDriver(
         world.waitFor(rowMatcher(name) and isFocused())
     }
 
+    /** Long-OK on a panel row; opens its context menu ("Search" first row). */
+    fun longPressRow(name: String) {
+        focusRow(name)
+        world.longPressOk()
+        if (world.nodeCount(hasText("Search")) == 0) {
+            // Synthetic key repeats do not always carry the long-press flag
+            // tv-material inspects; fall back to the row's long-click action.
+            world.compose
+                .onAllNodes(rowMatcher(name))
+                .onFirst()
+                .performSemanticsAction(SemanticsActions.OnLongClick)
+        }
+        world.waitForText("Search")
+    }
+
     fun awaitCondition(
         description: String,
         timeoutMs: Long = TellyWorld.DEFAULT_TIMEOUT_MS,
