@@ -24,24 +24,26 @@ class PlaybackEnv(
 
 /**
  * Fullscreen-playback state machine: which channel is tuned, which overlay
- * covers the video, and how D-pad keys move between them (catalogue §3).
+ * covers the video, and how D-pad keys move between them (catalogue §3 as
+ * corrected by the round3 device verification).
  * A plain class — everything injected, unit-tested on the JVM.
  */
 class PlaybackViewModel(
     env: PlaybackEnv,
     scope: CoroutineScope,
-    overlayTimeoutMs: Long = INFO_OVERLAY_TIMEOUT_MS,
 ) {
     private val clock = env.clock
 
     val panel = PanelViewModel(env.channelDao, env.epgRepository, clock, scope, env.zone)
 
     private val tuner = TuneController(env.engine, env.store, scope, env.channelDao)
-    private val overlays = OverlayState(scope, overlayTimeoutMs)
+    private val overlays = OverlayState(scope)
     private val instant = MutableStateFlow(clock())
 
     /** Executes context-menu rows; also resolves the channel they act on. */
     val menu = PlaybackMenuHandler(ChannelActions(env.channelDao, scope), overlays, tuner)
+
+    private val video = env.engine.video
 
     val current: StateFlow<ChannelEntity?> = tuner.current
     val overlay: StateFlow<PlaybackOverlay> = overlays.overlay
@@ -53,58 +55,48 @@ class PlaybackViewModel(
         tuner.start()
     }
 
+    private val commands = PlaybackCommands(tuner, overlays, panel, instant, clock)
+
     /** Routes a key through the catalogue's key-by-context map; true = consumed. */
     fun onKey(key: PlaybackKey): Boolean {
         val command = PlaybackKeyPolicy.commandFor(overlays.value, key) ?: return false
-        execute(command)
+        commands.execute(command)
         return true
     }
 
-    /** OK on a panel row tunes it and dismisses the panel (catalogue §3). */
+    /** OK on a panel row tunes it and shows the compact zap overlay (round3-ref 10). */
     fun tuneFromPanel(channel: ChannelEntity) {
         tuner.tune(channel)
-        overlays.set(PlaybackOverlay.None)
+        commands.showZapInfo()
     }
 
     fun showChannelMenu(channel: ChannelEntity) = overlays.set(PlaybackOverlay.ChannelMenu(channel.id))
 
     fun showComingSoon(feature: String) = overlays.set(PlaybackOverlay.ComingSoon(feature))
 
-    fun onOverlayInteraction() {
-        if (overlays.value == PlaybackOverlay.Info) overlays.keepInfoAlive()
+    /** Quick-bar OK: Channels list is real, the rest are later slices. */
+    fun onQuickBarItem(action: QuickBarAction) {
+        if (action == QuickBarAction.CHANNELS_LIST) openPanel() else showComingSoon(action.feature)
     }
+
+    /** The nine quick-bar slots with live stream labels (round3-ref 07). */
+    fun quickBarItems(): List<QuickBarItem> = QuickBar.items(video.value)
+
+    fun onOverlayInteraction() = overlays.keepAlive()
 
     fun close() = tuner.release()
 
-    private fun execute(command: PlaybackCommand) {
-        when (command) {
-            PlaybackCommand.ShowInfo -> showInfo()
-            PlaybackCommand.OpenPanelAtPrevious -> openPanel(offset = -1)
-            PlaybackCommand.OpenPanelAtCurrent -> openPanel(offset = 0)
-            is PlaybackCommand.Zap -> zap(command.delta)
-            PlaybackCommand.OpenMenu -> overlays.set(PlaybackOverlay.Menu)
-            PlaybackCommand.Dismiss -> overlays.set(PlaybackOverlay.None)
-            PlaybackCommand.BackToPanel -> overlays.set(PlaybackOverlay.Panel)
-        }
-    }
-
-    private fun showInfo() {
-        instant.value = clock()
-        overlays.showInfoAutoHiding()
-    }
-
-    private fun zap(delta: Int) {
-        if (tuner.zap(delta)) showInfo()
-    }
-
     /** The overlay's "TV guide" card opens the panel at the tuned row. */
-    fun openPanel(offset: Int = 0) {
-        panel.openFocusedOn(tuner.neighbour(offset)?.id)
-        overlays.set(PlaybackOverlay.Panel)
-    }
+    fun openPanel() = commands.openPanel()
 
     companion object {
-        /** TiviMate's default panel timeout (~5 s; premium-tunable, not captured). */
-        const val INFO_OVERLAY_TIMEOUT_MS = 5_000L
+        /** Hide begins ≈5.1 s after the keypress (tm-ov4.webm, round3). */
+        const val INFO_OVERLAY_TIMEOUT_MS = 5_100L
+
+        /** The compact zap overlay stays ~5.5 s after the zap (tm-zap.webm). */
+        const val ZAP_OVERLAY_TIMEOUT_MS = 5_500L
+
+        /** The quick-bar auto-hides ~5 s after opening (round3-ref 07). */
+        const val QUICK_BAR_TIMEOUT_MS = 5_000L
     }
 }

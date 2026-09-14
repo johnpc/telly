@@ -2,6 +2,7 @@ package com.johncorser.telly.features.playback
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
@@ -9,12 +10,9 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
@@ -24,10 +22,13 @@ import com.johncorser.telly.R
 import com.johncorser.telly.core.design.TELLY_MENU_SHEET
 import com.johncorser.telly.core.ui.LocalAccentColor
 import com.johncorser.telly.core.ui.TellyScreenMenuRow
+import com.johncorser.telly.core.ui.rememberAutoFocus
 
 /**
- * Right-side context-menu sheet (captures 38-40): plain rows plus blue
- * section headers; the first row takes focus like TiviMate's Search row.
+ * Right-side context-menu sheet (round3-ref 05 + captures 38-40): 256 dp
+ * wide, 8 dp off the screen's top/right edge, 40 dp row pitch, the focus
+ * pill inset 8 dp from the sheet edges; blue section headers; the first row
+ * takes focus like TiviMate's Search row.
  */
 @Composable
 internal fun PlaybackScreenMenu(
@@ -35,13 +36,13 @@ internal fun PlaybackScreenMenu(
     favorite: Boolean,
     onItem: (PlayerMenuItem) -> Unit,
 ) {
-    val firstFocus = remember { FocusRequester() }
-    LaunchedEffect(Unit) { firstFocus.requestFocus() }
-    Box(Modifier.fillMaxSize(), contentAlignment = Alignment.CenterEnd) {
+    val firstFocus = rememberAutoFocus()
+    Box(Modifier.fillMaxSize(), contentAlignment = Alignment.TopEnd) {
         LazyColumn(
             Modifier
-                .padding(12.dp)
-                .width(240.dp)
+                .padding(top = 8.dp, end = 8.dp, bottom = 8.dp)
+                .width(256.dp)
+                .fillMaxHeight()
                 .clip(RoundedCornerShape(4.dp))
                 .background(Color(TELLY_MENU_SHEET)),
         ) {
@@ -54,12 +55,10 @@ internal fun PlaybackScreenMenu(
                         label = menuItem.labelFor(favorite),
                         onClick = { onItem(menuItem) },
                         modifier =
-                            if (sectionIndex == 0 && itemIndex == 0) {
-                                Modifier.focusRequester(firstFocus)
-                            } else {
-                                Modifier
-                            },
+                            (if (sectionIndex == 0 && itemIndex == 0) Modifier.focusRequester(firstFocus) else Modifier)
+                                .padding(horizontal = 8.dp),
                         icon = menuIcon(menuItem),
+                        height = 40.dp,
                     )
                 }
             }

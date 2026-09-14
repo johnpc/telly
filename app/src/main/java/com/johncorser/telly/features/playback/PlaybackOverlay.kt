@@ -8,13 +8,19 @@ sealed interface PlaybackOverlay {
     /** Bottom info overlay with programme data + shortcut cards (capture 34). */
     data object Info : PlaybackOverlay
 
+    /** Info overlay expanded with the transport row (round3-ref 03b). */
+    data object InfoTransport : PlaybackOverlay
+
+    /** Compact channel-change overlay while the new stream tunes (round3-ref 10). */
+    data object ZapInfo : PlaybackOverlay
+
+    /** Bottom icon quick-bar from long-OK / MENU at fullscreen (round3-ref 07/08). */
+    data object QuickBar : PlaybackOverlay
+
     /** Channel list panel over the dimmed video (captures 36/47). */
     data object Panel : PlaybackOverlay
 
-    /** Long-OK / MENU player context menu (captures 38-40). */
-    data object Menu : PlaybackOverlay
-
-    /** Channel context menu opened by long-OK on a panel row (capture 38 §channel). */
+    /** Right-side sheet from long-OK on a panel row (round3-ref 05). */
     data class ChannelMenu(
         val channelId: Long,
     ) : PlaybackOverlay

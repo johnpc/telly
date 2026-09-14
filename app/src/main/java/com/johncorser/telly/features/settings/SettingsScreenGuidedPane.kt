@@ -7,7 +7,7 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.requiredSize
 import androidx.compose.foundation.layout.width
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
@@ -40,7 +40,7 @@ internal fun SettingsScreenGuidedPane(
             painter = painterResource(iconRes),
             contentDescription = null,
             tint = Color(TELLY_TEXT_PRIMARY),
-            modifier = Modifier.size(128.dp),
+            modifier = Modifier.requiredSize(128.dp),
         )
         Spacer(Modifier.width(24.dp))
         Column(

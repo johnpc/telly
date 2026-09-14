@@ -11,14 +11,14 @@ class PlaybackKeyPolicyTest {
     ): PlaybackCommand? = PlaybackKeyPolicy.commandFor(overlay, key)
 
     @Test
-    fun `bare playback follows the catalogue key map`() {
+    fun `bare playback follows the device-verified key map`() {
         assertEquals(PlaybackCommand.ShowInfo, at(PlaybackOverlay.None, PlaybackKey.OK))
         assertEquals(PlaybackCommand.ShowInfo, at(PlaybackOverlay.None, PlaybackKey.DOWN))
-        assertEquals(PlaybackCommand.OpenPanelAtPrevious, at(PlaybackOverlay.None, PlaybackKey.UP))
+        assertEquals(PlaybackCommand.ShowInfo, at(PlaybackOverlay.None, PlaybackKey.UP))
         assertEquals(PlaybackCommand.Zap(+1), at(PlaybackOverlay.None, PlaybackKey.CHANNEL_UP))
         assertEquals(PlaybackCommand.Zap(-1), at(PlaybackOverlay.None, PlaybackKey.CHANNEL_DOWN))
-        assertEquals(PlaybackCommand.OpenMenu, at(PlaybackOverlay.None, PlaybackKey.LONG_OK))
-        assertEquals(PlaybackCommand.OpenMenu, at(PlaybackOverlay.None, PlaybackKey.MENU))
+        assertEquals(PlaybackCommand.OpenQuickBar, at(PlaybackOverlay.None, PlaybackKey.LONG_OK))
+        assertEquals(PlaybackCommand.OpenQuickBar, at(PlaybackOverlay.None, PlaybackKey.MENU))
         assertEquals(PlaybackCommand.OpenPanelAtCurrent, at(PlaybackOverlay.None, PlaybackKey.BACK))
     }
 
@@ -29,10 +29,10 @@ class PlaybackKeyPolicyTest {
     }
 
     @Test
-    fun `the info overlay dismisses on back, opens the menu and keeps zapping`() {
+    fun `the info overlay dismisses on back, opens the quick-bar and keeps zapping`() {
         assertEquals(PlaybackCommand.Dismiss, at(PlaybackOverlay.Info, PlaybackKey.BACK))
-        assertEquals(PlaybackCommand.OpenMenu, at(PlaybackOverlay.Info, PlaybackKey.LONG_OK))
-        assertEquals(PlaybackCommand.OpenMenu, at(PlaybackOverlay.Info, PlaybackKey.MENU))
+        assertEquals(PlaybackCommand.OpenQuickBar, at(PlaybackOverlay.Info, PlaybackKey.LONG_OK))
+        assertEquals(PlaybackCommand.OpenQuickBar, at(PlaybackOverlay.Info, PlaybackKey.MENU))
         assertEquals(PlaybackCommand.Zap(+1), at(PlaybackOverlay.Info, PlaybackKey.CHANNEL_UP))
         assertEquals(PlaybackCommand.Zap(-1), at(PlaybackOverlay.Info, PlaybackKey.CHANNEL_DOWN))
         assertNull(at(PlaybackOverlay.Info, PlaybackKey.LEFT))
@@ -40,12 +40,32 @@ class PlaybackKeyPolicyTest {
     }
 
     @Test
-    fun `panels and menus only react to back`() {
+    fun `a second up expands the transport row and a third does nothing`() {
+        assertEquals(PlaybackCommand.ShowTransport, at(PlaybackOverlay.Info, PlaybackKey.UP))
+        assertNull(at(PlaybackOverlay.InfoTransport, PlaybackKey.UP))
+        assertEquals(PlaybackCommand.Dismiss, at(PlaybackOverlay.InfoTransport, PlaybackKey.BACK))
+        assertEquals(PlaybackCommand.OpenQuickBar, at(PlaybackOverlay.InfoTransport, PlaybackKey.MENU))
+        assertEquals(PlaybackCommand.Zap(+1), at(PlaybackOverlay.InfoTransport, PlaybackKey.CHANNEL_UP))
+    }
+
+    @Test
+    fun `the zap overlay promotes to the full info overlay and keeps zapping`() {
+        assertEquals(PlaybackCommand.ShowInfo, at(PlaybackOverlay.ZapInfo, PlaybackKey.OK))
+        assertEquals(PlaybackCommand.ShowInfo, at(PlaybackOverlay.ZapInfo, PlaybackKey.DOWN))
+        assertEquals(PlaybackCommand.ShowInfo, at(PlaybackOverlay.ZapInfo, PlaybackKey.UP))
+        assertEquals(PlaybackCommand.Zap(+1), at(PlaybackOverlay.ZapInfo, PlaybackKey.CHANNEL_UP))
+        assertEquals(PlaybackCommand.OpenQuickBar, at(PlaybackOverlay.ZapInfo, PlaybackKey.MENU))
+        assertEquals(PlaybackCommand.Dismiss, at(PlaybackOverlay.ZapInfo, PlaybackKey.BACK))
+        assertNull(at(PlaybackOverlay.ZapInfo, PlaybackKey.LEFT))
+    }
+
+    @Test
+    fun `panels, quick-bar and placeholders only react to back`() {
         assertEquals(PlaybackCommand.Dismiss, at(PlaybackOverlay.Panel, PlaybackKey.BACK))
-        assertEquals(PlaybackCommand.Dismiss, at(PlaybackOverlay.Menu, PlaybackKey.BACK))
+        assertEquals(PlaybackCommand.Dismiss, at(PlaybackOverlay.QuickBar, PlaybackKey.BACK))
         assertEquals(PlaybackCommand.Dismiss, at(PlaybackOverlay.ComingSoon("Record"), PlaybackKey.BACK))
         assertNull(at(PlaybackOverlay.Panel, PlaybackKey.OK))
-        assertNull(at(PlaybackOverlay.Menu, PlaybackKey.UP))
+        assertNull(at(PlaybackOverlay.QuickBar, PlaybackKey.UP))
     }
 
     @Test

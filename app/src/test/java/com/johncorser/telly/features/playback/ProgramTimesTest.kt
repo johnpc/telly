@@ -48,4 +48,12 @@ class ProgramTimesTest {
         assertEquals(1000, ProgramTimes.progressPermille(0, 1000, 2000))
         assertEquals(0, ProgramTimes.progressPermille(1000, 1000, 500))
     }
+
+    @Test
+    fun `transport spans render as minutes-seconds with hours when needed`() {
+        assertEquals("00:16", ProgramTimes.span(16_000))
+        assertEquals("45:00", ProgramTimes.span(45 * 60_000L))
+        assertEquals("1:15:00", ProgramTimes.span(75 * 60_000L))
+        assertEquals("00:00", ProgramTimes.span(-5_000))
+    }
 }

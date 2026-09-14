@@ -29,11 +29,15 @@ const val TELLY_ERROR_TEXT = 0xFFE57373
 // token table): Material Blue 500 accent, Blue 200 clock, dark overlay cards.
 const val TELLY_PLAYBACK_ACCENT = 0xFF2196F3
 const val TELLY_CLOCK_BLUE = 0xFF90CAF9
-const val TELLY_OVERLAY_CARD = 0xFF1B1D21
+const val TELLY_OVERLAY_CARD = 0xFF181E20
+const val TELLY_OVERLAY_CARD_FOCUSED = 0xFF252A2D
 const val TELLY_PROGRESS_TRACK = 0xFF666666
+const val TELLY_DASH_FILL = 0xFFB7B9BC
 const val TELLY_MENU_SHEET = 0xFF1B1D21
-const val TELLY_BADGE_FILL = 0xFF3A3D40
+const val TELLY_BADGE_FILL = 0x66000000
+const val TELLY_BADGE_TEXT = 0xFF9FA1A3
 const val TELLY_LOGO_TILE = 0xFF2C5F8A
+const val TELLY_LOGO_FOCUS_BORDER = 0xFF2E5B81
 
 // Settings panel palette (uidump 18: panel #232629 = TELLY_GUIDANCE_PANE,
 // header strip #333639, focused row pill #E0E2E4, accent #2196F3).

@@ -1,9 +1,10 @@
 package com.johncorser.telly.features.playback
 
 /**
- * Verbatim TiviMate 5.2.0 context-menu rows (captures 38-40 + uidump 38).
- * Only favorites and hide are functional this slice; everything else routes
- * to a branded "coming soon" placeholder.
+ * Verbatim TiviMate 5.2.0 context-menu rows (captures 38-40 + round3-ref 05:
+ * this sheet belongs to long-OK on a panel/guide row, with the panel still
+ * visible behind). Only favorites and hide are functional this slice;
+ * everything else routes to a branded "coming soon" placeholder.
  */
 enum class PlayerMenuItem(
     val label: String,
@@ -69,7 +70,7 @@ object PlayerMenu {
             PlayerMenuItem.GROUP_OPTIONS,
         )
 
-    /** The full long-OK / MENU sheet during playback. */
+    /** The full long-OK sheet on a panel/guide row (round3-ref 05). */
     fun sections(
         programTitle: String?,
         channelName: String,
@@ -80,8 +81,4 @@ object PlayerMenu {
             PlayerMenuSection(header = channelName, items = channelItems),
             PlayerMenuSection(header = "All channels", items = allChannelsItems),
         )
-
-    /** The long-OK menu on a channel panel row: just the channel section. */
-    fun channelSections(channelName: String): List<PlayerMenuSection> =
-        listOf(PlayerMenuSection(header = channelName, items = channelItems))
 }

@@ -27,33 +27,35 @@ import com.johncorser.telly.core.design.TELLY_PROGRESS_TRACK
  */
 private const val PERMILLE = 1000f
 
-/** TiviMate progress line: grey track, blue fill, optional round thumb. */
+/** TiviMate progress line: grey track, accent/grey fill, optional thumb. */
 @Composable
 fun TellyScreenProgressBar(
     permille: Int,
     modifier: Modifier = Modifier,
     thumb: Boolean = false,
+    fill: Color = LocalAccentColor.current,
+    thickness: Dp = 2.dp,
 ) {
     val fraction = permille / PERMILLE
     Box(modifier, contentAlignment = Alignment.CenterStart) {
         Box(
             Modifier
                 .fillMaxWidth()
-                .height(2.dp)
+                .height(thickness)
                 .background(Color(TELLY_PROGRESS_TRACK)),
         )
         Box(
             Modifier
                 .fillMaxWidth(fraction)
-                .height(2.dp)
-                .background(LocalAccentColor.current),
+                .height(thickness)
+                .background(fill),
         )
         if (thumb) {
             Box(Modifier.fillMaxWidth(fraction), contentAlignment = Alignment.CenterEnd) {
                 Box(
                     Modifier
                         .size(8.dp)
-                        .background(LocalAccentColor.current, CircleShape),
+                        .background(fill, CircleShape),
                 )
             }
         }

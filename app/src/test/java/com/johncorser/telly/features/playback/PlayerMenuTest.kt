@@ -39,18 +39,6 @@ class PlayerMenuTest {
     }
 
     @Test
-    fun `the channel menu is just the captured channel section`() {
-        val sections = PlayerMenu.channelSections("News One")
-
-        assertEquals(1, sections.size)
-        assertEquals("News One", sections.single().header)
-        assertEquals(
-            listOf("Add to Favorites", "Block channel", "Hide channel", "Assign EPG", "Channel options"),
-            sections.single().items.map { it.label },
-        )
-    }
-
-    @Test
     fun `the favorites row flips its label for favorite channels`() {
         assertEquals("Add to Favorites", PlayerMenuItem.ADD_TO_FAVORITES.labelFor(favorite = false))
         assertEquals("Remove from Favorites", PlayerMenuItem.ADD_TO_FAVORITES.labelFor(favorite = true))

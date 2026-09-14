@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Recordings icon for the quick-bar (round3-ref 07). -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="24dp"
+    android:height="24dp"
+    android:viewportWidth="24"
+    android:viewportHeight="24">
+    <path
+        android:fillColor="#FFFFFFFF"
+        android:pathData="M17,4.26L17,6.35c2.33,0.82 4,3.04 4,5.65s-1.67,4.83 -4,5.65v2.09c3.45,-0.89 6,-4.01 6,-7.74s-2.55,-6.85 -6,-7.74zM9,4C4.58,4 1,7.58 1,12s3.58,8 8,8 8,-3.58 8,-8 -3.58,-8 -8,-8z" />
+</vector>

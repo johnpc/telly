@@ -5,6 +5,7 @@ import androidx.media3.common.Format
 import androidx.media3.common.PlaybackException
 import androidx.media3.common.Player
 import androidx.media3.exoplayer.ExoPlayer
+import androidx.media3.exoplayer.video.VideoFrameMetadataListener
 import androidx.test.core.app.ApplicationProvider
 import io.mockk.Runs
 import io.mockk.every
@@ -23,9 +24,11 @@ import org.robolectric.RobolectricTestRunner
 class Media3PlayerEngineTest {
     private val player = mockk<ExoPlayer>(relaxed = true)
     private val listener = slot<Player.Listener>()
+    private val frameListener = slot<VideoFrameMetadataListener>()
 
     private fun engine(): Media3PlayerEngine {
         every { player.addListener(capture(listener)) } just Runs
+        every { player.setVideoFrameMetadataListener(capture(frameListener)) } just Runs
         return Media3PlayerEngine(player)
     }
 
@@ -70,6 +73,39 @@ class Media3PlayerEngineTest {
 
         assertEquals(PlayerState.Playing, engine.state.value)
         assertEquals(VideoDetails(0, 0, 0f, 0), engine.video.value)
+    }
+
+    @Test
+    fun `a TS stream without a container frame rate gets the measured one`() {
+        val engine = engine()
+        every { player.videoFormat } returns
+            Format.Builder().setWidth(1280).setHeight(720).build()
+        every { player.audioFormat } returns Format.Builder().setChannelCount(1).build()
+        listener.captured.onPlaybackStateChanged(Player.STATE_READY)
+        assertEquals(0f, engine.video.value!!.frameRate, 0f)
+
+        val format = Format.Builder().build()
+        for (frame in 0..12) {
+            frameListener.captured.onVideoFrameAboutToBeRendered(frame * 40_000L, 0L, format, null)
+        }
+
+        assertEquals(25f, engine.video.value!!.frameRate, 0.01f)
+    }
+
+    @Test
+    fun `a container-reported frame rate is never overridden`() {
+        val engine = engine()
+        every { player.videoFormat } returns
+            Format.Builder().setWidth(1280).setHeight(720).setFrameRate(50f).build()
+        every { player.audioFormat } returns Format.Builder().setChannelCount(1).build()
+        listener.captured.onPlaybackStateChanged(Player.STATE_READY)
+
+        val format = Format.Builder().build()
+        for (frame in 0..12) {
+            frameListener.captured.onVideoFrameAboutToBeRendered(frame * 40_000L, 0L, format, null)
+        }
+
+        assertEquals(50f, engine.video.value!!.frameRate, 0f)
     }
 
     @Test

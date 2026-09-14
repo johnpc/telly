@@ -20,6 +20,8 @@ data class PlaybackInfoData(
     val description: String?,
     val nextLine: String?,
     val badges: List<String>,
+    val elapsed: String?,
+    val duration: String?,
 )
 
 object PlaybackInfoBuilder {
@@ -48,6 +50,8 @@ object PlaybackInfoBuilder {
                     "${ProgramTimes.range(it.startMs, it.endMs, zone)}  ${ProgramTitle.of(it.details)}"
                 },
             badges = PlaybackBadges.badges(video),
+            elapsed = now?.let { ProgramTimes.span(atMs - it.startMs) },
+            duration = now?.let { ProgramTimes.span(it.endMs - it.startMs) },
         )
     }
 }

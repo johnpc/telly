@@ -18,6 +18,9 @@ fun PlayerScreenSurface(
             PlayerView(context).apply {
                 useController = false
                 resizeMode = AspectRatioFrameLayout.RESIZE_MODE_FIT
+                // Seamless zap: keep the old channel's frame while the next
+                // stream tunes — no black gap (round3 P0 item 2).
+                setKeepContentOnPlayerReset(true)
             }
         },
         update = { it.player = engine.player },

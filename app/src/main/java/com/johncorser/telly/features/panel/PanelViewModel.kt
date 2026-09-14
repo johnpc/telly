@@ -56,6 +56,9 @@ class PanelViewModel(
                     .map { guide -> PanelRows.build(groupChannels, group, guide, at, zone) }
             }.stateIn(scope, SharingStarted.Eagerly, emptyList())
 
+    /** The airing programme title of a row — the channel menu's blue header. */
+    fun nowTitleOf(channelId: Long): String? = rows.value.firstOrNull { it.channel.id == channelId }?.nowTitle
+
     /** Refreshes "now" and moves focus to [channelId] (the tuned/previous one). */
     fun openFocusedOn(channelId: Long?) {
         instant.value = clock()

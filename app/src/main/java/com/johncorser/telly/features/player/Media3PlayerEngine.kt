@@ -10,11 +10,14 @@ import androidx.media3.exoplayer.ExoPlayer
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.update
 
 /**
  * Media3-backed [PlayerEngine]. HLS, progressive and raw TS streams are all
  * handled by ExoPlayer's default media source factory (media3-exoplayer-hls
  * is on the classpath); audio focus comes from the audio attributes below.
+ * The player instance is reused across channel changes, so the last frame
+ * stays on the surface while the next stream tunes (round3 P0 item 2).
  */
 class Media3PlayerEngine(
     val player: ExoPlayer,
@@ -22,16 +25,21 @@ class Media3PlayerEngine(
     Player.Listener {
     private val mutableState = MutableStateFlow<PlayerState>(PlayerState.Idle)
     private val mutableVideo = MutableStateFlow<VideoDetails?>(null)
+    private var frameRates = FrameRateEstimator()
 
     override val state: StateFlow<PlayerState> = mutableState.asStateFlow()
     override val video: StateFlow<VideoDetails?> = mutableVideo.asStateFlow()
 
     init {
         player.addListener(this)
+        player.setVideoFrameMetadataListener { presentationTimeUs, _, _, _ ->
+            frameRates.onFrame(presentationTimeUs)?.let(::onFrameRateMeasured)
+        }
     }
 
     override fun load(streamUrl: String) {
         mutableState.value = PlayerState.Buffering
+        frameRates = FrameRateEstimator()
         player.setMediaItem(MediaItem.fromUri(streamUrl))
         player.prepare()
         player.play()
@@ -65,9 +73,16 @@ class Media3PlayerEngine(
             VideoDetails(
                 width = videoFormat?.width ?: 0,
                 height = videoFormat?.height ?: 0,
-                frameRate = videoFormat?.frameRate ?: 0f,
+                frameRate = (videoFormat?.frameRate ?: 0f).coerceAtLeast(0f),
                 audioChannels = player.audioFormat?.channelCount ?: 0,
             )
+    }
+
+    /** TS formats report no frame rate; the render-time estimate fills it in. */
+    private fun onFrameRateMeasured(fps: Float) {
+        mutableVideo.update { details ->
+            if (details != null && details.frameRate <= 0f) details.copy(frameRate = fps) else details
+        }
     }
 
     companion object {

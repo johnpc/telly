@@ -1,6 +1,5 @@
 package com.johncorser.telly.features.playback
 
-import com.johncorser.telly.features.panel.PanelViewModel
 import com.johncorser.telly.features.player.VideoDetails
 import com.johncorser.telly.testutil.FakeChannelDao
 import com.johncorser.telly.testutil.FakeKeyValueStore
@@ -85,6 +84,21 @@ class PlaybackViewModelTest {
         }
 
     @Test
+    fun `up opens the info overlay and a second up expands the transport row`() =
+        runTest {
+            val vm = buildVm()
+
+            assertTrue(vm.onKey(PlaybackKey.UP))
+            assertEquals(PlaybackOverlay.Info, vm.overlay.value)
+
+            assertTrue(vm.onKey(PlaybackKey.UP))
+            assertEquals(PlaybackOverlay.InfoTransport, vm.overlay.value)
+
+            advanceTimeBy(PlaybackViewModel.INFO_OVERLAY_TIMEOUT_MS + 1)
+            assertEquals(PlaybackOverlay.None, vm.overlay.value)
+        }
+
+    @Test
     fun `browsing inside the overlay postpones the auto-hide`() =
         runTest {
             val vm = buildVm()
@@ -95,18 +109,18 @@ class PlaybackViewModelTest {
             advanceTimeBy(4_000)
             assertEquals(PlaybackOverlay.Info, vm.overlay.value)
 
-            advanceTimeBy(1_100)
+            advanceTimeBy(1_200)
             assertEquals(PlaybackOverlay.None, vm.overlay.value)
         }
 
     @Test
-    fun `channel up zaps forward with wrap-around and shows the info overlay`() =
+    fun `channel up zaps forward with wrap-around and shows the zap overlay`() =
         runTest {
             val vm = buildVm()
 
             vm.onKey(PlaybackKey.CHANNEL_UP)
             assertEquals(2L, vm.current.value?.id)
-            assertEquals(PlaybackOverlay.Info, vm.overlay.value)
+            assertEquals(PlaybackOverlay.ZapInfo, vm.overlay.value)
 
             vm.onKey(PlaybackKey.CHANNEL_UP)
             vm.onKey(PlaybackKey.CHANNEL_UP)
@@ -115,26 +129,28 @@ class PlaybackViewModelTest {
         }
 
     @Test
-    fun `channel down wraps backwards from the first channel`() =
+    fun `the zap overlay hides after its own longer timeout`() =
         runTest {
             val vm = buildVm()
 
             vm.onKey(PlaybackKey.CHANNEL_DOWN)
-
             assertEquals(3L, vm.current.value?.id)
+
+            advanceTimeBy(PlaybackViewModel.ZAP_OVERLAY_TIMEOUT_MS - 1)
+            assertEquals(PlaybackOverlay.ZapInfo, vm.overlay.value)
+            advanceTimeBy(2)
+            assertEquals(PlaybackOverlay.None, vm.overlay.value)
         }
 
     @Test
-    fun `up opens the panel focused on the previous channel`() =
+    fun `ok during the zap overlay promotes it to the full info overlay`() =
         runTest {
             val vm = buildVm()
 
-            vm.onKey(PlaybackKey.UP)
+            vm.onKey(PlaybackKey.CHANNEL_UP)
+            assertTrue(vm.onKey(PlaybackKey.OK))
 
-            assertEquals(PlaybackOverlay.Panel, vm.overlay.value)
-            assertEquals(PanelViewModel.ALL_CHANNELS, vm.panel.selectedGroup.value)
-            assertEquals(2, vm.panel.focusIndex.value)
-            assertEquals(1L, vm.current.value?.id)
+            assertEquals(PlaybackOverlay.Info, vm.overlay.value)
         }
 
     @Test
@@ -158,48 +174,82 @@ class PlaybackViewModelTest {
             assertEquals(PlaybackOverlay.None, vm.overlay.value)
 
             vm.onKey(PlaybackKey.MENU)
-            assertEquals(PlaybackOverlay.Menu, vm.overlay.value)
+            assertEquals(PlaybackOverlay.QuickBar, vm.overlay.value)
             vm.onKey(PlaybackKey.BACK)
             assertEquals(PlaybackOverlay.None, vm.overlay.value)
         }
 
     @Test
-    fun `long ok opens the context menu and left right stay unconsumed`() =
+    fun `long ok opens the quick-bar which auto-hides`() =
         runTest {
             val vm = buildVm()
 
             assertFalse(vm.onKey(PlaybackKey.LEFT))
             assertFalse(vm.onKey(PlaybackKey.RIGHT))
             assertTrue(vm.onKey(PlaybackKey.LONG_OK))
-            assertEquals(PlaybackOverlay.Menu, vm.overlay.value)
+            assertEquals(PlaybackOverlay.QuickBar, vm.overlay.value)
+
+            advanceTimeBy(PlaybackViewModel.QUICK_BAR_TIMEOUT_MS + 1)
+            assertEquals(PlaybackOverlay.None, vm.overlay.value)
         }
 
     @Test
-    fun `tuning from the panel dismisses it and persists the channel`() =
+    fun `the quick-bar routes channels list to the panel and the rest to placeholders`() =
         runTest {
             val vm = buildVm()
-            vm.onKey(PlaybackKey.UP)
+            vm.onKey(PlaybackKey.MENU)
+
+            vm.onQuickBarItem(QuickBarAction.CHANNELS_LIST)
+            assertEquals(PlaybackOverlay.Panel, vm.overlay.value)
+
+            vm.onQuickBarItem(QuickBarAction.SEARCH)
+            assertEquals(PlaybackOverlay.ComingSoon("Search"), vm.overlay.value)
+        }
+
+    @Test
+    fun `quick-bar items read the live stream details`() =
+        runTest {
+            val vm = buildVm()
+            engine.video.value = VideoDetails(1280, 720, 25f, 1)
+
+            val labels = vm.quickBarItems().map { it.label }
+
+            assertEquals(
+                listOf(
+                    "Search", "Channels list", "Recordings", "Multiview",
+                    "Picture-in-picture", "1280 × 720", "Mono", "0 ms", "Off",
+                ),
+                labels,
+            )
+        }
+
+    @Test
+    fun `tuning from the panel shows the zap overlay and persists the channel`() =
+        runTest {
+            val vm = buildVm()
+            vm.onKey(PlaybackKey.BACK)
 
             vm.tuneFromPanel(channels[2])
 
-            assertEquals(PlaybackOverlay.None, vm.overlay.value)
+            assertEquals(PlaybackOverlay.ZapInfo, vm.overlay.value)
             assertEquals(3L, vm.current.value?.id)
             assertEquals(3L, store.getLong(TuneController.LAST_CHANNEL_KEY))
             assertEquals("http://s/3.ts", engine.loaded.last())
         }
 
     @Test
-    fun `the favorites menu row toggles and closes the player menu`() =
+    fun `the favorites row of a channel menu toggles and returns to the panel`() =
         runTest {
             val vm = buildVm()
-            vm.onKey(PlaybackKey.MENU)
+            vm.onKey(PlaybackKey.BACK)
+            vm.showChannelMenu(channels[0])
 
             vm.menu.onMenuItem(PlayerMenuItem.ADD_TO_FAVORITES)
 
             assertTrue(dao.channels.value.first { it.id == 1L }.flags.favorite)
-            assertEquals(PlaybackOverlay.None, vm.overlay.value)
+            assertEquals(PlaybackOverlay.Panel, vm.overlay.value)
 
-            vm.onKey(PlaybackKey.MENU)
+            vm.showChannelMenu(channels[0])
             vm.menu.onMenuItem(PlayerMenuItem.ADD_TO_FAVORITES)
             assertFalse(dao.channels.value.first { it.id == 1L }.flags.favorite)
         }
@@ -238,7 +288,8 @@ class PlaybackViewModelTest {
     fun `unbuilt menu rows route to a branded coming-soon placeholder`() =
         runTest {
             val vm = buildVm()
-            vm.onKey(PlaybackKey.MENU)
+            vm.onKey(PlaybackKey.BACK)
+            vm.showChannelMenu(channels[0])
 
             vm.menu.onMenuItem(PlayerMenuItem.RECORD)
 
@@ -280,5 +331,8 @@ class PlaybackViewModelTest {
             assertTrue(info.nextLine!!.endsWith("Newsroom Live. S1 E8"))
             assertEquals(1, info.number)
             assertEquals("News One", info.name)
+            assertEquals("Description of Business Hour", info.description)
+            assertEquals("16:40", info.elapsed)
+            assertEquals("33:20", info.duration)
         }
 }

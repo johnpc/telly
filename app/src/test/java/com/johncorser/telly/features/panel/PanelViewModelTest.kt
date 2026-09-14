@@ -14,6 +14,7 @@ import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertNull
 import org.junit.Test
 import java.util.GregorianCalendar
 import java.util.TimeZone
@@ -167,5 +168,16 @@ class PanelViewModelTest {
             panel.openFocusedOn(null)
 
             assertEquals("Sun, Sep 13, 3:02 PM", panel.clockText.value)
+        }
+
+    @Test
+    fun `now-title lookup feeds the channel menu's blue header`() =
+        runTest {
+            programs.programs.value =
+                listOf(testProgram("tvg-1", at(14, 30), at(15, 45), "Business Hour", episode = "S1 E7"))
+            val panel = buildPanel()
+
+            assertEquals("Business Hour. S1 E7", panel.nowTitleOf(1L))
+            assertNull(panel.nowTitleOf(99L))
         }
 }

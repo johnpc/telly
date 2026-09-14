@@ -13,6 +13,10 @@ import java.util.TimeZone
  */
 object ProgramTimes {
     private const val MINUTE_MS = 60_000L
+    private const val SECOND_MS = 1_000L
+    private const val SECONDS_PER_MINUTE = 60L
+    private const val MINUTES_PER_HOUR = 60L
+    private const val SECONDS_PER_HOUR = 3_600L
     const val PERMILLE = 1000
 
     fun range(
@@ -31,6 +35,16 @@ object ProgramTimes {
         atMs: Long,
         zone: TimeZone,
     ): String = format("EEE, MMM d, h:mm a", atMs, zone)
+
+    /** Transport-row span "00:16" / "45:00" / "1:15:00" (round3-ref 03b). */
+    fun span(ms: Long): String {
+        val totalSeconds = ms.coerceAtLeast(0) / SECOND_MS
+        val minutes = (totalSeconds / SECONDS_PER_MINUTE) % MINUTES_PER_HOUR
+        val seconds = totalSeconds % SECONDS_PER_MINUTE
+        val hours = totalSeconds / SECONDS_PER_HOUR
+        val minSec = "%02d:%02d".format(minutes, seconds)
+        return if (hours > 0) "$hours:$minSec" else minSec
+    }
 
     /** Minutes left in the programme, rounded up ("61 min" in capture 34). */
     fun remainingMinutes(

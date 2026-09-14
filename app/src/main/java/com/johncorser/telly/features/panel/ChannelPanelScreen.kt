@@ -27,8 +27,10 @@ import com.johncorser.telly.features.playlist.db.ChannelEntity
 
 /**
  * Channel-list panel over the dimmed video (captures 25/36/47): groups
- * column left, channel rows right with now-programme + progress, a detail
- * card for the focused row, OK tunes, long-OK opens the channel menu.
+ * column left, channel rows right with now-programme + progress; the focused
+ * row expands inline into the detail card at its list position (round3 item
+ * 13). OK tunes, long-OK opens the channel menu. The scrim lets the video
+ * show through like TiviMate's (item 17).
  */
 @Composable
 fun ChannelPanelScreen(
@@ -39,24 +41,21 @@ fun ChannelPanelScreen(
 ) {
     val groups by panel.groups.collectAsState()
     val selected by panel.selectedGroup.collectAsState()
-    val rows by panel.rows.collectAsState()
     val clockText by panel.clockText.collectAsState()
-    val focusIndex by panel.focusIndex.collectAsState()
     Row(
         Modifier
             .fillMaxSize()
-            .background(Color(TELLY_ONBOARDING_BACKGROUND).copy(alpha = 0.9f)),
+            .background(Color(TELLY_ONBOARDING_BACKGROUND).copy(alpha = 0.68f)),
     ) {
         ChannelPanelScreenGroups(groups, selected, panel::selectGroup)
         Column(Modifier.weight(1f).padding(top = 8.dp, end = 16.dp)) {
             Text(
                 text = clockText,
-                modifier = Modifier.padding(start = 12.dp),
+                modifier = Modifier.padding(start = 12.dp, bottom = 8.dp),
                 color = Color(TELLY_CLOCK_BLUE),
                 fontSize = 14.sp,
             )
-            ChannelPanelScreenDetail(rows.getOrNull(focusIndex))
-            ChannelPanelScreenList(panel, rows, playingChannelId, onTune, onChannelMenu)
+            ChannelPanelScreenList(panel, playingChannelId, onTune, onChannelMenu)
         }
     }
 }
@@ -64,24 +63,28 @@ fun ChannelPanelScreen(
 @Composable
 private fun ChannelPanelScreenList(
     panel: PanelViewModel,
-    rows: List<PanelRow>,
     playingChannelId: Long?,
     onTune: (ChannelEntity) -> Unit,
     onChannelMenu: (ChannelEntity) -> Unit,
 ) {
+    val rows by panel.rows.collectAsState()
+    val focusIndex by panel.focusIndex.collectAsState()
     val initialFocus = remember { panel.focusIndex.value }
     val requester = remember { FocusRequester() }
     LazyColumn(state = rememberLazyListState(initialFirstVisibleItemIndex = initialFocus)) {
         itemsIndexed(rows, key = { _, row -> row.channel.id }) { index, row ->
-            ChannelPanelScreenRow(
-                row = row,
-                playing = row.channel.id == playingChannelId,
-                modifier =
-                    (if (index == initialFocus) Modifier.focusRequester(requester) else Modifier)
-                        .onFocusChanged { if (it.isFocused) panel.onRowFocused(index) },
-                onClick = { onTune(row.channel) },
-                onLongClick = { onChannelMenu(row.channel) },
-            )
+            Column {
+                ChannelPanelScreenRow(
+                    row = row,
+                    playing = row.channel.id == playingChannelId,
+                    modifier =
+                        (if (index == initialFocus) Modifier.focusRequester(requester) else Modifier)
+                            .onFocusChanged { if (it.isFocused) panel.onRowFocused(index) },
+                    onClick = { onTune(row.channel) },
+                    onLongClick = { onChannelMenu(row.channel) },
+                )
+                if (index == focusIndex) ChannelPanelScreenDetail(row)
+            }
             if (index == initialFocus) {
                 LaunchedEffect(Unit) { requester.requestFocus() }
             }
