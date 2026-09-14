@@ -305,4 +305,27 @@ Local SDK note: `local.properties` must contain
   into view only when it sits below the fold — instead of resetting to
   Search; a freshly opened sheet still lands on Search. Restore-to-origin is
   the assumed TiviMate behavior (standard leanback focus memory) —
-  **pending round6 on-device confirmation**.
+  **confirmed by ref-round6 §B** (originating-row restore) with one
+  correction: the Channel-options path never returns to the sheet at all
+  (see the 2026-09-14 ref-round6 bullet below).
+- **2026-09-14** Sheet motion + Channel-options replace semantics, per the
+  freshly captured ref-round6 evidence (`docs/reference/sidebyside/
+  ref-round6/README.md` §A/§B): the shared long-OK sheet
+  (`PlaybackScreenMenu`, both guide and panel hosts) now ENTERS with a
+  250 ms FastOutSlowIn fade + 5 dp slide-in from the right
+  (`PlaybackScreenMenuMotion.kt`) — the reference's one emitted mid-frame
+  at ~140 ms sits at ~78-80 % opacity and 9-10 px (= 5 dp) from settled,
+  which FastOutSlowIn hits at ~79 % of 250 ms, inside the measured
+  150-280 ms envelope — over a 72 %-black backdrop scrim
+  (`PlaybackScreenMenuScrim`; grid dim measured (15,20,22) → (4,6,6)) that
+  settles within a frame of the sheet. CLOSE = instant cut of the sheet
+  (no exit transition; the layer switch uncomposes it) followed by the
+  scrim's 300 ms fade-out, so the scrim lives in the hosts, outside the
+  layer switch. Channel options REPLACES the sheet (reference cross-fades
+  in place; sheet fades out on push): BACK from the pane lands DIRECTLY on
+  the guide grid (`backOf` → `Grid`, originating-row focus restored by
+  `GuideFocusMemory`) / the playback panel (`ChannelOptions.back =
+  Panel`) — never back on the sheet — and `PlayerMenuFocus` dropped its
+  now-dead Channel-options case. The one-level pop back to the sheet
+  stays for the uncaptured pushed layers (description/paywall/
+  coming-soon). Exact timings remain to be eyeballed on-device.

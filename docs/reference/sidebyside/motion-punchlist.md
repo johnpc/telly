@@ -53,9 +53,9 @@ which this round re-confirms against telly's live behaviour.
   guide groups RIGHT-close is logged under the visual round-5 list where the
   routing fix lives).
 - **P1: 0**
-- **P2: 1 — logged, not fixed** (below).
+- **P2: 1 — FIXED after ref-round6** (below; pending on-device timing eyeball).
 
-## P2 — logged (architectural / needs reference not capturable here)
+## P2 — FIXED (reference captured in ref-round6, implemented 2026-09-14)
 
 - **Long-OK row context sheet has no open/close animation.** telly reuses
   `PlaybackScreenMenu`, which renders the sheet fully formed with no
@@ -79,3 +79,20 @@ which this round re-confirms against telly's live behaviour.
   pane fades in ~350 ms); its **pop is a ~150 ms fade landing directly on
   the guide grid** (never back on the sheet). Target curves exist now — fix
   round can proceed.
+
+  **FIXED (2026-09-14, post ref-round6):** the shared sheet
+  (`PlaybackScreenMenu` + new `PlaybackScreenMenuMotion.kt`) now enters with
+  a **250 ms FastOutSlowIn fade + 5 dp slide-in from the right** — chosen
+  because the reference's single emitted mid-frame at ~140 ms shows ~78-80 %
+  opacity and 9-10 px (= 5 dp) of remaining travel, and FastOutSlowIn at
+  140/250 ms is ~79 % through, inside the observed 150-280 ms envelope. A
+  **72 %-black backdrop scrim** (`PlaybackScreenMenuScrim`, matching the
+  measured grid dim (15,20,22) → (4,6,6)) fades in on the same 250 ms curve
+  so it settles within a frame of the sheet. **Close: the sheet is an
+  instant cut** (uncomposed, no exit transition) **and only the scrim fades
+  back out over 300 ms** (measured 5.904 → 6.203 s). Both hosts get it: the
+  guide (`GuideScreen`) and the playback panel (`PlaybackScreenOverlays`).
+  The Channel-options BACK semantics captured alongside (pane replaces the
+  sheet; pop lands on the grid/panel) are fixed in the same change — see the
+  visual-round5 punch-list rows. Exact on-screen timings still need the
+  usual on-device eyeball round.

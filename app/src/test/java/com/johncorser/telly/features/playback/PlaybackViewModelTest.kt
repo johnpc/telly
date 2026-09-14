@@ -398,7 +398,7 @@ class PlaybackViewModelTest {
         }
 
     @Test
-    fun `channel options pushes the locked pane and unlock premium overlays the paywall`() =
+    fun `channel options replaces the sheet and unlock premium overlays the paywall`() =
         runTest {
             val vm = buildVm()
             vm.openPanel()
@@ -406,7 +406,9 @@ class PlaybackViewModelTest {
 
             vm.menu.onMenuItem(PlayerMenuItem.CHANNEL_OPTIONS)
 
-            val pane = PlaybackOverlay.ChannelOptions("News One", back = PlaybackOverlay.ChannelMenu(1L))
+            // The pane REPLACES the sheet (ref-round6 §A): BACK targets the
+            // panel directly, never the channel menu.
+            val pane = PlaybackOverlay.ChannelOptions("News One", back = PlaybackOverlay.Panel)
             assertEquals(pane, vm.overlay.value)
 
             // Every §41 row is locked; only Unlock Premium is live.
@@ -417,8 +419,6 @@ class PlaybackViewModelTest {
 
             vm.onKey(PlaybackKey.BACK)
             assertEquals(pane, vm.overlay.value)
-            vm.onKey(PlaybackKey.BACK)
-            assertEquals(PlaybackOverlay.ChannelMenu(1L), vm.overlay.value)
             vm.onKey(PlaybackKey.BACK)
             assertEquals(PlaybackOverlay.Panel, vm.overlay.value)
         }
@@ -431,11 +431,11 @@ class PlaybackViewModelTest {
             vm.showChannelMenu(channels[0])
             assertNull(vm.menu.sheetFocus.restore)
 
-            vm.menu.onMenuItem(PlayerMenuItem.CHANNEL_OPTIONS)
+            vm.menu.onMenuItem(PlayerMenuItem.PROGRAM_DESCRIPTION)
             vm.onKey(PlaybackKey.BACK)
 
             assertEquals(PlaybackOverlay.ChannelMenu(1L), vm.overlay.value)
-            assertEquals(PlayerMenuItem.CHANNEL_OPTIONS, vm.menu.sheetFocus.restore)
+            assertEquals(PlayerMenuItem.PROGRAM_DESCRIPTION, vm.menu.sheetFocus.restore)
 
             // Reopening the sheet fresh lands on the first row again.
             vm.onKey(PlaybackKey.BACK)

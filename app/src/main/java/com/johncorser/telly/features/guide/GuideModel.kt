@@ -67,7 +67,7 @@ sealed interface GuideLayer {
         val text: String,
     ) : GuideLayer
 
-    /** "Channel options" sub-pane, every row premium-locked (captures 41-42). */
+    /** "Channel options" pane, every row premium-locked (captures 41-42); it REPLACES the sheet, BACK → grid. */
     data class ChannelOptions(
         val channelName: String,
     ) : GuideLayer

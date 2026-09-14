@@ -16,6 +16,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import com.johncorser.telly.core.design.TELLY_ONBOARDING_BACKGROUND
 import com.johncorser.telly.core.ui.TellyScreenKeyAnchor
+import com.johncorser.telly.features.playback.PlaybackScreenMenuScrim
 
 /**
  * The TV guide (capture 24): preview window + info pane on top, the
@@ -63,6 +64,9 @@ fun GuideScreen(
             }
         }
         GuideScreenHintToast(controller, Modifier.align(Alignment.BottomEnd))
+        // The dim behind the sheet lives outside the layer switch so it can
+        // fade back out (~300 ms) after the sheet's instant cut (ref-round6).
+        PlaybackScreenMenuScrim(visible = layer == GuideLayer.RowMenu)
         GuideScreenRowMenu(controller, layer)
         GuideScreenRowMenuLayers(controller, layer)
         GuideScreenPaywallLayer(controller, layer)

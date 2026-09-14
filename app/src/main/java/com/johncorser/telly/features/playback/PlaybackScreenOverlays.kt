@@ -56,6 +56,9 @@ internal fun PlaybackScreenOverlays(
     ) {
         PlaybackScreenPanel(viewModel)
     }
+    // Sheet backdrop dim: settles with the sheet's entrance, outlives its
+    // instant cut with a ~300 ms fade-out (ref-round6 §A).
+    PlaybackScreenMenuScrim(visible = overlay is PlaybackOverlay.ChannelMenu)
     when (overlay) {
         PlaybackOverlay.QuickBar -> PlaybackScreenQuickBar(viewModel)
         is PlaybackOverlay.ChannelMenu -> PlaybackScreenChannelMenu(viewModel, overlay.channelId)

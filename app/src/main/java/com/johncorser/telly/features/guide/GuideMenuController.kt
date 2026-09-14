@@ -42,7 +42,11 @@ class GuideMenuController(
 
     fun reset() = show(GuideLayer.Grid)
 
-    /** BACK pops one level: pushed screens return to the sheet, the sheet to the grid. */
+    /**
+     * BACK pops one level: pushed screens return to the sheet, the sheet to
+     * the grid — except Channel options, which REPLACED the sheet, so its
+     * BACK lands directly on the grid (ref-round6 §A).
+     */
     fun close() = show(backOf(mutable.value))
 
     /** Long-OK / MENU with a focused row opens the sheet (round3-ref 05). */
@@ -101,10 +105,16 @@ class GuideMenuController(
     }
 }
 
-/** One BACK level per layer: pushed screens → sheet, everything else → grid. */
+/**
+ * One BACK level per layer: pushed screens → sheet, everything else → grid.
+ * Channel options is NOT a pushed screen: in the reference it replaces the
+ * sheet (in-place cross-fade), so one BACK from it lands on the grid with
+ * the originating row's focus restored by [GuideFocusMemory] (ref-round6
+ * §A — the reference never returns to the sheet).
+ */
 private fun backOf(layer: GuideLayer): GuideLayer =
     when (layer) {
         is GuideLayer.Paywall -> layer.back
-        is GuideLayer.ComingSoon, is GuideLayer.Description, is GuideLayer.ChannelOptions -> GuideLayer.RowMenu
+        is GuideLayer.ComingSoon, is GuideLayer.Description -> GuideLayer.RowMenu
         else -> GuideLayer.Grid
     }

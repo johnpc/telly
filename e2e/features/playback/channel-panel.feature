@@ -59,14 +59,15 @@ Feature: Channel list panel
     When I press back
     Then I see the menu rows "Search" and "Settings"
 
-  Scenario: Channel options pushes the locked premium pane and BACK pops one level
+  Scenario: Channel options replaces the sheet and BACK lands directly on the panel
     When I long-press ok on the row "News One"
     And I select "Channel options"
     Then a right pane titled "News One" opens
     And I see "All features are available in Premium version"
     And the locked rows list "Channel name", "Restore channel name", "Channel names editor", "Audio decoder", "Video decoder", "Use external player", "EPG time offset, h:min", "Block channel" and "Hide channel"
     When I press back
-    Then I see the menu rows "Search" and "Settings"
+    Then the groups column lists "Favorites", "All channels", "News", "Sports", "Movies", "Kids", "Music"
+    And "All channels" is the selected group
 
   Scenario: Uncaptured sheet rows stay on the branded placeholder
     When I long-press ok on the row "News One"
