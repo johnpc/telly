@@ -257,6 +257,20 @@ Local SDK note: `local.properties` must contain
   coming-soon. "Channel options" pushes a settings-shell pane titled with
   the channel name whose §41 rows are all locked (`GuideChannelOptions`),
   BACK pops one level.
+- **2026-09-14** Panel sheet = guide sheet routing, one table: the long-OK
+  context sheet's row→destination map is derived ONCE in
+  `features/playback/PlayerMenuRouting` (`PlayerMenuRoute`: Search /
+  Settings / favorites toggle / hide / description / channel options /
+  paywall / coming-soon) and both `GuideMenuController` and
+  `PlaybackMenuHandler` consume it, so the two sheets can never drift.
+  The panel side gained the pushed screens as `PlaybackOverlay.Pushed`
+  overlays carrying a `back` overlay (paywall / description / channel
+  options / coming-soon), popped one level by BACK via
+  `PlaybackCommand.PopTo` — mirroring the guide's backOf chain (pushed
+  screen → sheet → panel). The §41 locked "Channel options" pane is the
+  shared `GuideScreenChannelOptionsPane` (`GuideChannelOptions` rows),
+  reused, not copied; the panel sheet's description reads the row's
+  airing programme from `PanelRow` (title + synopsis).
 - **2026-09-14** History card (capture 34's second 150×110 card): capture 48's
   uidump — taken right after the History press — is bare playback (zero text
   nodes, one focused full-screen ViewGroup), so 5.2.0 free has no History
