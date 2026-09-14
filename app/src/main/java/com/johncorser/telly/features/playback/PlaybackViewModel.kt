@@ -31,6 +31,7 @@ class PlaybackEnv(
 class PlaybackViewModel(
     env: PlaybackEnv,
     scope: CoroutineScope,
+    private val openSearch: () -> Unit = {},
 ) {
     private val clock = env.clock
 
@@ -74,9 +75,13 @@ class PlaybackViewModel(
 
     fun showComingSoon(feature: String) = overlays.set(PlaybackOverlay.ComingSoon(feature))
 
-    /** Quick-bar OK: Channels list is real, the rest are later slices. */
+    /** Quick-bar OK: Search and Channels list are real, the rest later slices. */
     fun onQuickBarItem(action: QuickBarAction) {
-        if (action == QuickBarAction.CHANNELS_LIST) openPanel() else showComingSoon(action.feature)
+        when (action) {
+            QuickBarAction.CHANNELS_LIST -> openPanel()
+            QuickBarAction.SEARCH -> openSearch()
+            else -> showComingSoon(action.feature)
+        }
     }
 
     /** The nine quick-bar slots with live stream labels (round3-ref 07). */

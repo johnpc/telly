@@ -22,6 +22,8 @@ import com.johncorser.telly.features.onboarding.WizardScreen
 import com.johncorser.telly.features.playback.PlaybackDeps
 import com.johncorser.telly.features.playback.PlaybackScreen
 import com.johncorser.telly.features.playlist.PlaylistRepository
+import com.johncorser.telly.features.search.SearchDeps
+import com.johncorser.telly.features.search.SearchScreen
 import com.johncorser.telly.features.settings.SettingsGraph
 import com.johncorser.telly.features.settings.SettingsScreenHost
 
@@ -33,6 +35,7 @@ fun RootScreen(
     fetchPlaylist: suspend (String) -> String,
     playbackDeps: PlaybackDeps,
     settingsGraph: SettingsGraph,
+    searchDeps: SearchDeps,
 ) {
     val stack by navigator.stack.collectAsState()
     val route = stack.last()
@@ -66,7 +69,16 @@ fun RootScreen(
                             onExit = { navigator.pop() },
                             onComplete = { navigator.replaceAll(Route.Playback) },
                         )
-                    Route.Playback -> PlaybackScreen(playbackDeps)
+                    Route.Playback ->
+                        PlaybackScreen(
+                            deps = playbackDeps,
+                            onOpenSearch = { navigator.push(Route.Search) },
+                        )
+                    Route.Search ->
+                        SearchScreen(
+                            deps = searchDeps,
+                            onTuned = { navigator.replaceAll(Route.Playback) },
+                        )
                 }
             }
         }

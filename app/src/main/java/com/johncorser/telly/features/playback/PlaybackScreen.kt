@@ -21,7 +21,10 @@ import com.johncorser.telly.features.player.PlayerScreenSurface
  * catalogue key map.
  */
 @Composable
-fun PlaybackScreen(deps: PlaybackDeps) {
+fun PlaybackScreen(
+    deps: PlaybackDeps,
+    onOpenSearch: () -> Unit = {},
+) {
     val scope = rememberCoroutineScope()
     val engine = remember { deps.engineFactory() }
     val viewModel =
@@ -36,6 +39,7 @@ fun PlaybackScreen(deps: PlaybackDeps) {
                         clock = deps.clock,
                     ),
                 scope = scope,
+                openSearch = onOpenSearch,
             )
         }
     DisposableEffect(Unit) { onDispose { viewModel.close() } }

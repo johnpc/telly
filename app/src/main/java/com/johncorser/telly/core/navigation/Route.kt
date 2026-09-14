@@ -16,4 +16,7 @@ sealed interface Route {
 
     /** Fullscreen playback of the last-watched channel; the app's main screen. */
     data object Playback : Route
+
+    /** TiviMate-style search screen (catalogue §4, captures 49-51). */
+    data object Search : Route
 }

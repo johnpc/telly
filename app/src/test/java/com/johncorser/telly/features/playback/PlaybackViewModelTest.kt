@@ -202,8 +202,9 @@ class PlaybackViewModelTest {
             vm.onQuickBarItem(QuickBarAction.CHANNELS_LIST)
             assertEquals(PlaybackOverlay.Panel, vm.overlay.value)
 
-            vm.onQuickBarItem(QuickBarAction.SEARCH)
-            assertEquals(PlaybackOverlay.ComingSoon("Search"), vm.overlay.value)
+            // Search is real now (PlaybackSearchWiringTest); Recordings is not yet.
+            vm.onQuickBarItem(QuickBarAction.RECORDINGS)
+            assertEquals(PlaybackOverlay.ComingSoon("Recordings"), vm.overlay.value)
         }
 
     @Test

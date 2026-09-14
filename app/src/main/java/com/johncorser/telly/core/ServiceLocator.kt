@@ -15,6 +15,8 @@ import com.johncorser.telly.features.playback.PlaybackDeps
 import com.johncorser.telly.features.player.Media3PlayerEngine
 import com.johncorser.telly.features.playlist.PlaylistRepository
 import com.johncorser.telly.features.playlist.RoomPlaylistRepository
+import com.johncorser.telly.features.search.SearchDeps
+import com.johncorser.telly.features.search.SearchRepository
 import com.johncorser.telly.core.settings.SharedPrefsKeyValueStore as SettingsPrefsStore
 
 /**
@@ -91,7 +93,25 @@ object ServiceLocator {
             clock = clock,
         )
 
+    /** Search slice deps; history keeps its own prefs file, out of backups. */
+    fun searchDeps(context: Context): SearchDeps =
+        SearchDeps(
+            repository =
+                SearchRepository(
+                    searchDao = database(context).searchDao(),
+                    channelDao = database(context).channelDao(),
+                    epgRepository = epgRepository(context),
+                ),
+            historyStore =
+                SettingsPrefsStore(
+                    context.applicationContext.getSharedPreferences(SEARCH_PREFS_NAME, Context.MODE_PRIVATE),
+                ),
+            lastChannelStore = keyValueStore(context),
+            clock = clock,
+        )
+
     private const val PREFS_NAME = "telly"
+    private const val SEARCH_PREFS_NAME = "telly-search"
 
     private val clock: () -> Long = { System.currentTimeMillis() }
 

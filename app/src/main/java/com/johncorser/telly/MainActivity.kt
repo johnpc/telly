@@ -34,6 +34,7 @@ class MainActivity : ComponentActivity() {
                 fetchPlaylist = fetcher::fetch,
                 playbackDeps = ServiceLocator.playbackDeps(this),
                 settingsGraph = settingsGraph(),
+                searchDeps = ServiceLocator.searchDeps(this),
             )
         }
     }
