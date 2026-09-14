@@ -212,3 +212,21 @@ Local SDK note: `local.properties` must contain
   resumes the last-watched channel in its preview window.
   `OkLongPressDetector` generalized into `core/input/HoldKeyDetector<T>` so
   LEFT/RIGHT holds can drive day jumps without duplicate detector code.
+- **2026-09-14** Guide row context sheet (catalogue §3 38-40 CORRECTED round3 +
+  round3-ref/05, dump 38): long-OK / MENU on a focused guide row opens the
+  full right-side sheet with the grid still visible behind — the same
+  `PlaybackScreenMenu` the playback panel uses (256 dp wide, 8 dp off
+  top/right, 40 dp row pitch, focus pill inset 8 dp; 2 px = 1 dp), sections
+  verbatim from `PlayerMenu`. Layer transitions live in `GuideMenuController`
+  with one-level BACK popping (pushed screens → sheet → grid). Live rows:
+  Search (Route.Search), Settings (right sheet), Add to/Remove from
+  Favorites, Hide channel (zap-away first), Program description (title +
+  synopsis from the focused cell's info). Premium-locked reference rows open
+  the shared Unlock Premium screen — Record/Custom recording/Add to My list
+  (capture 31), Open in external player + Block channel (locked in capture
+  41), Manage Favorites + Reorder channels (sold as premium in capture 28's
+  paywall body); everything else (Assign EPG, Manage blocking/visibility,
+  Copy channels, Create group, Group options) is uncaptured → branded
+  coming-soon. "Channel options" pushes a settings-shell pane titled with
+  the channel name whose §41 rows are all locked (`GuideChannelOptions`),
+  BACK pops one level.
