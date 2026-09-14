@@ -35,7 +35,11 @@ internal fun GuideScreenRowMenu(
     )
 }
 
-/** Screens the sheet pushes; BACK pops one level back to the sheet. */
+/**
+ * Screens the sheet routes to. Description and coming-soon are pushed —
+ * BACK pops one level back to the sheet; Channel options REPLACES the
+ * sheet, so its BACK lands directly on the grid (ref-round6 §A).
+ */
 @Composable
 internal fun GuideScreenRowMenuLayers(
     controller: GuideController,

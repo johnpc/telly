@@ -81,18 +81,21 @@ class PlaybackKeyPolicyTest {
     @Test
     fun `back from a sheet-pushed screen pops one level back to the sheet`() {
         val sheet = PlaybackOverlay.ChannelMenu(1)
-        val pane = PlaybackOverlay.ChannelOptions("News One", back = sheet)
         val pushed =
             listOf(
                 PlaybackOverlay.Paywall("Record", back = sheet),
                 PlaybackOverlay.Description("T", "D", back = sheet),
                 PlaybackOverlay.ComingSoon("Assign EPG", back = sheet),
-                pane,
             )
         pushed.forEach { overlay ->
             assertEquals(PlaybackCommand.PopTo(sheet), at(overlay, PlaybackKey.BACK))
             assertNull(at(overlay, PlaybackKey.OK))
         }
+        // Channel options replaced the sheet (ref-round6 §A): its back is
+        // the panel, so BACK lands there directly, never on the sheet.
+        val pane = PlaybackOverlay.ChannelOptions("News One", back = PlaybackOverlay.Panel)
+        assertEquals(PlaybackCommand.PopTo(PlaybackOverlay.Panel), at(pane, PlaybackKey.BACK))
+        assertNull(at(pane, PlaybackKey.OK))
         // The pane's Unlock Premium row overlays the paywall over the pane.
         val paywallOverPane = PlaybackOverlay.Paywall("Channel options", back = pane)
         assertEquals(PlaybackCommand.PopTo(pane), at(paywallOverPane, PlaybackKey.BACK))

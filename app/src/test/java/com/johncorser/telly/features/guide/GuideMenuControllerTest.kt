@@ -5,6 +5,8 @@ import com.johncorser.telly.features.playback.PlayerMenuItem
 import com.johncorser.telly.features.settings.RowIds
 import com.johncorser.telly.testutil.FakeChannelDao
 import com.johncorser.telly.testutil.testChannel
+import io.mockk.mockk
+import io.mockk.verify
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.SupervisorJob
@@ -35,7 +37,7 @@ class GuideMenuControllerTest {
             favorite = false,
         )
 
-    private fun TestScope.build(): GuideMenuController =
+    private fun TestScope.build(focusMemory: GuideFocusMemory? = null): GuideMenuController =
         GuideMenuController(
             actions = ChannelActions(dao, CoroutineScope(SupervisorJob() + UnconfinedTestDispatcher(testScheduler))),
             zapAway = { zapped += it.id },
@@ -47,6 +49,7 @@ class GuideMenuControllerTest {
                     onOpenSearch = { searches += 1 },
                     onOpenSettings = { settingsOpens += 1 },
                 ),
+            focusMemory = focusMemory,
         )
 
     private fun TestScope.buildOpenSheet(): GuideMenuController = build().apply { openRowMenu() }
@@ -186,17 +189,31 @@ class GuideMenuControllerTest {
     }
 
     @Test
-    fun `channel options pushes the pane and back pops one level at a time`() {
+    fun `channel options replaces the sheet and back lands directly on the grid`() {
         runTest {
             val menu = buildOpenSheet()
 
             menu.onMenuItem(PlayerMenuItem.CHANNEL_OPTIONS)
             assertEquals(GuideLayer.ChannelOptions("News One"), menu.layer.value)
 
-            menu.close()
-            assertEquals(GuideLayer.RowMenu, menu.layer.value)
+            // ref-round6 §A: the pane replaced the sheet — one BACK → grid.
             menu.close()
             assertEquals(GuideLayer.Grid, menu.layer.value)
+        }
+    }
+
+    @Test
+    fun `back from channel options restores the saved grid focus`() {
+        runTest {
+            val memory = mockk<GuideFocusMemory>(relaxed = true)
+            val menu = build(memory).apply { openRowMenu() }
+            verify(exactly = 1) { memory.save() }
+
+            menu.onMenuItem(PlayerMenuItem.CHANNEL_OPTIONS)
+            verify(exactly = 0) { memory.restore() }
+
+            menu.close()
+            verify(exactly = 1) { memory.restore() }
         }
     }
 
@@ -239,11 +256,22 @@ class GuideMenuControllerTest {
             val menu = buildOpenSheet()
             assertNull(menu.sheetFocus.restore)
 
-            menu.onMenuItem(PlayerMenuItem.CHANNEL_OPTIONS)
+            menu.onMenuItem(PlayerMenuItem.PROGRAM_DESCRIPTION)
             menu.close()
 
             assertEquals(GuideLayer.RowMenu, menu.layer.value)
-            assertEquals(PlayerMenuItem.CHANNEL_OPTIONS, menu.sheetFocus.restore)
+            assertEquals(PlayerMenuItem.PROGRAM_DESCRIPTION, menu.sheetFocus.restore)
+        }
+    }
+
+    @Test
+    fun `channel options leaves no refocus memory since it never returns to the sheet`() {
+        runTest {
+            val menu = buildOpenSheet()
+
+            menu.onMenuItem(PlayerMenuItem.CHANNEL_OPTIONS)
+
+            assertNull(menu.sheetFocus.restore)
         }
     }
 

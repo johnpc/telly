@@ -2,11 +2,13 @@ package com.johncorser.telly.features.playback
 
 /**
  * Focus memory of the shared long-OK context sheet: a row that pushes a
- * screen over the sheet (Program description, Channel options, a paywalled
- * or coming-soon row) remembers itself so BACK re-lands sheet focus on it
- * instead of resetting to the first row — standard leanback restore,
- * pending round6 on-device confirmation against TiviMate. Rows that leave
- * the sheet for good (Search, Settings, favorites, hide) clear it.
+ * screen over the sheet (Program description, a paywalled or coming-soon
+ * row) remembers itself so BACK re-lands sheet focus on it instead of
+ * resetting to the first row — standard leanback restore per the routing
+ * table's one-level BACK (round 6 did not capture these pops). Channel
+ * options is excluded: ref-round6 §A shows the pane REPLACES the sheet and
+ * its BACK lands on the grid/panel, never back on the sheet. Rows that
+ * leave the sheet for good (Search, Settings, favorites, hide) clear it.
  */
 class PlayerMenuFocus {
     /** The row the reopened sheet should focus; null = the first row. */
@@ -28,7 +30,6 @@ class PlayerMenuFocus {
         val PUSHED =
             setOf(
                 PlayerMenuRoute.DESCRIPTION,
-                PlayerMenuRoute.CHANNEL_OPTIONS,
                 PlayerMenuRoute.PAYWALL,
                 PlayerMenuRoute.COMING_SOON,
             )

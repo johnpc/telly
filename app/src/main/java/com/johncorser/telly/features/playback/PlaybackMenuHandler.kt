@@ -9,9 +9,10 @@ import com.johncorser.telly.features.settings.RowIds
  * table (the guide's sheet consumes the same one, so the two can never
  * drift): favorites/hide persist via [ChannelActions], Search and Settings
  * clear the overlay chrome first, premium-locked reference rows open the
- * shared Unlock Premium screen, Program description and Channel options
- * push screens whose BACK pops back to the sheet, and genuinely uncaptured
- * rows keep the branded coming-soon placeholder.
+ * shared Unlock Premium screen, Program description pushes a screen whose
+ * BACK pops back to the sheet, Channel options REPLACES the sheet — its
+ * BACK lands directly on the panel, never back on the sheet (ref-round6
+ * §A) — and genuinely uncaptured rows keep the coming-soon placeholder.
  */
 class PlaybackMenuHandler(
     private val actions: ChannelActions,
@@ -52,7 +53,7 @@ class PlaybackMenuHandler(
             PlayerMenuRoute.HIDE_CHANNEL -> hide(channel)
             PlayerMenuRoute.DESCRIPTION -> push { back -> description(channel, back) }
             PlayerMenuRoute.CHANNEL_OPTIONS ->
-                push { back -> PlaybackOverlay.ChannelOptions(channel.source.name, back) }
+                overlays.set(PlaybackOverlay.ChannelOptions(channel.source.name, back = afterAction()))
             PlayerMenuRoute.PAYWALL -> push { back -> PlaybackOverlay.Paywall(item.label, back) }
             PlayerMenuRoute.COMING_SOON -> push { back -> PlaybackOverlay.ComingSoon(item.label, back) }
         }
@@ -103,7 +104,11 @@ class PlaybackMenuHandler(
         overlays.set(next)
     }
 
-    /** A channel-menu action returns to the panel; the player menu closes. */
+    /**
+     * Where a row that dismisses the sheet lands: the panel behind the
+     * channel menu, bare playback otherwise. Channel options shares this —
+     * the pane replaces the sheet, so its BACK target is the panel too.
+     */
     private fun afterAction(): PlaybackOverlay =
         if (overlays.value is PlaybackOverlay.ChannelMenu) PlaybackOverlay.Panel else PlaybackOverlay.None
 }

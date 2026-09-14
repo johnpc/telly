@@ -49,7 +49,11 @@ sealed interface PlaybackOverlay {
         override val back: PlaybackOverlay = None,
     ) : Pushed
 
-    /** "Channel options" pane, every §41 row premium-locked (capture 41). */
+    /**
+     * "Channel options" pane, every §41 row premium-locked (capture 41).
+     * It replaces the sheet (ref-round6 §A), so [back] is the panel, not
+     * the channel menu.
+     */
     data class ChannelOptions(
         val channelName: String,
         override val back: PlaybackOverlay = None,
