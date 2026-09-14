@@ -29,7 +29,14 @@ class SearchViewModelTest {
 
     private val newsOne = testChannel(1, 1, "News One", tvgId = "one")
     private val channelDao = FakeChannelDao(listOf(newsOne, testChannel(2, 2, "Sports Arena", tvgId = "sports")))
-    private val programDao = FakeProgramDao(listOf(testProgram("one", now, now + hour, "Newsroom Live")))
+    private val programDao =
+        FakeProgramDao(
+            listOf(
+                testProgram("one", now, now + hour, "Newsroom Live"),
+                testProgram("one", now + 2 * hour, now + 3 * hour, "Newsroom Live"),
+                testProgram("sports", now + hour, now + 2 * hour, "Newsroom Update"),
+            ),
+        )
     private val historyStore = InMemoryKeyValueStore()
     private val lastChannelStore = FakeKeyValueStore()
 
@@ -60,7 +67,14 @@ class SearchViewModelTest {
             vm.onQueryChange("news")
 
             assertEquals(listOf("News One"), vm.results.value.channels.map { it.channel.source.name })
-            assertEquals(listOf("Newsroom Live"), vm.results.value.programs.map { it.title })
+            assertEquals(
+                listOf("News One", "Sports Arena"),
+                vm.results.value.programs.map { it.channel.source.name },
+            )
+            assertEquals(
+                listOf("Newsroom Live", "Newsroom Live"),
+                vm.results.value.programs[0].airings.map { it.title },
+            )
         }
 
     @Test
@@ -121,17 +135,33 @@ class SearchViewModelTest {
         }
 
     @Test
-    fun `each result batch preselects its first programme for the detail card`() =
+    fun `each result batch selects the first channel and preselects its first airing`() =
         runTest {
             val vm = buildVm()
 
             vm.onQueryChange("newsroom")
 
+            assertEquals("News One", vm.selectedChannel.value?.channel?.source?.name)
             assertEquals("Newsroom Live", vm.focusedProgram.value?.title)
+            assertEquals(now, vm.focusedProgram.value?.program?.startMs)
 
             vm.onQueryChange("")
 
+            assertNull(vm.selectedChannel.value)
             assertNull(vm.focusedProgram.value)
+        }
+
+    @Test
+    fun `focusing a master-lane card swaps the selection and preselects its first airing`() =
+        runTest {
+            val vm = buildVm()
+            vm.onQueryChange("newsroom")
+            val sports = vm.results.value.programs.last()
+
+            vm.onProgramChannelFocused(sports)
+
+            assertEquals("Sports Arena", vm.selectedChannel.value?.channel?.source?.name)
+            assertEquals("Newsroom Update", vm.focusedProgram.value?.title)
         }
 
     @Test
@@ -139,12 +169,12 @@ class SearchViewModelTest {
         runTest {
             val vm = buildVm()
             vm.onQueryChange("newsroom")
-            val hit = vm.results.value.programs.first()
+            val hit = vm.results.value.programs.first().airings.first()
             vm.onProgramFocused(hit)
 
             vm.onProgramResult(hit)
 
-            assertEquals(SearchOverlay.ProgramMenu(hit), vm.overlay.value)
+            assertEquals(SearchOverlay.ProgramMenu(hit), vm.overlays.current.value)
             assertEquals(hit, vm.focusedProgram.value)
         }
 
@@ -153,11 +183,11 @@ class SearchViewModelTest {
         runTest {
             val vm = buildVm()
 
-            vm.showPaywall()
+            vm.overlays.show(SearchOverlay.Paywall)
 
-            assertEquals(SearchOverlay.Paywall, vm.overlay.value)
-            assertTrue(vm.dismissOverlay())
-            assertEquals(SearchOverlay.None, vm.overlay.value)
+            assertEquals(SearchOverlay.Paywall, vm.overlays.current.value)
+            assertTrue(vm.overlays.dismiss())
+            assertEquals(SearchOverlay.None, vm.overlays.current.value)
         }
 
     @Test
@@ -165,20 +195,20 @@ class SearchViewModelTest {
         runTest {
             val vm = buildVm()
 
-            vm.showComingSoon("Voice search")
+            vm.overlays.show(SearchOverlay.ComingSoon("Voice search"))
 
-            assertEquals(SearchOverlay.ComingSoon("Voice search"), vm.overlay.value)
+            assertEquals(SearchOverlay.ComingSoon("Voice search"), vm.overlays.current.value)
         }
 
     @Test
     fun `back dismisses only an open overlay`() =
         runTest {
             val vm = buildVm()
-            assertFalse(vm.dismissOverlay())
+            assertFalse(vm.overlays.dismiss())
 
-            vm.showComingSoon("Voice search")
+            vm.overlays.show(SearchOverlay.ComingSoon("Voice search"))
 
-            assertTrue(vm.dismissOverlay())
-            assertEquals(SearchOverlay.None, vm.overlay.value)
+            assertTrue(vm.overlays.dismiss())
+            assertEquals(SearchOverlay.None, vm.overlays.current.value)
         }
 }

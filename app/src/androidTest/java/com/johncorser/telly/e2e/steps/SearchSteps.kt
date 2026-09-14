@@ -13,12 +13,14 @@ import androidx.compose.ui.test.performSemanticsAction
 import androidx.compose.ui.test.performTextClearance
 import com.johncorser.telly.e2e.PlaybackDriver
 import com.johncorser.telly.e2e.TellyWorld
+import com.johncorser.telly.e2e.fixtures.FixtureChannel
 import com.johncorser.telly.e2e.fixtures.FixturePlan
 import com.johncorser.telly.e2e.fixtures.FixtureProgramme
 import com.johncorser.telly.e2e.fixtures.FixtureServer
 import com.johncorser.telly.e2e.fixtures.rangeText
 import io.cucumber.java.en.Then
 import io.cucumber.java.en.When
+import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import java.text.SimpleDateFormat
 import java.util.Date
@@ -30,6 +32,10 @@ class SearchSteps(
     private val world: TellyWorld,
     private val driver: PlaybackDriver,
 ) {
+    /** The Programs master-lane card whose airings the rows pane shows. */
+    private var selectedCardName: String? = null
+    private var airingsTitle: String = "Newsroom Live"
+
     @When("I press ok on the quick-bar {string} slot")
     fun okOnQuickBarSlot(slot: String) = world.select(slot)
 
@@ -60,8 +66,8 @@ class SearchSteps(
         val names = Regex("\"([^\"]+)\"").findAll(rawList).map { it.groupValues[1] }.toList()
         names.forEach { world.waitForText(it) }
         // Name order (live tm-02). The same channel names repeat lower down
-        // as programme-row cards, so compare card positions within the
-        // shelf band only — the visual row of the first card's name.
+        // as Programs master-lane cards, so compare card positions within
+        // the shelf band only — the visual row of the first card's name.
         driver.awaitCondition("name-ordered shelf") {
             val bandTop = world.boundsOf(hasText(names.first())).minOfOrNull { it.top } ?: return@awaitCondition false
             val lefts =
@@ -96,53 +102,69 @@ class SearchSteps(
         world.waitForText(name)
     }
 
-    @Then("the {string} list shows {string} rows ordered by start time")
-    fun programmesOrdered(
-        header: String,
-        title: String,
-    ) {
-        world.waitForText(header)
-        val hits = upcomingTitled(title)
-        assertTrue("fixtures contain at least two upcoming '$title'", hits.size >= 2)
-        world.waitFor(hasText(title, substring = true), atLeast = 2)
-        world.waitForText(airTime(hits[0]), substring = true)
-        world.waitForText(airTime(hits[1]), substring = true)
-        val first = world.boundsOf(hasText(airTime(hits[0]), substring = true)).minOfOrNull { it.top }
-        val second = world.boundsOf(hasText(airTime(hits[1]), substring = true)).minOfOrNull { it.top }
-        if (first != null && second != null) {
-            assertTrue("rows render chronologically", first <= second)
+    @Then("the Programs lane lists one card per channel airing {string}, in name order")
+    fun programsLane(title: String) {
+        world.waitForText("Programs")
+        val names = channelsAiring(title).map { it.name }
+        airingsTitle = title
+        selectedCardName = names.first()
+        // Order check on the two above-the-fold cards first (a programme-only
+        // query renders channel names nowhere else), then reveal the rest by
+        // scrolling the lane.
+        world.waitForText(names[0])
+        world.waitForText(names[1])
+        driver.awaitCondition("master lane cards in name order") {
+            val first = world.boundsOf(hasText(names[0])).minOfOrNull { it.top } ?: return@awaitCondition false
+            val second = world.boundsOf(hasText(names[1])).minOfOrNull { it.top } ?: return@awaitCondition false
+            first < second
+        }
+        names.drop(2).forEach { world.waitForText(it) }
+    }
+
+    @Then("the airings pane lists only the selected channel's {string} airings chronologically, repeats included")
+    fun airingsPaneShowsSelected(title: String) {
+        airingsTitle = title
+        val channel = selectedChannel(title)
+        val expected = airingsOn(channel, title)
+        assertTrue("fixtures give ${channel.name} at least two upcoming '$title'", expected.size >= 2)
+        // Two rows with the same title = repeats are never deduped; check
+        // chronology on the first pair before scrolling uncomposes them.
+        world.waitForText(airTime(expected[0]), substring = true)
+        world.waitForText(airTime(expected[1]), substring = true)
+        driver.awaitCondition("airings render chronologically") {
+            val first = world.boundsOf(hasText(airTime(expected[0]), substring = true)).minOfOrNull { it.top }
+            val second = world.boundsOf(hasText(airTime(expected[1]), substring = true)).minOfOrNull { it.top }
+            first != null && second != null && first <= second
+        }
+        expected.drop(2).forEach { world.waitForText(airTime(it), substring = true) }
+        assertNoForeignAiring(channel, title)
+    }
+
+    @Then("each airing row shows its reference air time")
+    fun airingRowsShowReferenceTimes() {
+        airingsOn(selectedChannel(airingsTitle), airingsTitle).forEach {
+            world.waitForText(airTime(it), substring = true)
         }
     }
 
-    @Then("rows airing today show a time range like {string}")
-    fun todayRows(example: String) {
-        world.waitFor(world.hasTextMatching(Regex("\\d{2}:\\d{2}( [AP]M)? — \\d{2}:\\d{2} [AP]M")))
-    }
-
-    @Then("rows airing another day are prefixed like {string}")
-    fun otherDayRows(example: String) {
-        world.waitFor(
-            world.hasTextMatching(
-                Regex("[A-Z][a-z]{2}, [A-Z][a-z]{2} \\d{1,2}, \\d{2}:\\d{2}( [AP]M)? — \\d{2}:\\d{2} [AP]M"),
-            ),
-        )
-    }
-
-    @Then("the focused row shows a detail card with title, times and description")
-    fun focusedRowDetailCard() {
-        // The app preselects its first hit into the card; several fixture
-        // programmes can share that startMs on different channels, so accept
-        // any tied candidate's description (the DAO's tie order is free).
-        val candidates = upcomingTitled("Newsroom Live")
-        val first = candidates.first()
-        val ties = candidates.filter { it.startMs == first.startMs }
-        focusFirstProgrammeRow(hasText(airTime(first), substring = true))
+    @Then("the detail card pre-renders the selected channel's first airing")
+    fun detailCardPreRenders() {
+        // Pre-rendered = visible without any airing row ever taking focus;
+        // the description renders only inside the detail card.
+        val first = airingsOn(selectedChannel(airingsTitle), airingsTitle).first()
         world.waitForText(first.displayTitle, substring = true)
         world.waitForText(airTime(first), substring = true)
-        driver.awaitCondition("detail card shows the focused row's description") {
-            ties.any { world.nodeCount(hasText(it.description, substring = true)) > 0 }
-        }
+        world.waitForText(first.description, substring = true)
     }
+
+    @When("I focus the Programs channel card {string}")
+    fun focusProgramsCard(name: String) {
+        world.focus(name)
+        selectedCardName = name
+    }
+
+    @Then("the first channel card {string} is focused")
+    fun firstChannelCardFocused(name: String) = world.waitFor(hasText(name) and isFocused())
 
     @When("I press ok on the channel card {string}")
     fun okOnChannelCard(name: String) = world.select(name)
@@ -198,12 +220,46 @@ class SearchSteps(
 
     private fun newsChannels() = FixturePlan.channels.filter { it.group == "News" }
 
-    private fun upcomingTitled(title: String): List<FixtureProgramme> {
-        val now = System.currentTimeMillis()
-        return FixtureServer.programmes
-            .filter { it.title == title && it.endMs > now }
-            .sortedBy { it.startMs }
+    /** The Programs master lane: channels with a matching airing, name order (ref-round6 §D). */
+    private fun channelsAiring(title: String): List<FixtureChannel> {
+        val tvgIds = FixtureServer.programmes.filter { it.title == title && it.endMs > now() }.map { it.channelTvgId }
+        return FixturePlan.channels
+            .filter { it.tvgId in tvgIds.toSet() }
+            .sortedWith(compareBy(String.CASE_INSENSITIVE_ORDER) { it.name })
     }
+
+    /** One channel's still-airing/upcoming matches, chronological, repeats kept. */
+    private fun airingsOn(
+        channel: FixtureChannel,
+        title: String,
+    ): List<FixtureProgramme> =
+        FixtureServer.programmes
+            .filter { it.channelTvgId == channel.tvgId && it.title == title && it.endMs > now() }
+            .sortedBy { it.startMs }
+
+    private fun selectedChannel(title: String): FixtureChannel =
+        FixturePlan.channelNamed(selectedCardName ?: channelsAiring(title).first().name)
+
+    /** A non-selected channel's airing time must never render in the rows pane. */
+    private fun assertNoForeignAiring(
+        selected: FixtureChannel,
+        title: String,
+    ) {
+        val mine = airingsOn(selected, title).map { airTime(it) }.toSet()
+        val foreign =
+            channelsAiring(title)
+                .filter { it.tvgId != selected.tvgId }
+                .flatMap { airingsOn(it, title) }
+                .map { airTime(it) }
+                .firstOrNull { it !in mine } ?: return
+        assertEquals(
+            "only the selected channel's airings render",
+            0,
+            world.nodeCount(hasText(foreign, substring = true)),
+        )
+    }
+
+    private fun now() = System.currentTimeMillis()
 
     /** Mirrors the reference air-time format (bare today, date-prefixed else). */
     private fun airTime(programme: FixtureProgramme): String {

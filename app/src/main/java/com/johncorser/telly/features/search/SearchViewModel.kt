@@ -25,27 +25,33 @@ class SearchViewModel(
 
     private val mutableQuery = MutableStateFlow("")
     private val mutableHistory = MutableStateFlow(searchHistory.list())
-    private val mutableOverlay = MutableStateFlow<SearchOverlay>(SearchOverlay.None)
     private val mutableFocusedProgram = MutableStateFlow<SearchProgramHit?>(null)
+    private val mutableSelectedChannel = MutableStateFlow<SearchProgramChannel?>(null)
 
     val query: StateFlow<String> = mutableQuery.asStateFlow()
     val history: StateFlow<List<String>> = mutableHistory.asStateFlow()
-    val overlay: StateFlow<SearchOverlay> = mutableOverlay.asStateFlow()
+
+    /** The dropdown / paywall / coming-soon layer over the screen. */
+    val overlays = SearchOverlays()
 
     /** Feeds the right-side detail card (captures 50/51). */
     val focusedProgram: StateFlow<SearchProgramHit?> = mutableFocusedProgram.asStateFlow()
 
+    /** The Programs master-lane channel whose airings the rows pane shows (ref-round6 §D). */
+    val selectedChannel: StateFlow<SearchProgramChannel?> = mutableSelectedChannel.asStateFlow()
+
     /**
      * Results recompute on every keystroke; TiviMate searches as you type.
-     * Each batch preselects its first programme so the detail card is
-     * already visible while the IME is still up (ref 50, live tm-03) —
-     * state only, D-pad focus stays wherever it is (the query field).
+     * Each batch selects its first master-lane channel and preselects that
+     * channel's first airing so the rows pane and detail card are already
+     * visible while the IME is still up (ref 50, live tm-03, round6 06/07)
+     * — state only, D-pad focus stays wherever it is (the query field).
      */
     @OptIn(ExperimentalCoroutinesApi::class)
     val results: StateFlow<SearchResults> =
         mutableQuery
             .mapLatest { deps.repository.search(it, deps.clock(), deps.zone) }
-            .onEach { mutableFocusedProgram.value = it.programs.firstOrNull() }
+            .onEach { select(it.programs.firstOrNull()) }
             .stateIn(scope, SharingStarted.Eagerly, SearchResults())
 
     fun onQueryChange(text: String) {
@@ -78,26 +84,21 @@ class SearchViewModel(
         mutableFocusedProgram.value = hit
     }
 
+    /**
+     * Focusing a master-lane channel card swaps the rows pane to that
+     * channel's airings and preselects its first airing into the detail
+     * card (ref-round6 08-programs-card-newsone-plus1-selected).
+     */
+    fun onProgramChannelFocused(group: SearchProgramChannel) = select(group)
+
+    private fun select(group: SearchProgramChannel?) {
+        mutableSelectedChannel.value = group
+        mutableFocusedProgram.value = group?.airings?.firstOrNull()
+    }
+
     /** OK on a programme row opens the guide-cell dropdown (capture 27). */
     fun onProgramResult(hit: SearchProgramHit) {
         commit(mutableQuery.value)
-        mutableOverlay.value = SearchOverlay.ProgramMenu(hit)
-    }
-
-    /** Dropdown rows + the gear's premium search settings open the paywall. */
-    fun showPaywall() {
-        mutableOverlay.value = SearchOverlay.Paywall
-    }
-
-    /** Voice search lands on the placeholder until that slice ships. */
-    fun showComingSoon(feature: String) {
-        mutableOverlay.value = SearchOverlay.ComingSoon(feature)
-    }
-
-    /** BACK with an overlay up closes just the overlay. */
-    fun dismissOverlay(): Boolean {
-        if (mutableOverlay.value == SearchOverlay.None) return false
-        mutableOverlay.value = SearchOverlay.None
-        return true
+        overlays.show(SearchOverlay.ProgramMenu(hit))
     }
 }

@@ -1,8 +1,9 @@
 @search
 Feature: Search channels and programmes
-  TiviMate's search screen (catalogue §4, captures 49-51): voice orb, query
-  bar and gear on top, the search-history landing state, and typed results
-  as a Channels shelf plus a chronological Programs list with a detail card.
+  TiviMate's search screen (catalogue §4, captures 49-51 + ref-round6 §D):
+  voice orb, query bar and gear on top, the search-history landing state,
+  and typed results as a Channels shelf plus a channel-master / airings-
+  detail Programs section with a detail card.
 
   Background:
     Given the fixture playlist and EPG are served from "http://10.0.2.2:8090"
@@ -27,13 +28,26 @@ Feature: Search channels and programmes
     And I type "2"
     Then the "Channels" shelf includes channel 2 "News One HD"
 
-  Scenario: Programme matches are chronological with reference air times
+  Scenario: The Programs section pairs a channel-master lane with the selected channel's airings
     When I focus the query bar
     And I type "newsroom"
-    Then the "Programs" list shows "Newsroom Live" rows ordered by start time
-    And rows airing today show a time range like "03:45 — 05:15 PM"
-    And rows airing another day are prefixed like "Mon, Sep 14, 12:45 — 01:45 AM"
-    And the focused row shows a detail card with title, times and description
+    Then the Programs lane lists one card per channel airing "Newsroom Live", in name order
+    And the airings pane lists only the selected channel's "Newsroom Live" airings chronologically, repeats included
+    And each airing row shows its reference air time
+    And the detail card pre-renders the selected channel's first airing
+
+  Scenario: Focusing another channel card swaps the airings pane
+    When I focus the query bar
+    And I type "newsroom"
+    And I focus the Programs channel card "News One +1"
+    Then the airings pane lists only the selected channel's "Newsroom Live" airings chronologically, repeats included
+    And the detail card pre-renders the selected channel's first airing
+
+  Scenario: Down from the query bar lands on the first channel card
+    When I focus the query bar
+    And I type "news"
+    And I press dpad down
+    Then the first channel card "News One" is focused
 
   Scenario: OK on a channel result tunes it
     When I focus the query bar

@@ -42,7 +42,7 @@ internal fun SearchScreenDropdown(viewModel: SearchViewModel) {
             SearchProgramAction.entries.forEachIndexed { index, action ->
                 SearchScreenTextRow(
                     text = action.label,
-                    onClick = { viewModel.showPaywall() },
+                    onClick = { viewModel.overlays.show(SearchOverlay.Paywall) },
                     modifier =
                         Modifier
                             .fillMaxWidth()

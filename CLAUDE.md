@@ -180,15 +180,29 @@ Local SDK note: `local.properties` must contain
   substring OR number prefix (digits-only queries) in case-insensitive
   name order — live 5.2.0 side-by-side (`tm-02`) showed name order, not
   the zap order originally guessed when the cap was "not capturable" —
-  programmes by title substring still airing/upcoming, soonest first
-  (LIMIT 100 — the reference cap is not capturable). Currently-airing
-  programme rows append the shared dash progress + "N min" remaining to
-  the times and tint the title light blue, and the first programme hit is
-  preselected into the right-side detail card while the IME is still up
-  (`tm-03`, ref 50) — state only, never moving D-pad focus off the query
-  field. Programme rows drop hidden/unknown
-  channels and share one channel card per consecutive same-channel run
-  (capture 50's card-to-rows ratio). Air times: bare "03:45 — 05:15 PM"
+  programmes by title substring still airing/upcoming (LIMIT 100 — the
+  reference cap is not capturable). **The Programs section is a
+  channel-master / airings-detail two-pane (ref-round6 §D supersedes the
+  earlier flat soonest-first reading of capture 50):** a vertical master
+  lane with ONE 120×103 dp card (logo + name, adjacent) per channel that
+  has a matching programme, in case-insensitive NAME order, and a rows
+  pane showing ONLY the selected channel's airings, chronological, one
+  60 dp row per airing — no title dedupe, and same-titled programmes never
+  merge across channels (verified 1:1 against the fixture EPG). Selection
+  is ViewModel state (`selectedChannel`): each result batch selects the
+  first master channel and focusing a master card swaps the rows pane,
+  preselecting that channel's first airing into the right-side detail
+  card — while the IME is still up this is state only, D-pad focus stays
+  in the query field (`tm-03`, round6 06/07); DOWN from the query bar
+  lands on the FIRST channel card via an explicit `FocusRequester`
+  (round6 07 — Compose's spatial `moveFocus` picked the nearest card).
+  DOWN in the rows pane stops dead at the last airing
+  (`focusProperties down = Cancel`). OK on a master card tunes the channel
+  (uncaptured; assumed to match the Channels-shelf semantics — pending
+  device check). Currently-airing rows append the shared dash progress +
+  "N min" remaining to the times and tint the title light blue, and
+  hidden/unknown channels drop out with their airings.
+  Air times: bare "03:45 — 05:15 PM"
   today, "Mon, Sep 14, …" prefix otherwise. Search history = newline-joined
   string in its own SharedPreferences file (out of backups), dedupe + cap
   20; committed on IME search and result OK. OK on a channel card persists

@@ -13,11 +13,13 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
 import com.johncorser.telly.R
 import com.johncorser.telly.core.design.TELLY_ONBOARDING_BACKGROUND
 import com.johncorser.telly.core.ui.OnboardingScreenMessage
+import com.johncorser.telly.features.playlist.db.ChannelEntity
 import com.johncorser.telly.features.settings.SettingsScreenPaywall
 
 /**
@@ -34,43 +36,53 @@ fun SearchScreen(
     val scope = rememberCoroutineScope()
     val viewModel = remember { SearchViewModel(deps, scope) }
     val results by viewModel.results.collectAsState()
-    val overlay by viewModel.overlay.collectAsState()
-    BackHandler(enabled = overlay != SearchOverlay.None) { viewModel.dismissOverlay() }
+    val overlay by viewModel.overlays.current.collectAsState()
+    // DOWN from the query bar lands on the FIRST result card, not the
+    // geometrically nearest one (ref-round6 07-search-down-from-querybar).
+    val firstResult = remember { FocusRequester() }
+    BackHandler(enabled = overlay != SearchOverlay.None) { viewModel.overlays.dismiss() }
     Box(
         Modifier
             .fillMaxSize()
             .background(Color(TELLY_ONBOARDING_BACKGROUND)),
     ) {
         Column(Modifier.fillMaxSize()) {
-            SearchScreenTopBar(viewModel)
+            SearchScreenTopBar(viewModel, firstResult = if (results.isEmpty) null else firstResult)
             if (results.isEmpty) {
                 SearchScreenHistory(viewModel)
             } else {
-                SearchScreenResults(results, viewModel, onTuned)
+                SearchScreenResults(results, viewModel, firstResult, onTuned)
             }
         }
         SearchScreenOverlay(overlay, viewModel)
     }
 }
 
-/** Channels shelf on top, Programs list + focused detail card below. */
+/** Channels shelf on top, the two-pane Programs section + detail card below. */
 @Composable
 private fun SearchScreenResults(
     results: SearchResults,
     viewModel: SearchViewModel,
+    firstResult: FocusRequester,
     onTuned: () -> Unit,
 ) {
     val focused by viewModel.focusedProgram.collectAsState()
+    val onTune: (ChannelEntity) -> Unit = { channel ->
+        viewModel.onChannelResult(channel)
+        onTuned()
+    }
     if (results.channels.isNotEmpty()) {
-        SearchScreenChannels(results.channels) { hit ->
-            viewModel.onChannelResult(hit.channel)
-            onTuned()
-        }
+        SearchScreenChannels(results.channels, firstFocus = firstResult) { hit -> onTune(hit.channel) }
     }
     if (results.programs.isNotEmpty()) {
         Row {
             Column(Modifier.weight(1f)) {
-                SearchScreenPrograms(results.programs, viewModel)
+                SearchScreenPrograms(
+                    groups = results.programs,
+                    viewModel = viewModel,
+                    firstFocus = firstResult.takeIf { results.channels.isEmpty() },
+                    onTune = onTune,
+                )
             }
             Column(Modifier.align(Alignment.Top)) {
                 focused?.let { SearchScreenDetail(it) }
@@ -86,7 +98,7 @@ private fun SearchScreenOverlay(
 ) {
     when (overlay) {
         is SearchOverlay.ProgramMenu -> SearchScreenDropdown(viewModel)
-        SearchOverlay.Paywall -> SettingsScreenPaywall(onClose = { viewModel.dismissOverlay() })
+        SearchOverlay.Paywall -> SettingsScreenPaywall(onClose = { viewModel.overlays.dismiss() })
         is SearchOverlay.ComingSoon ->
             OnboardingScreenMessage(
                 headline = overlay.feature,
