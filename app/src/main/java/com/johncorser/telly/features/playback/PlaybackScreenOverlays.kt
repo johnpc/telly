@@ -102,5 +102,6 @@ private fun PlaybackScreenChannelMenu(
         sections = PlayerMenu.sections(viewModel.panel.nowTitleOf(channelId), channel?.source?.name.orEmpty()),
         favorite = channel?.flags?.favorite == true,
         onItem = viewModel.menu::onMenuItem,
+        restore = viewModel.menu.sheetFocus.restore,
     )
 }

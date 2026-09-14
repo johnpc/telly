@@ -20,6 +20,7 @@ import kotlinx.coroutines.test.advanceTimeBy
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
+import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
 import java.util.TimeZone
@@ -420,6 +421,26 @@ class PlaybackViewModelTest {
             assertEquals(PlaybackOverlay.ChannelMenu(1L), vm.overlay.value)
             vm.onKey(PlaybackKey.BACK)
             assertEquals(PlaybackOverlay.Panel, vm.overlay.value)
+        }
+
+    @Test
+    fun `back from a pushed screen re-focuses the sheet row that pushed it`() =
+        runTest {
+            val vm = buildVm()
+            vm.openPanel()
+            vm.showChannelMenu(channels[0])
+            assertNull(vm.menu.sheetFocus.restore)
+
+            vm.menu.onMenuItem(PlayerMenuItem.CHANNEL_OPTIONS)
+            vm.onKey(PlaybackKey.BACK)
+
+            assertEquals(PlaybackOverlay.ChannelMenu(1L), vm.overlay.value)
+            assertEquals(PlayerMenuItem.CHANNEL_OPTIONS, vm.menu.sheetFocus.restore)
+
+            // Reopening the sheet fresh lands on the first row again.
+            vm.onKey(PlaybackKey.BACK)
+            vm.showChannelMenu(channels[0])
+            assertNull(vm.menu.sheetFocus.restore)
         }
 
     @Test

@@ -287,3 +287,22 @@ Local SDK note: `local.properties` must contain
   at 30 (`WatchHistory.CAP`; the reference cap is not capturable). Events
   are recorded in `TuneController.tune`, the same commit point as
   `lastChannelId`, so guide preview tunes count as watches too.
+- **2026-09-14** Sheet-close focus restore (round5 punch list): the grid focus
+  engine's state already survived a plain sheet open/close (the round-5
+  "returns to the now-cell" read happened because the originating cell WAS the
+  airing cell) — what could actually drift was the POSITIONAL row index while
+  the sheet was up (rows re-emitting from a playlist/EPG refresh or the sheet's
+  own favorite/hide land focus on whatever slid into that index). Now
+  `GuideFocusMemory` snapshots (channel id, cell, anchor, scrollX, firstRow)
+  when `GuideMenuController.openRowMenu` fires and re-asserts it, consumed
+  once, on the first transition back to `GuideLayer.Grid`; a channel hidden
+  from its own sheet keeps the engine's index-resolved fallback. Inside the
+  shared sheet, rows that push screens (description / Channel options /
+  paywall / coming-soon — derived from `PlayerMenuRouting`) remember
+  themselves in `PlayerMenuFocus` (owned by both `GuideMenuController` and
+  `PlaybackMenuHandler`, so the panel sheet restores for free) and
+  `PlaybackScreenMenu` re-focuses that row on pop-back — lazy-scrolling it
+  into view only when it sits below the fold — instead of resetting to
+  Search; a freshly opened sheet still lands on Search. Restore-to-origin is
+  the assumed TiviMate behavior (standard leanback focus memory) —
+  **pending round6 on-device confirmation**.

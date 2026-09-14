@@ -46,6 +46,17 @@ class PlayerMenuTest {
     }
 
     @Test
+    fun `flat indexes count section headers as lazy rows`() {
+        val sections = PlayerMenu.sections("Business Hour", "News One")
+
+        assertEquals(0, PlayerMenu.flatIndexOf(sections, PlayerMenuItem.SEARCH))
+        assertEquals(3, PlayerMenu.flatIndexOf(sections, PlayerMenuItem.OPEN_IN_EXTERNAL_PLAYER))
+        assertEquals(7, PlayerMenu.flatIndexOf(sections, PlayerMenuItem.PROGRAM_DESCRIPTION))
+        assertEquals(13, PlayerMenu.flatIndexOf(sections, PlayerMenuItem.CHANNEL_OPTIONS))
+        assertEquals(21, PlayerMenu.flatIndexOf(sections, PlayerMenuItem.GROUP_OPTIONS))
+    }
+
+    @Test
     fun `no premium-only sleep timer or track rows exist in this build`() {
         val labels = PlayerMenuItem.entries.map { it.label }
         assertNull(labels.firstOrNull { it.contains("Sleep") || it.contains("Aspect") || it.contains("Audio track") })

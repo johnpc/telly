@@ -12,6 +12,7 @@ import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
 
@@ -229,6 +230,47 @@ class GuideMenuControllerTest {
 
             assertEquals(GuideLayer.RowMenu, menu.layer.value)
             assertTrue(dao.channels.value.none { it.flags.favorite })
+        }
+    }
+
+    @Test
+    fun `pushed rows remember themselves so back re-focuses them on the sheet`() {
+        runTest {
+            val menu = buildOpenSheet()
+            assertNull(menu.sheetFocus.restore)
+
+            menu.onMenuItem(PlayerMenuItem.CHANNEL_OPTIONS)
+            menu.close()
+
+            assertEquals(GuideLayer.RowMenu, menu.layer.value)
+            assertEquals(PlayerMenuItem.CHANNEL_OPTIONS, menu.sheetFocus.restore)
+        }
+    }
+
+    @Test
+    fun `rows that leave the sheet clear the refocus memory`() {
+        runTest {
+            val menu = buildOpenSheet()
+            menu.onMenuItem(PlayerMenuItem.RECORD)
+            menu.close()
+
+            menu.onMenuItem(PlayerMenuItem.SETTINGS)
+
+            assertNull(menu.sheetFocus.restore)
+        }
+    }
+
+    @Test
+    fun `reopening the sheet lands on the first row again`() {
+        runTest {
+            val menu = buildOpenSheet()
+            menu.onMenuItem(PlayerMenuItem.PROGRAM_DESCRIPTION)
+            menu.close()
+            menu.close()
+
+            menu.openRowMenu()
+
+            assertNull(menu.sheetFocus.restore)
         }
     }
 
