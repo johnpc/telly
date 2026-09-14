@@ -1,3 +1,4 @@
+@search
 Feature: Search channels and programmes
   TiviMate's search screen (catalogue §4, captures 49-51): voice orb, query
   bar and gear on top, the search-history landing state, and typed results
@@ -46,8 +47,7 @@ Feature: Search channels and programmes
     And I press ok on the first programme row
     Then I see the dropdown rows "Remind", "Record", "Custom recording", "Add to My list", "Program description"
     When I select "Remind"
-    Then I see "Remind"
-    And I see "Coming soon to telly"
+    Then I see the "Unlock Premium" screen
 
   Scenario: Committed queries land in the history and the trash clears them
     When I focus the query bar

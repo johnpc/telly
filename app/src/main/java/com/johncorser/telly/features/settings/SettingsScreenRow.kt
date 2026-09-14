@@ -12,6 +12,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.focusProperties
 import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.toggleableState
+import androidx.compose.ui.state.ToggleableState
 import androidx.compose.ui.unit.dp
 import androidx.tv.material3.LocalContentColor
 import androidx.tv.material3.Surface
@@ -38,6 +41,7 @@ internal fun SettingsScreenRow(
         modifier =
             modifier
                 .focusOnAppear(requestFocus)
+                .then(rowStateSemantics(row))
                 .fillMaxWidth()
                 .heightIn(min = SettingsScreenDims.rowMinHeight)
                 .onFocusChanged { if (it.isFocused) onFocused() }
@@ -91,4 +95,11 @@ internal fun SettingsRow.titleText(): String =
         is SettingsRow.Action -> title
         is SettingsRow.Header -> text
         is SettingsRow.Note -> text
+    }
+
+/** Exposes a toggle row's on/off state to accessibility + UI tests. */
+private fun rowStateSemantics(row: SettingsRow): Modifier =
+    when (row) {
+        is SettingsRow.Toggle -> Modifier.semantics { toggleableState = ToggleableState(row.checked) }
+        else -> Modifier
     }

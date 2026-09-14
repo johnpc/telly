@@ -1,3 +1,4 @@
+@settings
 Feature: Settings
   The TiviMate-style settings sheet stack (device-verified 2026-09-13): a
   single 360 dp right sheet over the dimmed underlying screen. The root

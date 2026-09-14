@@ -29,6 +29,7 @@ fun TellyScreenIconCircle(
     size: Dp = 40.dp,
     iconSize: Dp = 22.dp,
     colors: ClickableSurfaceColors = FocusScreenDefaults.colors(restingContainer = Color.Transparent),
+    contentDescription: String? = null,
 ) {
     Surface(
         onClick = onClick,
@@ -40,7 +41,7 @@ fun TellyScreenIconCircle(
         Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
             Icon(
                 painter = painterResource(icon),
-                contentDescription = null,
+                contentDescription = contentDescription,
                 modifier = Modifier.size(iconSize),
             )
         }

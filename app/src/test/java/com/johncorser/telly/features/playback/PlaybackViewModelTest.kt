@@ -41,7 +41,10 @@ class PlaybackViewModelTest {
     private var exitedToHistory = 0
     private var now = 1_000_000L
 
-    private fun TestScope.buildVm(clock: () -> Long = { now }): PlaybackViewModel =
+    private fun TestScope.buildVm(
+        clock: () -> Long = { now },
+        onOpenSettings: () -> Unit = {},
+    ): PlaybackViewModel =
         PlaybackViewModel(
             env =
                 PlaybackEnv(
@@ -49,14 +52,26 @@ class PlaybackViewModelTest {
                     epgRepository = testEpgRepository(programs),
                     engine = engine,
                     store = store,
-                    clock = clock,
-                    zone = TimeZone.getTimeZone("UTC"),
+                    time = PlaybackTime(clock, TimeZone.getTimeZone("UTC")),
+                    hooks = PlaybackHooks(onOpenSettings = onOpenSettings),
                 ),
             history = WatchHistory(historyDao, clock),
             scope = CoroutineScope(SupervisorJob() + UnconfinedTestDispatcher(testScheduler)),
             onExitToGuide = { exitedToGuide += 1 },
             onExitToHistory = { exitedToHistory += 1 },
         )
+
+    @Test
+    fun `the settings menu row opens the settings shell`() =
+        runTest {
+            var opened = false
+            val vm = buildVm(onOpenSettings = { opened = true })
+
+            vm.menu.onMenuItem(PlayerMenuItem.SETTINGS)
+
+            assertTrue(opened)
+            assertEquals(PlaybackOverlay.None, vm.overlay.value)
+        }
 
     @Test
     fun `cold start restores the last watched channel`() =

@@ -30,8 +30,8 @@ class GuideController(
     private val callbacks: GuideCallbacks,
     initialGroup: String = PanelViewModel.ALL_CHANNELS,
 ) {
-    val zone = env.zone
-    val nowMs = env.clock()
+    val zone = env.time.zone
+    val nowMs = env.time.clock()
     val originMs = GuideGeometry.halfHourFloor(nowMs, zone)
 
     /** "Sun, Sep 13, 2:44 PM" in blue at the header's left (uidump 24). */

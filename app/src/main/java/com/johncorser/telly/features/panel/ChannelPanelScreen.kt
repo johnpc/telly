@@ -6,6 +6,7 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
@@ -34,6 +35,8 @@ fun ChannelPanelScreen(
     val groups by panel.groups.collectAsState()
     val selected by panel.selectedGroup.collectAsState()
     val clockText by panel.clockText.collectAsState()
+    val pinPrompt by panel.pinPrompt.collectAsState()
+    DisposableEffect(Unit) { onDispose { panel.dismissPinPrompt() } }
     Row(
         Modifier
             .fillMaxSize()
@@ -49,5 +52,8 @@ fun ChannelPanelScreen(
             )
             ChannelPanelScreenList(panel, playingChannelId, onTune, onChannelMenu)
         }
+    }
+    if (pinPrompt != null) {
+        ChannelPanelScreenPin(onSubmit = panel::submitPin)
     }
 }

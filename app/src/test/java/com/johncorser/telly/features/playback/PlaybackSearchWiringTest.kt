@@ -29,7 +29,7 @@ class PlaybackSearchWiringTest {
                     epgRepository = testEpgRepository(FakeProgramDao()),
                     engine = FakePlayerEngine(),
                     store = FakeKeyValueStore(),
-                    clock = { 1_000_000L },
+                    time = PlaybackTime({ 1_000_000L }),
                 ),
             history = WatchHistory(FakeWatchHistoryDao()) { 1_000_000L },
             scope = CoroutineScope(SupervisorJob() + UnconfinedTestDispatcher(testScheduler)),

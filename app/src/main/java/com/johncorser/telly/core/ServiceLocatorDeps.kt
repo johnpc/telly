@@ -1,10 +1,12 @@
 package com.johncorser.telly.core
 
 import android.content.Context
+import com.johncorser.telly.core.settings.ParentalControls
 import com.johncorser.telly.core.settings.TellySettings
 import com.johncorser.telly.features.guide.GuideDeps
 import com.johncorser.telly.features.history.WatchHistory
 import com.johncorser.telly.features.playback.PlaybackDeps
+import com.johncorser.telly.features.playback.PlaybackSources
 import com.johncorser.telly.features.player.Media3PlayerEngine
 import com.johncorser.telly.features.search.SearchDeps
 import com.johncorser.telly.features.search.SearchRepository
@@ -15,12 +17,16 @@ private const val SEARCH_PREFS_NAME = "telly-search"
 /** Playback slice bundle over [ServiceLocator]'s app-scoped singletons. */
 fun ServiceLocator.playbackDeps(context: Context): PlaybackDeps =
     PlaybackDeps(
-        channelDao = database(context).channelDao(),
-        epgRepository = epgRepository(context),
+        sources =
+            PlaybackSources(
+                channelDao = database(context).channelDao(),
+                epgRepository = epgRepository(context),
+                history = WatchHistory(database(context).watchHistoryDao(), clock),
+            ),
         keyValueStore = keyValueStore(context),
-        history = WatchHistory(database(context).watchHistoryDao(), clock),
         engineFactory = { Media3PlayerEngine.create(context.applicationContext) },
         clock = clock,
+        parental = ParentalControls(settingsRepository(context)),
     )
 
 /** Guide slice = the playback bundle + the settings the grid honors. */

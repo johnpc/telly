@@ -22,6 +22,11 @@ coroutinesTest = "1.10.1"
 detekt = "1.23.8"
 ktlintGradle = "12.1.2"
 jacoco = "0.8.12"
+cucumberAndroid = "7.18.1"
+cucumberJvm = "7.18.1"
+androidxTestRunner = "1.6.2"
+espresso = "3.6.1"
+uiautomator = "2.3.0"
 
 [libraries]
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
@@ -48,6 +53,12 @@ junit = { group = "junit", name = "junit", version.ref = "junit" }
 mockk = { group = "io.mockk", name = "mockk", version.ref = "mockk" }
 turbine = { group = "app.cash.turbine", name = "turbine", version.ref = "turbine" }
 kotlinx-coroutines-test = { group = "org.jetbrains.kotlinx", name = "kotlinx-coroutines-test", version.ref = "coroutinesTest" }
+cucumber-android = { group = "io.cucumber", name = "cucumber-android", version.ref = "cucumberAndroid" }
+cucumber-picocontainer = { group = "io.cucumber", name = "cucumber-picocontainer", version.ref = "cucumberJvm" }
+androidx-test-runner = { group = "androidx.test", name = "runner", version.ref = "androidxTestRunner" }
+androidx-espresso-core = { group = "androidx.test.espresso", name = "espresso-core", version.ref = "espresso" }
+androidx-uiautomator = { group = "androidx.test.uiautomator", name = "uiautomator", version.ref = "uiautomator" }
+androidx-compose-ui-test-junit4 = { group = "androidx.compose.ui", name = "ui-test-junit4" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }

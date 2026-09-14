@@ -1,3 +1,4 @@
+@epg-data
 Feature: EPG data foundation
   Channels and guide data live in Room, not in memory: playlists survive a
   restart and the guide is populated from the playlist's url-tvg EPG source.

@@ -9,12 +9,16 @@ import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.key.onPreviewKeyEvent
 import com.johncorser.telly.core.input.HoldKeyDetector
+import com.johncorser.telly.features.panel.PanelLock
 import com.johncorser.telly.features.player.PlayerScreenSurface
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.cancel
 
 /**
  * Fullscreen playback host: video surface at the bottom of the stack, the
@@ -27,28 +31,43 @@ fun PlaybackScreen(
     onExitToGuide: () -> Unit = {},
     onExitToHistory: () -> Unit = {},
     onOpenSearch: () -> Unit = {},
+    onOpenSettings: () -> Unit = {},
 ) {
-    val scope = rememberCoroutineScope()
+    // A dedicated main-thread scope instead of rememberCoroutineScope(): the
+    // ViewModel drives ExoPlayer (main-thread-affine) and wall-clock overlay
+    // timeouts, so its coroutines must not run on the composition's frame
+    // clock (under UI-test harnesses that clock defers/redirects resumes).
+    val scope = remember { CoroutineScope(SupervisorJob() + Dispatchers.Main.immediate) }
     val engine = remember { deps.engineFactory() }
     val viewModel =
         remember {
             PlaybackViewModel(
                 env =
                     PlaybackEnv(
-                        channelDao = deps.channelDao,
-                        epgRepository = deps.epgRepository,
+                        channelDao = deps.sources.channelDao,
+                        epgRepository = deps.sources.epgRepository,
                         engine = engine,
                         store = deps.keyValueStore,
-                        clock = deps.clock,
+                        time = PlaybackTime(deps.clock),
+                        hooks =
+                            PlaybackHooks(
+                                panelLock = PanelLock(deps.parental),
+                                onOpenSettings = onOpenSettings,
+                            ),
                     ),
-                history = deps.history,
+                history = deps.sources.history,
                 scope = scope,
                 onExitToGuide = onExitToGuide,
                 onExitToHistory = onExitToHistory,
                 openSearch = onOpenSearch,
             )
         }
-    DisposableEffect(Unit) { onDispose { viewModel.close() } }
+    DisposableEffect(Unit) {
+        onDispose {
+            viewModel.close()
+            scope.cancel()
+        }
+    }
     val overlay by viewModel.overlay.collectAsState()
     val previewDetector = remember { HoldKeyDetector(PlaybackKey.OK, PlaybackKey.LONG_OK) }
     BackHandler { viewModel.onKey(PlaybackKey.BACK) }

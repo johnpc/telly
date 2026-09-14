@@ -1,0 +1,169 @@
+package com.johncorser.telly.e2e.steps
+
+import android.view.KeyEvent
+import androidx.compose.ui.test.hasTestTag
+import androidx.compose.ui.test.hasText
+import androidx.compose.ui.test.isEnabled
+import androidx.compose.ui.test.isFocused
+import androidx.compose.ui.test.isNotEnabled
+import androidx.compose.ui.test.isOn
+import com.johncorser.telly.core.ServiceLocator
+import com.johncorser.telly.core.settings.ParentalControls
+import com.johncorser.telly.core.settings.TellySettings
+import com.johncorser.telly.e2e.PlaybackDriver
+import com.johncorser.telly.e2e.TellyWorld
+import com.johncorser.telly.features.epg.RefreshScheduler
+import io.cucumber.java.en.Given
+import io.cucumber.java.en.Then
+import io.cucumber.java.en.When
+import org.junit.Assert.assertFalse
+import org.junit.Assert.assertTrue
+
+/** Steps for the two-pane settings shell and parental controls. */
+class SettingsSteps(
+    private val world: TellyWorld,
+    private val driver: PlaybackDriver,
+) {
+    @Given("I open Settings")
+    fun openSettings() {
+        driver.openPanel()
+        driver.longPressRow(driver.currentChannel.name)
+        world.select("Settings")
+        world.waitForText("All features are available in Premium version")
+    }
+
+    @Then("I see the sections {string} in order")
+    fun sectionsInOrder(list: String) {
+        val names = list.split(",").map { it.trim() }
+        names.forEach { world.waitForText(it) }
+        val tops =
+            names.map { name ->
+                world.compose.onAllNodes(hasText(name)).fetchSemanticsNodes().minOf { it.boundsInRoot.top }
+            }
+        assertTrue("sections rendered top-to-bottom: $tops", tops == tops.sorted())
+    }
+
+    @When("I open the {string} section")
+    fun openSection(name: String) {
+        // Sheet-stack shell: OK on a section row replaces the root sheet
+        // with that section's sheet.
+        world.select(name)
+    }
+
+    @When("I activate {string}")
+    fun activate(text: String) = world.select(text)
+
+    @Then("the {string} toggle is on")
+    fun toggleOn(title: String) = world.waitFor(hasText(title) and isOn())
+
+    @Then("the {string} row shows {string}")
+    fun rowShows(
+        title: String,
+        value: String,
+    ) = world.waitFor(hasText(title) and hasText(value))
+
+    @When("I choose {string}")
+    fun choose(option: String) = world.select(option)
+
+    @Then("EPG data older than {int} hours is due for refresh")
+    fun olderIsDue(hours: Int) {
+        assertTrue("stale EPG due", refreshDue(staleByHours = hours + 1))
+    }
+
+    @Then("EPG data fresher than {int} hours is not due for refresh")
+    fun fresherNotDue(hours: Int) {
+        assertFalse("fresh EPG not due", refreshDue(staleByHours = hours - 1))
+    }
+
+    @When("I set the PIN to {string}")
+    fun setPin(pin: String) {
+        world.waitForText("Change PIN")
+        spinPinWheels(pin)
+    }
+
+    /** BACKs out of the settings shell to fullscreen playback. */
+    private fun leaveSettings() {
+        driver.awaitCondition("left the settings shell") {
+            if (world.nodeCount(hasText("All features are available in Premium version")) == 0) {
+                true
+            } else {
+                world.pressKey(KeyEvent.KEYCODE_BACK)
+                false
+            }
+        }
+    }
+
+    @When("the group {string} is locked")
+    fun lockGroup(group: String) {
+        // No capture-verified UI owns group locking yet; arrange it through
+        // the app's real parental-controls policy over the real store.
+        ParentalControls(ServiceLocator.settingsRepository(world.targetContext)).setGroupLocked(group, true)
+    }
+
+    @Then("opening the group {string} requires the PIN")
+    fun groupRequiresPin(group: String) {
+        leaveSettings()
+        driver.openPanel()
+        world.pressKey(KeyEvent.KEYCODE_DPAD_LEFT)
+        world.select(group)
+        world.waitForText("Enter PIN")
+    }
+
+    @Then("entering the PIN {string} unlocks it")
+    fun enterPinUnlocks(pin: String) {
+        spinPinWheels(pin)
+        world.waitForGone(hasText("Enter PIN"))
+        world.waitForText("Movie House")
+    }
+
+    @Then("opening the group {string} does not require the PIN")
+    fun groupWithoutPin(group: String) {
+        world.select(group)
+        world.waitForGone(hasText("Enter PIN"))
+        world.waitForText("News One")
+    }
+
+    @When("I activate the playlist {string}")
+    fun activatePlaylist(name: String) = world.select(world.mapFixtureText(name))
+
+    @Then("the playlists section lists {string}")
+    fun playlistsSectionLists(name: String) {
+        driver.awaitCondition("back at the Playlists pane") {
+            if (world.nodeCount(hasText("Add playlist")) > 0) {
+                true
+            } else {
+                world.pressKey(KeyEvent.KEYCODE_BACK)
+                false
+            }
+        }
+        world.waitForText(name)
+    }
+
+    @Then("the row {string} is locked")
+    fun rowLocked(title: String) = world.waitFor(hasText(title) and isNotEnabled())
+
+    @Then("the row {string} is not locked")
+    fun rowNotLocked(title: String) = world.waitFor(hasText(title) and isEnabled())
+
+    /** Drives the four digit wheels: UP spins the digit, RIGHT advances. */
+    private fun spinPinWheels(pin: String) {
+        world.waitFor(hasTestTag("pin-wheel") and isFocused())
+        pin.forEachIndexed { index, digit ->
+            world.pressKey(KeyEvent.KEYCODE_DPAD_UP, times = digit.digitToInt())
+            if (index < pin.length - 1) {
+                world.pressKey(KeyEvent.KEYCODE_DPAD_RIGHT)
+            }
+        }
+        world.pressKey(KeyEvent.KEYCODE_DPAD_CENTER)
+    }
+
+    private fun refreshDue(staleByHours: Int): Boolean {
+        val settings = ServiceLocator.settingsRepository(world.targetContext)
+        val scheduler =
+            RefreshScheduler(
+                intervalMs = { RefreshScheduler.hoursToMs(settings.get(TellySettings.EPG_UPDATE_INTERVAL_HOURS)) },
+            )
+        val now = System.currentTimeMillis()
+        return scheduler.isDue(lastUpdatedMs = now - staleByHours * RefreshScheduler.HOUR_MS, nowMs = now)
+    }
+}

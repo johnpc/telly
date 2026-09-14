@@ -13,12 +13,20 @@ import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.flow.update
 import java.util.TimeZone
+
+/** A focus move the row list must execute (scroll + focus the index). */
+data class PanelFocusCommand(
+    val version: Int,
+    val index: Int,
+)
 
 /**
  * Channel-list panel state: the groups column (Favorites + All channels +
  * playlist groups, capture 25), the channel rows of the selected group with
- * their now/next programmes, and per-group focus memory.
+ * their now/next programmes, per-group focus memory, and the parental gate
+ * on locked groups.
  */
 class PanelViewModel(
     channelDao: ChannelDao,
@@ -26,15 +34,21 @@ class PanelViewModel(
     private val clock: () -> Long,
     scope: CoroutineScope,
     private val zone: TimeZone = TimeZone.getDefault(),
+    private val lock: PanelLock = PanelLock(),
 ) {
     private val channels = channelDao.observeVisible().stateIn(scope, SharingStarted.Eagerly, emptyList())
     private val selected = MutableStateFlow(ALL_CHANNELS)
     private val instant = MutableStateFlow(clock())
     private val mutableFocusIndex = MutableStateFlow(0)
+    private val mutableFocusCommand = MutableStateFlow(PanelFocusCommand(0, 0))
     private val focusMemory = mutableMapOf<String, Int>()
 
     val selectedGroup: StateFlow<String> = selected.asStateFlow()
     val focusIndex: StateFlow<Int> = mutableFocusIndex.asStateFlow()
+    val focusCommand: StateFlow<PanelFocusCommand> = mutableFocusCommand.asStateFlow()
+
+    /** The group awaiting a parental PIN, or null when no prompt is open. */
+    val pinPrompt: StateFlow<String?> = lock.pinPrompt
 
     /** Panel header clock, "Sun, Sep 13, 2:53 PM" in blue (capture 47). */
     val clockText: StateFlow<String> =
@@ -65,24 +79,42 @@ class PanelViewModel(
         channelId?.let(::focusChannel)
     }
 
+    /** OK on a group row; locked groups prompt for the PIN instead. */
     fun selectGroup(group: String) {
-        if (group == selected.value) return
-        selected.value = group
-        mutableFocusIndex.value = focusMemory[group] ?: 0
+        if (group == selected.value || lock.intercept(group)) return
+        applyGroup(group)
     }
+
+    /** A verified PIN releases the pending locked group. */
+    fun submitPin(pin: String) {
+        lock.unlock(pin)?.let(::applyGroup)
+    }
+
+    fun dismissPinPrompt() = lock.dismiss()
 
     fun onRowFocused(index: Int) {
         focusMemory[selected.value] = index
         mutableFocusIndex.value = index
     }
 
+    private fun applyGroup(group: String) {
+        selected.value = group
+        commandFocus(focusMemory[group] ?: 0)
+    }
+
+    /** Focus moves the LIST must execute (group switch / panel open). */
+    private fun commandFocus(index: Int) {
+        onRowFocused(index)
+        mutableFocusCommand.update { PanelFocusCommand(it.version + 1, index) }
+    }
+
     private fun focusChannel(channelId: Long) {
         val index = PanelRows.channelsIn(channels.value, selected.value).indexOfFirst { it.id == channelId }
         if (index >= 0) {
-            onRowFocused(index)
+            commandFocus(index)
         } else {
             selected.value = ALL_CHANNELS
-            onRowFocused(channels.value.indexOfFirst { it.id == channelId }.coerceAtLeast(0))
+            commandFocus(channels.value.indexOfFirst { it.id == channelId }.coerceAtLeast(0))
         }
     }
 

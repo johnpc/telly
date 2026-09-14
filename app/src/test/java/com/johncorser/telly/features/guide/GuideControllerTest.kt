@@ -8,6 +8,7 @@ import com.johncorser.telly.features.history.WatchHistory
 import com.johncorser.telly.features.history.db.WatchHistoryEntity
 import com.johncorser.telly.features.panel.PanelViewModel
 import com.johncorser.telly.features.playback.PlaybackEnv
+import com.johncorser.telly.features.playback.PlaybackTime
 import com.johncorser.telly.features.playback.PlayerMenuItem
 import com.johncorser.telly.features.playback.TuneController
 import com.johncorser.telly.testutil.FakeChannelDao
@@ -71,8 +72,7 @@ class GuideControllerTest {
                     epgRepository = testEpgRepository(programs),
                     engine = engine,
                     store = store,
-                    clock = { nowMs },
-                    zone = utc,
+                    time = PlaybackTime({ nowMs }, utc),
                 ),
             history = WatchHistory(historyDao) { nowMs },
             pastDays = { pastDays },

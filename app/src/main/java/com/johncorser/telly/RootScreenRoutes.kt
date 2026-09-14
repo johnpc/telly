@@ -56,6 +56,7 @@ internal fun RootScreenRoutes(
                     onExitToGuide = { navigator.replaceAll(Route.Guide()) },
                     onExitToHistory = { navigator.replaceAll(Route.Guide(historySource = true)) },
                     onOpenSearch = { navigator.push(Route.Search) },
+                    onOpenSettings = { navigator.push(Route.Settings) },
                 )
             is Route.Guide ->
                 GuideScreen(

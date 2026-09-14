@@ -9,6 +9,8 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.semantics.selected
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.dp
@@ -41,14 +43,15 @@ internal fun ChannelPanelScreenGroups(
         verticalArrangement = Arrangement.spacedBy(metrics.rowSpacing),
     ) {
         items(groups, key = { it }) { group ->
+            val isSelected = group == selected
             TellyScreenMenuRow(
                 label = group,
                 onClick = { onSelect(group) },
-                modifier = rowModifier,
+                modifier = rowModifier.semantics { this.selected = isSelected },
                 height = metrics.rowHeight,
                 fontSize = metrics.fontSize,
-                restingContainer = if (group == selected) Color(TELLY_BUTTON_RESTING) else Color.Transparent,
-                requestFocus = autoFocusSelected && group == selected,
+                restingContainer = if (isSelected) Color(TELLY_BUTTON_RESTING) else Color.Transparent,
+                requestFocus = autoFocusSelected && isSelected,
             )
         }
     }
