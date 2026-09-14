@@ -24,7 +24,7 @@ All bounds quoted from uidumps are px at 1920×1080 (2 px = 1 dp on this xhdpi c
 | Accent (progress fill, playing-channel name, section headers in menus, "All features…" note) | `#2196F3` (Material Blue 500) | 34, 18, 24 |
 | Guide date/clock header text | `#90CAF9` (Material Blue 200) | 24 |
 | Now-line | 2px vertical rule, ~`#384C5C` over bg (low-alpha light blue) with a small dot at the timeline row | 24 |
-| Overlay shortcut card bg | `#1B1D21`; focused card `#FFFFFF` | 34 |
+| Overlay shortcut card bg | ~~`#1B1D21`; focused card `#FFFFFF`~~ **CORRECTED (round3):** resting `#181E20` (24,30,32), focused `#252A2D` (37,42,45) with WHITE icon/text — the focused card is NOT the white pill; focus shows as the lighter fill + ~13% growth (280×208 vs 248×184 px) | 34; round3-ref/02 |
 | Progress track | grey ~`#666` (thin, 4px); fill `#2196F3` with round thumb | 34 |
 | Typeface | Roboto throughout (system) | all |
 
@@ -106,6 +106,8 @@ but are inert.
 - **Header row** y≈408-464: date+clock `Sun, Sep 13, 2:44 PM` in `#90CAF9` at x=32;
   timeline labels every 30 min (`02:30 PM`,`03:00 PM`…) width 320px per 30 min.
 - **Now-line**: thin vertical rule + dot at header, color ~#384C5C.
+- **Wrap (verified round4, read-only drive):** DOWN at the last channel row
+  (30) wraps focus to row 1, and UP at row 1 wraps to row 30.
 - **Channel rows** 78px pitch: number (grey, blue when playing), logo tile 56×48
   (rounded, shows the channel logo), name (white; **playing channel name is #2196F3 and
   gets a blue ▶ at the row's right edge**), then program cells.
@@ -165,19 +167,48 @@ but are inert.
 - BACK hides the overlay.
 
 ### Key map discovered during playback (free 5.2.0)
+
+> **CORRECTED (round3, re-verified twice on the live device):** the UP and
+> long-OK/MENU rows below were captured from a different pre-state and are
+> wrong at BARE fullscreen. The verified map is:
+> - **UP at bare fullscreen opens the INFO overlay** (same as OK/DOWN), not
+>   the guide overlay at the previous channel. A **second UP** moves focus
+>   into a transport row (00:16/45:00, ⏮ ⏪ ⏸ ⏩ ⏭, LIVE badge, record dot).
+>   Evidence: round3-ref/03-panel-up.png, 03b-panel-up-up.png, 03c-panel-up-x3.png.
+> - **long-OK / MENU at bare fullscreen opens a bottom icon quick-bar**
+>   (Search · Channels list · Recordings · Multiview · Picture-in-picture ·
+>   1280 × 720 · Mono · 0 ms · Off(CC)); focus = white circle on Search,
+>   auto-hides ~5 s. The right-side sheet documented below belongs to
+>   long-OK **on a row inside the guide overlay/panel**.
+>   Evidence: round3-ref/07-player-ctx-menu.png/.xml, 08-player-menu-key.png.
+> - Channel change shows a **compact zap overlay** (logo, title,
+>   time/progress/remaining, number+name, description line, next programme)
+>   while the OLD video keeps playing until the new stream is ready
+>   (~1.5–2 s); it auto-hides ~5.5 s. Evidence: round3-ref/10-zap-*.
+
 | Key | Result | Evidence |
 |---|---|---|
 | OK | opens bottom info overlay | 34 |
 | DOWN | opens the same bottom info overlay | 37 |
-| UP | opens the **guide overlay** focused on the previous channel row (wraps 1→30) + toast "Long press Back button to return to the player" | 36 |
-| long-OK | context menu (see below) | 38 |
-| MENU | same context menu as long-OK | 46 |
-| CHANNEL_UP | opens the info overlay (no zap on this build/emulator) | 45 |
+| UP | ~~opens the **guide overlay** focused on the previous channel row (wraps 1→30) + toast~~ **CORRECTED (round3): opens the info overlay; second UP focuses the transport row** | ~~36~~ round3-ref/03* |
+| long-OK | ~~context menu (see below)~~ **CORRECTED (round3): bottom icon quick-bar** | ~~38~~ round3-ref/07 |
+| MENU | same as long-OK (quick-bar) | 46, round3-ref/08 |
+| CHANNEL_UP | opens the info overlay (no zap on this build/emulator; flagged unreliable — the clone zaps directly with the compact zap overlay) | 45 |
 | digits 0–9 | **no-op** — no number-zap overlay exists in 5.2.0 free | 43, 44 |
 | long-BACK (from any guide overlay) | return to fullscreen player | 36 toast, verified |
-| BACK | guide overlay → player? No: from clean playback BACK returns to the **TV guide** | — |
+| BACK | guide overlay → player? No: from clean playback BACK returns to the **TV guide** | round3-ref/06-back3 |
 
 ### 38–40 long-OK / MENU context menu (`38`,`39`,`40` + dump 38)
+
+> **CORRECTED (round3):** this right-side sheet is NOT the bare-fullscreen
+> long-OK menu — capture 38's background shows the guide overlay with the
+> preview window, i.e. it was taken from the **guide/panel row context**.
+> Long-OK on a panel/guide row opens this full sheet with the panel still
+> visible behind it (round3-ref/05-panel-row-longok.png/.xml); long-OK at
+> bare fullscreen opens the bottom icon quick-bar instead (round3-ref/07).
+> Sheet metrics (round3): 512 px wide, 16 px off the screen's top/right,
+> 80 px row pitch, focus pill inset 16 px from the sheet edges.
+
 Right-side sheet, sectioned, verbatim (top→bottom):
 - **Search** (row with magnifier, focused by default), **Settings** (gear)
 - blue header = program title ("Business Hour: Episode 7. S1 E7"):
@@ -360,7 +391,10 @@ buttons **LOG IN** / **SIGN UP**; IME auto-opens. BACK×3 returns to the app.
 3. When a 60s fixture stream ends, TiviMate immediately reconnects — looks like a loop
    with the on-screen timer restarting; useful for e2e.
 4. Startup (free): always lands on the TV guide, group reset to "All channels",
-   nothing auto-tunes, preview stays black until first tune.
+   nothing auto-tunes, preview stays black until first tune. Cold-start look
+   (round3): system task-snapshot as starting window → guide skeleton (header +
+   black preview box, no rows) → rows populate ~2 s later → focus pill ~2.5 s.
+   No splash, no welcome interstitial (round3-ref/09-coldstart-*).
 5. Info overlay badges are derived from the stream: HD, 25 FPS, MONO for the fixtures.
 6. Number keys, CH+/CH− zap, FF/RW paging: none of these do anything observable in
    free 5.2.0 on the emulator.

@@ -49,6 +49,30 @@ capture catalogue — the fix agent should trust these, they were re-verified tw
 | Zap: video gap | **none** — old video keeps playing; new stream swaps in ~1.5–2 s; compact zap overlay appears with the panel-close fade and auto-hides ~5.5 s later | **1.31 s full black** (8.934→10.243), no overlay at all |
 | Cold start | snapshot → guide skeleton → rows ≈2 s later | ~0.8 s app bg → **welcome flash ~0.65 s** → **pure black ~1.65 s** → video |
 
+## Round 4 — fix pass status (2026-09-13, telly @ post-cd59b66 build)
+
+Evidence: `round4/` (stills + `ty4-ov.webm`, `ty4-zap.webm`, `ty4-cold.webm`,
+host recorder, same methodology as round 3). Every P0/P1/P2 item below is
+marked with its resolution; measured timings:
+
+| Event | TiviMate (round3) | telly round3 | telly round4 |
+|---|---|---|---|
+| Info overlay entrance | ~300–400 ms fade + 12 px settle | instant pop | **350 ms linear fade + 12 px slide** (ramp in ty4-ov.webm ≈330 ms) |
+| Info overlay visible (first frame → gone) | **5.134 s** | 4.51 s | **5.161 s** (Δ27 ms) |
+| Info overlay exit | instant cut | instant cut ✓ | instant cut ✓ (snap) |
+| Panel open/close | ~150 ms fade | instant pop | **150 ms cross-fade both ways** (tween) |
+| Zap: video gap | none; compact overlay ~5.5 s | **1.31 s black**, no overlay | **0 black frames** (ty4-zap.webm), old frame held, compact zap overlay with description, auto-hide 5.5 s |
+| Cold start | snapshot → skeleton → rows ~2 s | welcome flash 0.65 s + 1.65 s black | **no interstitial**: #131619 boot frame → black player frame (~0.7 s) → video ≈2.6 s after launch (ty4-cold.webm) |
+
+Item-by-item: 1 FIXED · 2 FIXED · 3 FIXED · 4 FIXED · 5 FIXED · 6 FIXED ·
+7 FIXED · 8 FIXED · 9 FIXED · 10 FIXED · 11 FIXED · 12 FIXED · 13 FIXED ·
+14 FIXED · 15 FIXED · 16 FIXED (transport row built; buttons route to the
+coming-soon pattern until catch-up exists) · 17 FIXED · 18 FIXED ·
+19 unchanged by design (BACK stand-in until the guide slice; guide agent owns
+the switch) · 20 FIXED · 21 FIXED (TiviMate wrap verified on-device: DOWN at
+row 30 wraps to 1, UP at 1 wraps to 30 — telly now does both) · 22 FIXED.
+Per-item notes below.
+
 ## P0 — functional
 
 1. **Programme title/episode formatting is broken everywhere.**
@@ -64,6 +88,13 @@ capture catalogue — the fix agent should trust these, they were re-verified tw
    Evidence: `round3/02-info-overlay.png` vs `round3-ref/02-info-overlay.png` (+ .xml
    text `Global Update: Episode 9. S1 E9`), `round3/04-panel-ch1-focused.png` vs
    `round3-ref/04-guide-overlay.png`.
+   **FIXED (round4):** `<sub-title>` parsed, xmltv_ns `<episode-num>` converted
+   (0-based `0.9.` → `S1 E10`) at parse time, and ONE shared formatter
+   (`ProgramTitle.of`: `Title: Sub-title. S1 E10`, parts dropped when missing)
+   feeds overlay, panel rows, detail card and menu headers. Schema v2 adds the
+   subTitle column. Exhaustive unit tests (`ProgramTitleTest`,
+   `XmltvEpisodeNumTest`). Evidence: `round4/02-info-overlay.png/.xml`
+   ("Weather Watch: Episode 12. S1 E12"), `round4/04-panel-focused.png`.
 
 2. **Zap transition: 1.3 s of black and zero feedback.**
    TiviMate: panel fades out ~140 ms, the OLD channel's video keeps playing, a compact
@@ -78,6 +109,12 @@ capture catalogue — the fix agent should trust these, they were re-verified tw
    `features/playback/TuneController.kt` / `PlaybackViewModel.kt`.
    Evidence: `round3-ref/10-zap-1/2/3-*.png`, `tm-zap.webm` vs `round3/10-zap-1/2/3-*.png`,
    `ty-zap.webm`.
+   **FIXED (round4):** player reused + `setKeepContentOnPlayerReset(true)` — the
+   old frame stays until the new stream renders (0 black frames in
+   `round4/ty4-zap.webm`); the compact zap overlay (logo/title/times/number+name
+   /description/next, no bar/cards/chevron) appears instantly on every tune
+   (CH± and panel-OK) and auto-hides 5.5 s. Evidence:
+   `round4/10-zap-2-zap-overlay.png`, `10-zap-3-new-stream.png`, `ty4-zap.webm`.
 
 3. **Cold start flashes the welcome screen (known issue) + long black gap.**
    Confirmed: welcome screen fully rendered for ~0.65 s (`ty-cold.webm` 12.20→12.85 s,
@@ -87,6 +124,11 @@ capture catalogue — the fix agent should trust these, they were re-verified tw
    for telly (which resumes playback) the equivalent is a black/quiet player frame, i.e.
    suppress the welcome route until the Room read resolves
    (`features/onboarding/StartRoute.kt` + `core/navigation`).
+   **FIXED (round4):** new `Route.Boot` start destination renders a bare
+   #131619 frame (windowBackground also #131619) until the Room channel count
+   resolves, then playback (or welcome on fresh installs). No welcome flash,
+   no white/black window flash. Evidence: `round4/09-coldstart-*.png`,
+   `ty4-cold.webm` (launch → boot frame → black player frame ~0.7 s → video).
 
 ## P1 — clearly off at arm's length
 
@@ -97,6 +139,10 @@ capture catalogue — the fix agent should trust these, they were re-verified tw
    transport-control row (00:16/45:00, ⏮ ⏪ ⏸ ⏩ ⏭, LIVE badge, record dot —
    `round3-ref/03b-panel-up-up.png`) which telly lacks entirely (no transport row at all).
    Fix location: `features/playback/PlaybackKeyPolicy.kt`.
+   **FIXED (round4):** UP at bare fullscreen opens the info overlay (same as
+   OK/DOWN); a second UP expands the transport row (item 16). Panel entry
+   points now: BACK (stand-in) and the TV guide card / quick-bar Channels
+   list — always focused on the tuned row.
 
 5. **Player context menu is the wrong menu.** Live TiviMate long-OK/MENU at fullscreen =
    bottom icon quick-bar (see corrections above; `round3-ref/07-player-ctx-menu.png/.xml`).
@@ -104,12 +150,23 @@ capture catalogue — the fix agent should trust these, they were re-verified tw
    faithful clone of the *panel-row* menu (that part is good — see Matches), but at bare
    fullscreen TiviMate shows the quick-bar instead.
    Fix: `features/playback/PlaybackMenuHandler.kt`, `PlayerMenu.kt`, `PlaybackScreenMenu.kt`.
+   **FIXED (round4):** long-OK/MENU at fullscreen opens the bottom icon
+   quick-bar (Search · Channels list · Recordings · Multiview ·
+   Picture-in-picture · live "1280 × 720" · "Mono" · "0 ms" · Off(CC)); white
+   circle focus starts on Search; auto-hides 5 s; Channels list opens the
+   panel, everything else routes to the coming-soon pattern. The right sheet
+   now belongs to panel-row long-OK only (item 14). Evidence:
+   `round4/07-player-quickbar.png/.xml`, `07b-quickbar-search-comingsoon.png`.
 
 6. **Info overlay auto-hide ~0.6 s too short and no entrance animation.**
    TiviMate: ~0.35 s fade-in + ~12 px upward settle, hide begins ≈5.1 s after keypress
    (visible 5.13 s), exit instant. telly: instant pop-in, visible 4.51 s, exit instant.
    Fix: `features/playback/OverlayState.kt` (timeout), `PlaybackScreenInfoOverlay.kt`
    (AnimatedVisibility fade+slide ~350 ms).
+   **FIXED (round4):** 350 ms linear fade + 12 px slide entrance, instant exit;
+   visible window measured 5.161 s vs TiviMate 5.134 s (ty4-ov.webm; timeout
+   5.35 s compensates the ~250 ms key→first-frame latency). Evidence:
+   `round4/11-overlay-anim-t40ms.png`, `11-overlay-anim-t240ms.png`.
 
 7. **"25 FPS" badge missing.** telly shows `HD MONO`; TiviMate shows `HD 25 FPS MONO`
    for the same stream. `PlaybackBadges.fps()` drops it because Media3 reports
@@ -118,6 +175,10 @@ capture catalogue — the fix agent should trust these, they were re-verified tw
    `features/player/Media3PlayerEngine.kt` video-details mapping.
    Evidence: `round3/02-info-overlay.png` vs `round3-ref/02-info-overlay.xml`
    (`25 FPS` node [1099,666][1178,696]).
+   **FIXED (round4):** `FrameRateEstimator` derives fps from video-frame
+   presentation-time deltas (median of 12) when the container reports none;
+   badge shows `25 FPS` for the fixture TS. Evidence: `round4/02-info-overlay.xml`
+   (`25 FPS` node).
 
 8. **Focused shortcut card is white — should be dark grey.** TiviMate focused
    TV guide card fill = (37,42,45) with WHITE icon/text; unfocused = (24,30,32).
@@ -125,16 +186,22 @@ capture catalogue — the fix agent should trust these, they were re-verified tw
    (~280×208 focused / 248×184 unfocused) — keep those.
    Fix: `features/playback/PlaybackScreenCards.kt`.
    Evidence: crops of both `02-info-overlay.png` (see also tm-ov4 steady frames).
+   **FIXED (round4):** focused #252A2D + white content, resting #181E20;
+   pixel-verified (37,42,45)/(24,30,32) in `round4/02-info-overlay.png`.
 
 9. **Mini dash-progress fill is blue — should be light grey.** TiviMate's 80×6 px dash
    next to the time range uses fill (183,185,188) on a dark track; telly fills with
    #2196F3. (The full-width bottom bar IS blue in both — only the small dash differs.)
    Fix: `features/playback/PlaybackScreenInfoLines.kt`.
+   **FIXED (round4):** mini dash fills #B7B9BC (3 dp thick) on the dark track;
+   the full-width bar stays accent blue.
 
 10. **Badge pill styling.** TiviMate: translucent dark pill, text light grey (#999-ish),
     HD pill 43×30 px, gaps 16 px. telly: solid (58,61,64) pill, text pure white,
     HD pill ~56×32 px (more horizontal padding), gap ~21 px.
     Fix: `features/playback/PlaybackScreenInfoLines.kt` badge composable.
+    **FIXED (round4):** translucent dark pill (40% black), light-grey caps text
+    (#9FA1A3), pill ≈45×29 px, 16 px inter-badge gap, 40 px name→badge gap.
 
 11. **Info overlay geometry offsets.**
     - Logo tile: TiviMate visible tile 158×158 at x 125–283, y 590–748 (centered inside
@@ -147,11 +214,17 @@ capture catalogue — the fix agent should trust these, they were re-verified tw
     Fix: `features/playback/PlaybackScreenInfoOverlay.kt` paddings.
     Evidence: `round3-ref/02-info-overlay.xml` bounds vs pixel scans of
     `round3/02-info-overlay.png`.
+    **FIXED (round4):** logo tile 158×158 at x 125–283 (centered in the 248 px
+    slot), muted steel-blue border #2E5B81; text column x=360; title top y=594
+    (ref 591); bar center y≈767 (ref 771); cards top 836 (ref ~834). Measured
+    in `round4/02-info-overlay.xml` + pixel scans.
 
 12. **Top scrim too short.** TiviMate's top gradient is still dimming at y=150 and fades
     out ≈y=170–180 (two stacked scrim views [0,0–80] + [0,80–160]); telly's is gone by
     y≈75. Bottom scrim depth looks comparable.
     Fix: `features/playback/PlaybackScreenInfoOverlay.kt` scrim brush.
+    **FIXED (round4):** top scrim now a 90 dp gradient (still dimming at y≈150,
+    gone ~y 170–180), shared by info/zap/quick-bar overlays.
 
 13. **Panel: focused-row detail card is pinned to the top — TiviMate expands it inline.**
     In the TiviMate guide overlay the focused channel row itself expands into the detail
@@ -162,6 +235,10 @@ capture catalogue — the fix agent should trust these, they were re-verified tw
     right edge** — absent in telly's card.
     Fix: `features/panel/ChannelPanelScreen.kt` / `ChannelPanelScreenDetail.kt`.
     Evidence: `round3-ref/04-guide-overlay.png` vs `round3/04-panel-ch1-focused.png`.
+    **FIXED (round4):** the focused row expands inline into the detail card at
+    its list position (70 dp logo, title, times + dash + remaining, description,
+    star icon and group name at the right edge); the pinned top block is gone.
+    Evidence: `round4/04-panel-focused.png`.
 
 14. **Panel channel context menu is a subset and drops the panel behind it.**
     TiviMate long-OK on a panel row: full right sheet — Search, Settings,
@@ -173,6 +250,10 @@ capture catalogue — the fix agent should trust these, they were re-verified tw
     Fix: `features/panel/PanelViewModel.kt` + `features/playback/PlaybackScreenMenu.kt`
     (reuse the full sheet; keep the panel composed behind it).
     Evidence: `round3-ref/05-panel-row-longok.png/.xml` vs `round3/05-panel-row-longok.png`.
+    **FIXED (round4):** panel-row long-OK opens the FULL sheet (Search/Settings
+    /programme/channel/All channels, blue headers, row's now-programme title as
+    the programme header) with the panel still composed behind it. Evidence:
+    `round4/05-panel-row-longok.png/.xml`.
 
 15. **Menu sheet metrics.** TiviMate: sheet 512 px wide (x 1392–1904), 16 px margin from
     screen right/top, rounded corners; row pitch 80 px; the focused row is a rounded
@@ -180,35 +261,56 @@ capture catalogue — the fix agent should trust these, they were re-verified tw
     (y=15, right edge 1896), row pitch 72 px, focus pill square and flush to the sheet
     edges. Icons on Search/Settings match; no other rows have icons in either app ✓.
     Fix: `features/playback/PlaybackScreenMenu.kt`, `core/ui/TellyScreenMenuRow.kt`.
+    **FIXED (round4):** sheet 256 dp (512 px) wide, 8 dp off top/right, rounded,
+    40 dp row pitch, focus pill inset 8 dp from the sheet edges.
 
 16. **No transport/timeshift row.** See item 4 — TiviMate's overlay can expand into
     transport controls (progress 00:16/45:00, ⏮⏪⏸⏩⏭, LIVE pill, record dot). telly has
     no equivalent; DOWN below the shortcut row is a no-op. (May be deliberately deferred
     with catch-up; flag for the director.)
+    **FIXED (round4):** transport row built — second UP reveals programme
+    elapsed/duration (00:16 / 45:00 form), ⏮ ⏪ ⏸ ⏩ ⏭ circle buttons (pause
+    focused first), LIVE badge + record dot. Seek/pause need catch-up, so every
+    button routes to the existing coming-soon pattern (director note: wire to
+    timeshift when that slice lands). Evidence: `round4/03b-transport-row.png`.
 
 ## P2 — nitpicks
 
 17. **Panel scrim tint.** Over identical video, telly panel background reads (22,29,36)
     vs TiviMate (34,46,60) — telly is darker and less blue; TiviMate lets more video
     through (its NEWS ONE watermark is clearly visible through the cell field).
+    **FIXED (round4):** scrim alpha 0.9 → 0.68; cell field measures (28,45,60)
+    vs TiviMate (34,46,60) over the same video (`round4/04-panel-focused.png`).
 
 18. **Panel/overlay motion.** telly panel opens/closes with an instant cut; TiviMate
     cross-fades ~150 ms both ways. telly info-overlay exit matches (instant) ✓.
+    **FIXED (round4):** panel enters/exits with a 150 ms fade (AnimatedVisibility);
+    zap overlay pops instantly over the panel's fade-out, like tm-zap.webm.
 
 19. **BACK at bare playback** goes to the channel panel in telly (documented stand-in);
     TiviMate returns to the TV guide (`round3-ref/06-back3-from-player.png`). Becomes P1
     once the guide slice exists.
+    **Unchanged by design (round4):** BACK at bare playback still opens the
+    panel as the documented stand-in; the guide-slice agent owns rebinding
+    BACK to the TV guide.
 
 20. **Chevron.** TiviMate: 56×56 px glyph centered at (996,1036), bright. telly's is
     smaller/thinner and ~30 px lower (bottom edge y≈1067), dimmer.
+    **FIXED (round4):** 28 dp bright chevron glyph overlapping the card row's
+    bottom edge, center y≈1036 like the reference.
 
 21. **Panel list does not wrap on DOWN at the last row** (telly stays on ch30;
     `round3/04-panel-ch1-focused.png` sequence). TiviMate wrap behavior in the guide
     overlay was not verified this round — verify before "fixing".
+    **FIXED (round4):** verified on TiviMate first (read-only): DOWN at row 30
+    wraps to row 1 and UP at row 1 wraps to row 30 in the guide. telly's panel
+    now wraps at both ends (`ChannelPanelScreenList`).
 
 22. **telly panel rows show only the programme title** ("Weather Watch") in unfocused
     rows where TiviMate shows `Title: Subtitle` cells; partially subsumed by item 1 —
     once sub-titles parse, apply the same `Title: Subtitle` form to rows.
+    **FIXED (round4):** rows render through the shared formatter — see
+    `round4/04-panel-focused.png` ("Business Hour: Business Hour Special", …).
 
 ## Matches — do not churn
 
@@ -243,3 +345,13 @@ capture catalogue — the fix agent should trust these, they were re-verified tw
   with voice. No playlist/settings were modified in either app; telly's last channel is
   ch1 (News One).
 - Both apps left force-stopped.
+
+## Session state notes — round 4
+
+- telly was `pm clear`-ed and re-onboarded through the wizard against the
+  fixture server (fresh Room DB on schema v2, so sub-titles exist for every
+  programme); last channel left = ch2 (News One HD region — whatever the
+  final zap left tuned), force-stopped at the end of the pass.
+- TiviMate was driven READ-ONLY once to verify item 21 (guide wrap): launch,
+  30× DOWN in the guide, screenshots, exit. Nothing tuned, no settings or
+  playlist touched; force-stopped afterwards. Playlist intact.
