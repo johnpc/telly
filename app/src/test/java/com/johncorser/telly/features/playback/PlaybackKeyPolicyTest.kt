@@ -64,7 +64,10 @@ class PlaybackKeyPolicyTest {
     fun `panels, quick-bar and placeholders only react to back`() {
         assertEquals(PlaybackCommand.Dismiss, at(PlaybackOverlay.Panel, PlaybackKey.BACK))
         assertEquals(PlaybackCommand.Dismiss, at(PlaybackOverlay.QuickBar, PlaybackKey.BACK))
-        assertEquals(PlaybackCommand.Dismiss, at(PlaybackOverlay.ComingSoon("Record"), PlaybackKey.BACK))
+        assertEquals(
+            PlaybackCommand.PopTo(PlaybackOverlay.None),
+            at(PlaybackOverlay.ComingSoon("Recordings"), PlaybackKey.BACK),
+        )
         assertNull(at(PlaybackOverlay.Panel, PlaybackKey.OK))
         assertNull(at(PlaybackOverlay.QuickBar, PlaybackKey.UP))
     }
@@ -73,5 +76,25 @@ class PlaybackKeyPolicyTest {
     fun `back from a channel menu returns to the panel`() {
         assertEquals(PlaybackCommand.BackToPanel, at(PlaybackOverlay.ChannelMenu(1), PlaybackKey.BACK))
         assertNull(at(PlaybackOverlay.ChannelMenu(1), PlaybackKey.OK))
+    }
+
+    @Test
+    fun `back from a sheet-pushed screen pops one level back to the sheet`() {
+        val sheet = PlaybackOverlay.ChannelMenu(1)
+        val pane = PlaybackOverlay.ChannelOptions("News One", back = sheet)
+        val pushed =
+            listOf(
+                PlaybackOverlay.Paywall("Record", back = sheet),
+                PlaybackOverlay.Description("T", "D", back = sheet),
+                PlaybackOverlay.ComingSoon("Assign EPG", back = sheet),
+                pane,
+            )
+        pushed.forEach { overlay ->
+            assertEquals(PlaybackCommand.PopTo(sheet), at(overlay, PlaybackKey.BACK))
+            assertNull(at(overlay, PlaybackKey.OK))
+        }
+        // The pane's Unlock Premium row overlays the paywall over the pane.
+        val paywallOverPane = PlaybackOverlay.Paywall("Channel options", back = pane)
+        assertEquals(PlaybackCommand.PopTo(pane), at(paywallOverPane, PlaybackKey.BACK))
     }
 }

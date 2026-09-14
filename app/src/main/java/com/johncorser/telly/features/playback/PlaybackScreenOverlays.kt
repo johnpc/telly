@@ -7,13 +7,18 @@ import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.slideInVertically
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import com.johncorser.telly.R
 import com.johncorser.telly.core.ui.OnboardingScreenMessage
+import com.johncorser.telly.features.guide.GuideScreenChannelOptionsPane
 import com.johncorser.telly.features.panel.ChannelPanelScreen
+import com.johncorser.telly.features.settings.SettingsScreenPaywall
 
 /**
  * Renders whichever overlay is active over the fullscreen video, with
@@ -54,6 +59,14 @@ internal fun PlaybackScreenOverlays(
     when (overlay) {
         PlaybackOverlay.QuickBar -> PlaybackScreenQuickBar(viewModel)
         is PlaybackOverlay.ChannelMenu -> PlaybackScreenChannelMenu(viewModel, overlay.channelId)
+        is PlaybackOverlay.Paywall ->
+            Box(Modifier.fillMaxSize()) {
+                SettingsScreenPaywall(onClose = { viewModel.onKey(PlaybackKey.BACK) })
+            }
+        is PlaybackOverlay.Description ->
+            OnboardingScreenMessage(headline = overlay.title, subtitle = overlay.text)
+        is PlaybackOverlay.ChannelOptions ->
+            GuideScreenChannelOptionsPane(overlay.channelName, viewModel.menu::onChannelOption)
         is PlaybackOverlay.ComingSoon ->
             OnboardingScreenMessage(
                 headline = overlay.feature,

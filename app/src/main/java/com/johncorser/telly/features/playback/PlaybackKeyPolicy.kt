@@ -17,6 +17,11 @@ sealed interface PlaybackCommand {
     data object Dismiss : PlaybackCommand
 
     data object BackToPanel : PlaybackCommand
+
+    /** One-level BACK from a sheet-pushed screen (paywall, description, …). */
+    data class PopTo(
+        val overlay: PlaybackOverlay,
+    ) : PlaybackCommand
 }
 
 /**
@@ -39,6 +44,7 @@ object PlaybackKeyPolicy {
             PlaybackOverlay.InfoTransport -> withinInfoOverlay(key, onUp = null)
             PlaybackOverlay.ZapInfo -> withinZapOverlay(key)
             is PlaybackOverlay.ChannelMenu -> dismissalOnly(key, PlaybackCommand.BackToPanel)
+            is PlaybackOverlay.Pushed -> dismissalOnly(key, PlaybackCommand.PopTo(overlay.back))
             else -> dismissalOnly(key, PlaybackCommand.Dismiss)
         }
 

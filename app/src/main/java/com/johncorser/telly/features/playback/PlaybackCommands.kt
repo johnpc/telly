@@ -27,6 +27,7 @@ class PlaybackCommands(
                 overlays.showAutoHiding(PlaybackOverlay.QuickBar, PlaybackViewModel.QUICK_BAR_TIMEOUT_MS)
             PlaybackCommand.Dismiss -> overlays.set(PlaybackOverlay.None)
             PlaybackCommand.BackToPanel -> overlays.set(PlaybackOverlay.Panel)
+            is PlaybackCommand.PopTo -> overlays.set(command.overlay)
         }
     }
 

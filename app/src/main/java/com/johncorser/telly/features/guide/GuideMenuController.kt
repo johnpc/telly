@@ -2,6 +2,8 @@ package com.johncorser.telly.features.guide
 
 import com.johncorser.telly.features.playback.ChannelActions
 import com.johncorser.telly.features.playback.PlayerMenuItem
+import com.johncorser.telly.features.playback.PlayerMenuRoute
+import com.johncorser.telly.features.playback.PlayerMenuRouting
 import com.johncorser.telly.features.playlist.db.ChannelEntity
 import com.johncorser.telly.features.settings.RowIds
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -9,12 +11,13 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 
 /**
- * The guide's overlay-layer state machine plus the routing of the long-OK
- * row context sheet (catalogue §3 38-42 + round3-ref 05). Genuinely
- * supported rows act (Search, Settings, favorites toggle, hide, the
- * programme description); rows the free reference locks behind Premium
- * open the shared Unlock Premium screen; the remaining rows land on the
- * branded coming-soon placeholder until their slice ships.
+ * The guide's overlay-layer state machine plus the long-OK row context
+ * sheet (catalogue §3 38-42 + round3-ref 05), routed through the shared
+ * [PlayerMenuRouting] table: genuinely supported rows act (Search,
+ * Settings, favorites toggle, hide, the programme description); rows the
+ * free reference locks behind Premium open the shared Unlock Premium
+ * screen; the remaining rows land on the branded coming-soon placeholder
+ * until their slice ships.
  */
 class GuideMenuController(
     private val actions: ChannelActions,
@@ -50,18 +53,18 @@ class GuideMenuController(
 
     fun onMenuItem(item: PlayerMenuItem) {
         val row = focusedRow() ?: return
-        when (item) {
-            PlayerMenuItem.SEARCH -> {
+        when (PlayerMenuRouting.routeOf(item)) {
+            PlayerMenuRoute.SEARCH -> {
                 reset()
                 callbacks.onOpenSearch()
             }
-            PlayerMenuItem.SETTINGS -> callbacks.onOpenSettings()
-            PlayerMenuItem.ADD_TO_FAVORITES -> toggleFavorite(row.channel)
-            PlayerMenuItem.HIDE_CHANNEL -> hide(row.channel)
-            PlayerMenuItem.PROGRAM_DESCRIPTION -> show(description())
-            PlayerMenuItem.CHANNEL_OPTIONS -> show(GuideLayer.ChannelOptions(row.channel.source.name))
-            in PREMIUM -> show(GuideLayer.Paywall(item.label, back = GuideLayer.RowMenu))
-            else -> show(GuideLayer.ComingSoon(item.label))
+            PlayerMenuRoute.SETTINGS -> callbacks.onOpenSettings()
+            PlayerMenuRoute.TOGGLE_FAVORITE -> toggleFavorite(row.channel)
+            PlayerMenuRoute.HIDE_CHANNEL -> hide(row.channel)
+            PlayerMenuRoute.DESCRIPTION -> show(description())
+            PlayerMenuRoute.CHANNEL_OPTIONS -> show(GuideLayer.ChannelOptions(row.channel.source.name))
+            PlayerMenuRoute.PAYWALL -> show(GuideLayer.Paywall(item.label, back = GuideLayer.RowMenu))
+            PlayerMenuRoute.COMING_SOON -> show(GuideLayer.ComingSoon(item.label))
         }
     }
 
@@ -84,27 +87,6 @@ class GuideMenuController(
             title = data?.title ?: GuideInfoBuilder.NO_INFORMATION,
             text = data?.description ?: GuideInfoBuilder.NO_INFORMATION,
         )
-    }
-
-    private companion object {
-        /**
-         * Sheet rows the free reference locks behind Premium: the guide
-         * dropdown's Record / Custom recording / Add to My list open the
-         * paywall (capture 31), external playback and channel blocking are
-         * locked in the Channel options pane (capture 41), and the paywall
-         * body itself sells "Favorites management" and "Manual channels
-         * sorting" (capture 28).
-         */
-        val PREMIUM =
-            setOf(
-                PlayerMenuItem.OPEN_IN_EXTERNAL_PLAYER,
-                PlayerMenuItem.RECORD,
-                PlayerMenuItem.CUSTOM_RECORDING,
-                PlayerMenuItem.ADD_TO_MY_LIST,
-                PlayerMenuItem.BLOCK_CHANNEL,
-                PlayerMenuItem.MANAGE_FAVORITES,
-                PlayerMenuItem.REORDER_CHANNELS,
-            )
     }
 }
 

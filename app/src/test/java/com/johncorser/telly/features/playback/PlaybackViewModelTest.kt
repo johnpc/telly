@@ -2,6 +2,7 @@ package com.johncorser.telly.features.playback
 
 import com.johncorser.telly.features.history.WatchHistory
 import com.johncorser.telly.features.player.VideoDetails
+import com.johncorser.telly.features.settings.RowIds
 import com.johncorser.telly.testutil.FakeChannelDao
 import com.johncorser.telly.testutil.FakeKeyValueStore
 import com.johncorser.telly.testutil.FakePlayerEngine
@@ -322,17 +323,103 @@ class PlaybackViewModelTest {
         }
 
     @Test
-    fun `unbuilt menu rows route to a branded coming-soon placeholder`() =
+    fun `uncaptured menu rows keep the placeholder and back pops to the sheet`() =
         runTest {
             val vm = buildVm()
+            vm.openPanel()
+            vm.showChannelMenu(channels[0])
+
+            vm.menu.onMenuItem(PlayerMenuItem.ASSIGN_EPG)
+
+            val sheet = PlaybackOverlay.ChannelMenu(1L)
+            assertEquals(PlaybackOverlay.ComingSoon("Assign EPG", back = sheet), vm.overlay.value)
             vm.onKey(PlaybackKey.BACK)
+            assertEquals(sheet, vm.overlay.value)
+            vm.onKey(PlaybackKey.BACK)
+            assertEquals(PlaybackOverlay.Panel, vm.overlay.value)
+        }
+
+    @Test
+    fun `premium-locked menu rows open the shared paywall and back pops to the sheet`() =
+        runTest {
+            val vm = buildVm()
+            vm.openPanel()
             vm.showChannelMenu(channels[0])
 
             vm.menu.onMenuItem(PlayerMenuItem.RECORD)
 
-            assertEquals(PlaybackOverlay.ComingSoon("Record"), vm.overlay.value)
+            val sheet = PlaybackOverlay.ChannelMenu(1L)
+            assertEquals(PlaybackOverlay.Paywall("Record", back = sheet), vm.overlay.value)
             vm.onKey(PlaybackKey.BACK)
-            assertEquals(PlaybackOverlay.None, vm.overlay.value)
+            assertEquals(sheet, vm.overlay.value)
+        }
+
+    @Test
+    fun `the program description row shows the row's airing programme synopsis`() =
+        runTest {
+            programs.programs.value =
+                listOf(testProgram("tvg-1", 900_000L, 1_100_000L, "Business Hour"))
+            val vm = buildVm()
+            vm.openPanel()
+            vm.showChannelMenu(channels[0])
+
+            vm.menu.onMenuItem(PlayerMenuItem.PROGRAM_DESCRIPTION)
+
+            assertEquals(
+                PlaybackOverlay.Description(
+                    title = "Business Hour",
+                    text = "Description of Business Hour",
+                    back = PlaybackOverlay.ChannelMenu(1L),
+                ),
+                vm.overlay.value,
+            )
+            vm.onKey(PlaybackKey.BACK)
+            assertEquals(PlaybackOverlay.ChannelMenu(1L), vm.overlay.value)
+        }
+
+    @Test
+    fun `the program description row falls back to no-information without EPG`() =
+        runTest {
+            val vm = buildVm()
+            vm.openPanel()
+            vm.showChannelMenu(channels[2])
+
+            vm.menu.onMenuItem(PlayerMenuItem.PROGRAM_DESCRIPTION)
+
+            assertEquals(
+                PlaybackOverlay.Description(
+                    title = "No information",
+                    text = "No information",
+                    back = PlaybackOverlay.ChannelMenu(3L),
+                ),
+                vm.overlay.value,
+            )
+        }
+
+    @Test
+    fun `channel options pushes the locked pane and unlock premium overlays the paywall`() =
+        runTest {
+            val vm = buildVm()
+            vm.openPanel()
+            vm.showChannelMenu(channels[0])
+
+            vm.menu.onMenuItem(PlayerMenuItem.CHANNEL_OPTIONS)
+
+            val pane = PlaybackOverlay.ChannelOptions("News One", back = PlaybackOverlay.ChannelMenu(1L))
+            assertEquals(pane, vm.overlay.value)
+
+            // Every §41 row is locked; only Unlock Premium is live.
+            vm.menu.onChannelOption("channel_options.name")
+            assertEquals(pane, vm.overlay.value)
+            vm.menu.onChannelOption(RowIds.UNLOCK_PREMIUM)
+            assertEquals(PlaybackOverlay.Paywall("Channel options", back = pane), vm.overlay.value)
+
+            vm.onKey(PlaybackKey.BACK)
+            assertEquals(pane, vm.overlay.value)
+            vm.onKey(PlaybackKey.BACK)
+            assertEquals(PlaybackOverlay.ChannelMenu(1L), vm.overlay.value)
+            vm.onKey(PlaybackKey.BACK)
+            assertEquals(PlaybackOverlay.Panel, vm.overlay.value)
         }
 
     @Test

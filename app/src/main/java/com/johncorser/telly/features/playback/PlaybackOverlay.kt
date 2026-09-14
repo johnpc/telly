@@ -25,10 +25,35 @@ sealed interface PlaybackOverlay {
         val channelId: Long,
     ) : PlaybackOverlay
 
+    /** A screen pushed on top of another overlay; BACK pops to [back]. */
+    sealed interface Pushed : PlaybackOverlay {
+        val back: PlaybackOverlay
+    }
+
     /** Branded placeholder for menu entries whose feature is a later slice. */
     data class ComingSoon(
         val feature: String,
-    ) : PlaybackOverlay
+        override val back: PlaybackOverlay = None,
+    ) : Pushed
+
+    /** Shared Unlock Premium screen for premium-locked rows (capture 28). */
+    data class Paywall(
+        val feature: String,
+        override val back: PlaybackOverlay = None,
+    ) : Pushed
+
+    /** The sheet's "Program description": the airing programme's synopsis. */
+    data class Description(
+        val title: String,
+        val text: String,
+        override val back: PlaybackOverlay = None,
+    ) : Pushed
+
+    /** "Channel options" pane, every §41 row premium-locked (capture 41). */
+    data class ChannelOptions(
+        val channelName: String,
+        override val back: PlaybackOverlay = None,
+    ) : Pushed
 }
 
 /** D-pad / media keys playback reacts to (mapped from KeyEvents in the UI). */
