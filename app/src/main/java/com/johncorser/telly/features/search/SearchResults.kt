@@ -14,11 +14,10 @@ data class SearchChannelHit(
 )
 
 /**
- * One row of the Programs list (captures 50/51): the programme, the channel
- * it airs on, its formatted air time, and whether this row starts a new
- * same-channel run (the reference renders the channel card once per run).
- * Currently-airing rows also carry the dash progress + "50 min" remaining
- * shown after the times (live tm-03); both stay empty for upcoming rows.
+ * One airing row of the Programs rows pane (ref-round6 §D): the programme,
+ * the channel it airs on and its formatted air time. Currently-airing rows
+ * also carry the dash progress + "50 min" remaining shown after the times
+ * (live tm-03); both stay empty for upcoming rows.
  */
 data class SearchProgramHit(
     val program: ProgramEntity,
@@ -27,14 +26,24 @@ data class SearchProgramHit(
     val timeText: String,
     val progressPermille: Int,
     val remaining: String?,
-    val showsChannelCard: Boolean,
+)
+
+/**
+ * One master-lane card of the Programs section (ref-round6 §D): a channel
+ * with at least one matching programme and ALL of its matching airings,
+ * chronological — one row per airing, never deduped by title, never merged
+ * with same-titled airings on other channels.
+ */
+data class SearchProgramChannel(
+    val channel: ChannelEntity,
+    val airings: List<SearchProgramHit>,
 )
 
 /** Everything the typed state renders; empty query = empty shelves. */
 data class SearchResults(
     val query: String = "",
     val channels: List<SearchChannelHit> = emptyList(),
-    val programs: List<SearchProgramHit> = emptyList(),
+    val programs: List<SearchProgramChannel> = emptyList(),
 ) {
     val isEmpty: Boolean get() = channels.isEmpty() && programs.isEmpty()
 }

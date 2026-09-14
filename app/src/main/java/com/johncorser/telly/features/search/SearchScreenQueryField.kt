@@ -14,6 +14,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.focus.FocusDirection
+import androidx.compose.ui.focus.FocusManager
+import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.input.key.Key
 import androidx.compose.ui.input.key.KeyEventType
@@ -38,6 +40,7 @@ import com.johncorser.telly.features.search.SearchScreenDims as Dims
 internal fun SearchScreenQueryField(
     query: String,
     viewModel: SearchViewModel,
+    firstResult: FocusRequester?,
     modifier: Modifier,
 ) {
     Box(
@@ -66,11 +69,30 @@ internal fun SearchScreenQueryField(
             modifier =
                 Modifier.fillMaxWidth().onPreviewKeyEvent { event ->
                     if (event.type == KeyEventType.KeyDown && event.key == Key.DirectionDown) {
-                        focusManager.moveFocus(FocusDirection.Down)
+                        moveDownFromBar(firstResult, focusManager)
                     } else {
                         false
                     }
                 },
         )
+    }
+}
+
+/**
+ * DOWN with results up lands on the FIRST channel card, not Compose's
+ * geometrically nearest candidate (ref-round6 07-search-down-from-querybar);
+ * the history landing keeps the plain spatial move.
+ */
+private fun moveDownFromBar(
+    firstResult: FocusRequester?,
+    focusManager: FocusManager,
+): Boolean {
+    if (firstResult == null) return focusManager.moveFocus(FocusDirection.Down)
+    return try {
+        firstResult.requestFocus()
+        true
+    } catch (ignored: IllegalStateException) {
+        // The first card scrolled out of composition; fall back to spatial.
+        focusManager.moveFocus(FocusDirection.Down)
     }
 }

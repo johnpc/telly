@@ -11,10 +11,11 @@ import java.util.Locale
 import java.util.TimeZone
 
 /**
- * Pure assembly of the search shelves from DAO rows (captures 50/51):
- * channel cards keep the DAO's name order and carry their airing programme;
- * programme rows are chronological, drop hidden/unknown channels, and share
- * one channel card per consecutive same-channel run.
+ * Pure assembly of the search shelves from DAO rows (captures 50/51 +
+ * ref-round6 §D): channel cards keep the DAO's name order and carry their
+ * airing programme; the Programs section groups programme matches into one
+ * master entry per channel (case-insensitive name order) whose airings stay
+ * chronological, one per airing, never deduped or merged across channels.
  */
 object SearchResultsBuilder {
     fun channels(
@@ -31,20 +32,38 @@ object SearchResultsBuilder {
             )
         }
 
+    /**
+     * The Programs master lane (ref-round6 §D): one entry per channel with a
+     * matching programme, ordered by channel name (case-insensitive, ties by
+     * number), each carrying all of its airings chronologically. Hidden and
+     * unknown channels drop out with their airings.
+     */
     fun programs(
         matches: List<ProgramEntity>,
         channels: List<ChannelEntity>,
         atMs: Long,
         zone: TimeZone,
-    ): List<SearchProgramHit> {
+    ): List<SearchProgramChannel> {
         val byTvgId = channelByTvgId(channels)
-        var previousTvgId: String? = null
-        return matches.mapNotNull { program ->
-            val channel = byTvgId[program.channelTvgId] ?: return@mapNotNull null
-            hit(program, channel, atMs, zone, showsCard = program.channelTvgId != previousTvgId)
-                .also { previousTvgId = program.channelTvgId }
-        }
+        return matches
+            .groupBy { it.channelTvgId }
+            .mapNotNull { (tvgId, airings) -> byTvgId[tvgId]?.let { group(it, airings, atMs, zone) } }
+            .sortedWith(
+                compareBy<SearchProgramChannel, String>(String.CASE_INSENSITIVE_ORDER) { it.channel.source.name }
+                    .thenBy { it.channel.number },
+            )
     }
+
+    private fun group(
+        channel: ChannelEntity,
+        airings: List<ProgramEntity>,
+        atMs: Long,
+        zone: TimeZone,
+    ): SearchProgramChannel =
+        SearchProgramChannel(
+            channel = channel,
+            airings = airings.sortedBy { it.startMs }.map { hit(it, channel, atMs, zone) },
+        )
 
     /** Airing rows add dash progress + remaining minutes (live tm-03). */
     private fun hit(
@@ -52,7 +71,6 @@ object SearchResultsBuilder {
         channel: ChannelEntity,
         atMs: Long,
         zone: TimeZone,
-        showsCard: Boolean,
     ): SearchProgramHit {
         val airing = program.startMs <= atMs
         return SearchProgramHit(
@@ -62,7 +80,6 @@ object SearchResultsBuilder {
             timeText = airTime(program, atMs, zone),
             progressPermille = if (airing) ProgramTimes.progressPermille(program.startMs, program.endMs, atMs) else 0,
             remaining = if (airing) "${ProgramTimes.remainingMinutes(program.endMs, atMs)} min" else null,
-            showsChannelCard = showsCard,
         )
     }
 

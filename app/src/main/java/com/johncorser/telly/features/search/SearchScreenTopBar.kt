@@ -10,6 +10,7 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
@@ -30,7 +31,10 @@ import com.johncorser.telly.features.search.SearchScreenDims as Dims
  * open the shared paywall like the guide's premium rows.
  */
 @Composable
-internal fun SearchScreenTopBar(viewModel: SearchViewModel) {
+internal fun SearchScreenTopBar(
+    viewModel: SearchViewModel,
+    firstResult: FocusRequester?,
+) {
     val query by viewModel.query.collectAsState()
     val orbFocus = rememberAutoFocus()
     val voiceLabel = stringResource(R.string.search_voice)
@@ -42,7 +46,7 @@ internal fun SearchScreenTopBar(viewModel: SearchViewModel) {
     ) {
         TellyScreenIconCircle(
             icon = R.drawable.ic_search_mic,
-            onClick = { viewModel.showComingSoon(voiceLabel) },
+            onClick = { viewModel.overlays.show(SearchOverlay.ComingSoon(voiceLabel)) },
             modifier = Modifier.focusRequester(orbFocus),
             size = Dims.orbSize,
             iconSize = 24.dp,
@@ -50,11 +54,11 @@ internal fun SearchScreenTopBar(viewModel: SearchViewModel) {
             contentDescription = voiceLabel,
         )
         Spacer(Modifier.width(Dims.barGap))
-        SearchScreenQueryField(query, viewModel, Modifier.width(Dims.barWidth))
+        SearchScreenQueryField(query, viewModel, firstResult, Modifier.width(Dims.barWidth))
         Spacer(Modifier.weight(1f))
         TellyScreenIconCircle(
             icon = R.drawable.ic_menu_settings,
-            onClick = { viewModel.showPaywall() },
+            onClick = { viewModel.overlays.show(SearchOverlay.Paywall) },
             size = Dims.gearSize,
             contentDescription = "Search settings",
         )

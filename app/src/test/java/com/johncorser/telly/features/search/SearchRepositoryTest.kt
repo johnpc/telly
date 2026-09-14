@@ -63,12 +63,13 @@ class SearchRepositoryTest {
         }
 
     @Test
-    fun `programmes match by title substring upcoming first and skip ended ones`() =
+    fun `programmes match by title substring per channel and skip ended ones`() =
         runTest {
             val results = repository.search("news", now, zone)
 
-            assertEquals(listOf("Newsroom Live. S1 E8", "World News Now"), results.programs.map { it.title })
             assertEquals(listOf("News One", "Sports Arena"), results.programs.map { it.channel.source.name })
+            assertEquals(listOf("Newsroom Live. S1 E8"), results.programs[0].airings.map { it.title })
+            assertEquals(listOf("World News Now"), results.programs[1].airings.map { it.title })
         }
 
     @Test

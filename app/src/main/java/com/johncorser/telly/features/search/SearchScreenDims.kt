@@ -41,13 +41,21 @@ internal object SearchScreenDims {
     val logoWidth = 100.dp
     val logoHeight = 42.dp
 
-    val rowHeight = 72.dp
-    val listWidth = 580.dp
+    /** Airing rows pitch 119-120 px in the two-pane Programs section (round6 06/08). */
+    val rowHeight = 60.dp
+
+    /** Row title boxes are a fixed 776 px wide plus the pill's 2 x 8 dp pads (round6 06). */
+    val rowsWidth = 404.dp
     val rowCardWidth = 120.dp
     val rowLogoWidth = 72.dp
     val rowLogoHeight = 48.dp
 
-    /** Plus the pill's 8 dp text pad this puts row titles at x=360 px (tm-02). */
+    /** Master-lane channel cards: 240x206 px, adjacent, logo inset 32 px (round6 08). */
+    val masterCardHeight = 103.dp
+    val masterCardPad = 16.dp
+    val masterNameGap = 4.dp
+
+    /** Plus the pill's 8 dp text pad this puts row titles at x=360 px (tm-02, round6 06). */
     val rowTextStart = 28.dp
 
     val detailWidth = 332.dp

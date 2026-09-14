@@ -9,10 +9,12 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyRow
-import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -31,6 +33,7 @@ import com.johncorser.telly.features.search.SearchScreenDims as Dims
 @Composable
 internal fun SearchScreenChannels(
     hits: List<SearchChannelHit>,
+    firstFocus: FocusRequester?,
     onTune: (SearchChannelHit) -> Unit,
 ) {
     SearchScreenHeader(R.string.search_channels)
@@ -39,8 +42,13 @@ internal fun SearchScreenChannels(
         horizontalArrangement = Arrangement.spacedBy(Dims.cardGap),
         modifier = Modifier.padding(top = Dims.shelfTop),
     ) {
-        items(hits, key = { it.channel.id }) { hit ->
-            SearchScreenChannelCard(hit, onClick = { onTune(hit) })
+        itemsIndexed(hits, key = { _, hit -> hit.channel.id }) { index, hit ->
+            SearchScreenChannelCard(
+                hit = hit,
+                onClick = { onTune(hit) },
+                // DOWN from the query bar targets the first card (round6 07).
+                modifier = if (index == 0 && firstFocus != null) Modifier.focusRequester(firstFocus) else Modifier,
+            )
         }
     }
 }
@@ -49,10 +57,11 @@ internal fun SearchScreenChannels(
 private fun SearchScreenChannelCard(
     hit: SearchChannelHit,
     onClick: () -> Unit,
+    modifier: Modifier,
 ) {
     SearchScreenFocusRow(
         onClick = onClick,
-        modifier = Modifier.width(Dims.cardWidth),
+        modifier = modifier.width(Dims.cardWidth),
         restingContainer = Dims.cardFill,
         dimWhenResting = true,
     ) {

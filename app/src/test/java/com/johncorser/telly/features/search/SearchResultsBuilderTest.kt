@@ -36,11 +36,11 @@ class SearchResultsBuilderTest {
     }
 
     @Test
-    fun `programme hits resolve their channel and drop unknown tvg ids`() {
+    fun `programme matches group per channel and drop unknown tvg ids`() {
         val known = testProgram("one", now, now + hour, "Newsroom Live")
         val unknown = testProgram("ghost", now, now + hour, "Newsroom Live")
 
-        val hits =
+        val groups =
             SearchResultsBuilder.programs(
                 matches = listOf(known, unknown),
                 channels = listOf(newsOne),
@@ -48,14 +48,75 @@ class SearchResultsBuilderTest {
                 zone = zone,
             )
 
-        assertEquals(1, hits.size)
-        assertEquals("News One", hits[0].channel.source.name)
-        assertEquals("Newsroom Live", hits[0].title)
+        assertEquals(1, groups.size)
+        assertEquals("News One", groups[0].channel.source.name)
+        assertEquals(listOf("Newsroom Live"), groups[0].airings.map { it.title })
+    }
+
+    @Test
+    fun `channel groups order by name case-insensitively with number ties`() {
+        val alpha = testChannel(3, 3, "alpha news", tvgId = "alpha")
+        val matches =
+            listOf(
+                testProgram("two", now, now + hour, "A"),
+                testProgram("alpha", now + hour, now + 2 * hour, "A"),
+                testProgram("one", now + 2 * hour, now + 3 * hour, "A"),
+            )
+
+        val groups =
+            SearchResultsBuilder.programs(
+                matches = matches,
+                channels = listOf(newsOne, newsTwo, alpha),
+                atMs = now,
+                zone = zone,
+            )
+
+        assertEquals(listOf("alpha news", "News One", "News Two"), groups.map { it.channel.source.name })
+    }
+
+    @Test
+    fun `airings stay chronological within their channel and repeats are never deduped`() {
+        val groups =
+            SearchResultsBuilder.programs(
+                matches =
+                    listOf(
+                        testProgram("one", now + 3 * hour, now + 4 * hour, "Newsroom Live"),
+                        testProgram("one", now, now + hour, "Newsroom Live"),
+                        testProgram("one", now + hour, now + 2 * hour, "Newsroom Live"),
+                    ),
+                channels = listOf(newsOne),
+                atMs = now,
+                zone = zone,
+            )
+
+        assertEquals(1, groups.size)
+        assertEquals(3, groups[0].airings.size)
+        assertEquals(listOf(now, now + hour, now + 3 * hour), groups[0].airings.map { it.program.startMs })
+        assertEquals(listOf("Newsroom Live", "Newsroom Live", "Newsroom Live"), groups[0].airings.map { it.title })
+    }
+
+    @Test
+    fun `same-titled programmes never merge across channels`() {
+        val groups =
+            SearchResultsBuilder.programs(
+                matches =
+                    listOf(
+                        testProgram("one", now, now + hour, "Newsroom Live"),
+                        testProgram("two", now, now + hour, "Newsroom Live"),
+                    ),
+                channels = listOf(newsOne, newsTwo),
+                atMs = now,
+                zone = zone,
+            )
+
+        assertEquals(2, groups.size)
+        assertEquals(listOf("Newsroom Live"), groups[0].airings.map { it.title })
+        assertEquals(listOf("Newsroom Live"), groups[1].airings.map { it.title })
     }
 
     @Test
     fun `airing programme rows carry dash progress and remaining minutes`() {
-        val hits =
+        val groups =
             SearchResultsBuilder.programs(
                 matches = listOf(testProgram("one", now - hour, now + hour, "Newsroom Live")),
                 channels = listOf(newsOne),
@@ -63,13 +124,13 @@ class SearchResultsBuilderTest {
                 zone = zone,
             )
 
-        assertEquals(500, hits[0].progressPermille)
-        assertEquals("60 min", hits[0].remaining)
+        assertEquals(500, groups[0].airings[0].progressPermille)
+        assertEquals("60 min", groups[0].airings[0].remaining)
     }
 
     @Test
     fun `upcoming programme rows carry no progress or remaining`() {
-        val hits =
+        val groups =
             SearchResultsBuilder.programs(
                 matches = listOf(testProgram("one", now + hour, now + 2 * hour, "Newsroom Live")),
                 channels = listOf(newsOne),
@@ -77,27 +138,8 @@ class SearchResultsBuilderTest {
                 zone = zone,
             )
 
-        assertEquals(0, hits[0].progressPermille)
-        assertNull(hits[0].remaining)
-    }
-
-    @Test
-    fun `only the first row of a same-channel run shows the channel card`() {
-        val hits =
-            SearchResultsBuilder.programs(
-                matches =
-                    listOf(
-                        testProgram("one", now, now + hour, "A"),
-                        testProgram("one", now + hour, now + 2 * hour, "B"),
-                        testProgram("two", now + 2 * hour, now + 3 * hour, "C"),
-                        testProgram("one", now + 3 * hour, now + 4 * hour, "D"),
-                    ),
-                channels = listOf(newsOne, newsTwo),
-                atMs = now,
-                zone = zone,
-            )
-
-        assertEquals(listOf(true, false, true, true), hits.map { it.showsChannelCard })
+        assertEquals(0, groups[0].airings[0].progressPermille)
+        assertNull(groups[0].airings[0].remaining)
     }
 
     @Test
@@ -127,7 +169,7 @@ class SearchResultsBuilderTest {
     fun `the first visible channel wins a shared tvg id`() {
         val duplicate = testChannel(9, 9, "News One Mirror", tvgId = "one")
 
-        val hits =
+        val groups =
             SearchResultsBuilder.programs(
                 matches = listOf(testProgram("one", now, now + hour, "A")),
                 channels = listOf(newsOne, duplicate),
@@ -135,6 +177,6 @@ class SearchResultsBuilderTest {
                 zone = zone,
             )
 
-        assertEquals("News One", hits[0].channel.source.name)
+        assertEquals("News One", groups[0].channel.source.name)
     }
 }

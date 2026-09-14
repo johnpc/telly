@@ -22,7 +22,12 @@ interface SearchDao {
         numberLike: String,
     ): List<ChannelEntity>
 
-    /** Programmes by title substring, still airing or upcoming, soonest first. */
+    /**
+     * Programmes by title substring, still airing or upcoming, soonest
+     * first — the LIMIT keeps the query bounded (the reference cap is not
+     * capturable), so it caps the soonest airings overall; the builder then
+     * regroups them per channel for the master–detail Programs section.
+     */
     @Query(
         "SELECT * FROM programs WHERE endMs > :atMs AND title LIKE :titleLike ESCAPE '\\' " +
             "ORDER BY startMs, channelTvgId LIMIT :limit",

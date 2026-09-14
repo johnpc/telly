@@ -1,20 +1,21 @@
 package com.johncorser.telly.features.search
 
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.Alignment
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.alpha
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusProperties
 import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.style.TextOverflow
@@ -23,27 +24,45 @@ import androidx.compose.ui.unit.sp
 import androidx.tv.material3.Text
 import com.johncorser.telly.R
 import com.johncorser.telly.core.design.TELLY_CLOCK_BLUE
-import com.johncorser.telly.core.ui.TellyScreenLogoTile
+import com.johncorser.telly.features.playlist.db.ChannelEntity
 import com.johncorser.telly.features.search.SearchScreenDims as Dims
 
 /**
- * The Programs list (captures 50/51): one row per programme match — channel
- * card at the left of the first row of each same-channel run, then title and
- * air time. Focusing a row feeds the right-side detail card; OK opens the
- * guide-cell dropdown.
+ * The Programs section (ref-round6 §D): a channel-master / airings-detail
+ * two-pane. The left lane lists ONE card per matching channel in
+ * case-insensitive name order; the rows pane lists ONLY the selected
+ * channel's airings, chronological, one row per airing, never deduped.
+ * Focusing a card selects it (ViewModel state) and swaps the rows pane,
+ * preselecting that channel's first airing into the detail card.
  */
 @Composable
 internal fun SearchScreenPrograms(
-    hits: List<SearchProgramHit>,
+    groups: List<SearchProgramChannel>,
     viewModel: SearchViewModel,
+    firstFocus: FocusRequester?,
+    onTune: (ChannelEntity) -> Unit,
 ) {
     SearchScreenHeader(R.string.search_programs)
+    val selected by viewModel.selectedChannel.collectAsState()
+    Row(Modifier.padding(start = Dims.edgePad, top = Dims.shelfTop)) {
+        SearchScreenProgramLane(groups, viewModel, firstFocus, onTune)
+        Spacer(Modifier.width(Dims.rowTextStart))
+        SearchScreenAiringsPane(selected?.airings.orEmpty(), viewModel)
+    }
+}
+
+/** The rows pane: the selected channel's airings only, chronological. */
+@Composable
+private fun SearchScreenAiringsPane(
+    airings: List<SearchProgramHit>,
+    viewModel: SearchViewModel,
+) {
     LazyColumn(
-        contentPadding = PaddingValues(start = Dims.edgePad, top = Dims.shelfTop, bottom = Dims.edgePad),
-        modifier = Modifier.width(Dims.listWidth),
+        contentPadding = PaddingValues(bottom = Dims.edgePad),
+        modifier = Modifier.width(Dims.rowsWidth),
     ) {
-        items(hits) { hit ->
-            SearchScreenProgramRow(hit, viewModel)
+        itemsIndexed(airings) { index, hit ->
+            SearchScreenProgramRow(hit, viewModel, isLast = index == airings.lastIndex)
         }
     }
 }
@@ -52,55 +71,31 @@ internal fun SearchScreenPrograms(
 private fun SearchScreenProgramRow(
     hit: SearchProgramHit,
     viewModel: SearchViewModel,
+    isLast: Boolean,
 ) {
-    Row(Modifier.height(Dims.rowHeight)) {
-        Box(Modifier.width(Dims.rowCardWidth), contentAlignment = Alignment.CenterStart) {
-            if (hit.showsChannelCard) SearchScreenProgramChannel(hit)
-        }
-        Spacer(Modifier.width(Dims.rowTextStart))
-        SearchScreenFocusRow(
-            onClick = { viewModel.onProgramResult(hit) },
-            modifier =
-                Modifier
-                    .fillMaxSize()
-                    .onFocusChanged { if (it.isFocused) viewModel.onProgramFocused(hit) },
-            dimWhenResting = true,
-        ) {
-            Column(Modifier.padding(horizontal = 8.dp, vertical = 6.dp)) {
-                // Airing rows tint the title light blue and append the dash
-                // progress + remaining minutes to the times (live tm-03).
-                Text(
-                    text = hit.title,
-                    color = if (hit.remaining != null) Color(TELLY_CLOCK_BLUE) else Color.Unspecified,
-                    fontSize = 16.sp,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis,
-                )
-                SearchScreenAirTime(hit, fontSize = 13.sp)
-            }
-        }
-    }
-}
-
-/** The per-run channel card at the row's left (logo + name, capture 50). */
-@Composable
-private fun SearchScreenProgramChannel(hit: SearchProgramHit) {
-    Column(
-        Modifier.alpha(Dims.RESTING_ALPHA),
-        horizontalAlignment = Alignment.CenterHorizontally,
+    SearchScreenFocusRow(
+        onClick = { viewModel.onProgramResult(hit) },
+        modifier =
+            Modifier
+                .fillMaxWidth()
+                .height(Dims.rowHeight)
+                .onFocusChanged { if (it.isFocused) viewModel.onProgramFocused(hit) }
+                // DOWN stops dead at the selected channel's last airing
+                // (ref-round6 §D) instead of leaking into the master lane.
+                .focusProperties { if (isLast) down = FocusRequester.Cancel },
+        dimWhenResting = true,
     ) {
-        TellyScreenLogoTile(
-            logoUrl = hit.channel.source.logoUrl,
-            name = hit.channel.source.name,
-            size = Dims.rowLogoHeight,
-            modifier = Modifier.width(Dims.rowLogoWidth),
-        )
-        Text(
-            text = hit.channel.source.name,
-            color = Color.White,
-            fontSize = 13.sp,
-            maxLines = 1,
-            overflow = TextOverflow.Ellipsis,
-        )
+        Column(Modifier.padding(horizontal = 8.dp, vertical = 6.dp)) {
+            // Airing rows tint the title light blue and append the dash
+            // progress + remaining minutes to the times (live tm-03).
+            Text(
+                text = hit.title,
+                color = if (hit.remaining != null) Color(TELLY_CLOCK_BLUE) else Color.Unspecified,
+                fontSize = 16.sp,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+            )
+            SearchScreenAirTime(hit, fontSize = 13.sp)
+        }
     }
 }

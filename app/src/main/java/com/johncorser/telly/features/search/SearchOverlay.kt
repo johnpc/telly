@@ -1,5 +1,9 @@
 package com.johncorser.telly.features.search
 
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
+
 /**
  * The dropdown rows for OK on a programme result — the guide-cell set
  * (capture 27). In the free reference every row leads to Unlock Premium;
@@ -31,4 +35,26 @@ sealed interface SearchOverlay {
     data class ComingSoon(
         val feature: String,
     ) : SearchOverlay
+}
+
+/**
+ * The search screen's overlay stack (one deep): the programme dropdown, the
+ * shared paywall (dropdown rows + the gear's premium search settings) and
+ * the voice-search placeholder all show through here.
+ */
+class SearchOverlays {
+    private val mutable = MutableStateFlow<SearchOverlay>(SearchOverlay.None)
+
+    val current: StateFlow<SearchOverlay> = mutable.asStateFlow()
+
+    fun show(overlay: SearchOverlay) {
+        mutable.value = overlay
+    }
+
+    /** BACK with an overlay up closes just the overlay. */
+    fun dismiss(): Boolean {
+        if (mutable.value == SearchOverlay.None) return false
+        mutable.value = SearchOverlay.None
+        return true
+    }
 }
