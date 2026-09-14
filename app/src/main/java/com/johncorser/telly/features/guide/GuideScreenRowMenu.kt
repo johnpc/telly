@@ -42,12 +42,7 @@ internal fun GuideScreenRowMenuLayers(
 ) {
     when (layer) {
         is GuideLayer.ChannelOptions ->
-            SettingsScreenSheet(title = layer.channelName) {
-                SettingsScreenRows(
-                    rows = GuideChannelOptions.rows(layer.channelName),
-                    onActivate = controller.menu::onChannelOption,
-                )
-            }
+            GuideScreenChannelOptionsPane(layer.channelName, controller.menu::onChannelOption)
         is GuideLayer.Description -> OnboardingScreenMessage(headline = layer.title, subtitle = layer.text)
         is GuideLayer.ComingSoon ->
             OnboardingScreenMessage(
@@ -55,5 +50,23 @@ internal fun GuideScreenRowMenuLayers(
                 subtitle = stringResource(R.string.playback_coming_soon),
             )
         else -> Unit
+    }
+}
+
+/**
+ * The §41 "Channel options" pane (captures 41-42): a settings-shell sheet
+ * titled with the channel name, every row locked. Shared verbatim with the
+ * playback panel's sheet.
+ */
+@Composable
+internal fun GuideScreenChannelOptionsPane(
+    channelName: String,
+    onActivate: (String) -> Unit,
+) {
+    SettingsScreenSheet(title = channelName) {
+        SettingsScreenRows(
+            rows = GuideChannelOptions.rows(channelName),
+            onActivate = onActivate,
+        )
     }
 }

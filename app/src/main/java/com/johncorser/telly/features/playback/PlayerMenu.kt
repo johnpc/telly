@@ -3,8 +3,8 @@ package com.johncorser.telly.features.playback
 /**
  * Verbatim TiviMate 5.2.0 context-menu rows (captures 38-40 + round3-ref 05:
  * this sheet belongs to long-OK on a panel/guide row, with the panel still
- * visible behind). Only favorites and hide are functional this slice;
- * everything else routes to a branded "coming soon" placeholder.
+ * visible behind). Where each row leads is derived once in
+ * [PlayerMenuRouting], shared by the guide's and the panel's sheets.
  */
 enum class PlayerMenuItem(
     val label: String,
@@ -42,6 +42,9 @@ data class PlayerMenuSection(
 )
 
 object PlayerMenu {
+    /** EPG-gap fallback for the programme header and description screen. */
+    const val NO_INFORMATION = "No information"
+
     private val topItems = listOf(PlayerMenuItem.SEARCH, PlayerMenuItem.SETTINGS)
     private val programItems =
         listOf(
@@ -77,7 +80,7 @@ object PlayerMenu {
     ): List<PlayerMenuSection> =
         listOf(
             PlayerMenuSection(header = null, items = topItems),
-            PlayerMenuSection(header = programTitle ?: "No information", items = programItems),
+            PlayerMenuSection(header = programTitle ?: NO_INFORMATION, items = programItems),
             PlayerMenuSection(header = channelName, items = channelItems),
             PlayerMenuSection(header = "All channels", items = allChannelsItems),
         )
