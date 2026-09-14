@@ -153,7 +153,25 @@ Local SDK note: `local.properties` must contain
   kotlinx.serialization) of the raw settings map + playlist identities;
   restored playlists re-fetch channels via "Update playlist". SAF intent
   wiring lives in thin `SettingsScreenHost` (untested; logic fully tested).
-- **2026-09-13** Accent color: `LocalAccentColor` CompositionLocal (default
+- **2026-09-13** Search slice (catalogue §4, captures 49-51): its own
+  `Route.Search`, reached from the playback quick-bar's Search slot. Room
+  queries live in a dedicated `features/search/db/SearchDao` (LIKE with
+  `ESCAPE '\'`; `SearchQuery` escapes `%`/`_`/`\`): channels by name
+  substring OR number prefix (digits-only queries) in zap order, programmes
+  by title substring still airing/upcoming, soonest first (LIMIT 100 — the
+  reference cap is not capturable). Programme rows drop hidden/unknown
+  channels and share one channel card per consecutive same-channel run
+  (capture 50's card-to-rows ratio). Air times: bare "03:45 — 05:15 PM"
+  today, "Mon, Sep 14, …" prefix otherwise. Search history = newline-joined
+  string in its own SharedPreferences file (out of backups), dedupe + cap
+  20; committed on IME search and result OK. OK on a channel card persists
+  `lastChannelId` and `replaceAll(Route.Playback)` (the free reference
+  returns straight to playback); OK on a programme row opens the guide-cell
+  dropdown (Remind/Record/…, capture 27) whose rows — like the voice orb
+  and the gear's premium search settings — land on the branded coming-soon
+  placeholder until the paywall/premium slice ships. Deviation, on purpose:
+  the reference dims the live video behind search; telly's search is a
+  route (single player engine), so it sits on the flat app background.
   sampled #2196F3) fed from Settings -> Appearance -> Color theme via
   `ProvideAccentColor`; `AccentPalette` maps captured-style accent names to
   ARGB. `RefreshScheduler` now takes an interval *provider* (settings-driven,
