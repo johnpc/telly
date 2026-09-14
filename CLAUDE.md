@@ -61,6 +61,26 @@ Never raise a threshold, add an exclusion, or skip a gate to get green. Restruct
 ./scripts/install-hooks.sh        # one-time: enable the pre-commit gate
 ```
 
+### Gherkin e2e acceptance (cucumber-android)
+
+The `e2e/features/**/*.feature` specs EXECUTE against the real app via
+cucumber-android (step definitions under `app/src/androidTest`, features +
+stream/logo fixtures staged from `e2e/` by the `syncE2eAssets` gradle task).
+A MockWebServer inside the instrumentation process serves the fixtures on
+`127.0.0.1:8090` (playlist/EPG regenerated per scenario so "now" programmes
+exist); steps rewrite the dev host `10.0.2.2` in feature text to it.
+
+```sh
+# all areas, against a running Android TV emulator/device:
+./gradlew connectedDebugAndroidTest
+# one feature area (tags match the CI matrix / @<area> tag per .feature):
+./gradlew connectedDebugAndroidTest \
+  -Pandroid.testInstrumentationRunnerArguments.tags=@watch-and-zap
+```
+
+CI runs the same suite per feature area on an API 36 android-tv x86_64
+emulator (the only 64-bit x86 TV image; API 34 TV is x86-32/arm64 only).
+
 Local SDK note: `local.properties` must contain
 `sdk.dir=/opt/homebrew/share/android-commandlinetools` on the primary dev machine
 (the `ANDROID_HOME` env var there is stale — do not trust it).

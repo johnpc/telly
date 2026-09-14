@@ -55,6 +55,10 @@ per-function Halstead difficulty ≤ 20, zero code duplication (jscpd), ≥80% l
 coverage, and a green build + unit tests. Thresholds are never loosened — the code
 gets fixed instead. See [CLAUDE.md](CLAUDE.md) for the full charter.
 
+On top of that, every feature ships with a Gherkin spec under `e2e/features/` that CI
+executes for real (cucumber-android driving the app with D-pad events on an Android TV
+emulator, one matrix job per feature area, hermetic in-process fixture server).
+
 ## Development
 
 ```sh
