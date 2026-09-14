@@ -91,7 +91,7 @@ class EpgSteps(
         driver.openPanel()
         driver.longPressRow(driver.currentChannel.name)
         world.select("Settings")
-        world.focus("Playlists")
+        world.select("Playlists")
         world.select("127.0.0.1")
         world.select("Update playlist")
         driver.awaitCondition("playlist refresh completed") {

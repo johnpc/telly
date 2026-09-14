@@ -43,9 +43,11 @@ class SettingsSteps(
         assertTrue("sections rendered top-to-bottom: $tops", tops == tops.sorted())
     }
 
-    @When("I focus the {string} section")
-    fun focusSection(name: String) {
-        world.focus(name)
+    @When("I open the {string} section")
+    fun openSection(name: String) {
+        // Sheet-stack shell: OK on a section row replaces the root sheet
+        // with that section's sheet.
+        world.select(name)
     }
 
     @When("I activate {string}")

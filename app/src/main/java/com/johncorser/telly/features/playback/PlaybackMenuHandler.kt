@@ -31,7 +31,12 @@ class PlaybackMenuHandler(
         when (item) {
             PlayerMenuItem.ADD_TO_FAVORITES -> toggleFavorite(channel)
             PlayerMenuItem.HIDE_CHANNEL -> hide(channel)
-            PlayerMenuItem.SETTINGS -> openSettings()
+            PlayerMenuItem.SETTINGS -> {
+                // The settings sheet opens over bare playback (no stale
+                // panel/menu chrome behind the scrim).
+                overlays.set(PlaybackOverlay.None)
+                openSettings()
+            }
             else -> overlays.set(PlaybackOverlay.ComingSoon(item.label))
         }
     }
