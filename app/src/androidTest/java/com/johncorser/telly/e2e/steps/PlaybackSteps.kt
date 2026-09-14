@@ -9,6 +9,7 @@ import com.johncorser.telly.e2e.fixtures.FixtureServer
 import com.johncorser.telly.e2e.fixtures.rangeText
 import io.cucumber.java.en.Given
 import io.cucumber.java.en.Then
+import io.cucumber.java.en.When
 
 /** Steps for the fullscreen playback surface and its overlays. */
 class PlaybackSteps(
@@ -95,6 +96,9 @@ class PlaybackSteps(
         world.waitForText(first)
         world.waitForText(second)
     }
+
+    @When("I select the {string} card")
+    fun selectCard(label: String) = world.select(label)
 
     @Then("I see the quick-bar slots {string}, {string}, {string}, {string} and {string}")
     fun seeQuickBarSlots(

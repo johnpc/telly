@@ -4,6 +4,8 @@ import android.view.KeyEvent
 import androidx.compose.ui.test.hasContentDescription
 import androidx.compose.ui.test.hasTestTag
 import androidx.compose.ui.test.hasText
+import androidx.compose.ui.test.isNotEnabled
+import androidx.compose.ui.test.isRoot
 import com.johncorser.telly.e2e.PlaybackDriver
 import com.johncorser.telly.e2e.TellyWorld
 import com.johncorser.telly.e2e.fixtures.FixturePlan
@@ -178,8 +180,43 @@ class GuideSteps(
     fun gridFocusedAgain() {
         world.waitForGone(hasText("Unlock Premium"))
         world.waitForGone(hasText("Remind"))
+        // "Channel options" only exists on the row context sheet; its
+        // absence proves the sheet fully closed over the still-visible grid.
+        world.waitForGone(hasText("Channel options"))
         world.waitFor(world.hasTextMatching(TICK_LABEL))
     }
+
+    @Then("a right-side sheet opens with the guide grid still visible behind it")
+    fun sheetOverGrid() {
+        world.waitForText("Channel options")
+        world.waitFor(world.hasTextMatching(TICK_LABEL))
+        driver.awaitCondition("sheet anchored to the right half") {
+            val bounds = world.boundsOf(hasText("Channel options"))
+            bounds.isNotEmpty() && bounds.all { it.left > rootCenterX() }
+        }
+    }
+
+    @Then("the channel column no longer lists {string}")
+    fun channelColumnWithout(name: String) = world.waitForGone(hasText(name))
+
+    @Then("a right pane titled {string} opens")
+    fun rightPaneTitled(title: String) {
+        // The channel column lists the same name at the left edge, so the
+        // pane's copy must sit in the right half of the screen.
+        driver.awaitCondition("right pane titled $title") {
+            world.boundsOf(hasText(title)).any { it.left > rootCenterX() }
+        }
+    }
+
+    @Then("^the locked rows list (.+)$")
+    fun lockedRowsList(rawList: String) {
+        Regex("\"([^\"]+)\"")
+            .findAll(rawList)
+            .map { it.groupValues[1] }
+            .forEach { world.waitFor(hasText(it) and isNotEnabled()) }
+    }
+
+    private fun rootCenterX(): Float = world.boundsOf(isRoot()).maxOf { it.right } / 2
 
     @Then("the groups column is dismissed")
     fun groupsDismissed() = world.waitForGone(hasText("Favorites"))

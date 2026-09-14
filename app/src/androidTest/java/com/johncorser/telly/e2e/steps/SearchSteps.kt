@@ -23,6 +23,7 @@ import org.junit.Assert.assertTrue
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
+import kotlin.math.abs
 
 /** Steps for the search screen (Route.Search, quick-bar Search slot). */
 class SearchSteps(
@@ -58,11 +59,19 @@ class SearchSteps(
     fun channelsShelfLists(rawList: String) {
         val names = Regex("\"([^\"]+)\"").findAll(rawList).map { it.groupValues[1] }.toList()
         names.forEach { world.waitForText(it) }
-        // Zap order: channel 1's card sits left of channel 2's.
-        driver.awaitCondition("zap-ordered shelf") {
-            val first = world.boundsOf(hasText("News One")).minOfOrNull { it.left }
-            val second = world.boundsOf(hasText("News One HD")).minOfOrNull { it.left }
-            first != null && second != null && first < second
+        // Name order (live tm-02). The same channel names repeat lower down
+        // as programme-row cards, so compare card positions within the
+        // shelf band only — the visual row of the first card's name.
+        driver.awaitCondition("name-ordered shelf") {
+            val bandTop = world.boundsOf(hasText(names.first())).minOfOrNull { it.top } ?: return@awaitCondition false
+            val lefts =
+                names.map { name ->
+                    world
+                        .boundsOf(hasText(name))
+                        .filter { abs(it.top - bandTop) < BAND_TOLERANCE_PX }
+                        .minOfOrNull { it.left } ?: return@awaitCondition false
+                }
+            lefts.zipWithNext().all { (left, right) -> left < right }
         }
     }
 
@@ -194,5 +203,9 @@ class SearchSteps(
         val day = SimpleDateFormat("yyyy-DDD", Locale.US)
         if (day.format(Date(programme.startMs)) == day.format(Date())) return range
         return "${SimpleDateFormat("EEE, MMM d", Locale.US).format(Date(programme.startMs))}, $range"
+    }
+
+    private companion object {
+        const val BAND_TOLERANCE_PX = 5f
     }
 }
