@@ -94,7 +94,16 @@ class CommonSteps(
         if (world.nodeCount(setTextNodes()) > 0) {
             world.compose.onAllNodes(setTextNodes()).onFirst().performTextReplacement(text)
             world.compose.onAllNodes(setTextNodes()).onFirst().performImeAction()
-            driver.awaitCondition("IME hidden") { !world.imeVisible() }
+            // Compose does not always hide the IME when the field leaves the
+            // tree; BACK goes to the keyboard window while it is up.
+            driver.awaitCondition("IME dismissed") {
+                if (world.imeVisible()) {
+                    world.pressKey(KeyEvent.KEYCODE_BACK)
+                    false
+                } else {
+                    true
+                }
+            }
             world.compose.waitForIdle()
         } else {
             driver.typeIntoEditor(text)

@@ -6,7 +6,6 @@ import android.view.KeyEvent
 import android.view.WindowInsets
 import androidx.compose.ui.semantics.SemanticsActions
 import androidx.compose.ui.test.SemanticsMatcher
-import androidx.compose.ui.test.SemanticsNodeInteraction
 import androidx.compose.ui.test.hasContentDescription
 import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.isFocused
@@ -162,9 +161,20 @@ class TellyWorld(
         val labelled = hasText(text).or(hasContentDescription(text))
         val focusable = labelled and SemanticsMatcher.keyIsDefined(SemanticsActions.RequestFocus)
         waitFor(focusable)
-        focusedNodeOrNull(focusable)?.let { return }
-        compose.onAllNodes(focusable).onFirst().performSemanticsAction(SemanticsActions.RequestFocus)
+        requestFocusOn(focusable)
+        // Screen transitions can bounce focus right after it lands (e.g. the
+        // wizard's editor detach); let that settle and re-take focus once.
+        SystemClock.sleep(FOCUS_SETTLE_MS)
+        if (nodeCount(focusable and isFocused()) == 0) {
+            requestFocusOn(focusable)
+            SystemClock.sleep(FOCUS_SETTLE_MS)
+        }
         waitFor(focusable and isFocused())
+    }
+
+    private fun requestFocusOn(matcher: SemanticsMatcher) {
+        compose.onAllNodes(matcher).onFirst().performSemanticsAction(SemanticsActions.RequestFocus)
+        waitFor(matcher and isFocused())
     }
 
     /** True while the soft keyboard covers the activity (first IME show lags). */
@@ -176,9 +186,6 @@ class TellyWorld(
         return visible
     }
 
-    private fun focusedNodeOrNull(matcher: SemanticsMatcher): SemanticsNodeInteraction? =
-        (matcher and isFocused()).takeIf { nodeCount(it) > 0 }?.let { compose.onAllNodes(it).onFirst() }
-
     /** Rewrites dev-server fixture URLs/hosts to the embedded server's. */
     fun mapFixtureText(text: String): String = FixtureServer.mapHost(text)
 
@@ -186,5 +193,6 @@ class TellyWorld(
         const val DEFAULT_TIMEOUT_MS = 30_000L
         private const val LONG_PRESS_REPEATS = 6
         private const val LONG_PRESS_STEP_MS = 150L
+        private const val FOCUS_SETTLE_MS = 350L
     }
 }
