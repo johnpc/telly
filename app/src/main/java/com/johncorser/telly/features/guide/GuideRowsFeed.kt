@@ -1,6 +1,7 @@
 package com.johncorser.telly.features.guide
 
 import com.johncorser.telly.features.epg.db.ProgramEntity
+import com.johncorser.telly.features.history.HistoryGroup
 import com.johncorser.telly.features.panel.PanelRows
 import com.johncorser.telly.features.playlist.db.ChannelEntity
 import kotlinx.coroutines.CoroutineScope
@@ -21,8 +22,7 @@ import kotlinx.coroutines.flow.stateIn
  * window's programmes.
  */
 class GuideRowsFeed(
-    channels: StateFlow<List<ChannelEntity>>,
-    selectedGroup: StateFlow<String>,
+    sources: GuideRowsSources,
     scrollX: StateFlow<Float>,
     private val programsFor: (List<String>, Long, Long) -> Flow<List<ProgramEntity>>,
     private val originMs: Long,
@@ -35,16 +35,32 @@ class GuideRowsFeed(
 
     @OptIn(ExperimentalCoroutinesApi::class)
     val rows: StateFlow<List<GuideRow>> =
-        combine(channels, selectedGroup, span) { list, group, window -> Triple(list, group, window) }
-            .flatMapLatest { (list, group, window) ->
-                val tvgIds = list.mapNotNull { it.source.tvgId }
-                programsFor(tvgIds, window.fromMs, window.toMs)
-                    .map { programs -> GuideRowsBuilder.build(list, group, programs, window) }
-            }.stateIn(scope, SharingStarted.Eagerly, emptyList())
+        combine(sources.channels, sources.selectedGroup, sources.historyKeys, span) { list, group, history, window ->
+            GuideRowsInput(list, group, history, window)
+        }.flatMapLatest { input ->
+            val tvgIds = input.channels.mapNotNull { it.source.tvgId }
+            programsFor(tvgIds, input.span.fromMs, input.span.toMs)
+                .map { programs -> GuideRowsBuilder.build(input, programs) }
+        }.stateIn(scope, SharingStarted.Eagerly, emptyList())
 
-    /** Groups column order shared with the panel (capture 25). */
+    /** The groups column; History leads it only while it is selected (capture 25). */
     val groups: StateFlow<List<String>> =
-        channels
-            .map(PanelRows::groupNames)
-            .stateIn(scope, SharingStarted.Eagerly, PanelRows.groupNames(emptyList()))
+        combine(sources.channels, sources.selectedGroup) { list, group ->
+            HistoryGroup.columnFor(group, PanelRows.groupNames(list))
+        }.stateIn(scope, SharingStarted.Eagerly, PanelRows.groupNames(emptyList()))
 }
+
+/** The live inputs the grid rows are derived from. */
+class GuideRowsSources(
+    val channels: StateFlow<List<ChannelEntity>>,
+    val selectedGroup: StateFlow<String>,
+    val historyKeys: Flow<List<String>>,
+)
+
+/** One (channels, group, history, span) snapshot the rows build from. */
+data class GuideRowsInput(
+    val channels: List<ChannelEntity>,
+    val group: String,
+    val historyKeys: List<String>,
+    val span: GuideSpan,
+)

@@ -1,9 +1,11 @@
 package com.johncorser.telly.features.playback
 
+import com.johncorser.telly.features.history.WatchHistory
 import com.johncorser.telly.testutil.FakeChannelDao
 import com.johncorser.telly.testutil.FakeKeyValueStore
 import com.johncorser.telly.testutil.FakePlayerEngine
 import com.johncorser.telly.testutil.FakeProgramDao
+import com.johncorser.telly.testutil.FakeWatchHistoryDao
 import com.johncorser.telly.testutil.testChannel
 import com.johncorser.telly.testutil.testEpgRepository
 import kotlinx.coroutines.CoroutineScope
@@ -29,6 +31,7 @@ class PlaybackSearchWiringTest {
                     store = FakeKeyValueStore(),
                     clock = { 1_000_000L },
                 ),
+            history = WatchHistory(FakeWatchHistoryDao()) { 1_000_000L },
             scope = CoroutineScope(SupervisorJob() + UnconfinedTestDispatcher(testScheduler)),
             openSearch = openSearch,
         )

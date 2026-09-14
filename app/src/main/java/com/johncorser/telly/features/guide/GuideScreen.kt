@@ -32,10 +32,11 @@ fun GuideScreen(
     onOpenSearch: () -> Unit = {},
     onOpenSettings: () -> Unit = {},
     settingsOpen: Boolean = false,
+    historySource: Boolean = false,
 ) {
     val engine = remember { deps.playback.engineFactory() }
     val callbacks = remember { GuideCallbacks(onFullscreen, onOpenSearch, onOpenSettings) }
-    val controller = rememberGuideController(deps, engine, callbacks)
+    val controller = rememberGuideController(deps, engine, callbacks, historySource)
     val detectors = remember { GuideScreenKeyDetectors() }
     val layer by controller.layer.collectAsState()
     BackHandler(enabled = layer != GuideLayer.Grid && !settingsOpen) { controller.onKey(GuideKey.BACK) }

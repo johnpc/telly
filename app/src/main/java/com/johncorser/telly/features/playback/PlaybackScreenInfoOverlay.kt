@@ -14,7 +14,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.tv.material3.Icon
 import com.johncorser.telly.R
@@ -32,7 +31,6 @@ internal fun PlaybackScreenInfoOverlay(
 ) {
     val info by viewModel.info.collectAsState()
     val data = info ?: return
-    val historyLabel = stringResource(R.string.playback_card_history)
     PlaybackScreenOverlayScaffold(data.group, data.clockText) {
         PlaybackScreenInfoBlock(data, showBadges = true, showDescription = false)
         Spacer(Modifier.height(10.dp))
@@ -51,7 +49,7 @@ internal fun PlaybackScreenInfoOverlay(
         Box(Modifier.fillMaxWidth()) {
             PlaybackScreenCards(
                 onGuide = { viewModel.exitToGuide() },
-                onHistory = { viewModel.showComingSoon(historyLabel) },
+                onHistory = { viewModel.exitToHistory() },
             )
             // The chevron sits centered at y≈1036 px, overlapping the card
             // row's bottom edge (round3-ref 02 + item 20).

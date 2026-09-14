@@ -1,10 +1,12 @@
 package com.johncorser.telly.features.playback
 
+import com.johncorser.telly.features.history.WatchHistory
 import com.johncorser.telly.features.player.VideoDetails
 import com.johncorser.telly.testutil.FakeChannelDao
 import com.johncorser.telly.testutil.FakeKeyValueStore
 import com.johncorser.telly.testutil.FakePlayerEngine
 import com.johncorser.telly.testutil.FakeProgramDao
+import com.johncorser.telly.testutil.FakeWatchHistoryDao
 import com.johncorser.telly.testutil.testChannel
 import com.johncorser.telly.testutil.testEpgRepository
 import com.johncorser.telly.testutil.testProgram
@@ -33,10 +35,13 @@ class PlaybackViewModelTest {
     private val engine = FakePlayerEngine()
     private val store = FakeKeyValueStore()
     private val programs = FakeProgramDao()
+    private val historyDao = FakeWatchHistoryDao()
 
     private var exitedToGuide = 0
+    private var exitedToHistory = 0
+    private var now = 1_000_000L
 
-    private fun TestScope.buildVm(clock: () -> Long = { 1_000_000L }): PlaybackViewModel =
+    private fun TestScope.buildVm(clock: () -> Long = { now }): PlaybackViewModel =
         PlaybackViewModel(
             env =
                 PlaybackEnv(
@@ -47,8 +52,10 @@ class PlaybackViewModelTest {
                     clock = clock,
                     zone = TimeZone.getTimeZone("UTC"),
                 ),
+            history = WatchHistory(historyDao, clock),
             scope = CoroutineScope(SupervisorJob() + UnconfinedTestDispatcher(testScheduler)),
             onExitToGuide = { exitedToGuide += 1 },
+            onExitToHistory = { exitedToHistory += 1 },
         )
 
     @Test
@@ -314,16 +321,34 @@ class PlaybackViewModelTest {
         }
 
     @Test
-    fun `the overlay cards open the panel and the history placeholder`() =
+    fun `the overlay's History card leaves for the guide's history group`() =
+        runTest {
+            val vm = buildVm()
+            vm.onKey(PlaybackKey.OK)
+
+            vm.exitToHistory()
+
+            assertEquals(1, exitedToHistory)
+            assertEquals(0, exitedToGuide)
+        }
+
+    @Test
+    fun `every tune records a deduped newest-first watch history`() =
         runTest {
             val vm = buildVm()
 
-            vm.openPanel()
-            assertEquals(PlaybackOverlay.Panel, vm.overlay.value)
-            assertEquals(0, vm.panel.focusIndex.value)
+            now = 1_000_001L
+            vm.onKey(PlaybackKey.CHANNEL_UP)
+            now = 1_000_002L
+            vm.onKey(PlaybackKey.CHANNEL_UP)
+            now = 1_000_003L
+            vm.tuneFromPanel(channels[1])
 
-            vm.showComingSoon("History")
-            assertEquals(PlaybackOverlay.ComingSoon("History"), vm.overlay.value)
+            assertEquals(2L, vm.current.value?.id)
+            assertEquals(
+                mapOf("tvg-1" to 1_000_000L, "tvg-2" to 1_000_003L, "tvg-3" to 1_000_002L),
+                historyDao.events.value,
+            )
         }
 
     @Test

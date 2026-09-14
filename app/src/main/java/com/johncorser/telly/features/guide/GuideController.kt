@@ -1,5 +1,6 @@
 package com.johncorser.telly.features.guide
 
+import com.johncorser.telly.features.history.WatchHistory
 import com.johncorser.telly.features.panel.PanelViewModel
 import com.johncorser.telly.features.playback.ChannelActions
 import com.johncorser.telly.features.playback.PlaybackEnv
@@ -23,9 +24,11 @@ import kotlinx.coroutines.launch
  */
 class GuideController(
     env: PlaybackEnv,
+    history: WatchHistory,
     private val pastDays: () -> Int,
     scope: CoroutineScope,
     private val callbacks: GuideCallbacks,
+    initialGroup: String = PanelViewModel.ALL_CHANNELS,
 ) {
     val zone = env.zone
     val nowMs = env.clock()
@@ -34,13 +37,12 @@ class GuideController(
     /** "Sun, Sep 13, 2:44 PM" in blue at the header's left (uidump 24). */
     val clockText: String = ProgramTimes.clock(nowMs, zone)
 
-    private val tuner = TuneController(env.engine, env.store, scope, env.channelDao)
-    private val selected = MutableStateFlow(PanelViewModel.ALL_CHANNELS)
+    private val tuner = TuneController(env.engine, env.store, scope, env.channelDao, history)
+    private val selected = MutableStateFlow(initialGroup)
     private val focusEngine = GuideFocusEngine(originMs, pastFloorDp = { GuideWindowMath.scrollFloorDp(pastDays()) })
     private val feed =
         GuideRowsFeed(
-            tuner.channels,
-            selected.asStateFlow(),
+            GuideRowsSources(tuner.channels, selected.asStateFlow(), history.keys),
             focusEngine.scrollX,
             env.epgRepository::programsFor,
             originMs,
@@ -48,6 +50,8 @@ class GuideController(
         )
 
     val rows: StateFlow<List<GuideRow>> = feed.rows
+
+    /** History leads the column only while it is the source group (capture 25). */
     val groups: StateFlow<List<String>> = feed.groups
     val selectedGroup: StateFlow<String> = selected.asStateFlow()
     val focus: StateFlow<GuideFocus?> = focusEngine.focus

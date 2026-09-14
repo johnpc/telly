@@ -5,6 +5,8 @@ import com.johncorser.telly.features.epg.EpgRepository
 import com.johncorser.telly.features.epg.db.ProgramDao
 import com.johncorser.telly.features.epg.db.ProgramDetails
 import com.johncorser.telly.features.epg.db.ProgramEntity
+import com.johncorser.telly.features.history.db.WatchHistoryDao
+import com.johncorser.telly.features.history.db.WatchHistoryEntity
 import com.johncorser.telly.features.player.PlayerEngine
 import com.johncorser.telly.features.player.PlayerState
 import com.johncorser.telly.features.player.VideoDetails
@@ -178,6 +180,26 @@ class FakePlayerEngine : PlayerEngine {
 
     override fun release() {
         released = true
+    }
+}
+
+/** In-memory [WatchHistoryDao] mirroring the real one's ordering and trim. */
+class FakeWatchHistoryDao : WatchHistoryDao {
+    val events = MutableStateFlow<Map<String, Long>>(emptyMap())
+
+    private fun ordered(map: Map<String, Long>): List<String> =
+        map.entries
+            .sortedWith(compareByDescending<Map.Entry<String, Long>> { it.value }.thenBy { it.key })
+            .map { it.key }
+
+    override suspend fun upsert(event: WatchHistoryEntity) {
+        events.update { it + (event.channelKey to event.watchedAtMs) }
+    }
+
+    override fun observeKeys(): Flow<List<String>> = events.map(::ordered)
+
+    override suspend fun trimTo(cap: Int) {
+        events.update { map -> ordered(map).take(cap).associateWith(map::getValue) }
     }
 }
 

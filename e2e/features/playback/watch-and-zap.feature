@@ -63,3 +63,64 @@ Feature: Watch live TV and zap between channels
     Then no chrome is visible over the video
     When I press back
     Then the TV guide opens with the programme grid
+
+  # The History card (capture 34: second 150x110 card, clock-with-arrow
+  # icon). Capture 47's note: OK on it "opens the same overlay (with History
+  # as source group when it exists)". Capture 48's uidump — taken right
+  # after the press — is bare playback (zero text nodes, one focused
+  # full-screen ViewGroup): 5.2.0 free has no History screen and no
+  # persistent History group (capture 25 lists only Favorites / All
+  # channels / News / Sports / Movies / Kids / Music). telly honors the
+  # documented intent: the card lands on the guide with a synthetic,
+  # recently-watched History source group.
+
+  Scenario: The History card opens the guide on the recently-watched channels
+    Given I zapped to channel 2 "News One HD"
+    And I zapped to channel 3 "News One +1"
+    When I press ok
+    And I select the "History" card
+    Then the TV guide opens with the programme grid
+    And "History" is the selected group
+    And the channels column lists exactly "News One +1", "News One HD", "News One"
+
+  Scenario: History is newest-first and lists each channel once
+    Given I zapped to channel 2 "News One HD"
+    And I zapped to channel 3 "News One +1"
+    And I zapped to channel 2 "News One HD"
+    When I press ok
+    And I select the "History" card
+    Then the channels column lists exactly "News One HD", "News One +1", "News One"
+
+  Scenario: History channel numbers restart from 1
+    Given I zapped to channel 7 "Sports Arena"
+    When I press ok
+    And I select the "History" card
+    Then the "Sports Arena" row shows number 1
+    And the "News One" row shows number 2
+
+  Scenario: History survives a relaunch
+    Given I zapped to channel 7 "Sports Arena"
+    When I relaunch telly
+    And I press ok
+    And I select the "History" card
+    Then the channels column lists exactly "Sports Arena", "News One"
+
+  Scenario: The groups column shows History only while it is the source group
+    When I press ok
+    And I select the "TV guide" card
+    And I press dpad left
+    Then the groups column lists "Favorites", "All channels", "News", "Sports", "Movies", "Kids", "Music"
+    And the groups column does not list "History"
+    When I press back
+    And I press ok
+    And I select the "History" card
+    And I press dpad left
+    Then the groups column lists "History", "Favorites", "All channels", "News", "Sports", "Movies", "Kids", "Music"
+    When I select "Sports"
+    Then the "Sports Arena" row shows number 1
+
+  Scenario: Back from the History guide exits the app, like any guide root
+    When I press ok
+    And I select the "History" card
+    And I press back
+    Then telly exits to the launcher
