@@ -71,7 +71,17 @@ class PanelSteps(
     fun rowShowsNumber(
         name: String,
         number: Int,
-    ) = world.waitFor(driver.rowMatcher(name) and hasText(number.toString()))
+    ) {
+        // Panel rows are tagged Surfaces; guide rows are plain text columns,
+        // so fall back to a same-visual-row check for the number there.
+        if (world.nodeCount(hasTestTag("channel-row")) > 0) {
+            world.waitFor(driver.rowMatcher(name) and hasText(number.toString()))
+        } else {
+            driver.awaitCondition("number $number next to $name") {
+                world.rowAligned(number.toString(), name)
+            }
+        }
+    }
 
     @When("I select the row {string}")
     fun selectRow(name: String) {

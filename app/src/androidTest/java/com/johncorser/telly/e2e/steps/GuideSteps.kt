@@ -1,0 +1,196 @@
+package com.johncorser.telly.e2e.steps
+
+import android.view.KeyEvent
+import androidx.compose.ui.test.hasContentDescription
+import androidx.compose.ui.test.hasTestTag
+import androidx.compose.ui.test.hasText
+import com.johncorser.telly.e2e.PlaybackDriver
+import com.johncorser.telly.e2e.TellyWorld
+import com.johncorser.telly.e2e.fixtures.FixturePlan
+import com.johncorser.telly.e2e.fixtures.FixtureProgramme
+import com.johncorser.telly.e2e.fixtures.FixtureServer
+import com.johncorser.telly.e2e.fixtures.rangeText
+import com.johncorser.telly.features.guide.GuideGeometry
+import com.johncorser.telly.features.guide.GuideTimeline
+import io.cucumber.java.en.Then
+import io.cucumber.java.en.When
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.Locale
+import java.util.TimeZone
+
+/** Steps for the TV-guide grid (Route.Guide, the app's root screen). */
+class GuideSteps(
+    private val world: TellyWorld,
+    private val driver: PlaybackDriver,
+) {
+    /** The time anchor guide focus keeps while navigating (starts at now). */
+    private var anchorMs: Long = 0L
+
+    private fun programmeAt(
+        channelNumber: Int,
+        atMs: Long,
+    ): FixtureProgramme = FixtureServer.nowProgramme(FixturePlan.channels[channelNumber - 1].tvgId, atMs)
+
+    @Then("the TV guide opens with the programme grid")
+    fun guideOpen() {
+        world.waitFor(world.hasTextMatching(TICK_LABEL))
+        world.waitForText("News One")
+    }
+
+    @Then("I see the preview window playing channel {int} {string}")
+    fun previewPlays(
+        number: Int,
+        name: String,
+    ) {
+        guideOpen()
+        driver.awaitCondition("play marker on the $name row") { world.rowAligned("▶", name) }
+        driver.currentChannel = FixturePlan.channelNamed(name)
+    }
+
+    @Then("the info pane shows the focused programme title, time range and description")
+    fun infoPaneComplete() {
+        val programme = programmeAt(1, System.currentTimeMillis())
+        anchorMs = System.currentTimeMillis()
+        world.waitForText(programme.displayTitle, substring = true)
+        world.waitForText(programme.rangeText(), substring = true)
+        world.waitForText(programme.description, substring = true)
+    }
+
+    @Then("the channel column lists number, logo and name for {string} and {string}")
+    fun channelColumn(
+        first: String,
+        second: String,
+    ) {
+        listOf(first, second).forEach { name ->
+            val channel = FixturePlan.channelNamed(name)
+            world.waitForText(name)
+            world.waitFor(hasContentDescription("$name logo"), unmerged = true)
+            driver.awaitCondition("number ${channel.number} next to $name") {
+                world.rowAligned(channel.number.toString(), name)
+            }
+        }
+    }
+
+    @Then("the grid shows the current and next programme cells of {string}")
+    fun gridShowsNowAndNext(name: String) {
+        val tvgId = FixturePlan.channelNamed(name).tvgId
+        val now = System.currentTimeMillis()
+        world.waitForText(FixtureServer.nowProgramme(tvgId, now).displayTitle, substring = true)
+        world.waitForText(FixtureServer.nextProgramme(tvgId, now).displayTitle, substring = true)
+    }
+
+    @Then("channels without EPG show {string} cells")
+    fun noEpgCells(placeholder: String) {
+        world.waitForText(placeholder, substring = true)
+    }
+
+    @Then("the header clock shows today's date and time")
+    fun headerClock() {
+        // "Sun, Sep 14, 2:45 PM" — assert the date part (minutes drift) and
+        // that a time follows it.
+        val datePart = SimpleDateFormat("EEE, MMM d", Locale.US).format(Date())
+        world.waitForText(datePart, substring = true)
+        world.waitFor(world.hasTextMatching(Regex("$datePart, \\d{1,2}:\\d{2} [AP]M")))
+    }
+
+    @Then("the timeline shows labels every 30 minutes")
+    fun timelineTicks() {
+        world.waitFor(world.hasTextMatching(TICK_LABEL), atLeast = 2)
+    }
+
+    @Then("the now-line marks the current time in the grid")
+    fun nowLine() {
+        world.waitFor(hasTestTag("now-line"), unmerged = true)
+    }
+
+    @Then("the next programme cell of channel {int} is focused")
+    fun nextCellFocused(number: Int) {
+        val next = FixtureServer.nextProgramme(FixturePlan.channels[number - 1].tvgId, System.currentTimeMillis())
+        anchorMs = next.startMs
+        world.waitForText(next.rangeText(), substring = true)
+    }
+
+    @Then("the info pane shows that programme's title")
+    fun infoPaneShowsFocusedTitle() {
+        val next = FixtureServer.nowProgramme(FixturePlan.channels.first().tvgId, anchorMs)
+        // The title renders twice: once in the cell, once in the info pane.
+        world.waitFor(hasText(next.displayTitle), atLeast = 2)
+    }
+
+    @Then("the focused cell is on channel {int} at roughly the same time")
+    fun focusedCellOnChannel(number: Int) {
+        world.waitForText(programmeAt(number, anchorMs).rangeText(), substring = true)
+    }
+
+    @Then("the timeline header has scrolled forward with the cells")
+    fun timelineScrolled() {
+        val zone = TimeZone.getDefault()
+        val originLabel = GuideTimeline.timeLabel(GuideGeometry.halfHourFloor(System.currentTimeMillis(), zone), zone)
+        world.waitFor(world.hasTextMatching(TICK_LABEL))
+        driver.awaitCondition("origin tick label scrolled away") {
+            world.nodeCount(hasText(originLabel)) == 0
+        }
+    }
+
+    @When("I press ok on the airing programme")
+    fun okOnAiringProgramme() {
+        // Only airing cells put the remaining-minutes pill in the info pane.
+        world.waitFor(world.hasTextMatching(REMAINING_LABEL))
+        world.pressKey(KeyEvent.KEYCODE_DPAD_CENTER)
+    }
+
+    @Then("the preview window plays channel {int} {string}")
+    fun previewSwitches(
+        number: Int,
+        name: String,
+    ) {
+        driver.awaitCondition("play marker moves to $name") { world.rowAligned("▶", name) }
+        driver.currentChannel = FixturePlan.channelNamed(name)
+    }
+
+    @Then("the channel name of row {int} renders in accent blue with a play marker")
+    fun playingRowMarker(number: Int) {
+        driver.awaitCondition("play marker on row $number") {
+            world.rowAligned("▶", FixturePlan.channels[number - 1].name)
+        }
+    }
+
+    @Then("playback goes fullscreen on channel {int} {string}")
+    fun fullscreenOn(
+        number: Int,
+        name: String,
+    ) = driver.assertPlaybackOn(number, name)
+
+    @Then("a dropdown anchored under the cell lists exactly {string}, {string}, {string}, {string}, {string}")
+    fun dropdownLists(
+        a: String,
+        b: String,
+        c: String,
+        d: String,
+        e: String,
+    ) = listOf(a, b, c, d, e).forEach { world.waitForText(it) }
+
+    @Then("I see the {string} screen")
+    fun seeScreen(title: String) = world.waitForText(title)
+
+    @Then("the programme grid is focused again")
+    fun gridFocusedAgain() {
+        world.waitForGone(hasText("Unlock Premium"))
+        world.waitForGone(hasText("Remind"))
+        world.waitFor(world.hasTextMatching(TICK_LABEL))
+    }
+
+    @Then("the groups column is dismissed")
+    fun groupsDismissed() = world.waitForGone(hasText("Favorites"))
+
+    @Then("telly exits to the launcher")
+    fun appExits() {
+        driver.awaitCondition("activity destroyed") { world.appDestroyed() }
+    }
+
+    private companion object {
+        val TICK_LABEL = Regex("\\d{2}:(00|30) [AP]M")
+        val REMAINING_LABEL = Regex("\\d+ min")
+    }
+}

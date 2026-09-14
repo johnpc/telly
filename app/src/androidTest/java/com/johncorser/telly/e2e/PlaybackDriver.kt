@@ -131,10 +131,11 @@ class PlaybackDriver(
             hasText(channelLabel(currentChannel.number, currentChannel.name), substring = true),
         )
 
-    /** BACK at bare playback opens the panel (device-verified key map). */
+    /** The channel panel lives behind the quick-bar's Channels list slot. */
     fun openPanel() {
         dismissChrome()
-        world.pressKey(KeyEvent.KEYCODE_BACK)
+        world.longPressOk()
+        world.select("Channels list")
         world.waitForText("All channels")
         world.waitForText("Favorites")
     }

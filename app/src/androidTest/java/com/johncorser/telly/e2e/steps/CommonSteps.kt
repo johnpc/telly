@@ -56,6 +56,9 @@ class CommonSteps(
     @When("I press dpad right")
     fun pressRight() = world.pressKey(KeyEvent.KEYCODE_DPAD_RIGHT)
 
+    @When("I press dpad right {int} times")
+    fun pressRightTimes(times: Int) = world.pressKey(KeyEvent.KEYCODE_DPAD_RIGHT, times = times)
+
     @When("I press dpad left")
     fun pressLeft() = world.pressKey(KeyEvent.KEYCODE_DPAD_LEFT)
 

@@ -51,11 +51,15 @@ object FixturePlan {
         return channels.flatMap { channel -> channelSchedule(channel, windowStart, windowEnd) }
     }
 
+    /** One channel ships WITHOUT EPG so "No information" cells are real. */
+    val noEpgTvgIds: Set<String> = setOf("news-one-6.fixture")
+
     private fun channelSchedule(
         channel: FixtureChannel,
         windowStart: Long,
         windowEnd: Long,
     ): List<FixtureProgramme> {
+        if (channel.tvgId in noEpgTvgIds) return emptyList()
         val titles = groups.getValue(channel.group).titles
         val out = mutableListOf<FixtureProgramme>()
         var start = windowStart

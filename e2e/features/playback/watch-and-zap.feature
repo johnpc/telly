@@ -4,8 +4,8 @@ Feature: Watch live TV and zap between channels
   playback of the last-watched channel and the remote drives everything.
   Reference: TiviMate captures 33-46 and the catalogue's key map (§3), as
   corrected by the round3/round4 on-device verification: OK/DOWN/UP all open
-  the info overlay, long-OK/MENU open the quick-bar, and BACK stands in for
-  "return to the TV guide" by opening the channel panel.
+  the info overlay, long-OK/MENU open the quick-bar, and BACK returns to the
+  TV guide (the channel panel lives behind the quick-bar's Channels list).
 
   Background:
     Given the fixture playlist and EPG are served from "http://10.0.2.2:8090"
@@ -41,8 +41,9 @@ Feature: Watch live TV and zap between channels
     And I press channel down
     Then playback switches to channel 30 "Music Box 24"
 
-  Scenario: Back opens the channel panel focused on the playing channel
-    When I press back
+  Scenario: The quick-bar's Channels list opens the panel focused on the playing channel
+    When I long-press ok
+    And I select "Channels list"
     Then the channel list panel opens over the dimmed video
     And the focused channel row is number 1 "News One"
 

@@ -4,7 +4,10 @@ import android.content.Context
 import android.os.SystemClock
 import android.view.KeyEvent
 import android.view.WindowInsets
+import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.semantics.SemanticsActions
+import androidx.compose.ui.semantics.SemanticsProperties
+import androidx.compose.ui.semantics.getOrNull
 import androidx.compose.ui.test.SemanticsMatcher
 import androidx.compose.ui.test.hasContentDescription
 import androidx.compose.ui.test.hasText
@@ -13,6 +16,7 @@ import androidx.compose.ui.test.junit4.ComposeTestRule
 import androidx.compose.ui.test.onFirst
 import androidx.compose.ui.test.performScrollToNode
 import androidx.compose.ui.test.performSemanticsAction
+import androidx.lifecycle.Lifecycle
 import androidx.test.core.app.ActivityScenario
 import androidx.test.platform.app.InstrumentationRegistry
 import androidx.test.uiautomator.UiDevice
@@ -176,6 +180,28 @@ class TellyWorld(
         compose.onAllNodes(matcher).onFirst().performSemanticsAction(SemanticsActions.RequestFocus)
         waitFor(matcher and isFocused())
     }
+
+    /** True when two texts render vertically aligned (same visual row). */
+    fun rowAligned(
+        textA: String,
+        textB: String,
+    ): Boolean {
+        val aBounds = boundsOf(hasText(textA))
+        val bBounds = boundsOf(hasText(textB))
+        return aBounds.any { a -> bBounds.any { b -> a.top < b.bottom && b.top < a.bottom } }
+    }
+
+    fun boundsOf(matcher: SemanticsMatcher): List<Rect> =
+        compose.onAllNodes(matcher).fetchSemanticsNodes(false).map { it.boundsInRoot }
+
+    /** Matches nodes whose (any) text matches [regex] exactly. */
+    fun hasTextMatching(regex: Regex): SemanticsMatcher =
+        SemanticsMatcher("text matches $regex") { node ->
+            node.config.getOrNull(SemanticsProperties.Text)?.any { regex.matches(it.text) } == true
+        }
+
+    /** True once the activity finished (BACK at the guide root exits). */
+    fun appDestroyed(): Boolean = scenario?.state == Lifecycle.State.DESTROYED
 
     /** True while the soft keyboard covers the activity (first IME show lags). */
     fun imeVisible(): Boolean {

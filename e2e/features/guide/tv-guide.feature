@@ -1,3 +1,4 @@
+@tv-guide
 Feature: TV guide
   The signature TiviMate screen (captures 24-27, 32, 74): live preview
   window + focused-programme info pane on top, a 30-min timeline header and
@@ -13,7 +14,7 @@ Feature: TV guide
     Then I see the preview window playing channel 1 "News One"
     And the info pane shows the focused programme title, time range and description
     And the channel column lists number, logo and name for "News One" and "Sports Arena"
-    And the grid shows the programme cell "Business Hour"
+    And the grid shows the current and next programme cells of "News One"
     And channels without EPG show "No information" cells
 
   Scenario: The timeline header shows half-hour ticks around now
