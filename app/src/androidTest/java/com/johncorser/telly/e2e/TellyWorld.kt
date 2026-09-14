@@ -62,7 +62,7 @@ class TellyWorld(
         resetServiceLocatorField("database") { (it as? TellyDatabase)?.close() }
         resetServiceLocatorField("settings") {}
         targetContext.deleteDatabase("telly.db")
-        listOf("telly-settings", "telly").forEach { name ->
+        listOf("telly-settings", "telly", "telly-search").forEach { name ->
             targetContext.getSharedPreferences(name, Context.MODE_PRIVATE).edit().clear().commit()
         }
     }

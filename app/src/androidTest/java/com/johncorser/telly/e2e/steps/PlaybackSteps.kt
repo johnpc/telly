@@ -30,7 +30,12 @@ class PlaybackSteps(
         number: Int,
         name: String,
     ) {
-        driver.zapBy(number - driver.currentChannel.number)
+        // A DIRECT tune (panel row OK), not CHANNEL_UP hops: every hop is a
+        // real tune the watch history records, which would pollute the
+        // History scenarios with the channels stepped over on the way.
+        driver.openPanel()
+        driver.focusRow(name)
+        world.pressKey(android.view.KeyEvent.KEYCODE_DPAD_CENTER)
         driver.assertZapOverlayShows(number, name)
     }
 
@@ -98,7 +103,20 @@ class PlaybackSteps(
     }
 
     @When("I select the {string} card")
-    fun selectCard(label: String) = world.select(label)
+    fun selectCard(label: String) {
+        // The cards live on the playback info overlay; reaching this step
+        // from the guide's preview means OK first goes fullscreen and a
+        // second OK opens the overlay.
+        driver.awaitCondition("$label card visible") {
+            if (world.nodeCount(hasText(label)) > 0) {
+                true
+            } else {
+                world.pressKey(android.view.KeyEvent.KEYCODE_DPAD_CENTER)
+                false
+            }
+        }
+        world.select(label)
+    }
 
     @Then("I see the quick-bar slots {string}, {string}, {string}, {string} and {string}")
     fun seeQuickBarSlots(

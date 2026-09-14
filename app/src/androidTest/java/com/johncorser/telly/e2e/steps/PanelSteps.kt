@@ -39,10 +39,17 @@ class PanelSteps(
             return
         }
         // The guide renders group selection only inside its groups column:
-        // peek at the column (LEFT) and close it again (RIGHT).
-        world.pressKey(KeyEvent.KEYCODE_DPAD_LEFT)
-        world.waitFor(hasText(name) and isSelected())
-        world.pressKey(KeyEvent.KEYCODE_DPAD_RIGHT)
+        // peek at the column (LEFT, retried while the route crossfade may
+        // still be swallowing keys) and close it again with BACK.
+        driver.awaitCondition("$name is the selected group") {
+            if (world.nodeCount(hasText(name) and isSelected()) > 0) {
+                true
+            } else {
+                world.pressKey(KeyEvent.KEYCODE_DPAD_LEFT)
+                false
+            }
+        }
+        world.pressKey(KeyEvent.KEYCODE_BACK)
         world.waitForGone(hasText("All channels"))
     }
 

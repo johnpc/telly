@@ -1,8 +1,8 @@
 package com.johncorser.telly.e2e.steps
 
-import android.view.KeyEvent
 import androidx.compose.ui.semantics.SemanticsActions
 import androidx.compose.ui.test.SemanticsMatcher
+import androidx.compose.ui.test.SemanticsNodeInteraction
 import androidx.compose.ui.test.hasContentDescription
 import androidx.compose.ui.test.hasTestTag
 import androidx.compose.ui.test.hasText
@@ -130,17 +130,18 @@ class SearchSteps(
 
     @Then("the focused row shows a detail card with title, times and description")
     fun focusedRowDetailCard() {
-        val first = upcomingTitled("Newsroom Live").first()
-        driver.awaitCondition("a programme row is focused") {
-            if (world.nodeCount(hasText(first.displayTitle, substring = true) and isFocused()) > 0) {
-                true
-            } else {
-                world.pressKey(KeyEvent.KEYCODE_DPAD_DOWN)
-                false
-            }
-        }
-        world.waitForText(first.description, substring = true)
+        // The app preselects its first hit into the card; several fixture
+        // programmes can share that startMs on different channels, so accept
+        // any tied candidate's description (the DAO's tie order is free).
+        val candidates = upcomingTitled("Newsroom Live")
+        val first = candidates.first()
+        val ties = candidates.filter { it.startMs == first.startMs }
+        focusFirstProgrammeRow(hasText(airTime(first), substring = true))
+        world.waitForText(first.displayTitle, substring = true)
         world.waitForText(airTime(first), substring = true)
+        driver.awaitCondition("detail card shows the focused row's description") {
+            ties.any { world.nodeCount(hasText(it.description, substring = true)) > 0 }
+        }
     }
 
     @When("I press ok on the channel card {string}")
@@ -148,13 +149,20 @@ class SearchSteps(
 
     @When("I press ok on the first programme row")
     fun okOnFirstProgrammeRow() {
-        val focusable =
-            hasText("Newsroom Live", substring = true) and
-                SemanticsMatcher.keyIsDefined(SemanticsActions.RequestFocus)
+        // A synthetic DPAD_CENTER pair can leak its UP into the dropdown
+        // that the row's click opens (its first row takes focus while the
+        // key is in flight); the semantics click IS the row's OK action.
+        focusFirstProgrammeRow(hasText("Newsroom Live", substring = true))
+            .performSemanticsAction(SemanticsActions.OnClick)
+    }
+
+    private fun focusFirstProgrammeRow(text: SemanticsMatcher): SemanticsNodeInteraction {
+        val focusable = text and SemanticsMatcher.keyIsDefined(SemanticsActions.RequestFocus)
         world.waitFor(focusable)
-        world.compose.onAllNodes(focusable).onFirst().performSemanticsAction(SemanticsActions.RequestFocus)
+        val row = world.compose.onAllNodes(focusable).onFirst()
+        row.performSemanticsAction(SemanticsActions.RequestFocus)
         world.waitFor(focusable and isFocused())
-        world.pressKey(KeyEvent.KEYCODE_DPAD_CENTER)
+        return row
     }
 
     @Then("I see the dropdown rows {string}, {string}, {string}, {string}, {string}")

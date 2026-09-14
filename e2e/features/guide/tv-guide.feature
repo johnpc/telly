@@ -91,7 +91,7 @@ Feature: TV guide
   Scenario: Program description shows the focused programme's synopsis
     When I long-press ok
     And I select "Program description"
-    Then I see "All-new episode featuring special guests and exclusive behind-the-scenes footage."
+    Then the description layer shows the focused programme's title and synopsis
     When I press back
     Then I see the menu rows "Search" and "Settings"
 

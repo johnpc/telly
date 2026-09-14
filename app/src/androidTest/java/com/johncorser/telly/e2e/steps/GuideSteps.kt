@@ -199,6 +199,17 @@ class GuideSteps(
     @Then("the channel column no longer lists {string}")
     fun channelColumnWithout(name: String) = world.waitForGone(hasText(name))
 
+    @Then("the description layer shows the focused programme's title and synopsis")
+    fun descriptionLayer() {
+        // The sheet opens on the focused row = the tuned channel's airing
+        // cell; the synopsis is that programme's fixture description (a
+        // fixed string would rot as the airing programme rotates with the
+        // wall clock).
+        val programme = FixtureServer.nowProgramme(driver.currentChannel.tvgId, System.currentTimeMillis())
+        world.waitForText(programme.displayTitle, substring = true)
+        world.waitForText(programme.description, substring = true)
+    }
+
     @Then("a right pane titled {string} opens")
     fun rightPaneTitled(title: String) {
         // The channel column lists the same name at the left edge, so the
