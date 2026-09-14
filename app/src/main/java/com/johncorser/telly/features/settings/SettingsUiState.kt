@@ -1,6 +1,6 @@
 package com.johncorser.telly.features.settings
 
-/** What the right pane is showing: a section, or a pushed sub-pane. */
+/** One pushed sheet: a section, or a deeper sub-sheet. */
 sealed interface SettingsPane {
     data class Section(
         val section: SettingsSection,
@@ -13,7 +13,7 @@ sealed interface SettingsPane {
     data object EpgSources : SettingsPane
 }
 
-/** Modal state over the two-pane shell. */
+/** Modal state over the sheet stack. */
 sealed interface SettingsOverlay {
     data class Picker(
         val spec: PickerSpec,
@@ -36,14 +36,21 @@ sealed interface SettingsOverlay {
     data object Paywall : SettingsOverlay
 }
 
+/**
+ * The right-sheet stack (device-verified 2026-09-13): settings is a single
+ * 360 dp sheet at the screen's right edge over the dimmed underlying
+ * surface. The root sheet lists the sections; OK pushes a section sheet
+ * that REPLACES the root in place, BACK pops one sheet at a time and
+ * leaves settings from the root. [panes] holds the pushed sheets; empty
+ * means the root section list.
+ */
 data class SettingsUiState(
-    val section: SettingsSection = SettingsSection.GENERAL,
-    val subPanes: List<SettingsPane> = emptyList(),
+    val panes: List<SettingsPane> = emptyList(),
     val overlay: SettingsOverlay? = null,
 ) {
-    /** The pane the right side renders: the deepest push, else the section. */
-    val activePane: SettingsPane get() = subPanes.lastOrNull() ?: SettingsPane.Section(section)
+    /** The sheet on top: the deepest push, or null for the root list. */
+    val activePane: SettingsPane? get() = panes.lastOrNull()
 
-    /** True while a sub-pane or overlay consumes BACK before navigation. */
-    val consumesBack: Boolean get() = overlay != null || subPanes.isNotEmpty()
+    /** True while an overlay or pushed sheet consumes BACK before leaving. */
+    val consumesBack: Boolean get() = overlay != null || panes.isNotEmpty()
 }

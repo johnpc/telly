@@ -14,6 +14,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.tv.material3.Text
 import com.johncorser.telly.core.design.TELLY_SETTINGS_HEADER
@@ -40,7 +41,7 @@ internal fun SettingsScreenPane(
                 text = title,
                 color = Color(TELLY_TEXT_PRIMARY),
                 fontSize = SettingsScreenDims.headerTitleSize,
-                fontFamily = SettingsScreenDims.fontFamily,
+                fontWeight = FontWeight.Medium,
                 modifier = Modifier.padding(horizontal = SettingsScreenDims.panePadding),
             )
         }
@@ -48,11 +49,13 @@ internal fun SettingsScreenPane(
     }
 }
 
-/** The focusable rows of a pane, with headers/notes rendered statically. */
+/** The focusable rows of a sheet, with headers/notes rendered statically. */
 @Composable
 internal fun SettingsScreenRows(
     rows: List<SettingsRow>,
     onActivate: (String) -> Unit,
+    initialFocusId: String? = null,
+    onRowFocused: (String) -> Unit = {},
 ) {
     LazyColumn(
         modifier = Modifier.fillMaxSize(),
@@ -61,7 +64,14 @@ internal fun SettingsScreenRows(
         items(rows, key = { it.id }) { row ->
             when (row) {
                 is SettingsRow.Header, is SettingsRow.Note -> SettingsScreenStaticRow(row)
-                else -> SettingsScreenRow(row = row, onActivate = onActivate)
+                else ->
+                    SettingsScreenRow(
+                        row = row,
+                        onActivate = onActivate,
+                        modifier = Modifier.padding(horizontal = SettingsScreenDims.rowMargin),
+                        onFocused = { onRowFocused(row.id) },
+                        requestFocus = row.id == initialFocusId,
+                    )
             }
         }
     }
@@ -87,7 +97,9 @@ internal fun SettingsScreenStaticRow(row: SettingsRow) {
                 start = SettingsScreenDims.panePadding,
                 end = SettingsScreenDims.panePadding,
                 top = topPadding,
-                bottom = 8.dp,
+                // The blue premium note sits 12 dp above the first pill
+                // (ref/01: note bottom 217 px, pill top 241 px).
+                bottom = if (row is SettingsRow.Note) 12.dp else 8.dp,
             ),
     )
 }

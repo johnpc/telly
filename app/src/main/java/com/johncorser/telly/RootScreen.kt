@@ -16,13 +16,8 @@ import com.johncorser.telly.core.design.TELLY_ONBOARDING_BACKGROUND
 import com.johncorser.telly.core.navigation.Navigator
 import com.johncorser.telly.core.navigation.Route
 import com.johncorser.telly.core.ui.ProvideAccentColor
-import com.johncorser.telly.core.ui.ScreenCrossfade
 import com.johncorser.telly.features.guide.GuideDeps
-import com.johncorser.telly.features.guide.GuideScreen
-import com.johncorser.telly.features.onboarding.WelcomeScreen
-import com.johncorser.telly.features.onboarding.WizardScreen
 import com.johncorser.telly.features.playback.PlaybackDeps
-import com.johncorser.telly.features.playback.PlaybackScreen
 import com.johncorser.telly.features.playlist.PlaylistRepository
 import com.johncorser.telly.features.settings.SettingsGraph
 import com.johncorser.telly.features.settings.SettingsScreenHost
@@ -39,6 +34,10 @@ fun RootScreen(
 ) {
     val stack by navigator.stack.collectAsState()
     val route = stack.last()
+    // Settings is a right sheet OVER the previous screen (device-verified):
+    // the base route keeps rendering (and playing) beneath the dim scrim.
+    val settingsOpen = route == Route.Settings
+    val baseRoute = stack.lastOrNull { it != Route.Settings } ?: route
     BackHandler(enabled = stack.size > 1 && route != Route.AddPlaylistWizard) { navigator.pop() }
     ProvideAccentColor(settingsGraph.settings) { accent ->
         MaterialTheme(
@@ -49,51 +48,16 @@ fun RootScreen(
                     surface = Color(TELLY_GUIDANCE_PANE),
                 ),
         ) {
-            ScreenCrossfade(route) { target ->
-                when (target) {
-                    Route.Boot -> BootScreen()
-                    Route.Welcome ->
-                        WelcomeScreen(
-                            onAddPlaylist = { navigator.push(Route.AddPlaylistWizard) },
-                            onOpenSettings = { navigator.push(Route.Settings) },
-                        )
-                    Route.Settings ->
-                        SettingsScreenHost(
-                            graph = settingsGraph,
-                            onAddPlaylist = { navigator.push(Route.AddPlaylistWizard) },
-                        )
-                    Route.AddPlaylistWizard ->
-                        WizardScreen(
-                            repository = repository,
-                            fetchPlaylist = fetchPlaylist,
-                            onExit = { navigator.pop() },
-                            onComplete = { navigator.replaceAll(Route.Playback) },
-                        )
-                    // BACK/TV-guide card leave playback for the guide as its
-                    // new root: BACK at guide root then exits the app with no
-                    // confirmation, the device-verified free-tier BACK chain.
-                    Route.Playback ->
-                        PlaybackScreen(
-                            deps = playbackDeps,
-                            onExitToGuide = { navigator.replaceAll(Route.Guide) },
-                        )
-                    Route.Guide ->
-                        GuideScreen(
-                            deps = guideDeps,
-                            onFullscreen = { navigator.push(Route.Playback) },
-                        )
+            Box(Modifier.fillMaxSize()) {
+                RootScreenRoutes(baseRoute, settingsOpen, navigator, repository, fetchPlaylist, playbackDeps, guideDeps)
+                if (settingsOpen) {
+                    SettingsScreenHost(
+                        graph = settingsGraph,
+                        onAddPlaylist = { navigator.push(Route.AddPlaylistWizard) },
+                        onClose = { navigator.pop() },
+                    )
                 }
             }
         }
     }
-}
-
-/** TiviMate-style boot skeleton: nothing but the app background (round3 P0 3). */
-@Composable
-private fun BootScreen() {
-    Box(
-        Modifier
-            .fillMaxSize()
-            .background(Color(TELLY_ONBOARDING_BACKGROUND)),
-    )
 }

@@ -32,7 +32,7 @@ fun playlistsRows(
                 id = RowIds.PLAYLIST_PREFIX + item.url,
                 title = item.name,
                 summary = "Channels: ${item.channelCount}",
-                selected = true,
+                checkIcon = true,
             )
         }
     return panePrelude() + items +

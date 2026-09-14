@@ -9,7 +9,10 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusProperties
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import com.johncorser.telly.core.design.TELLY_ONBOARDING_BACKGROUND
@@ -19,6 +22,7 @@ import com.johncorser.telly.core.ui.focusOnAppear
  * A full-screen GuidedStep in the reference style (screens 22/28): left
  * guidance pane with icon + 36 sp title + body lines, action pills right.
  */
+@OptIn(ExperimentalComposeUiApi::class)
 @Composable
 internal fun SettingsScreenGuidedStep(
     iconRes: Int,
@@ -29,7 +33,10 @@ internal fun SettingsScreenGuidedStep(
     Row(
         Modifier
             .fillMaxSize()
-            .background(Color(TELLY_ONBOARDING_BACKGROUND)),
+            .background(Color(TELLY_ONBOARDING_BACKGROUND))
+            // Focus stays on the action pills; the surfaces behind the
+            // full-screen step must not catch the D-pad.
+            .focusProperties { exit = { FocusRequester.Cancel } },
     ) {
         SettingsScreenGuidedPane(iconRes = iconRes, title = title, bodyLines = bodyLines)
         Column(
@@ -44,7 +51,7 @@ internal fun SettingsScreenGuidedStep(
                     onActivate = { onClick() },
                     modifier =
                         Modifier
-                            .width(298.dp)
+                            .width(328.dp)
                             .focusOnAppear(enabled = index == 0),
                     resting = Color.Transparent,
                 )

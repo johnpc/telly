@@ -23,6 +23,8 @@ sealed interface SettingsRow {
         val summary: String? = null,
         val locked: Boolean = false,
         val selected: Boolean = false,
+        /** Leading circle-check (enabled playlist rows, ref/05). */
+        val checkIcon: Boolean = false,
     ) : SettingsRow
 
     data class Action(

@@ -7,7 +7,11 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusProperties
+import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.johncorser.telly.features.panel.ChannelPanelScreenGroups
@@ -20,25 +24,33 @@ import com.johncorser.telly.features.settings.SettingsScreenPaywall
  * decorative only, focus stays in the groups list.
  */
 @Composable
-internal fun GuideScreenGroups(controller: GuideController) {
+internal fun GuideScreenGroups(
+    controller: GuideController,
+    onOpenSettings: () -> Unit,
+) {
     val groups by controller.groups.collectAsState()
     val selected by controller.selectedGroup.collectAsState()
+    val gearFocus = remember { FocusRequester() }
+    val groupsFocus = remember { FocusRequester() }
     Row(Modifier.fillMaxHeight()) {
-        GuideScreenRail()
-        ChannelPanelScreenGroups(
-            groups = groups,
-            selected = selected,
-            onSelect = controller::selectGroup,
-            autoFocusSelected = true,
-            metrics =
-                GroupColumnMetrics(
-                    width = 252.dp,
-                    topPadding = 213.dp,
-                    rowHeight = 36.dp,
-                    rowSpacing = 2.5.dp,
-                    fontSize = 18.sp,
-                ),
-        )
+        GuideScreenRail(onOpenSettings, gearFocus, groupsFocus)
+        Box(Modifier.focusRequester(groupsFocus)) {
+            ChannelPanelScreenGroups(
+                groups = groups,
+                selected = selected,
+                onSelect = controller::selectGroup,
+                autoFocusSelected = true,
+                rowModifier = Modifier.focusProperties { left = gearFocus },
+                metrics =
+                    GroupColumnMetrics(
+                        width = 252.dp,
+                        topPadding = 213.dp,
+                        rowHeight = 36.dp,
+                        rowSpacing = 2.5.dp,
+                        fontSize = 18.sp,
+                    ),
+            )
+        }
     }
 }
 

@@ -14,10 +14,10 @@ import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 
 /**
- * Plain JVM-testable state holder for the two-pane settings shell. Rows are
- * rebuilt from the store + playlists on every change; row activations are
- * dispatched generically (toggle table, picker table) with the leftovers in
- * SettingsViewModelActions.kt.
+ * Plain JVM-testable state holder for the right-sheet settings stack. Rows
+ * are rebuilt from the store + playlists on every change; row activations
+ * are dispatched generically (toggle table, picker table) with the
+ * leftovers in SettingsViewModelActions.kt.
  */
 class SettingsViewModel(
     internal val scope: CoroutineScope,
@@ -48,15 +48,15 @@ class SettingsViewModel(
                 }
             }.stateIn(scope, SharingStarted.Eagerly, emptyList())
 
-    /** The right pane's rows for whatever is focused/pushed right now. */
+    /** The active sheet's rows (root section list when nothing is pushed). */
     val rows: StateFlow<List<SettingsRow>> =
         combine(mutableState, playlistItems, settings.changes) { uiState, playlists, _ ->
             rowsFor(uiState.activePane, settings, playlists, versionName)
         }.stateIn(scope, SharingStarted.Eagerly, emptyList())
 
-    /** Left-pane focus drives the right pane (and drops any pushed panes). */
+    /** OK on a section row pushes its sheet over the root list. */
     fun selectSection(section: SettingsSection) {
-        mutableState.update { it.copy(section = section, subPanes = emptyList()) }
+        mutableState.update { it.copy(panes = listOf(SettingsPane.Section(section))) }
     }
 
     /** OK on a row. Locked rows are unfocusable and never reach this. */
@@ -64,6 +64,8 @@ class SettingsViewModel(
         val toggle = SettingsToggles.byRowId[rowId]
         val picker = SettingsPickers.byRowId[rowId]
         when {
+            rowId.startsWith(RowIds.SECTION_PREFIX) ->
+                selectSection(SettingsSection.valueOf(rowId.removePrefix(RowIds.SECTION_PREFIX)))
             rowId == RowIds.PARENTAL_MASTER -> toggleParentalMaster()
             toggle != null -> flip(toggle)
             picker != null ->
@@ -77,7 +79,7 @@ class SettingsViewModel(
         }
     }
 
-    /** BACK inside settings: overlay first, then pushed panes. False = leave. */
+    /** BACK inside settings: overlay first, then one sheet. False = leave. */
     fun back(): Boolean {
         val current = mutableState.value
         return when {
@@ -85,8 +87,8 @@ class SettingsViewModel(
                 dismissOverlay()
                 true
             }
-            current.subPanes.isNotEmpty() -> {
-                mutableState.update { it.copy(subPanes = it.subPanes.dropLast(1)) }
+            current.panes.isNotEmpty() -> {
+                mutableState.update { it.copy(panes = it.panes.dropLast(1)) }
                 true
             }
             else -> false

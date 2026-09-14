@@ -1,67 +1,66 @@
 package com.johncorser.telly.features.settings
 
 import androidx.activity.compose.BackHandler
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.key
+import androidx.compose.runtime.remember
+import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.unit.dp
-import com.johncorser.telly.core.design.TELLY_GUIDANCE_PANE
-import com.johncorser.telly.core.design.TELLY_ONBOARDING_BACKGROUND
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusProperties
 
 /**
- * The two-pane settings shell: left column lists the captured sections
- * (focus drives the right pane), right pane renders the focused/pushed
- * pane's rows. Panel palette and geometry from uidump 18.
+ * The settings surface, rebuilt to the device-verified model (2026-09-13):
+ * ONE 360 dp right sheet over the dimmed underlying screen. The root sheet
+ * lists the sections; OK replaces it in place with the section's sheet;
+ * BACK pops one sheet, and from the root [onClose] leaves settings. Focus
+ * lands on the first focusable row of a fresh sheet and is restored to the
+ * row you came from when popping back, like the reference.
  */
+@OptIn(ExperimentalComposeUiApi::class)
 @Composable
-fun SettingsScreen(model: SettingsViewModel) {
+fun SettingsScreen(
+    model: SettingsViewModel,
+    onClose: () -> Unit,
+) {
     val state by model.state.collectAsState()
     val rows by model.rows.collectAsState()
     val playlists by model.playlistItems.collectAsState()
-    BackHandler(enabled = state.consumesBack) { model.back() }
-    Row(
-        Modifier
-            .fillMaxSize()
-            .background(Color(TELLY_GUIDANCE_PANE)),
-    ) {
-        SettingsScreenPane(title = "Settings", modifier = Modifier.width(SettingsScreenDims.leftPaneWidth)) {
-            SettingsScreenSectionList(model = model)
+    BackHandler(enabled = true) { if (!model.back()) onClose() }
+    val focusMemory = remember { mutableMapOf<SettingsPane?, String>() }
+    // One trap around the whole surface: focus roams freely between the
+    // sheet and any overlay, but never crosses to the dimmed underlay —
+    // BACK is the only way out (device-verified).
+    // The picker / text-edit overlays are themselves 360 dp sheets that sit
+    // ON the section sheet (device-verified); rendering the section sheet
+    // underneath would keep a second focusable row that the overlay can't
+    // steal focus from, so it's dropped while such a sheet is up. The
+    // fullscreen guided steps (paywall, delete confirm) own the screen.
+    val sheetOverlay =
+        state.overlay is SettingsOverlay.Picker ||
+            state.overlay is SettingsOverlay.TextEdit ||
+            state.overlay is SettingsOverlay.PinSetup
+    Box(Modifier.fillMaxSize().focusProperties { exit = { FocusRequester.Cancel } }) {
+        if (!sheetOverlay) {
+            key(state.activePane) {
+                SettingsScreenSheet(title = paneTitle(state.activePane, playlists)) {
+                    SettingsScreenRows(
+                        rows = rows,
+                        onActivate = model::activate,
+                        initialFocusId = focusMemory[state.activePane] ?: rows.firstFocusableId(),
+                        onRowFocused = { focusMemory[state.activePane] = it },
+                    )
+                }
+            }
         }
-        Box(
-            Modifier
-                .width(2.dp)
-                .fillMaxSize()
-                .background(Color(TELLY_ONBOARDING_BACKGROUND)),
-        )
-        SettingsScreenPane(title = paneTitle(state.activePane, playlists)) {
-            SettingsScreenRows(rows = rows, onActivate = model::activate)
-        }
+        SettingsScreenOverlay(model = model, overlay = state.overlay)
     }
-    SettingsScreenOverlay(model = model, overlay = state.overlay)
 }
 
-/** Premium note + Unlock Premium + the nine sections, as captured. */
-@Composable
-private fun SettingsScreenSectionList(model: SettingsViewModel) {
-    LazyColumn(contentPadding = PaddingValues(vertical = 12.dp)) {
-        item { SettingsScreenStaticRow(SettingsRow.Note(PREMIUM_NOTE)) }
-        item { SettingsScreenRow(row = unlockPremiumRow(), onActivate = model::activate) }
-        items(SettingsSection.entries, key = { it.name }) { section ->
-            SettingsScreenRow(
-                row = SettingsRow.Value(id = "section:${section.name}", title = section.title),
-                onActivate = { model.selectSection(section) },
-                onFocused = { model.selectSection(section) },
-            )
-        }
-    }
-}
+/** The row a fresh sheet should focus: its first focusable row. */
+internal fun List<SettingsRow>.firstFocusableId(): String? =
+    firstOrNull { it !is SettingsRow.Header && it !is SettingsRow.Note && !it.isLocked() }?.id

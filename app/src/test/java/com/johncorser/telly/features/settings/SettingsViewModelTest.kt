@@ -79,18 +79,19 @@ class SettingsViewModelTest {
     }
 
     @Test
-    fun `starts on General with its captured rows`() =
+    fun `starts on the root sheet listing the captured sections`() =
         runTest {
             val model = model()
-            assertEquals(SettingsSection.GENERAL, model.state.value.section)
-            assertTrue(model.rows.value.any { it.id == RowIds.CONFIRM_EXIT })
+            assertNull(model.state.value.activePane)
+            assertEquals("Settings", paneTitle(model.state.value.activePane, model.playlistItems.value))
+            assertTrue(model.rows.value.any { it.id == RowIds.SECTION_PREFIX + SettingsSection.GENERAL.name })
         }
 
     @Test
-    fun `left-pane focus switches the right pane rows`() =
+    fun `OK on a section row pushes its sheet over the root`() =
         runTest {
             val model = model()
-            model.selectSection(SettingsSection.EPG)
+            model.activate(RowIds.SECTION_PREFIX + SettingsSection.EPG.name)
             assertTrue(model.rows.value.any { it.id == RowIds.EPG_UPDATE_NOW })
             assertEquals("EPG", paneTitle(model.state.value.activePane, model.playlistItems.value))
         }
@@ -179,7 +180,7 @@ class SettingsViewModelTest {
             model.confirmDelete()
 
             assertTrue(playlists.playlists.value.isEmpty())
-            assertEquals(SettingsPane.Section(SettingsSection.GENERAL), model.state.value.activePane)
+            assertNull(model.state.value.activePane)
         }
 
     @Test
@@ -220,10 +221,11 @@ class SettingsViewModelTest {
         }
 
     @Test
-    fun `back pops overlay first then sub-panes then leaves`() =
+    fun `back pops overlay first then one sheet at a time then leaves`() =
         runTest {
             seedPlaylist()
             val model = model()
+            model.selectSection(SettingsSection.PLAYLISTS)
             model.activate(RowIds.PLAYLIST_PREFIX + "http://p/x.m3u")
             model.activate(RowIds.PLAYLIST_DELETE)
             assertTrue(model.state.value.consumesBack)
@@ -231,7 +233,9 @@ class SettingsViewModelTest {
             assertTrue(model.back())
             assertNull(model.state.value.overlay)
             assertTrue(model.back())
-            assertEquals(SettingsPane.Section(SettingsSection.GENERAL), model.state.value.activePane)
+            assertEquals(SettingsPane.Section(SettingsSection.PLAYLISTS), model.state.value.activePane)
+            assertTrue(model.back())
+            assertNull(model.state.value.activePane)
             assertFalse(model.back())
         }
 
@@ -338,7 +342,7 @@ class SettingsViewModelTest {
         runTest {
             val graph = graph()
             val model = graph.viewModel(CoroutineScope(UnconfinedTestDispatcher(testScheduler)), SettingsCallbacks())
-            assertEquals(SettingsSection.GENERAL, model.state.value.section)
+            assertNull(model.state.value.activePane)
             assertEquals("0.1.0", graph.versionName)
         }
 }

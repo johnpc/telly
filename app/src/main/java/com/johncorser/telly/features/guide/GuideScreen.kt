@@ -7,6 +7,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
@@ -28,19 +29,24 @@ import com.johncorser.telly.core.ui.TellyScreenKeyAnchor
 fun GuideScreen(
     deps: GuideDeps,
     onFullscreen: () -> Unit,
+    onOpenSettings: () -> Unit = {},
+    settingsOpen: Boolean = false,
 ) {
     val engine = remember { deps.playback.engineFactory() }
     val controller = rememberGuideController(deps, engine, onFullscreen)
     val detectors = remember { GuideScreenKeyDetectors() }
     val layer by controller.layer.collectAsState()
-    BackHandler(enabled = layer != GuideLayer.Grid) { controller.onKey(GuideKey.BACK) }
+    BackHandler(enabled = layer != GuideLayer.Grid && !settingsOpen) { controller.onKey(GuideKey.BACK) }
+    // Returning from the settings sheet lands back on the grid, whose key
+    // anchor re-grabs focus when it recomposes.
+    LaunchedEffect(settingsOpen) { if (!settingsOpen) controller.closeLayer() }
     Box(
         Modifier
             .fillMaxSize()
             .background(Color(TELLY_ONBOARDING_BACKGROUND)),
     ) {
         Row(Modifier.fillMaxSize()) {
-            if (layer == GuideLayer.Groups) GuideScreenGroups(controller)
+            if (layer == GuideLayer.Groups) GuideScreenGroups(controller, onOpenSettings)
             Box(Modifier.weight(1f)) {
                 Column(Modifier.fillMaxSize()) {
                     GuideScreenTop(controller, engine)

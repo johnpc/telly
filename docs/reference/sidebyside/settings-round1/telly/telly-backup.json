@@ -1,0 +1,18 @@
+{
+    "version": 1,
+    "settings": {
+        "parental_pin_hash": "a2ed4f3c81664c0a9ee267d46b410756d7a99b5539f83db1d085ddabb10c88ba",
+        "parental_enabled": "false",
+        "general_last_channel_on_start": "false",
+        "general_confirm_exit": "false",
+        "parental_pin_salt": "f1f23422fb18f006f1d6c0a525d0d501",
+        "general_autostart_boot": "false"
+    },
+    "playlists": [
+        {
+            "name": "10.0.2.2",
+            "url": "http://10.0.2.2:8090/playlist.m3u",
+            "epgUrl": "http://10.0.2.2:8090/epg.xml"
+        }
+    ]
+}

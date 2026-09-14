@@ -17,6 +17,10 @@ internal object SettingsScreenDims {
     val leftPaneWidth = 360.dp
     val headerHeight = 72.dp
     val panePadding = 24.dp
+
+    /** Rows are inset 8 dp pills with 16 dp inner padding (uidump ref/02). */
+    val rowMargin = 8.dp
+    val rowPadding = 16.dp
     val rowMinHeight = 45.dp
     val iconSize = 24.dp
     val iconTextGap = 16.dp
@@ -26,7 +30,8 @@ internal object SettingsScreenDims {
     val switchTrackHeight = 14.dp
     val switchThumb = 20.dp
 
-    val headerTitleSize = 17.sp
+    /** Sheet header title: 20 sp regular Roboto (ref/01 glyph band 36 px). */
+    val headerTitleSize = 20.sp
     val titleSize = 14.sp
     val titleLineHeight = 19.sp
     val summarySize = 12.sp

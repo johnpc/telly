@@ -20,6 +20,7 @@ import androidx.compose.ui.platform.LocalContext
 fun SettingsScreenHost(
     graph: SettingsGraph,
     onAddPlaylist: () -> Unit,
+    onClose: () -> Unit,
 ) {
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
@@ -64,5 +65,5 @@ fun SettingsScreenHost(
     model.callbacks.onImportBackup = {
         importLauncher.launch(arrayOf(SettingsBackupManager.BACKUP_MIME_TYPE, "text/*"))
     }
-    SettingsScreen(model)
+    SettingsScreen(model, onClose)
 }

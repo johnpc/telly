@@ -14,13 +14,16 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.withFrameNanos
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.SolidColor
+import androidx.compose.ui.text.TextRange
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.input.ImeAction
+import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.unit.dp
 import com.johncorser.telly.core.design.TELLY_FIELD_UNDERLINE
 import com.johncorser.telly.core.design.TELLY_TEXT_PRIMARY
@@ -36,9 +39,16 @@ internal fun SettingsScreenTextField(
     initial: String,
     onCommit: (String) -> Unit,
 ) {
-    var value by remember { mutableStateOf(initial) }
+    var value by remember { mutableStateOf(TextFieldValue(initial, TextRange(initial.length))) }
     val focusRequester = remember { FocusRequester() }
-    LaunchedEffect(Unit) { focusRequester.requestFocus() }
+    // Retry across a couple of frames: the overlay mounts a frame after the
+    // sheet, so a single requestFocus can land before the node is placed.
+    LaunchedEffect(Unit) {
+        repeat(3) {
+            runCatching { focusRequester.requestFocus() }
+            withFrameNanos { }
+        }
+    }
     Column {
         BasicTextField(
             value = value,
@@ -52,7 +62,7 @@ internal fun SettingsScreenTextField(
                 ),
             cursorBrush = SolidColor(LocalAccentColor.current),
             keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
-            keyboardActions = KeyboardActions(onDone = { onCommit(value) }),
+            keyboardActions = KeyboardActions(onDone = { onCommit(value.text) }),
             modifier =
                 Modifier
                     .fillMaxWidth()

@@ -11,7 +11,7 @@ internal fun SettingsViewModel.flip(setting: Setting<Boolean>) {
 }
 
 internal fun SettingsViewModel.push(pane: SettingsPane) {
-    mutableState.update { it.copy(subPanes = it.subPanes + pane) }
+    mutableState.update { it.copy(panes = it.panes + pane) }
 }
 
 internal fun SettingsViewModel.showOverlay(overlay: SettingsOverlay) {
@@ -23,7 +23,7 @@ internal fun SettingsViewModel.currentDetailUrl(): String? =
 
 internal fun SettingsViewModel.popDetailPane() {
     mutableState.update { state ->
-        state.copy(subPanes = state.subPanes.filterNot { it is SettingsPane.PlaylistDetail })
+        state.copy(panes = state.panes.filterNot { it is SettingsPane.PlaylistDetail })
     }
 }
 

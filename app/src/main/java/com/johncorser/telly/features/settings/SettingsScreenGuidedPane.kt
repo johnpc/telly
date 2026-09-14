@@ -31,7 +31,7 @@ internal fun SettingsScreenGuidedPane(
 ) {
     Row(
         Modifier
-            .width(470.dp)
+            .width(592.dp)
             .fillMaxHeight()
             .background(Color(TELLY_GUIDANCE_PANE))
             .padding(start = 56.dp, top = 152.dp),
@@ -45,7 +45,7 @@ internal fun SettingsScreenGuidedPane(
         Spacer(Modifier.width(24.dp))
         Column(
             Modifier
-                .width(198.dp)
+                .width(312.dp)
                 .padding(top = 28.dp),
         ) {
             Text(
@@ -56,13 +56,13 @@ internal fun SettingsScreenGuidedPane(
                 letterSpacing = (-0.01).em,
             )
             Spacer(Modifier.height(6.dp))
+            // 16 sp on a 19.5 dp rhythm: uidump 28 body = 389 px / 10 lines.
             bodyLines.forEach { line ->
                 Text(
                     text = line,
                     color = Color(TELLY_TEXT_GUIDANCE_MUTED),
-                    fontSize = 13.sp,
-                    lineHeight = 18.sp,
-                    fontFamily = SettingsScreenDims.fontFamily,
+                    fontSize = 16.sp,
+                    lineHeight = 19.5.sp,
                 )
             }
         }

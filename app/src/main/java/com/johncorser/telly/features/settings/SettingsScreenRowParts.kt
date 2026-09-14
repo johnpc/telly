@@ -20,20 +20,36 @@ import com.johncorser.telly.core.design.TELLY_TEXT_FAINT_FOCUSED
 import com.johncorser.telly.core.design.TELLY_TEXT_GUIDANCE_MUTED
 import com.johncorser.telly.core.ui.LocalAccentColor
 
-/** Padlock for locked rows, key for Unlock Premium, otherwise nothing. */
+/** Padlock, Unlock-Premium key, or playlist circle-check; else nothing. */
 @Composable
 internal fun SettingsScreenRowIcon(
     row: SettingsRow,
     locked: Boolean,
 ) {
     val premiumKey = (row as? SettingsRow.Action)?.premiumKey == true
-    if (!locked && !premiumKey) return
+    val check = (row as? SettingsRow.Value)?.checkIcon == true
+    if (!locked && !premiumKey && !check) return
+    val res =
+        when {
+            premiumKey -> R.drawable.ic_settings_key
+            check -> R.drawable.ic_settings_check_circle
+            else -> R.drawable.ic_settings_lock
+        }
+    // The circle-check is accent blue at rest and follows the near-black
+    // content color under the focus pill (ref/05 vs ref/10).
+    val focused = LocalContentColor.current == Color(TELLY_FOCUS_TEXT)
+    val tint =
+        when {
+            locked -> Color(TELLY_TEXT_DISABLED)
+            check && !focused -> LocalAccentColor.current
+            else -> LocalContentColor.current
+        }
     Box(Modifier.size(SettingsScreenDims.iconSize), contentAlignment = Alignment.Center) {
         Icon(
-            painter = painterResource(if (premiumKey) R.drawable.ic_settings_key else R.drawable.ic_settings_lock),
+            painter = painterResource(res),
             contentDescription = null,
-            tint = if (locked) Color(TELLY_TEXT_DISABLED) else LocalContentColor.current,
-            modifier = Modifier.size(20.dp),
+            tint = tint,
+            modifier = Modifier.size(if (check) 24.dp else 20.dp),
         )
     }
     Spacer(Modifier.width(SettingsScreenDims.iconTextGap))
@@ -68,6 +84,7 @@ internal fun SettingsScreenRowTrailing(
 ) {
     when {
         row is SettingsRow.Toggle -> SettingsScreenSwitch(checked = row.checked, locked = locked)
+        // Trailing accent check on the selected picker option (ref/09b).
         row is SettingsRow.Value && row.selected ->
             Icon(
                 painter = painterResource(R.drawable.ic_settings_check),
@@ -77,20 +94,3 @@ internal fun SettingsScreenRowTrailing(
             )
     }
 }
-
-internal fun SettingsRow.isLocked(): Boolean =
-    when (this) {
-        is SettingsRow.Toggle -> locked
-        is SettingsRow.Value -> locked
-        is SettingsRow.Action -> locked
-        else -> false
-    }
-
-internal fun SettingsRow.titleText(): String =
-    when (this) {
-        is SettingsRow.Toggle -> title
-        is SettingsRow.Value -> title
-        is SettingsRow.Action -> title
-        is SettingsRow.Header -> text
-        is SettingsRow.Note -> text
-    }

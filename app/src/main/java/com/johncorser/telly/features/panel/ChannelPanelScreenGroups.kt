@@ -31,6 +31,7 @@ internal fun ChannelPanelScreenGroups(
     onSelect: (String) -> Unit,
     autoFocusSelected: Boolean = false,
     metrics: GroupColumnMetrics = GroupColumnMetrics(),
+    rowModifier: Modifier = Modifier,
 ) {
     LazyColumn(
         Modifier
@@ -43,6 +44,7 @@ internal fun ChannelPanelScreenGroups(
             TellyScreenMenuRow(
                 label = group,
                 onClick = { onSelect(group) },
+                modifier = rowModifier,
                 height = metrics.rowHeight,
                 fontSize = metrics.fontSize,
                 restingContainer = if (group == selected) Color(TELLY_BUTTON_RESTING) else Color.Transparent,

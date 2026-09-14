@@ -75,7 +75,7 @@ class SettingsRowsTest {
         val playlistRow = rows[0] as SettingsRow.Value
         assertEquals("10.0.2.2", playlistRow.title)
         assertEquals("Channels: 30", playlistRow.summary)
-        assertTrue(playlistRow.selected)
+        assertTrue(playlistRow.checkIcon)
         assertEquals(listOf("Playlists sorting", "Add playlist", "Update all playlists"), titles(rows.drop(1)))
         assertEquals("By name", (rows[1] as SettingsRow.Value).summary)
     }
@@ -142,7 +142,7 @@ class SettingsRowsTest {
         val source = rows[0] as SettingsRow.Value
         assertEquals("10.0.2.2 (default)", source.title)
         assertEquals("http://10.0.2.2:8090/epg.xml", source.summary)
-        assertTrue(source.selected)
+        assertTrue(source.checkIcon)
         assertTrue((rows[1] as SettingsRow.Action).locked)
         val note = rows[2] as SettingsRow.Note
         assertEquals("EPG sources should be assigned in the playlist settings", note.text)

@@ -4,8 +4,9 @@ import androidx.compose.runtime.Composable
 import com.johncorser.telly.R
 
 /**
- * "Delete playlist" GuidedStep confirm, verbatim from capture 22:
- * guidance "Delete playlist" + the playlist name, actions Delete / Cancel.
+ * "Delete playlist?" GuidedStep confirm, verbatim from the live capture
+ * (settings-round1/ref/08): warning icon, question title, channel-loss
+ * body, actions Delete / Cancel.
  */
 @Composable
 internal fun SettingsScreenConfirmDelete(
@@ -13,9 +14,9 @@ internal fun SettingsScreenConfirmDelete(
     confirm: SettingsOverlay.ConfirmDelete,
 ) {
     SettingsScreenGuidedStep(
-        iconRes = R.drawable.ic_wizard_playlist_add,
-        title = "Delete playlist",
-        bodyLines = listOf(confirm.name),
+        iconRes = R.drawable.ic_settings_warning,
+        title = "Delete playlist?",
+        bodyLines = listOf("All channels from the playlist \"${confirm.name}\" will no longer be available"),
         actions =
             listOf(
                 "Delete" to { model.confirmDelete() },

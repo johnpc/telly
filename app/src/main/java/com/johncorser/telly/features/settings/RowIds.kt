@@ -4,6 +4,9 @@ package com.johncorser.telly.features.settings
 object RowIds {
     const val UNLOCK_PREMIUM = "unlock_premium"
 
+    /** Root-sheet section rows append the [SettingsSection] name. */
+    const val SECTION_PREFIX = "section:"
+
     // General.
     const val AUTOSTART_BOOT = "general.autostart_boot"
     const val AUTOSTART_WAKE = "general.autostart_wake"

@@ -11,6 +11,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
+import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
@@ -32,7 +33,8 @@ internal fun SettingsScreenOverlay(
     }
 }
 
-/** Dimming scrim + right-anchored panel, like the reference sub-sheets. */
+/** Dimming scrim + the 360 dp right sheet every settings surface uses. */
+@OptIn(ExperimentalComposeUiApi::class)
 @Composable
 internal fun SettingsScreenSheet(
     title: String,
@@ -76,6 +78,7 @@ private fun SettingsScreenPicker(
                             selected = option.raw == picker.current,
                         ),
                     onActivate = { model.choosePickerOption(option.raw) },
+                    modifier = Modifier.padding(horizontal = SettingsScreenDims.rowMargin),
                 )
             }
         }
@@ -95,4 +98,6 @@ private fun SettingsScreenTextEdit(
     }
 }
 
-private const val SCRIM = 0xB3000000
+// The underlay dims to ~41% of its brightness in the reference (uidump 25
+// vs the live view sampled on-device), i.e. a 60%-black scrim.
+private const val SCRIM = 0x99000000

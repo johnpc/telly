@@ -1,5 +1,6 @@
 package com.johncorser.telly.features.settings
 
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -18,6 +19,7 @@ import androidx.tv.material3.Text
 import com.johncorser.telly.core.design.TELLY_GUIDANCE_PANE
 import com.johncorser.telly.core.design.TELLY_TEXT_DISABLED
 import com.johncorser.telly.core.ui.FocusScreenDefaults
+import com.johncorser.telly.core.ui.focusOnAppear
 
 /** One interactive settings row: focus pill, optional icon/summary/widget. */
 @Composable
@@ -26,6 +28,7 @@ internal fun SettingsScreenRow(
     onActivate: (String) -> Unit,
     modifier: Modifier = Modifier,
     onFocused: () -> Unit = {},
+    requestFocus: Boolean = false,
     resting: Color = Color(TELLY_GUIDANCE_PANE),
 ) {
     val locked = row.isLocked()
@@ -34,6 +37,7 @@ internal fun SettingsScreenRow(
         enabled = !locked,
         modifier =
             modifier
+                .focusOnAppear(requestFocus)
                 .fillMaxWidth()
                 .heightIn(min = SettingsScreenDims.rowMinHeight)
                 .onFocusChanged { if (it.isFocused) onFocused() }
@@ -43,11 +47,21 @@ internal fun SettingsScreenRow(
         colors = FocusScreenDefaults.colors(restingContainer = resting),
     ) {
         Row(
-            modifier = Modifier.padding(horizontal = SettingsScreenDims.panePadding, vertical = 6.dp),
+            modifier =
+                Modifier
+                    .align(Alignment.CenterStart)
+                    .padding(horizontal = SettingsScreenDims.rowPadding),
             verticalAlignment = Alignment.CenterVertically,
         ) {
             SettingsScreenRowIcon(row, locked)
-            Column(Modifier.weight(1f)) {
+            // Text pads 12 dp vertically (ref rows: title top = row + 24 px);
+            // taller neighbors (icon, switch) stay centered on the row.
+            Column(
+                Modifier
+                    .weight(1f)
+                    .padding(vertical = 12.dp),
+                verticalArrangement = Arrangement.spacedBy(2.dp),
+            ) {
                 Text(
                     text = row.titleText(),
                     fontSize = SettingsScreenDims.titleSize,
@@ -61,3 +75,20 @@ internal fun SettingsScreenRow(
         }
     }
 }
+
+internal fun SettingsRow.isLocked(): Boolean =
+    when (this) {
+        is SettingsRow.Toggle -> locked
+        is SettingsRow.Value -> locked
+        is SettingsRow.Action -> locked
+        else -> false
+    }
+
+internal fun SettingsRow.titleText(): String =
+    when (this) {
+        is SettingsRow.Toggle -> title
+        is SettingsRow.Value -> title
+        is SettingsRow.Action -> title
+        is SettingsRow.Header -> text
+        is SettingsRow.Note -> text
+    }

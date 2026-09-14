@@ -45,7 +45,7 @@ fun epgSourcesRows(playlists: List<PlaylistItem>): List<SettingsRow> {
                 id = RowIds.EPG_SOURCE_PREFIX + item.url,
                 title = "${item.name} (default)",
                 summary = item.epgUrl,
-                selected = true,
+                checkIcon = true,
             )
         }
     return panePrelude() + sources +
