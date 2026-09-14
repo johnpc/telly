@@ -23,3 +23,6 @@ report/
 # Signing
 *.keystore
 *.jks
+
+# Local side-by-side / acceptance run output
+artifacts/
