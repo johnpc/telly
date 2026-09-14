@@ -21,6 +21,9 @@ android {
         versionName = "0.1.0"
         // Gherkin acceptance harness: cucumber-android drives the real app.
         testInstrumentationRunner = "com.johncorser.telly.e2e.TellyCucumberRunner"
+        // cucumber-android scans the test-app package for @CucumberOptions
+        // by default; the harness lives under .e2e instead.
+        testInstrumentationRunnerArguments["optionsAnnotationPackage"] = "com.johncorser.telly.e2e"
     }
 
     sourceSets {
