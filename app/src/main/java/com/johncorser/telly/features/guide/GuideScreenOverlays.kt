@@ -12,6 +12,11 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusProperties
 import androidx.compose.ui.focus.focusRequester
+import androidx.compose.ui.input.key.Key
+import androidx.compose.ui.input.key.KeyEventType
+import androidx.compose.ui.input.key.key
+import androidx.compose.ui.input.key.onPreviewKeyEvent
+import androidx.compose.ui.input.key.type
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.johncorser.telly.features.panel.ChannelPanelScreenGroups
@@ -34,7 +39,18 @@ internal fun GuideScreenGroups(
     val groupsFocus = remember { FocusRequester() }
     Row(Modifier.fillMaxHeight()) {
         GuideScreenRail(onOpenSettings, gearFocus, groupsFocus)
-        Box(Modifier.focusRequester(groupsFocus)) {
+        // RIGHT leaves the column back to the grid (capture 25); the grid
+        // has no focusables for the focus search to find, so the key is
+        // routed to the layer policy before it dead-ends.
+        Box(
+            Modifier
+                .focusRequester(groupsFocus)
+                .onPreviewKeyEvent { event ->
+                    event.type == KeyEventType.KeyDown &&
+                        event.key == Key.DirectionRight &&
+                        controller.onKey(GuideKey.RIGHT)
+                },
+        ) {
             ChannelPanelScreenGroups(
                 groups = groups,
                 selected = selected,
