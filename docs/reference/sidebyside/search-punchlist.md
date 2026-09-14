@@ -26,22 +26,27 @@ telly evidence: `search-smoke/` in this directory. Geometry in px on the
 | --- | --- | --- |
 | D-pad focus trapped in the query field: Compose `BasicTextField` consumes DPAD_DOWN as a cursor move, so results were unreachable by remote | DOWN from the query bar kept focus in the EditText (uidump: `focused=true` on the field after DOWN) | `SearchScreenQueryField` hands DPAD_DOWN to `LocalFocusManager.moveFocus(Down)` via `onPreviewKeyEvent`; verified on-device (`04-channel-card-focused.png`) |
 
-## P2 — logged (live-TiviMate deltas, same fixture data)
+## P2 — FIXED (fidelity pass, branch `fix/search-p2-fidelity`)
+
+| Item | Was (telly) | Fix |
+| --- | --- | --- |
+| Channel-result order | zap/number order (News One, HD, +1, Extra, 2, 24) | `SearchDao.channels` now `ORDER BY name COLLATE NOCASE, number` — matches live name order (News One, +1, 2, 24, Extra, HD, `tm-02`); CLAUDE.md search decision updated; DAO test pins the family ordering |
+| Airing programme rows show progress + remaining | times only ("12:45 — 01:45 AM") | `SearchResultsBuilder` computes `progressPermille` + `"N min"` remaining (shared `ProgramTimes`) for airing hits; rows and the detail card render them via the shared `TellyScreenTimesLine` dash ("12:45 — 01:45 AM ▬▬ 50 min", `tm-03`); builder unit tests |
+| Airing programme title tint | white | airing row titles tint `TELLY_CLOCK_BLUE` light blue (`tm-03`); upcoming rows keep the focus-aware default |
+| Focused voice orb color | white focus fill | orb focus/press fill = `LocalAccentColor` (accent blue, `tm-01`); resting light grey unchanged |
+| Section header size | 44 px tall (~22 sp box), bounds [48,228][215,272] | still 19 sp but the line box is trimmed (`includeFontPadding=false`, lineHeight 19 sp, trim Both) → 38 px box like `tm-02` |
+| Detail card preselection while typing | detail card only renders once a programme row takes focus | every result batch preselects its first programme into `focusedProgram` (state only) — detail card shows while the IME is up, D-pad focus stays in the query field (ffbdfa1 DOWN-escape untouched); ViewModel unit test |
+
+## P2 — logged (won't fix here)
 
 | Item | telly | TiviMate (live `tm-*`) |
 | --- | --- | --- |
-| Channel-result order | zap/number order (News One, HD, +1, Extra, 2, 24) — deliberate, documented in CLAUDE.md when the reference cap was "not capturable" | live shows name order (News One, +1, 2, 24, Extra, HD) (`tm-02`); one-line `ORDER BY` follow-up if we adopt it |
-| Airing programme rows show progress + remaining | times only ("12:45 — 01:45 AM") | "12:45 — 01:45 AM ▬▬ 50 min" progress dash + minutes on airing rows and in the detail card (`tm-03`) |
-| Airing programme title tint | white | light blue for the currently-airing row title (`tm-03`) |
-| Focused voice orb color | white focus fill | accent blue focus fill (`tm-01`); resting light grey matches |
-| Section header size | "Channels"/"Programs" 44 px tall (~22 sp), bounds [48,228][215,272] | 38 px (~19 sp), [48,232][165,270] (`tm-02` uidump) |
-| System IME position | Gboard centered under the bar, covers mid-screen rows (`02`) | Gboard anchored bottom-right, left rows stay readable (`tm-02`); not obviously app-controllable |
-| Detail card preselection while typing | detail card only renders once a programme row takes focus | first programme's detail card already visible while the keyboard is up (ref 50, `tm-03`) |
+| System IME position | Gboard centered under the bar, covers mid-screen rows (`02`) | Gboard anchored bottom-right, left rows stay readable (`tm-02`). WON'T FIX in-app: the system IME's window position is owned by the keyboard app/framework, not app-controllable (no public API to anchor Gboard bottom-right) |
 
 ## P3 — logged
 
 - Digits-only queries: live TiviMate finds NOTHING for "7" (`tm-04-digits-query.png`); telly's number-prefix match is a deliberate superset (catalogue §4 note kept).
-- DOWN from the query bar lands on the nearest card under the bar's center (4th card), not the first card.
-- Channel-card text inset: telly text starts x=72 (200 px wide), TiviMate x=64 (216 px); card subtitle font ~15 sp vs ~19 sp.
-- Programme rows start x=376 vs TiviMate x=360.
-- Live TiviMate collapsed the "news" programme list to 2 rows (one per title?) where the ref capture 50 showed duplicates across channels; telly lists per airing/channel like ref 50.
+- DOWN from the query bar lands on the nearest card under the bar's center (4th card), not the first card. (Left as logged: Compose one-dimensional `moveFocus(Down)` picks the geometrically nearest candidate; forcing card #1 would need a focus-restorer hack and the reference behavior on this exact key isn't captured.)
+- FIXED: channel-card text inset 72→64 px (`cardPad` 12→8 dp, content now 216 px wide) and card subtitle 15→19 sp — same pass as the P2 fixes.
+- FIXED: programme rows now start at x=360 px (`rowTextStart` 36→28 dp; 8 dp pill pad included).
+- Live TiviMate collapsed the "news" programme list to 2 rows (one per title?) where the ref capture 50 showed duplicates across channels; telly lists per airing/channel like ref 50. (Unverified grouping rule — needs another live probe before adopting.)
