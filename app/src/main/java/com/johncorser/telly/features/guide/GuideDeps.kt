@@ -11,3 +11,10 @@ class GuideDeps(
     val playback: PlaybackDeps,
     val pastDays: () -> Int,
 )
+
+/** Navigation the guide triggers: fullscreen playback, search, settings. */
+class GuideCallbacks(
+    val onFullscreen: () -> Unit,
+    val onOpenSearch: () -> Unit,
+    val onOpenSettings: () -> Unit,
+)

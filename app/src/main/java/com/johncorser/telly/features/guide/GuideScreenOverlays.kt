@@ -54,7 +54,7 @@ internal fun GuideScreenGroups(
     }
 }
 
-/** Every dropdown row lands on the shared Unlock Premium screen. */
+/** The shared Unlock Premium screen; closing pops one layer level. */
 @Composable
 internal fun GuideScreenPaywallLayer(
     controller: GuideController,
@@ -62,6 +62,6 @@ internal fun GuideScreenPaywallLayer(
 ) {
     if (layer !is GuideLayer.Paywall) return
     Box(Modifier.fillMaxSize()) {
-        SettingsScreenPaywall(onClose = controller::closeLayer)
+        SettingsScreenPaywall(onClose = controller.menu::close)
     }
 }

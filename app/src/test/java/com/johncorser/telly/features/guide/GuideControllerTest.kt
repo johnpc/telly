@@ -5,6 +5,7 @@ import com.johncorser.telly.features.guide.GuideTestData.nowMs
 import com.johncorser.telly.features.guide.GuideTestData.utc
 import com.johncorser.telly.features.panel.PanelViewModel
 import com.johncorser.telly.features.playback.PlaybackEnv
+import com.johncorser.telly.features.playback.PlayerMenuItem
 import com.johncorser.telly.features.playback.TuneController
 import com.johncorser.telly.testutil.FakeChannelDao
 import com.johncorser.telly.testutil.FakeKeyValueStore
@@ -70,7 +71,12 @@ class GuideControllerTest {
                 ),
             pastDays = { pastDays },
             scope = CoroutineScope(SupervisorJob() + UnconfinedTestDispatcher(testScheduler)),
-            onFullscreen = { fullscreens += 1 },
+            callbacks =
+                GuideCallbacks(
+                    onFullscreen = { fullscreens += 1 },
+                    onOpenSearch = {},
+                    onOpenSettings = {},
+                ),
         )
 
     private fun focusedTitle(controller: GuideController): String? =
@@ -203,11 +209,69 @@ class GuideControllerTest {
                 GuideCellAction.entries.map { it.label },
             )
 
-            controller.onCellAction(GuideCellAction.REMIND)
+            controller.menu.onCellAction(GuideCellAction.REMIND)
             assertEquals(GuideLayer.Paywall("Remind"), controller.layer.value)
 
             assertTrue(controller.onKey(GuideKey.BACK))
             assertEquals(GuideLayer.Grid, controller.layer.value)
+        }
+    }
+
+    @Test
+    fun `long-ok and menu open the row context sheet and back returns to the grid`() {
+        runTest {
+            val controller = buildController()
+
+            assertTrue(controller.onKey(GuideKey.LONG_OK))
+            assertEquals(GuideLayer.RowMenu, controller.layer.value)
+
+            assertTrue(controller.onKey(GuideKey.BACK))
+            assertEquals(GuideLayer.Grid, controller.layer.value)
+
+            assertTrue(controller.onKey(GuideKey.MENU))
+            assertEquals(GuideLayer.RowMenu, controller.layer.value)
+        }
+    }
+
+    @Test
+    fun `the sheet's favorites row toggles the focused channel and returns to the grid`() {
+        runTest {
+            val controller = buildController()
+            controller.onKey(GuideKey.LONG_OK)
+
+            controller.menu.onMenuItem(PlayerMenuItem.ADD_TO_FAVORITES)
+
+            assertTrue(dao.channels.value.first { it.id == 1L }.flags.favorite)
+            assertEquals(GuideLayer.Grid, controller.layer.value)
+        }
+    }
+
+    @Test
+    fun `hiding the previewed channel from the sheet retunes the preview away`() {
+        runTest {
+            store.putLong(TuneController.LAST_CHANNEL_KEY, 1L)
+            val controller = buildController()
+            controller.onKey(GuideKey.LONG_OK)
+
+            controller.menu.onMenuItem(PlayerMenuItem.HIDE_CHANNEL)
+
+            assertTrue(dao.channels.value.first { it.id == 1L }.flags.hidden)
+            assertEquals(2L, controller.preview.value?.id)
+            assertEquals(GuideLayer.Grid, controller.layer.value)
+        }
+    }
+
+    @Test
+    fun `program description shows the focused programme's synopsis and back pops to the sheet`() {
+        runTest {
+            val controller = buildController()
+            controller.onKey(GuideKey.LONG_OK)
+
+            controller.menu.onMenuItem(PlayerMenuItem.PROGRAM_DESCRIPTION)
+
+            assertEquals(GuideLayer.Description("Business Hour. S1 E7", "All-new episode."), controller.layer.value)
+            assertTrue(controller.onKey(GuideKey.BACK))
+            assertEquals(GuideLayer.RowMenu, controller.layer.value)
         }
     }
 

@@ -41,11 +41,34 @@ class GuideKeyPolicyTest {
     }
 
     @Test
+    fun `long-ok and menu open the row context sheet from the grid`() {
+        assertEquals(GuideCommand.OpenRowMenu, at(GuideLayer.Grid, GuideKey.LONG_OK))
+        assertEquals(GuideCommand.OpenRowMenu, at(GuideLayer.Grid, GuideKey.MENU))
+    }
+
+    @Test
     fun `the dropdown and paywall only close on back`() {
         val menu = GuideLayer.CellMenu(cell(at(15, 45), at(17, 0)))
         assertEquals(GuideCommand.CloseLayer, at(menu, GuideKey.BACK))
         assertNull(at(menu, GuideKey.RIGHT))
         assertEquals(GuideCommand.CloseLayer, at(GuideLayer.Paywall("Remind"), GuideKey.BACK))
         assertNull(at(GuideLayer.Paywall("Remind"), GuideKey.OK))
+    }
+
+    @Test
+    fun `the row sheet and its pushed screens only close on back`() {
+        val layers =
+            listOf(
+                GuideLayer.RowMenu,
+                GuideLayer.ComingSoon("Assign EPG"),
+                GuideLayer.Description("Title", "Text"),
+                GuideLayer.ChannelOptions("News One"),
+            )
+        layers.forEach { layer ->
+            assertEquals(GuideCommand.CloseLayer, at(layer, GuideKey.BACK))
+            assertNull(at(layer, GuideKey.RIGHT))
+            assertNull(at(layer, GuideKey.OK))
+            assertNull(at(layer, GuideKey.MENU))
+        }
     }
 }

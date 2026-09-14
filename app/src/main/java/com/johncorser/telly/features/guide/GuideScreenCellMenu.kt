@@ -47,7 +47,7 @@ internal fun GuideScreenCellMenu(
         GuideCellAction.entries.forEachIndexed { index, action ->
             TellyScreenMenuRow(
                 label = action.label,
-                onClick = { controller.onCellAction(action) },
+                onClick = { controller.menu.onCellAction(action) },
                 height = GuideDropdownAnchor.MENU_ROW_DP.dp,
                 requestFocus = index == 0,
             )

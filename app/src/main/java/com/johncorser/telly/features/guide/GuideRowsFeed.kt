@@ -1,6 +1,7 @@
 package com.johncorser.telly.features.guide
 
 import com.johncorser.telly.features.epg.db.ProgramEntity
+import com.johncorser.telly.features.panel.PanelRows
 import com.johncorser.telly.features.playlist.db.ChannelEntity
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -40,4 +41,10 @@ class GuideRowsFeed(
                 programsFor(tvgIds, window.fromMs, window.toMs)
                     .map { programs -> GuideRowsBuilder.build(list, group, programs, window) }
             }.stateIn(scope, SharingStarted.Eagerly, emptyList())
+
+    /** Groups column order shared with the panel (capture 25). */
+    val groups: StateFlow<List<String>> =
+        channels
+            .map(PanelRows::groupNames)
+            .stateIn(scope, SharingStarted.Eagerly, PanelRows.groupNames(emptyList()))
 }

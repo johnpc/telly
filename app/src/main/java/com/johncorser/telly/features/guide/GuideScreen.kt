@@ -29,17 +29,19 @@ import com.johncorser.telly.core.ui.TellyScreenKeyAnchor
 fun GuideScreen(
     deps: GuideDeps,
     onFullscreen: () -> Unit,
+    onOpenSearch: () -> Unit = {},
     onOpenSettings: () -> Unit = {},
     settingsOpen: Boolean = false,
 ) {
     val engine = remember { deps.playback.engineFactory() }
-    val controller = rememberGuideController(deps, engine, onFullscreen)
+    val callbacks = remember { GuideCallbacks(onFullscreen, onOpenSearch, onOpenSettings) }
+    val controller = rememberGuideController(deps, engine, callbacks)
     val detectors = remember { GuideScreenKeyDetectors() }
     val layer by controller.layer.collectAsState()
     BackHandler(enabled = layer != GuideLayer.Grid && !settingsOpen) { controller.onKey(GuideKey.BACK) }
     // Returning from the settings sheet lands back on the grid, whose key
     // anchor re-grabs focus when it recomposes.
-    LaunchedEffect(settingsOpen) { if (!settingsOpen) controller.closeLayer() }
+    LaunchedEffect(settingsOpen) { if (!settingsOpen) controller.menu.reset() }
     Box(
         Modifier
             .fillMaxSize()
@@ -60,6 +62,8 @@ fun GuideScreen(
             }
         }
         GuideScreenHintToast(controller, Modifier.align(Alignment.BottomEnd))
+        GuideScreenRowMenu(controller, layer)
+        GuideScreenRowMenuLayers(controller, layer)
         GuideScreenPaywallLayer(controller, layer)
     }
 }
