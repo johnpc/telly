@@ -59,7 +59,15 @@ class PlaybackViewModel(
     private val instant = MutableStateFlow(clock())
 
     /** Executes context-menu rows; also resolves the channel they act on. */
-    val menu = PlaybackMenuHandler(ChannelActions(env.channelDao, scope), overlays, tuner, env.hooks.onOpenSettings)
+    val menu =
+        PlaybackMenuHandler(
+            actions = ChannelActions(env.channelDao, scope),
+            overlays = overlays,
+            tuner = tuner,
+            openSettings = env.hooks.onOpenSettings,
+            openSearch = openSearch,
+            rowOf = { id -> panel.rows.value.firstOrNull { it.channel.id == id } },
+        )
 
     private val video = env.engine.video
 

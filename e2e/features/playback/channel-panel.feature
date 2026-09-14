@@ -34,6 +34,47 @@ Feature: Channel list panel
     And I see a blue channel section "News One" with "Add to Favorites" and "Hide channel"
     And I see a blue "All channels" section with "Manage Favorites" and "Group options"
 
+  Scenario: The sheet's Search row opens the search screen
+    When I long-press ok on the row "News One"
+    And I select "Search"
+    Then the query bar shows the hint "Speak to search"
+
+  Scenario: The sheet's Settings row opens the settings sheet
+    When I long-press ok on the row "News One"
+    And I select "Settings"
+    Then I see "All features are available in Premium version"
+    And I see the sections "General, Playlists, EPG, Appearance, Playback, Remote control, Parental controls, Other, About" in order
+
+  Scenario: Premium sheet rows open the Unlock Premium screen and BACK pops back to the sheet
+    When I long-press ok on the row "News One"
+    And I select "Record"
+    Then I see the "Unlock Premium" screen
+    When I press back
+    Then I see the menu rows "Search" and "Settings"
+
+  Scenario: Program description shows the row's airing programme synopsis
+    When I long-press ok on the row "News One"
+    And I select "Program description"
+    Then the description layer shows the focused programme's title and synopsis
+    When I press back
+    Then I see the menu rows "Search" and "Settings"
+
+  Scenario: Channel options pushes the locked premium pane and BACK pops one level
+    When I long-press ok on the row "News One"
+    And I select "Channel options"
+    Then a right pane titled "News One" opens
+    And I see "All features are available in Premium version"
+    And the locked rows list "Channel name", "Restore channel name", "Channel names editor", "Audio decoder", "Video decoder", "Use external player", "EPG time offset, h:min", "Block channel" and "Hide channel"
+    When I press back
+    Then I see the menu rows "Search" and "Settings"
+
+  Scenario: Uncaptured sheet rows stay on the branded placeholder
+    When I long-press ok on the row "News One"
+    And I select "Assign EPG"
+    Then I see "Coming soon to telly"
+    When I press back
+    Then I see the menu rows "Search" and "Settings"
+
   Scenario: The favorite toggle persists across a restart
     When I long-press ok on the row "News One"
     And I select "Add to Favorites"

@@ -57,4 +57,18 @@ class PlaybackSearchWiringTest {
 
             assertEquals(PlaybackOverlay.ComingSoon("Recordings"), vm.overlay.value)
         }
+
+    @Test
+    fun `the panel sheet's Search row opens search over bare playback`() =
+        runTest {
+            var opened = false
+            val vm = buildVm { opened = true }
+            vm.openPanel()
+            vm.showChannelMenu(vm.current.value!!)
+
+            vm.menu.onMenuItem(PlayerMenuItem.SEARCH)
+
+            assertTrue(opened)
+            assertEquals(PlaybackOverlay.None, vm.overlay.value)
+        }
 }
