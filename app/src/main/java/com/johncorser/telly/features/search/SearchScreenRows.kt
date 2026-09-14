@@ -5,9 +5,15 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.PlatformTextStyle
 import androidx.compose.ui.text.TextStyle
@@ -33,15 +39,16 @@ internal fun SearchScreenHeader(
     textRes: Int,
     modifier: Modifier = Modifier.padding(start = Dims.edgePad, top = Dims.headerTop),
 ) {
-    // 19 sp with the line box trimmed to the em: the reference header is
-    // 38 px tall (tm-02 uidump); Compose's default font padding inflated
-    // the same 19 sp to a 44 px (~22 sp) box.
+    // 14 sp in a 19 sp line box: the reference header box is 38 px tall
+    // with a 21 px glyph band (tm-01/tm-02 re-measured round5 — the old
+    // 19 sp read came from the box height, not the glyphs), and its white
+    // sits at the results' 42% resting alpha.
     Text(
         text = stringResource(textRes),
-        color = Color(TELLY_TEXT_PRIMARY),
+        color = Color(TELLY_TEXT_PRIMARY).copy(alpha = Dims.RESTING_ALPHA),
         style =
             TextStyle(
-                fontSize = 19.sp,
+                fontSize = 14.sp,
                 lineHeight = 19.sp,
                 platformStyle = PlatformTextStyle(includeFontPadding = false),
                 lineHeightStyle = LineHeightStyle(LineHeightStyle.Alignment.Center, LineHeightStyle.Trim.Both),
@@ -54,7 +61,7 @@ internal fun SearchScreenHeader(
 @Composable
 internal fun SearchScreenAirTime(
     hit: SearchProgramHit,
-    fontSize: TextUnit = 15.sp,
+    fontSize: TextUnit = 14.sp,
 ) {
     if (hit.remaining == null) {
         Text(text = hit.timeText, color = Color(TELLY_TEXT_MUTED), fontSize = fontSize, maxLines = 1)
@@ -63,17 +70,27 @@ internal fun SearchScreenAirTime(
     }
 }
 
-/** TiviMate's universal focus pill around arbitrary row/card content. */
+/**
+ * TiviMate's universal focus pill around arbitrary row/card content. On the
+ * search screen, resting results sit at 42% alpha (every tm-01/02/03 text,
+ * logo and card fill samples as its full color x 0.42 over the background);
+ * focus restores full opacity.
+ */
 @Composable
 internal fun SearchScreenFocusRow(
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
     restingContainer: Color = Color.Transparent,
+    dimWhenResting: Boolean = false,
     content: @Composable () -> Unit,
 ) {
+    var focused by remember { mutableStateOf(false) }
     Surface(
         onClick = onClick,
-        modifier = modifier,
+        modifier =
+            modifier
+                .onFocusChanged { focused = it.isFocused }
+                .graphicsLayer { if (dimWhenResting) alpha = if (focused) 1f else Dims.RESTING_ALPHA },
         shape = FocusScreenDefaults.shape(),
         scale = FocusScreenDefaults.scale(),
         colors = FocusScreenDefaults.colors(restingContainer = restingContainer),

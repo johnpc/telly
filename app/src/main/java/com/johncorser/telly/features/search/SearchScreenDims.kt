@@ -21,8 +21,15 @@ internal object SearchScreenDims {
     val gearSize = 40.dp
     val edgePad = 24.dp
 
-    /** History block aligns with the query bar (orb + gap), uidump 49. */
-    val historyStart = orbStart + orbSize + barGap
+    /** History header starts at x=384 px like the live bar column (tm-01). */
+    val historyStart = 192.dp
+
+    /**
+     * Resting search results render at 42% opacity — every tm-01/02/03
+     * sample (headers, titles, times, airing blue, logos, card fills) is
+     * its full color x 0.42 composited over the flat background.
+     */
+    const val RESTING_ALPHA = 0.42f
     val headerTop = 32.dp
     val shelfTop = 14.dp
 

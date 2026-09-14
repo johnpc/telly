@@ -9,6 +9,7 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.style.TextOverflow
@@ -26,10 +27,13 @@ import com.johncorser.telly.features.search.SearchScreenDims as Dims
  */
 @Composable
 internal fun SearchScreenDetail(hit: SearchProgramHit) {
+    // The card never takes focus, so it keeps the results' resting alpha
+    // (tm-03 samples the detail title/times at the same 42% as the rows).
     Column(
         Modifier
             .padding(top = Dims.detailTop, end = Dims.edgePad)
             .width(Dims.detailWidth)
+            .alpha(Dims.RESTING_ALPHA)
             .clip(RoundedCornerShape(Dims.barCorner))
             .background(Dims.detailFill)
             .padding(Dims.detailPad),

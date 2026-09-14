@@ -54,6 +54,7 @@ private fun SearchScreenChannelCard(
         onClick = onClick,
         modifier = Modifier.width(Dims.cardWidth),
         restingContainer = Dims.cardFill,
+        dimWhenResting = true,
     ) {
         Column(Modifier.padding(Dims.cardPad), horizontalAlignment = Alignment.CenterHorizontally) {
             TellyScreenLogoTile(
@@ -65,7 +66,7 @@ private fun SearchScreenChannelCard(
             Spacer(Modifier.height(6.dp))
             Text(
                 text = hit.channel.source.name,
-                fontSize = 19.sp,
+                fontSize = 14.sp,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
                 modifier = Modifier.fillMaxWidth(),

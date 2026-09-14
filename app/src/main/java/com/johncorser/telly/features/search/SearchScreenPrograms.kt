@@ -14,6 +14,7 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.style.TextOverflow
@@ -63,6 +64,7 @@ private fun SearchScreenProgramRow(
                 Modifier
                     .fillMaxSize()
                     .onFocusChanged { if (it.isFocused) viewModel.onProgramFocused(hit) },
+            dimWhenResting = true,
         ) {
             Column(Modifier.padding(horizontal = 8.dp, vertical = 6.dp)) {
                 // Airing rows tint the title light blue and append the dash
@@ -70,11 +72,11 @@ private fun SearchScreenProgramRow(
                 Text(
                     text = hit.title,
                     color = if (hit.remaining != null) Color(TELLY_CLOCK_BLUE) else Color.Unspecified,
-                    fontSize = 17.sp,
+                    fontSize = 16.sp,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis,
                 )
-                SearchScreenAirTime(hit, fontSize = 14.sp)
+                SearchScreenAirTime(hit, fontSize = 13.sp)
             }
         }
     }
@@ -83,7 +85,10 @@ private fun SearchScreenProgramRow(
 /** The per-run channel card at the row's left (logo + name, capture 50). */
 @Composable
 private fun SearchScreenProgramChannel(hit: SearchProgramHit) {
-    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+    Column(
+        Modifier.alpha(Dims.RESTING_ALPHA),
+        horizontalAlignment = Alignment.CenterHorizontally,
+    ) {
         TellyScreenLogoTile(
             logoUrl = hit.channel.source.logoUrl,
             name = hit.channel.source.name,
