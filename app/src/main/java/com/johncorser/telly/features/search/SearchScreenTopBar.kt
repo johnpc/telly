@@ -47,6 +47,7 @@ internal fun SearchScreenTopBar(viewModel: SearchViewModel) {
             size = Dims.orbSize,
             iconSize = 24.dp,
             colors = orbColors(),
+            contentDescription = voiceLabel,
         )
         Spacer(Modifier.width(Dims.barGap))
         SearchScreenQueryField(query, viewModel, Modifier.width(Dims.barWidth))
@@ -55,6 +56,7 @@ internal fun SearchScreenTopBar(viewModel: SearchViewModel) {
             icon = R.drawable.ic_menu_settings,
             onClick = { viewModel.showPaywall() },
             size = Dims.gearSize,
+            contentDescription = "Search settings",
         )
     }
 }

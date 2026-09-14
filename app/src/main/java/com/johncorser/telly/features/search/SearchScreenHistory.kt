@@ -44,6 +44,7 @@ internal fun SearchScreenHistory(viewModel: SearchViewModel) {
                 onClick = viewModel::clearHistory,
                 size = 36.dp,
                 iconSize = 18.dp,
+                contentDescription = "Clear search history",
             )
         }
         if (entries.isEmpty()) {
