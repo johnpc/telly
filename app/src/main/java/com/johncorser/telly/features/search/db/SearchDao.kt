@@ -12,10 +12,10 @@ import com.johncorser.telly.features.playlist.db.ChannelEntity
  */
 @Dao
 interface SearchDao {
-    /** Channels by name substring or number prefix, in zap order. */
+    /** Channels by name substring or number prefix, in name order (live 5.2.0, tm-02). */
     @Query(
         "SELECT * FROM channels WHERE hidden = 0 AND (name LIKE :nameLike ESCAPE '\\' " +
-            "OR CAST(number AS TEXT) LIKE :numberLike ESCAPE '\\') ORDER BY number",
+            "OR CAST(number AS TEXT) LIKE :numberLike ESCAPE '\\') ORDER BY name COLLATE NOCASE, number",
     )
     suspend fun channels(
         nameLike: String,

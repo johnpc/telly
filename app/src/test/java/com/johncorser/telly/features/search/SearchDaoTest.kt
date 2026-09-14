@@ -47,17 +47,39 @@ class SearchDaoTest {
     ) = ProgramEntity(channelTvgId = "one", startMs = startMs, endMs = endMs, details = ProgramDetails(title = title))
 
     @Test
-    fun `channel search matches name substrings case-insensitively in number order`() =
+    fun `channel search matches name substrings case-insensitively in name order`() =
         runTest {
             seedChannels(
-                Triple(3, "World NEWS Now", false),
-                Triple(1, "News One", false),
-                Triple(2, "Sports Arena", false),
+                Triple(1, "World NEWS Now", false),
+                Triple(2, "News One", false),
+                Triple(3, "Sports Arena", false),
             )
 
             val hits = searchDao.channels(SearchQuery.nameLike("news"), SearchQuery.numberLike("news"))
 
             assertEquals(listOf("News One", "World NEWS Now"), hits.map { it.source.name })
+        }
+
+    @Test
+    fun `channel results follow name order not zap order`() =
+        runTest {
+            // Live TiviMate 5.2.0 order for the fixture family (tm-02):
+            // News One, +1, 2, 24, Extra, HD — regardless of channel number.
+            seedChannels(
+                Triple(1, "News One", false),
+                Triple(2, "News One HD", false),
+                Triple(3, "News One +1", false),
+                Triple(4, "News One Extra", false),
+                Triple(5, "News One 2", false),
+                Triple(6, "News One 24", false),
+            )
+
+            val hits = searchDao.channels(SearchQuery.nameLike("news one"), SearchQuery.numberLike("news one"))
+
+            assertEquals(
+                listOf("News One", "News One +1", "News One 2", "News One 24", "News One Extra", "News One HD"),
+                hits.map { it.source.name },
+            )
         }
 
     @Test

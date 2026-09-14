@@ -17,6 +17,7 @@ import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
+import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
 import java.util.TimeZone
@@ -117,6 +118,20 @@ class SearchViewModelTest {
 
             assertEquals(1L, lastChannelStore.getLong(TuneController.LAST_CHANNEL_KEY))
             assertEquals(listOf("news"), vm.history.value)
+        }
+
+    @Test
+    fun `each result batch preselects its first programme for the detail card`() =
+        runTest {
+            val vm = buildVm()
+
+            vm.onQueryChange("newsroom")
+
+            assertEquals("Newsroom Live", vm.focusedProgram.value?.title)
+
+            vm.onQueryChange("")
+
+            assertNull(vm.focusedProgram.value)
         }
 
     @Test

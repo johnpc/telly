@@ -44,7 +44,7 @@ class SearchRepositoryTest {
         }
 
     @Test
-    fun `channels match by name substring in zap order with airing programme`() =
+    fun `channels match by name substring in name order with airing programme`() =
         runTest {
             val results = repository.search("news", now, zone)
 
@@ -58,7 +58,8 @@ class SearchRepositoryTest {
         runTest {
             val results = repository.search("2", now, zone)
 
-            assertEquals(listOf(2, 24), results.channels.map { it.channel.number })
+            // Name order like every channel shelf (tm-02): Music Box (24) < News One HD (2).
+            assertEquals(listOf(24, 2), results.channels.map { it.channel.number })
         }
 
     @Test

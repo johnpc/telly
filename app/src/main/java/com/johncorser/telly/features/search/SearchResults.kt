@@ -17,12 +17,16 @@ data class SearchChannelHit(
  * One row of the Programs list (captures 50/51): the programme, the channel
  * it airs on, its formatted air time, and whether this row starts a new
  * same-channel run (the reference renders the channel card once per run).
+ * Currently-airing rows also carry the dash progress + "50 min" remaining
+ * shown after the times (live tm-03); both stay empty for upcoming rows.
  */
 data class SearchProgramHit(
     val program: ProgramEntity,
     val channel: ChannelEntity,
     val title: String,
     val timeText: String,
+    val progressPermille: Int,
+    val remaining: String?,
     val showsChannelCard: Boolean,
 )
 

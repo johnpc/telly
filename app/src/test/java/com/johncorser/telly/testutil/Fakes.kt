@@ -123,7 +123,7 @@ class FakeSearchDao(
         channelDao.channels.value
             .filter { !it.flags.hidden }
             .filter { sqlLike(nameLike, it.source.name) || sqlLike(numberLike, it.number.toString()) }
-            .sortedBy { it.number }
+            .sortedWith(compareBy(String.CASE_INSENSITIVE_ORDER) { it.source.name })
 
     override suspend fun programs(
         titleLike: String,

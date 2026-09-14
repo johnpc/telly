@@ -28,7 +28,9 @@ internal object SearchScreenDims {
 
     val cardWidth = 124.dp
     val cardGap = 8.dp
-    val cardPad = 12.dp
+
+    /** Card text starts 16 px in from the card edge — x=64 px on screen (tm-02). */
+    val cardPad = 8.dp
     val logoWidth = 100.dp
     val logoHeight = 42.dp
 
@@ -37,7 +39,9 @@ internal object SearchScreenDims {
     val rowCardWidth = 120.dp
     val rowLogoWidth = 72.dp
     val rowLogoHeight = 48.dp
-    val rowTextStart = 36.dp
+
+    /** Plus the pill's 8 dp text pad this puts row titles at x=360 px (tm-02). */
+    val rowTextStart = 28.dp
 
     val detailWidth = 332.dp
     val detailTop = 40.dp

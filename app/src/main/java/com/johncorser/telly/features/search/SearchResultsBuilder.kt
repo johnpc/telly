@@ -12,9 +12,9 @@ import java.util.TimeZone
 
 /**
  * Pure assembly of the search shelves from DAO rows (captures 50/51):
- * channel cards keep zap order and carry their airing programme; programme
- * rows are chronological, drop hidden/unknown channels, and share one
- * channel card per consecutive same-channel run.
+ * channel cards keep the DAO's name order and carry their airing programme;
+ * programme rows are chronological, drop hidden/unknown channels, and share
+ * one channel card per consecutive same-channel run.
  */
 object SearchResultsBuilder {
     fun channels(
@@ -41,14 +41,29 @@ object SearchResultsBuilder {
         var previousTvgId: String? = null
         return matches.mapNotNull { program ->
             val channel = byTvgId[program.channelTvgId] ?: return@mapNotNull null
-            SearchProgramHit(
-                program = program,
-                channel = channel,
-                title = ProgramTitle.of(program.details),
-                timeText = airTime(program, atMs, zone),
-                showsChannelCard = program.channelTvgId != previousTvgId,
-            ).also { previousTvgId = program.channelTvgId }
+            hit(program, channel, atMs, zone, showsCard = program.channelTvgId != previousTvgId)
+                .also { previousTvgId = program.channelTvgId }
         }
+    }
+
+    /** Airing rows add dash progress + remaining minutes (live tm-03). */
+    private fun hit(
+        program: ProgramEntity,
+        channel: ChannelEntity,
+        atMs: Long,
+        zone: TimeZone,
+        showsCard: Boolean,
+    ): SearchProgramHit {
+        val airing = program.startMs <= atMs
+        return SearchProgramHit(
+            program = program,
+            channel = channel,
+            title = ProgramTitle.of(program.details),
+            timeText = airTime(program, atMs, zone),
+            progressPermille = if (airing) ProgramTimes.progressPermille(program.startMs, program.endMs, atMs) else 0,
+            remaining = if (airing) "${ProgramTimes.remainingMinutes(program.endMs, atMs)} min" else null,
+            showsChannelCard = showsCard,
+        )
     }
 
     /**

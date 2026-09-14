@@ -21,7 +21,8 @@ import com.johncorser.telly.features.search.SearchScreenDims as Dims
 
 /**
  * The right-side detail card of the focused programme result (captures
- * 50/51): title, air time, then the description in muted grey.
+ * 50/51): title, air time — with dash progress + remaining minutes while
+ * airing (live tm-03) — then the description in muted grey.
  */
 @Composable
 internal fun SearchScreenDetail(hit: SearchProgramHit) {
@@ -41,7 +42,7 @@ internal fun SearchScreenDetail(hit: SearchProgramHit) {
             overflow = TextOverflow.Ellipsis,
         )
         Spacer(Modifier.height(8.dp))
-        Text(text = hit.timeText, color = Color(TELLY_TEXT_MUTED), fontSize = 15.sp, maxLines = 1)
+        SearchScreenAirTime(hit)
         hit.program.details.description?.let { description ->
             Spacer(Modifier.height(8.dp))
             Text(

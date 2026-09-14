@@ -15,7 +15,7 @@ Feature: Search channels and programmes
     And I see the "Search history" header with a trash icon
     And the empty state reads "No history"
 
-  Scenario: Typing a query lists matching channels in zap order
+  Scenario: Typing a query lists matching channels in name order
     When I focus the query bar
     And I type "news"
     Then the "Channels" shelf lists "News One", "News One +1", "News One 2", "News One 24", "News One Extra", "News One HD"
