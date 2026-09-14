@@ -1,3 +1,4 @@
+@search
 Feature: Search channels and programmes
   TiviMate's search screen (catalogue §4, captures 49-51): voice orb, query
   bar and gear on top, the search-history landing state, and typed results

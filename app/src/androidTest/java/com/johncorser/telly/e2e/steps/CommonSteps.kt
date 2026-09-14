@@ -4,6 +4,7 @@ import android.os.SystemClock
 import android.view.KeyEvent
 import androidx.compose.ui.semantics.SemanticsActions
 import androidx.compose.ui.test.SemanticsMatcher
+import androidx.compose.ui.test.hasContentDescription
 import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.isFocused
 import androidx.compose.ui.test.onFirst
@@ -77,6 +78,9 @@ class CommonSteps(
     @When("I press back")
     fun pressBack() = world.pressKey(KeyEvent.KEYCODE_BACK)
 
+    @When("I press menu")
+    fun pressMenu() = world.pressKey(KeyEvent.KEYCODE_MENU)
+
     @When("I press channel up")
     fun pressChannelUp() = world.pressKey(KeyEvent.KEYCODE_CHANNEL_UP)
 
@@ -96,7 +100,11 @@ class CommonSteps(
         val text = world.mapFixtureText(raw)
         if (world.nodeCount(setTextNodes()) > 0) {
             world.compose.onAllNodes(setTextNodes()).onFirst().performTextReplacement(text)
-            world.compose.onAllNodes(setTextNodes()).onFirst().performImeAction()
+            // The search query bar commits to the history only on the
+            // explicit IME search action step; value dialogs commit here.
+            if (world.nodeCount(hasContentDescription("Voice search")) == 0) {
+                world.compose.onAllNodes(setTextNodes()).onFirst().performImeAction()
+            }
             // Compose does not always hide the IME when the field leaves the
             // tree; BACK goes to the keyboard window while it is up.
             driver.awaitCondition("IME dismissed") {

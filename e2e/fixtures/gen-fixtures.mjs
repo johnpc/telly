@@ -83,8 +83,8 @@ let xml = `<?xml version="1.0" encoding="UTF-8"?>\n<!DOCTYPE tv SYSTEM "xmltv.dt
 for (const c of channels) {
   xml += `  <channel id="${esc(c.id)}">\n    <display-name>${esc(c.name)}</display-name>\n    <icon src="${esc(c.logo)}" />\n  </channel>\n`;
 }
-// news-one-6 ships WITHOUT EPG so "No information" guide cells are real.
-const NO_EPG_IDS = new Set(["news-one-6.fixture"]);
+// sports-arena-1 ships WITHOUT EPG so "No information" guide cells are real.
+const NO_EPG_IDS = new Set(["sports-arena-1.fixture"]);
 for (const c of channels) {
   if (NO_EPG_IDS.has(c.id)) continue;
   const rand = rng(c.num * 7919);

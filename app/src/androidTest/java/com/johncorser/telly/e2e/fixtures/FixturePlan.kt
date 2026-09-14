@@ -51,8 +51,10 @@ object FixturePlan {
         return channels.flatMap { channel -> channelSchedule(channel, windowStart, windowEnd) }
     }
 
-    /** One channel ships WITHOUT EPG so "No information" cells are real. */
-    val noEpgTvgIds: Set<String> = setOf("news-one-6.fixture")
+    // One channel ships WITHOUT EPG so "No information" cells are real:
+    // Sports Arena (7) is visible in the guide's initial 7 rows but outside
+    // the news family the search scenarios assert complete cards for.
+    val noEpgTvgIds: Set<String> = setOf("sports-arena-1.fixture")
 
     private fun channelSchedule(
         channel: FixtureChannel,
