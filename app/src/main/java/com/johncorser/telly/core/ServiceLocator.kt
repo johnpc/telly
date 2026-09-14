@@ -6,7 +6,6 @@ import androidx.room.Room
 import com.johncorser.telly.core.db.TellyDatabase
 import com.johncorser.telly.core.kv.KeyValueStore
 import com.johncorser.telly.core.kv.SharedPrefsKeyValueStore
-import com.johncorser.telly.core.settings.ParentalControls
 import com.johncorser.telly.core.settings.SettingsRepository
 import com.johncorser.telly.core.settings.TellySettings
 import com.johncorser.telly.features.epg.EpgRefresher
