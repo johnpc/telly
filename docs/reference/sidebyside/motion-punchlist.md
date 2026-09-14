@@ -67,3 +67,15 @@ which this round re-confirms against telly's live behaviour.
   and because `PlaybackMenuHandler` routing is being aligned concurrently by
   another agent (do-not-touch), any sheet-entrance work should land after
   that settles. No code change this round.
+
+  **ANSWERED (round6)** — reference motion now captured
+  (`ref-round6/01-sheet-open-close-take1-best.mp4` + `01-frames/`,
+  frame-stepped): the sheet **entrance is a ~150–280 ms decelerating fade-in
+  with a ~10 px slide-in from the right** (one mid-frame at ~140 ms shows
+  ~80 % opacity, 9–10 px right of final; grid dim-scrim lands within a frame
+  of settle). The **close is an instant cut of the sheet followed by a
+  ~300 ms fade-out of the grid scrim**. The **Channel options push is a
+  cross-fade in place that REPLACES the sheet** (sheet fades out ~170 ms,
+  pane fades in ~350 ms); its **pop is a ~150 ms fade landing directly on
+  the guide grid** (never back on the sheet). Target curves exist now — fix
+  round can proceed.

@@ -35,8 +35,8 @@ and the section header is a small muted label, not a big white one.
 | --- | --- | --- | --- |
 | Header wraps with long programme titles | wraps | wraps to 2 lines ("Global Update: Global Update Special", "Newsroom Live: Newsroom Live Special") | MATCH (`ty-sheet-long-title.png/.xml`) |
 | Below-fold "All channels" section scrolls | scrolls | scrolls to Manage Favorites / Manage blocking / Reorder / Copy / Create group / Group options | MATCH (`ty-sheet-belowfold.png`) |
-| Focus re-lands on originating row after BACK | reference likely restores it | **after BACK from the sheet, focus returns to the guide grid's now-cell** (grid has no per-row focusable — the key anchor re-grabs). Acceptable: the grid focus model is a single anchor, so "the row you were on" isn't a focusable to restore. | Logged — no cheap fix (grid focus is a single anchor by design; row-level restore would need the guide focus engine to persist and re-apply, out of scope) |
-| BACK from Channel options returns to the "Channel options" row | reference likely restores that row | **telly resets sheet focus to the top (Search row)** after popping ChannelOptions → RowMenu | Logged — not cheap (`PlaybackScreenMenu` always `rememberAutoFocus()` on the first row; restoring the origin row needs sheet focus memory keyed by layer + LazyColumn scroll restore, and there's no captured reference frame to pin the exact target). `ty-channel-options-back.png` |
+| Focus re-lands on originating row after BACK | **ANSWERED (round6): reference RESTORES the originating row** — sheet opened from the 5th visible row (ch 5, News One 2, [0,702][1920,780]); after BACK that same row is focused=true (`ref-round6/04-row5-*.xml`; the row also keeps a white outline while the sheet is open) | **after BACK from the sheet, focus returns to the guide grid's now-cell** (grid has no per-row focusable — the key anchor re-grabs). | Logged — no cheap fix (grid focus is a single anchor by design; row-level restore would need the guide focus engine to persist and re-apply, out of scope) — now a CONFIRMED deviation with reference evidence |
+| BACK from Channel options returns to the "Channel options" row | **ANSWERED (round6): N/A — the reference pane REPLACES the sheet** (cross-fade in place, sheet fades out on push); one BACK from Channel options lands directly on the guide grid with the originating row focused, never back on the sheet (`ref-round6/03-after-back-from-channel-options.png/.xml`, `03-channel-options-push-pop.mp4`) | **telly resets sheet focus to the top (Search row)** after popping ChannelOptions → RowMenu | Logged — telly's one-level pop (pane → sheet) is itself a structural deviation; reference dismisses the sheet on push. Fix round should decide whether to adopt replace-semantics or keep the stack |
 | "Program description" full-screen message readability | readable | readable full-screen `OnboardingScreenMessage` (title + synopsis) | MATCH (`ty-program-description.png`) |
 
 ## History
@@ -53,7 +53,7 @@ and the section header is a small muted label, not a big white one.
 | Item | Reference | telly | Verdict |
 | --- | --- | --- | --- |
 | BACK-escape fix (9e549e0) didn't change visuals | — | settings sheet + guided steps render unchanged; settings acceptance leg green | MATCH |
-| New PIN wheel vs reference PIN entry | reference uses a numeric entry | `SettingsScreenPinWheel.kt` present from the harness merge | Not re-shot this round (PIN entry requires enabling parental controls + setting a PIN; no reference PIN-wheel capture on hand to diff against). Logged for a dedicated PIN pass. |
+| New PIN wheel vs reference PIN entry | reference uses a numeric entry | `SettingsScreenPinWheel.kt` present from the harness merge | **ANSWERED (round6): the reference PIN entry UI is NOT capturable** — in 5.2.0 free, every Parental-controls row is premium-locked AND skipped by focus (the Off toggle can never be reached, so no PIN screen exists to shoot; `ref-round6/09-parental-*.png/.xml`). Only anchor: locked row "PIN input method: **Picker**" (default). telly's wheel is consistent with "Picker"; a pixel diff needs a premium account. |
 
 ## Fixed this round
 
@@ -77,7 +77,12 @@ and the section header is a small muted label, not a big white one.
 - Guide sheet BACK focus restore (originating row / Channel-options row) —
   needs sheet focus memory + grid focus-engine persistence; no captured
   reference frame to pin the target; out of scope for a cheap fix.
+  **ANSWERED (round6):** targets now pinned — sheet BACK must restore the
+  originating row; Channel options must REPLACE the sheet (see updated table
+  rows + `ref-round6/README.md` §A/§B).
 - PIN wheel visual diff — needs a dedicated PIN pass with a reference capture.
+  **ANSWERED (round6):** no reference capture is possible on the free build
+  (section fully premium-locked and unfocusable); see `ref-round6/README.md` §C.
 - Playback-sheet routing: NOT touched (another agent is aligning
   `PlaybackMenuHandler`). Observation only: the guide long-OK sheet and the
   playback quick-bar "Channels list" both route through
