@@ -11,6 +11,7 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.focus.FocusDirection
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusProperties
 import androidx.compose.ui.graphics.Color
@@ -34,9 +35,15 @@ internal fun SettingsScreenGuidedStep(
         Modifier
             .fillMaxSize()
             .background(Color(TELLY_ONBOARDING_BACKGROUND))
-            // Focus stays on the action pills; the surfaces behind the
-            // full-screen step must not catch the D-pad.
-            .focusProperties { exit = { FocusRequester.Cancel } },
+            // D-pad stays on the action pills — the surfaces behind the
+            // full-screen step must not catch it. BACK arrives as a focus
+            // EXIT, which must stay unconsumed so it reaches the back
+            // dispatcher (cancelling it eats the key and strands the step).
+            .focusProperties {
+                exit = { direction ->
+                    if (direction == FocusDirection.Exit) FocusRequester.Default else FocusRequester.Cancel
+                }
+            },
     ) {
         SettingsScreenGuidedPane(iconRes = iconRes, title = title, bodyLines = bodyLines)
         Column(
