@@ -5,6 +5,7 @@ import com.johncorser.telly.core.settings.ParentalControls
 import com.johncorser.telly.core.settings.TellySettings
 import com.johncorser.telly.features.guide.GuideDeps
 import com.johncorser.telly.features.history.WatchHistory
+import com.johncorser.telly.features.multiview.MultiviewDeps
 import com.johncorser.telly.features.playback.PlaybackDeps
 import com.johncorser.telly.features.playback.PlaybackSources
 import com.johncorser.telly.features.player.Media3PlayerEngine
@@ -34,6 +35,20 @@ fun ServiceLocator.guideDeps(context: Context): GuideDeps =
     GuideDeps(
         playback = playbackDeps(context),
         pastDays = { settingsRepository(context).get(TellySettings.EPG_PAST_DAYS_TO_KEEP) },
+    )
+
+/**
+ * Multiview slice: one independent engine per pane from the factory. The
+ * pane engines do NOT handle audio focus (N players grabbing focus pause
+ * one another); the focused pane owns audio via mute state instead.
+ */
+fun ServiceLocator.multiviewDeps(context: Context): MultiviewDeps =
+    MultiviewDeps(
+        channelDao = database(context).channelDao(),
+        epgRepository = epgRepository(context),
+        engines = { Media3PlayerEngine.create(context.applicationContext, handleAudioFocus = false) },
+        store = keyValueStore(context),
+        clock = clock,
     )
 
 /** Search slice deps; history keeps its own prefs file, out of backups. */

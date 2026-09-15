@@ -17,6 +17,7 @@ import kotlinx.coroutines.flow.StateFlow
 class PlaybackHooks(
     val panelLock: PanelLock = PanelLock(),
     val onOpenSettings: () -> Unit = {},
+    val onOpenMultiview: () -> Unit = {},
 )
 
 /** Everything [PlaybackViewModel] needs injected, bundled for readability. */
@@ -44,6 +45,7 @@ class PlaybackViewModel(
     private val openSearch: () -> Unit = {},
 ) {
     private val clock = env.time.clock
+    private val openMultiview = env.hooks.onOpenMultiview
 
     val panel = PanelViewModel(env.channelDao, env.epgRepository, clock, scope, env.time.zone, env.hooks.panelLock)
 
@@ -96,11 +98,12 @@ class PlaybackViewModel(
 
     fun showComingSoon(feature: String) = overlays.set(PlaybackOverlay.ComingSoon(feature))
 
-    /** Quick-bar OK: Search and Channels list are real, the rest later slices. */
+    /** Quick-bar OK: Search, Channels list and Multiview are real, the rest later slices. */
     fun onQuickBarItem(action: QuickBarAction) {
         when (action) {
             QuickBarAction.CHANNELS_LIST -> openPanel()
             QuickBarAction.SEARCH -> openSearch()
+            QuickBarAction.MULTIVIEW -> openMultiview()
             else -> showComingSoon(action.feature)
         }
     }

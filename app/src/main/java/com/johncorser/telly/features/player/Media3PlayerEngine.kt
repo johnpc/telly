@@ -54,6 +54,10 @@ class Media3PlayerEngine(
         player.release()
     }
 
+    override fun setMuted(muted: Boolean) {
+        player.volume = if (muted) 0f else 1f
+    }
+
     override fun onPlaybackStateChanged(playbackState: Int) {
         when (playbackState) {
             Player.STATE_BUFFERING -> mutableState.value = PlayerState.Buffering
@@ -86,8 +90,17 @@ class Media3PlayerEngine(
     }
 
     companion object {
-        /** Built here so devices get audio focus and TV-ready defaults. */
-        fun create(context: Context): Media3PlayerEngine {
+        /**
+         * Built here so devices get audio focus and TV-ready defaults.
+         * Multiview panes pass [handleAudioFocus] = false: N players each
+         * grabbing focus would pause one another, so the pool's engines
+         * share the app's focus and the focused pane owns audio by mute
+         * state instead. Single fullscreen playback keeps the default.
+         */
+        fun create(
+            context: Context,
+            handleAudioFocus: Boolean = true,
+        ): Media3PlayerEngine {
             val audioAttributes =
                 AudioAttributes
                     .Builder()
@@ -97,7 +110,7 @@ class Media3PlayerEngine(
             val player =
                 ExoPlayer
                     .Builder(context)
-                    .setAudioAttributes(audioAttributes, true)
+                    .setAudioAttributes(audioAttributes, handleAudioFocus)
                     .build()
             return Media3PlayerEngine(player)
         }

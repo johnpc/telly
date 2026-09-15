@@ -37,4 +37,7 @@ interface PlayerEngine {
     fun stop()
 
     fun release()
+
+    /** Multiview audio ownership: only the focused pane's engine is unmuted. */
+    fun setMuted(muted: Boolean)
 }

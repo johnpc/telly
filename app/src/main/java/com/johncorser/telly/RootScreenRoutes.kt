@@ -12,6 +12,8 @@ import com.johncorser.telly.core.navigation.Route
 import com.johncorser.telly.core.ui.ScreenCrossfade
 import com.johncorser.telly.features.guide.GuideDeps
 import com.johncorser.telly.features.guide.GuideScreen
+import com.johncorser.telly.features.multiview.MultiviewDeps
+import com.johncorser.telly.features.multiview.MultiviewScreen
 import com.johncorser.telly.features.onboarding.WelcomeScreen
 import com.johncorser.telly.features.onboarding.WizardScreen
 import com.johncorser.telly.features.playback.PlaybackDeps
@@ -31,6 +33,7 @@ internal fun RootScreenRoutes(
     playbackDeps: PlaybackDeps,
     guideDeps: GuideDeps,
     searchDeps: SearchDeps,
+    multiviewDeps: MultiviewDeps,
 ) {
     ScreenCrossfade(baseRoute) { target ->
         when (target) {
@@ -57,7 +60,11 @@ internal fun RootScreenRoutes(
                     onExitToHistory = { navigator.replaceAll(Route.Guide(historySource = true)) },
                     onOpenSearch = { navigator.push(Route.Search) },
                     onOpenSettings = { navigator.push(Route.Settings) },
+                    onOpenMultiview = { navigator.push(Route.Multiview) },
                 )
+            // BACK at the pane grid exits to fullscreen playback of the
+            // focused pane's channel (multiview-spec: exit chain).
+            Route.Multiview -> MultiviewScreen(deps = multiviewDeps, onExit = { navigator.pop() })
             is Route.Guide ->
                 GuideScreen(
                     deps = guideDeps,

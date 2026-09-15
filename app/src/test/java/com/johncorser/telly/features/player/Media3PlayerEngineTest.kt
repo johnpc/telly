@@ -146,4 +146,29 @@ class Media3PlayerEngineTest {
         assertNull(engine.video.value)
         engine.release()
     }
+
+    @Test
+    fun `create without audio focus builds a player too (multiview panes)`() {
+        val engine =
+            Media3PlayerEngine.create(
+                ApplicationProvider.getApplicationContext<Context>(),
+                handleAudioFocus = false,
+            )
+
+        assertNotNull(engine.player)
+        engine.release()
+    }
+
+    @Test
+    fun `mute drops the volume to zero and unmute restores it`() {
+        val engine = engine()
+
+        engine.setMuted(true)
+        engine.setMuted(false)
+
+        verify {
+            player.volume = 0f
+            player.volume = 1f
+        }
+    }
 }

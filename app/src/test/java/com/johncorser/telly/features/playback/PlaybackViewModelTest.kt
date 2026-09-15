@@ -46,6 +46,7 @@ class PlaybackViewModelTest {
     private fun TestScope.buildVm(
         clock: () -> Long = { now },
         onOpenSettings: () -> Unit = {},
+        onOpenMultiview: () -> Unit = {},
     ): PlaybackViewModel =
         PlaybackViewModel(
             env =
@@ -55,7 +56,7 @@ class PlaybackViewModelTest {
                     engine = engine,
                     store = store,
                     time = PlaybackTime(clock, TimeZone.getTimeZone("UTC")),
-                    hooks = PlaybackHooks(onOpenSettings = onOpenSettings),
+                    hooks = PlaybackHooks(onOpenSettings = onOpenSettings, onOpenMultiview = onOpenMultiview),
                 ),
             history = WatchHistory(historyDao, clock),
             scope = CoroutineScope(SupervisorJob() + UnconfinedTestDispatcher(testScheduler)),
@@ -284,6 +285,18 @@ class PlaybackViewModelTest {
             // Search is real now (PlaybackSearchWiringTest); Recordings is not yet.
             vm.onQuickBarItem(QuickBarAction.RECORDINGS)
             assertEquals(PlaybackOverlay.ComingSoon("Recordings"), vm.overlay.value)
+        }
+
+    @Test
+    fun `the quick-bar's multiview slot opens the multiview route`() =
+        runTest {
+            var opened = 0
+            val vm = buildVm(onOpenMultiview = { opened += 1 })
+            vm.onKey(PlaybackKey.MENU)
+
+            vm.onQuickBarItem(QuickBarAction.MULTIVIEW)
+
+            assertEquals(1, opened)
         }
 
     @Test

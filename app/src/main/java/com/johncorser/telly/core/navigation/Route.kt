@@ -28,4 +28,7 @@ sealed interface Route {
 
     /** TiviMate-style search screen (catalogue §4, captures 49-51). */
     data object Search : Route
+
+    /** Multiview grid from the quick-bar's Multiview slot (multiview-round). */
+    data object Multiview : Route
 }
