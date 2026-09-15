@@ -59,6 +59,7 @@ Never raise a threshold, add an exclusion, or skip a gate to get green. Restruct
 ./gradlew jacocoTestReport        # coverage report (XML + HTML)
 ./gradlew ktlintFormat            # auto-fix formatting
 ./scripts/install-hooks.sh        # one-time: enable the pre-commit gate
+./scripts/release-local.sh        # gate + build + publish a GitHub Release without Actions
 ```
 
 ### Gherkin e2e acceptance (cucumber-android)
@@ -86,6 +87,13 @@ Local SDK note: `local.properties` must contain
 (the `ANDROID_HOME` env var there is stale — do not trust it).
 
 ## Decisions log
+
+- **2026-09-15** GitHub Actions credits are exhausted: CI/deploy workflows stay in
+  the repo but must be treated as unavailable. The authoritative gate is local —
+  `./scripts/quality.sh` (pre-commit enforced) plus the acceptance legs on the
+  local tv34 emulator — and releases are published with
+  `./scripts/release-local.sh` (gh API, no Actions minutes). Note "verified
+  locally" in commit/release bodies. Last Actions-published release: v0.1.0-29.
 
 - **2026-09-13** Native Kotlin + Compose for TV (`androidx.tv:tv-material`) chosen over
   Ionic/hybrid: TV focus handling, D-pad navigation, and playback performance demand it.
