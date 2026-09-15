@@ -8,6 +8,8 @@ import com.johncorser.telly.features.vod.vodSettingsRows
 /**
  * Routes a sheet to its row builder — the whole captured settings tree.
  * A null pane is the root sheet: the nine captured sections (uidump 18).
+ * The Recording pane is built by the view model (it needs the DVR storage
+ * hook), so here it resolves to an empty list.
  */
 fun rowsFor(
     pane: SettingsPane?,
@@ -27,6 +29,7 @@ fun rowsFor(
         SettingsPane.RemotePlayer -> remotePlayerRows(settings)
         SettingsPane.Reminders -> remindersRows(settings, feeds.reminders)
         SettingsPane.Vod -> vodSettingsRows(settings)
+        SettingsPane.Recording -> emptyList()
         else -> appearancePaneRows(pane, settings)
     }
 
@@ -108,5 +111,6 @@ private fun fixedPaneTitle(pane: SettingsPane): String? =
         SettingsPane.RemotePlayer -> "Player"
         SettingsPane.Reminders -> "Reminders"
         SettingsPane.Vod -> "VOD"
+        SettingsPane.Recording -> "Recording"
         else -> null
     }

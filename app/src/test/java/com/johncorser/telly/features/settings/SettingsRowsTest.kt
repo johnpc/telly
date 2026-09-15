@@ -350,11 +350,11 @@ class SettingsRowsTest {
     }
 
     @Test
-    fun `other pane keeps Reminders and VOD live with the rest locked and about matches capture 53`() {
+    fun `other pane keeps Reminders Recording and VOD live with Search locked and about matches capture 53`() {
         val other = otherRows()
         assertEquals(listOf("Search", "Reminders", "Recording", "VOD"), titles(other))
-        // Reminders and VOD shipped as telly slices; the rest stay locked.
-        assertEquals(listOf(true, false, true, false), other.map { (it as SettingsRow.Value).locked })
+        // Reminders, Recording and VOD shipped as telly slices; Search stays locked.
+        assertEquals(listOf(true, false, false, false), other.map { (it as SettingsRow.Value).locked })
 
         val about = aboutRows(s, "0.1.0")
         assertEquals(listOf("Send anonymous statistics to improve the app", "Privacy policy", "Version"), titles(about))

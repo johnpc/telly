@@ -4,6 +4,7 @@ import com.johncorser.telly.core.settings.ParentalControls
 import com.johncorser.telly.core.settings.SettingsRepository
 import com.johncorser.telly.features.epg.EpgSourceStore
 import com.johncorser.telly.features.playlist.PlaylistRepository
+import com.johncorser.telly.features.recording.RecordingSettingsHook
 import com.johncorser.telly.features.reminders.ReminderSettingsFeed
 import kotlinx.coroutines.CoroutineScope
 
@@ -16,6 +17,8 @@ class SettingsActions(
     val changePlaylistUrl: suspend (oldUrl: String, newUrl: String) -> Boolean = { _, _ -> false },
     /** Other -> VOD -> Clear playback positions (empties vod_positions). */
     val clearVodPositions: suspend () -> Unit = {},
+    /** Other -> Recording pane (recording slice); null in JVM tests. */
+    val recordings: RecordingSettingsHook? = null,
 )
 
 /**

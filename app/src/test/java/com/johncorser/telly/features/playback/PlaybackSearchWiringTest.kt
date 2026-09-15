@@ -53,9 +53,9 @@ class PlaybackSearchWiringTest {
         runTest {
             val vm = buildVm { }
 
-            vm.onQuickBarItem(QuickBarAction.RECORDINGS)
+            vm.onQuickBarItem(QuickBarAction.SUBTITLES)
 
-            assertEquals(PlaybackOverlay.ComingSoon("Recordings"), vm.overlay.value)
+            assertEquals(PlaybackOverlay.ComingSoon("Subtitles"), vm.overlay.value)
         }
 
     @Test

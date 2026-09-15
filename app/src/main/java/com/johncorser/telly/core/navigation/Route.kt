@@ -50,4 +50,11 @@ sealed interface Route {
     data class VodPlayback(
         val itemKey: String,
     ) : Route
+
+    /**
+     * The Recordings / DVR library (recording slice): reached from the
+     * quick-bar's Recordings slot and the guide rail's DVR icon; BACK pops
+     * back to wherever it was opened from.
+     */
+    data object Recordings : Route
 }

@@ -34,7 +34,7 @@ internal fun GuideScreenRailLogo(modifier: Modifier = Modifier) {
     )
 }
 
-/** A focusable rail icon (search / bookmark / gear), pill on focus. */
+/** A focusable rail icon (search / bookmark / Movies / DVR / gear), pill on focus. */
 @Composable
 internal fun GuideScreenRailButton(
     icon: Int,

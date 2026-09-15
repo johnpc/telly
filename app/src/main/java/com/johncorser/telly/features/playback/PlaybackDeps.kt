@@ -7,7 +7,6 @@ import com.johncorser.telly.features.history.WatchHistory
 import com.johncorser.telly.features.mylist.InMemoryMyListStore
 import com.johncorser.telly.features.mylist.MyListStore
 import com.johncorser.telly.features.player.Media3PlayerEngine
-import com.johncorser.telly.features.player.PlayerEngine
 import com.johncorser.telly.features.playlist.db.ChannelDao
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
@@ -66,13 +65,3 @@ class PlaybackDeps(
     /** Saved My-list programmes; shared with the guide via [sources]. */
     val myList: MyListStore get() = sources.myList
 }
-
-/** Everything [PlaybackViewModel] needs injected, bundled for readability. */
-class PlaybackEnv(
-    val channelDao: ChannelDao,
-    val epgRepository: EpgRepository,
-    val engine: PlayerEngine,
-    val store: KeyValueStore,
-    val time: PlaybackTime,
-    val hooks: PlaybackHooks = PlaybackHooks(),
-)

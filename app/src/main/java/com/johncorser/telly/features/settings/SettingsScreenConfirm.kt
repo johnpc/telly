@@ -26,6 +26,24 @@ internal fun SettingsScreenConfirmDelete(
 }
 
 /**
+ * "Delete all recordings?" confirm (Other -> Recording pane), shaped after
+ * the captured delete-playlist GuidedStep above.
+ */
+@Composable
+internal fun SettingsScreenConfirmDeleteRecordings(model: SettingsViewModel) {
+    SettingsScreenGuidedStep(
+        iconRes = R.drawable.ic_settings_warning,
+        title = "Delete all recordings?",
+        bodyLines = listOf("Every capture file and library entry will be deleted"),
+        actions =
+            listOf(
+                "Delete" to { model.confirmDeleteRecordings() },
+                "Cancel" to { model.dismissOverlay() },
+            ),
+    )
+}
+
+/**
  * "Delete EPG source?" confirm: uncapturable (the reference locks source
  * management behind premium), shaped after the captured delete-playlist
  * GuidedStep above.

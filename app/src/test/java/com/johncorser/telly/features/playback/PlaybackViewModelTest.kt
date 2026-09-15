@@ -252,9 +252,22 @@ class PlaybackViewModelTest : PlaybackVmHarness() {
             vm.onQuickBarItem(QuickBarAction.CHANNELS_LIST)
             assertEquals(PlaybackOverlay.Panel, vm.overlay.value)
 
-            // Search is real now (PlaybackSearchWiringTest); Recordings is not yet.
+            // Search (PlaybackSearchWiringTest), Recordings, Multiview and
+            // PIP are real; the stream-detail slots stay placeholders.
+            vm.onQuickBarItem(QuickBarAction.SUBTITLES)
+            assertEquals(PlaybackOverlay.ComingSoon("Subtitles"), vm.overlay.value)
+        }
+
+    @Test
+    fun `the quick-bar's recordings slot opens the DVR library route`() =
+        runTest {
+            var opened = 0
+            val vm = buildVm(hooks = PlaybackHooks(onOpenRecordings = { opened += 1 }))
+            vm.onKey(PlaybackKey.MENU)
+
             vm.onQuickBarItem(QuickBarAction.RECORDINGS)
-            assertEquals(PlaybackOverlay.ComingSoon("Recordings"), vm.overlay.value)
+
+            assertEquals(1, opened)
         }
 
     @Test
@@ -369,6 +382,7 @@ class PlaybackViewModelTest : PlaybackVmHarness() {
         runTest {
             // telly has no premium tier: the reference's paywall rows now
             // share the coming-soon placeholder with the uncaptured rows.
+            // (Record falls back to it too while no DVR center is wired.)
             val vm = buildVm()
             vm.openPanel()
             vm.showChannelMenu(channels[0])

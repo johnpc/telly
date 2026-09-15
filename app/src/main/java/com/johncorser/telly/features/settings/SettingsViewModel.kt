@@ -41,7 +41,11 @@ class SettingsViewModel(
     internal val backup: SettingsBackupManager = graph.actions.backup
     internal val reminders: ReminderSettingsFeed? = graph.reminders
     internal val clearVodPositions: suspend () -> Unit = graph.actions.clearVodPositions
-    private val versionName: String = graph.versionName
+    internal val recordings = graph.actions.recordings
+    internal val versionName: String = graph.versionName
+
+    /** Bumped after actions that change derived rows (recording storage). */
+    internal val refresh = MutableStateFlow(0)
 
     internal val mutableState = MutableStateFlow(SettingsUiState())
     val state: StateFlow<SettingsUiState> = mutableState.asStateFlow()
@@ -70,8 +74,8 @@ class SettingsViewModel(
 
     /** The active sheet's rows (root section list when nothing is pushed). */
     val rows: StateFlow<List<SettingsRow>> =
-        combine(mutableState, playlistItems, epgSourceItems, reminderItems, settings.changes) { state, pls, s, r, _ ->
-            rowsFor(state.activePane, settings, pls, versionName, SettingsFeeds(s, r))
+        combine(mutableState, playlistItems, epgSourceItems, reminderItems, rowTicks()) { state, pls, s, r, _ ->
+            activeRows(state.activePane, pls, SettingsFeeds(s, r))
         }.stateIn(scope, SharingStarted.Eagerly, emptyList())
 
     /** OK on a section row pushes its sheet over the root list. */

@@ -23,6 +23,7 @@ import com.johncorser.telly.features.pip.PipActivityBridge
 import com.johncorser.telly.features.pip.PipState
 import com.johncorser.telly.features.playback.PlaybackTime
 import com.johncorser.telly.features.playlist.M3uFetcher
+import com.johncorser.telly.features.recording.recordingDeps
 import com.johncorser.telly.features.reminders.remindersHub
 import kotlinx.coroutines.launch
 
@@ -84,6 +85,7 @@ class MainActivity : ComponentActivity() {
                 vodDeps = ServiceLocator.vodDeps(this),
                 onEnterPip = pip::enter,
                 reminders = ServiceLocator.remindersHub(this),
+                recordingDeps = ServiceLocator.recordingDeps(this),
             )
         }
     }

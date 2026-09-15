@@ -4,6 +4,8 @@ import com.johncorser.telly.core.ServiceLocator
 import com.johncorser.telly.core.settings.ParentalControls
 import com.johncorser.telly.features.playlist.M3uFetcher
 import com.johncorser.telly.features.playlist.PlaylistUrlChanger
+import com.johncorser.telly.features.recording.RecordingSettingsHook
+import com.johncorser.telly.features.recording.recordingCenter
 import com.johncorser.telly.features.reminders.remindersHub
 import com.johncorser.telly.features.settings.PlaylistKeyMigration
 import com.johncorser.telly.features.settings.PlaylistUpdater
@@ -35,6 +37,7 @@ internal fun MainActivity.settingsGraph(fetcher: M3uFetcher): SettingsGraph {
                         rekeyEpgSources = ServiceLocator.epgSourceStore(this)::rekeyPlaylist,
                     )::change,
                 clearVodPositions = { ServiceLocator.database(this).vodPositionDao().clearAll() },
+                recordings = RecordingSettingsHook(ServiceLocator.recordingCenter(this)),
             ),
         versionName = appVersionName(),
         epgSources = ServiceLocator.epgSourceStore(this),

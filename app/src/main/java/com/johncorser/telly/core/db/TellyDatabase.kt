@@ -16,6 +16,8 @@ import com.johncorser.telly.features.playlist.db.ChannelDao
 import com.johncorser.telly.features.playlist.db.ChannelEntity
 import com.johncorser.telly.features.playlist.db.PlaylistDao
 import com.johncorser.telly.features.playlist.db.PlaylistEntity
+import com.johncorser.telly.features.recording.db.RecordingDao
+import com.johncorser.telly.features.recording.db.RecordingEntity
 import com.johncorser.telly.features.reminders.db.ReminderDao
 import com.johncorser.telly.features.reminders.db.ReminderEntity
 import com.johncorser.telly.features.search.db.SearchDao
@@ -30,8 +32,9 @@ import com.johncorser.telly.features.vod.db.VodPositionEntity
         PlaylistEntity::class, ChannelEntity::class, ProgramEntity::class,
         WatchHistoryEntity::class, EpgSourceEntity::class, ReminderEntity::class,
         MyListEntity::class, VodItemEntity::class, VodPositionEntity::class,
+        RecordingEntity::class,
     ],
-    version = 7,
+    version = 8,
     exportSchema = true,
 )
 abstract class TellyDatabase : RoomDatabase() {
@@ -56,6 +59,9 @@ abstract class TellyDatabase : RoomDatabase() {
     abstract fun vodItemDao(): VodItemDao
 
     abstract fun vodPositionDao(): VodPositionDao
+
+    /** v8: DVR recordings (migration in RecordingMigration). */
+    abstract val recordingDao: RecordingDao
 
     companion object {
         /** v2 adds the programme `<sub-title>` column (round3 P0 item 1). */

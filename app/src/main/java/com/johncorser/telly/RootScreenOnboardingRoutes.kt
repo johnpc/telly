@@ -40,7 +40,7 @@ internal fun RootScreenOnboardingRoutes(
 
 /** TiviMate-style boot skeleton: nothing but the app background (round3 P0 3). */
 @Composable
-private fun BootScreen() {
+internal fun BootScreen() {
     Box(
         Modifier
             .fillMaxSize()

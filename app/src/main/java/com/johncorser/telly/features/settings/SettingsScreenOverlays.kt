@@ -33,6 +33,7 @@ internal fun SettingsScreenOverlay(
         is SettingsOverlay.ConfirmDeleteSource -> SettingsScreenConfirmDeleteSource(model, overlay)
         is SettingsOverlay.ConfirmDeleteReminder -> ReminderScreenConfirmDelete(model, overlay)
         SettingsOverlay.ConfirmClearVodPositions -> VodSettingsScreenConfirm(model)
+        SettingsOverlay.ConfirmDeleteRecordings -> SettingsScreenConfirmDeleteRecordings(model)
         SettingsOverlay.PinSetup -> SettingsScreenPinDialog(model)
     }
 }

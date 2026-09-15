@@ -14,13 +14,9 @@ import com.johncorser.telly.features.playback.PlaybackSources
 import com.johncorser.telly.features.playback.PlaybackTime
 import com.johncorser.telly.features.playback.PlayerKeymap
 import com.johncorser.telly.features.player.Media3PlayerEngine
+import com.johncorser.telly.features.recording.recordingCenter
 import com.johncorser.telly.features.reminders.remindersHub
-import com.johncorser.telly.features.search.SearchDeps
-import com.johncorser.telly.features.search.SearchRepository
 import com.johncorser.telly.features.vod.VodDeps
-import com.johncorser.telly.core.settings.SharedPrefsKeyValueStore as SettingsPrefsStore
-
-private const val SEARCH_PREFS_NAME = "telly-search"
 
 /** Playback slice bundle over [ServiceLocator]'s app-scoped singletons. */
 fun ServiceLocator.playbackDeps(
@@ -47,7 +43,11 @@ fun ServiceLocator.playbackDeps(
                 },
             ),
         parental = ParentalControls(settingsRepository(context)),
-        hooks = hooks.copy(playerKeymap = { PlayerKeymap.from(settingsRepository(context)) }),
+        hooks =
+            hooks.copy(
+                playerKeymap = { PlayerKeymap.from(settingsRepository(context)) },
+                recording = recordingCenter(context),
+            ),
     )
 
 /** Guide slice = the playback bundle + the settings the grid honors. */
@@ -92,22 +92,5 @@ fun ServiceLocator.vodDeps(context: Context): VodDeps =
             Media3PlayerEngine.create(context.applicationContext, userAgentFor = streamUserAgentFor(context))
         },
         rememberPosition = { settingsRepository(context).get(TellySettings.VOD_REMEMBER_POSITION) },
-        clock = clock,
-    )
-
-/** Search slice deps; history keeps its own prefs file, out of backups. */
-fun ServiceLocator.searchDeps(context: Context): SearchDeps =
-    SearchDeps(
-        repository =
-            SearchRepository(
-                searchDao = database(context).searchDao(),
-                channelDao = visibleChannelDao(context),
-                epgRepository = epgRepository(context),
-            ),
-        historyStore =
-            SettingsPrefsStore(
-                context.applicationContext.getSharedPreferences(SEARCH_PREFS_NAME, Context.MODE_PRIVATE),
-            ),
-        lastChannelStore = keyValueStore(context),
         clock = clock,
     )

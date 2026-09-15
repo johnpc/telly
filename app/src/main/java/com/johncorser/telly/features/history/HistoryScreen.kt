@@ -11,15 +11,13 @@ import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import com.johncorser.telly.R
 import com.johncorser.telly.core.design.TELLY_ONBOARDING_BACKGROUND
-import com.johncorser.telly.core.ui.TellyScreenMutedText
+import com.johncorser.telly.core.ui.TellyScreenEmptyState
 import com.johncorser.telly.features.playback.PlaybackDeps
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -52,9 +50,7 @@ fun HistoryScreen(
     ) {
         HistoryScreenHeader(viewModel, focusTrash = rows.isEmpty())
         if (rows.isEmpty()) {
-            Box(Modifier.align(Alignment.Center)) {
-                TellyScreenMutedText(text = stringResource(R.string.history_empty), fontSize = 18.sp)
-            }
+            TellyScreenEmptyState(stringResource(R.string.history_empty))
         } else {
             LazyColumn(
                 Modifier

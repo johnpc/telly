@@ -27,6 +27,9 @@ sealed interface SettingsPane {
     /** Other -> VOD (remember-position toggle + clear positions). */
     data object Vod : SettingsPane
 
+    /** Other -> Recording (recording slice): storage + delete-all. */
+    data object Recording : SettingsPane
+
     data object AppearanceTvGuide : SettingsPane
 
     data object AppearancePlayer : SettingsPane
@@ -72,6 +75,9 @@ sealed interface SettingsOverlay {
 
     /** "Clear playback positions?" confirm on the VOD pane. */
     data object ConfirmClearVodPositions : SettingsOverlay
+
+    /** "Delete all recordings?" GuidedStep (Other -> Recording pane). */
+    data object ConfirmDeleteRecordings : SettingsOverlay
 
     data object PinSetup : SettingsOverlay
 }

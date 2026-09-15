@@ -32,6 +32,12 @@ enum class PlayerMenuRoute {
     /** Opens the reorder screen on the sheet's group (Route.ReorderChannels). */
     REORDER_CHANNELS,
 
+    /** Instant record of the channel (or Stop confirm while it records). */
+    RECORD,
+
+    /** The custom-recording form (channel prefilled, start + duration). */
+    CUSTOM_RECORDING,
+
     /** Unbuilt row: the branded coming-soon placeholder. */
     COMING_SOON,
 }
@@ -55,6 +61,8 @@ object PlayerMenuRouting {
             PlayerMenuItem.ADD_TO_MY_LIST -> PlayerMenuRoute.MY_LIST_TOGGLE
             PlayerMenuItem.MANAGE_FAVORITES -> PlayerMenuRoute.MANAGE_FAVORITES
             PlayerMenuItem.REORDER_CHANNELS -> PlayerMenuRoute.REORDER_CHANNELS
+            PlayerMenuItem.RECORD -> PlayerMenuRoute.RECORD
+            PlayerMenuItem.CUSTOM_RECORDING -> PlayerMenuRoute.CUSTOM_RECORDING
             else -> PlayerMenuRoute.COMING_SOON
         }
 }

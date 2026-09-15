@@ -4,6 +4,7 @@ import com.johncorser.telly.features.mylist.MyListHooks
 import com.johncorser.telly.features.panel.PanelLock
 import com.johncorser.telly.features.pip.PipState
 import com.johncorser.telly.features.player.PlayerPlatformHooks
+import com.johncorser.telly.features.recording.RecordingCenter
 
 /**
  * Cross-slice hooks the playback surface plugs into (nav + parental + PIP +
@@ -15,6 +16,8 @@ import com.johncorser.telly.features.player.PlayerPlatformHooks
 data class PlaybackHooks(
     val panelLock: PanelLock = PanelLock(),
     val onOpenSettings: () -> Unit = {},
+    /** Opens the search route (the sheet's Search row + the quick-bar slot). */
+    val onOpenSearch: () -> Unit = {},
     val onOpenMultiview: () -> Unit = {},
     /** The activity's real enterPictureInPictureMode call. */
     val onEnterPip: () -> Unit = {},
@@ -26,4 +29,8 @@ data class PlaybackHooks(
     val platform: PlayerPlatformHooks = PlayerPlatformHooks(),
     /** Settings → Remote control → Player key remaps, read per key press. */
     val playerKeymap: () -> PlayerKeymap = { PlayerKeymap() },
+    /** Opens the Recordings library (quick-bar RECORDINGS slot + guide rail). */
+    val onOpenRecordings: () -> Unit = {},
+    /** The DVR facade behind the sheet's Record rows (null in JVM tests). */
+    val recording: RecordingCenter? = null,
 )

@@ -31,6 +31,7 @@ internal fun rememberGuideController(
                         engine = engine,
                         store = deps.playback.keyValueStore,
                         time = deps.playback.time,
+                        hooks = deps.playback.hooks,
                     ),
                 history = deps.playback.sources.history,
                 pastDays = deps.pastDays,

@@ -61,8 +61,11 @@ class GuideMenuControllerTest {
                 openReorderChannels = { reorderGroups += it },
             )
         return GuideMenuController(
-            actions = ChannelActions(dao, scope, myList = host),
-            zapAway = { zapped += it.id },
+            channelActions =
+                GuideSheetChannelActions(
+                    ChannelActions(dao, scope, myList = host),
+                    zapAway = { zapped += it.id },
+                ),
             focusedRow = { row },
             info = { infoData },
             callbacks =
@@ -214,8 +217,6 @@ class GuideMenuControllerTest {
             // (the My-list/favorites-management rows are real now).
             val unbuilt =
                 listOf(
-                    PlayerMenuItem.RECORD,
-                    PlayerMenuItem.CUSTOM_RECORDING,
                     PlayerMenuItem.BLOCK_CHANNEL,
                     PlayerMenuItem.ASSIGN_EPG,
                     PlayerMenuItem.MANAGE_BLOCKING,
@@ -325,7 +326,7 @@ class GuideMenuControllerTest {
     fun `rows that leave the sheet clear the refocus memory`() {
         runTest {
             val menu = buildOpenSheet()
-            menu.onMenuItem(PlayerMenuItem.RECORD)
+            menu.onMenuItem(PlayerMenuItem.ADD_TO_MY_LIST)
             menu.close()
 
             menu.onMenuItem(PlayerMenuItem.SETTINGS)
@@ -353,8 +354,8 @@ class GuideMenuControllerTest {
         runTest {
             val menu = build()
 
-            menu.onCellAction(GuideCellAction.RECORD)
-            assertEquals(GuideLayer.ComingSoon("Record"), menu.layer.value)
+            menu.onCellAction(GuideCellAction.PROGRAM_DESCRIPTION)
+            assertEquals(GuideLayer.ComingSoon("Program description"), menu.layer.value)
 
             menu.close()
             assertEquals(GuideLayer.Grid, menu.layer.value)

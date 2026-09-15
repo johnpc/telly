@@ -9,6 +9,8 @@ import com.johncorser.telly.core.ui.OnboardingScreenMessage
 import com.johncorser.telly.features.mylist.MyListKeys
 import com.johncorser.telly.features.playback.PlaybackScreenMenu
 import com.johncorser.telly.features.playback.PlayerMenu
+import com.johncorser.telly.features.recording.RecordingScreenForm
+import com.johncorser.telly.features.recording.RecordingScreenStopConfirm
 import com.johncorser.telly.features.settings.SettingsScreenRows
 import com.johncorser.telly.features.settings.SettingsScreenSheet
 
@@ -57,6 +59,13 @@ internal fun GuideScreenRowMenuLayers(
                 headline = layer.feature,
                 subtitle = stringResource(R.string.playback_coming_soon),
             )
+        is GuideLayer.RecordingStop ->
+            RecordingScreenStopConfirm(
+                channelName = layer.channelName,
+                onStop = { controller.recordingMenu?.confirmStop(layer.recordingId) },
+                onDismiss = { controller.menu.close() },
+            )
+        is GuideLayer.CustomRecording -> controller.recordingMenu?.let { RecordingScreenForm(it) }
         else -> Unit
     }
 }

@@ -1,6 +1,7 @@
 package com.johncorser.telly.features.settings
 
 import com.johncorser.telly.core.settings.TellySettings
+import com.johncorser.telly.features.recording.RecordingRowIds
 
 /**
  * Non-generic row activations: everything that is not a plain toggle or
@@ -47,10 +48,11 @@ private fun pushedPaneFor(rowId: String): SettingsPane? =
         RowIds.EPG_SOURCES, RowIds.PLAYLIST_EPG_SOURCES -> SettingsPane.EpgSources
         RowIds.REMOTE_TV_GUIDE -> SettingsPane.RemoteTvGuide
         RowIds.REMOTE_PLAYER -> SettingsPane.RemotePlayer
+        RowIds.OTHER_RECORDING -> SettingsPane.Recording
         else -> null
     }
 
-/** Playlist-list and per-playlist actions. */
+/** Playlist-list, per-playlist and recording-pane actions. */
 private fun SettingsViewModel.runPlaylistAction(rowId: String) {
     when (rowId) {
         RowIds.ADD_PLAYLIST -> addPlaylist()
@@ -59,6 +61,7 @@ private fun SettingsViewModel.runPlaylistAction(rowId: String) {
         RowIds.PLAYLIST_ENABLE -> currentDetailUrl()?.let { flip(playlistEnabledSetting(it)) }
         RowIds.PLAYLIST_DELETE -> confirmDeleteOverlay()
         RowIds.PLAYLIST_NAME -> renameOverlay()
+        RecordingRowIds.DELETE_ALL -> showOverlay(SettingsOverlay.ConfirmDeleteRecordings)
         else -> runPlaylistExtrasAction(rowId)
     }
 }

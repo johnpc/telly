@@ -7,6 +7,7 @@ import com.johncorser.telly.features.panel.PanelViewModel
 import com.johncorser.telly.features.pip.PipEnterAction
 import com.johncorser.telly.features.player.PlayerState
 import com.johncorser.telly.features.playlist.db.ChannelEntity
+import com.johncorser.telly.features.recording.RecordingMenu
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -25,7 +26,8 @@ class PlaybackViewModel(
     val exitToGuide: () -> Unit = {},
     /** The overlay's History card pushes the History screen (history-round2 §3). */
     val openHistory: () -> Unit = {},
-    private val openSearch: () -> Unit = {},
+    /** Quick-bar Search slot + the sheet's Search row both leave here. */
+    val openSearch: () -> Unit = {},
 ) {
     private val clock = env.time.clock
     private val hooks = env.hooks
@@ -53,10 +55,16 @@ class PlaybackViewModel(
             actions = ChannelActions(env.channelDao, scope, myList = panelMyListHost(myList, panel, env.hooks)),
             overlays = overlays,
             tuner = tuner,
-            hooks = hooks,
-            openSearch = openSearch,
+            hooks = hooks.copy(onOpenSearch = openSearch),
             rowOf = { id -> panel.rows.value.firstOrNull { it.channel.id == id } },
+            recording = { recordingMenu },
         )
+
+    /** The sheet's Record rows act through this (null while no DVR wired). */
+    val recordingMenu: RecordingMenu? =
+        env.hooks.recording?.let { center ->
+            RecordingMenu(center, scope, clock) { prompt -> menu.onRecordingPrompt(prompt) }
+        }
 
     private val video = env.engine.video
 
@@ -121,16 +129,8 @@ class PlaybackViewModel(
 
     fun showComingSoon(feature: String) = overlays.set(PlaybackOverlay.ComingSoon(feature))
 
-    /** Quick-bar OK: Search, Channels list, Multiview and PIP are real, the rest later slices. */
-    fun onQuickBarItem(action: QuickBarAction) {
-        when (action) {
-            QuickBarAction.CHANNELS_LIST -> openPanel()
-            QuickBarAction.SEARCH -> openSearch()
-            QuickBarAction.MULTIVIEW -> openMultiview()
-            QuickBarAction.PICTURE_IN_PICTURE -> enterPip()
-            else -> showComingSoon(action.feature)
-        }
-    }
+    /** The quick-bar's Recordings slot opens the DVR library route. */
+    val openRecordings: () -> Unit = env.hooks.onOpenRecordings
 
     /** The nine quick-bar slots with live stream labels (round3-ref 07). */
     fun quickBarItems(): List<QuickBarItem> = QuickBar.items(video.value)

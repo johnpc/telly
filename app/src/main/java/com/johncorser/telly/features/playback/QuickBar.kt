@@ -23,6 +23,18 @@ enum class QuickBarAction(
     SUBTITLES("Subtitles"),
 }
 
+/** Quick-bar OK: Search, Channels list, Multiview, PIP and Recordings are real. */
+fun PlaybackViewModel.onQuickBarItem(action: QuickBarAction) {
+    when (action) {
+        QuickBarAction.CHANNELS_LIST -> openPanel()
+        QuickBarAction.SEARCH -> openSearch()
+        QuickBarAction.MULTIVIEW -> openMultiview()
+        QuickBarAction.PICTURE_IN_PICTURE -> enterPip()
+        QuickBarAction.RECORDINGS -> openRecordings()
+        else -> showComingSoon(action.feature)
+    }
+}
+
 /**
  * Long-OK / MENU at fullscreen opens this bottom icon bar (round3-ref
  * 07/08): Search · Channels list · Recordings · Multiview ·

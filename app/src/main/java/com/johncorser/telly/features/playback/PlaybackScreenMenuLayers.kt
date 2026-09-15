@@ -7,6 +7,8 @@ import androidx.compose.ui.res.stringResource
 import com.johncorser.telly.R
 import com.johncorser.telly.core.ui.OnboardingScreenMessage
 import com.johncorser.telly.features.guide.GuideScreenChannelOptionsPane
+import com.johncorser.telly.features.recording.RecordingScreenForm
+import com.johncorser.telly.features.recording.RecordingScreenStopConfirm
 
 /**
  * The quick-bar, the long-OK sheet and the screens its rows push, hosted in
@@ -32,6 +34,13 @@ internal fun PlaybackScreenMenuLayers(
                     headline = active.feature,
                     subtitle = stringResource(R.string.playback_coming_soon),
                 )
+            is PlaybackOverlay.RecordingStop ->
+                RecordingScreenStopConfirm(
+                    channelName = active.channelName,
+                    onStop = { viewModel.recordingMenu?.confirmStop(active.recordingId) },
+                    onDismiss = { viewModel.onKey(PlaybackKey.BACK) },
+                )
+            is PlaybackOverlay.CustomRecording -> viewModel.recordingMenu?.let { RecordingScreenForm(it) }
             else -> Unit
         }
     }

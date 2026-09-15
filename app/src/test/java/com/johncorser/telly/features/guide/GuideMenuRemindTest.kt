@@ -30,8 +30,7 @@ class GuideMenuRemindTest {
     private fun TestScope.build(): GuideMenuController {
         val scope = CoroutineScope(UnconfinedTestDispatcher(testScheduler))
         return GuideMenuController(
-            actions = ChannelActions(channelDao, scope),
-            zapAway = {},
+            channelActions = GuideSheetChannelActions(ChannelActions(channelDao, scope), zapAway = {}),
             focusedRow = { row },
             info = { null },
             callbacks = GuideCallbacks(onFullscreen = {}, onOpenSearch = {}, onOpenSettings = {}),

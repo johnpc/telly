@@ -21,6 +21,7 @@ import com.johncorser.telly.features.guide.GuideDeps
 import com.johncorser.telly.features.multiview.MultiviewDeps
 import com.johncorser.telly.features.playback.PlaybackDeps
 import com.johncorser.telly.features.playlist.PlaylistRepository
+import com.johncorser.telly.features.recording.RecordingDeps
 import com.johncorser.telly.features.reminders.ReminderScreenPopupHost
 import com.johncorser.telly.features.reminders.RemindersHub
 import com.johncorser.telly.features.search.SearchDeps
@@ -42,6 +43,7 @@ fun RootScreen(
     vodDeps: VodDeps,
     onEnterPip: () -> Unit = {},
     reminders: RemindersHub? = null,
+    recordingDeps: RecordingDeps? = null,
 ) {
     val stack by navigator.stack.collectAsState()
     val route = stack.last()
@@ -77,6 +79,7 @@ fun RootScreen(
                             multiviewDeps,
                             vodDeps,
                             onEnterPip,
+                            recordingDeps,
                         )
                     }
                     if (settingsOpen) {

@@ -1,8 +1,27 @@
 package com.johncorser.telly.features.settings
 
 import com.johncorser.telly.core.settings.Setting
+import com.johncorser.telly.features.recording.recordingRows
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.merge
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+
+/** The active sheet's rows; the Recording pane needs the DVR storage hook. */
+internal fun SettingsViewModel.activeRows(
+    pane: SettingsPane?,
+    playlists: List<PlaylistItem>,
+    feeds: SettingsFeeds,
+): List<SettingsRow> =
+    if (pane == SettingsPane.Recording) {
+        recordingRows(recordings)
+    } else {
+        rowsFor(pane, settings, playlists, versionName, feeds)
+    }
+
+/** Rebuild triggers beyond the feeds: settings edits + the manual bump. */
+internal fun SettingsViewModel.rowTicks(): Flow<Unit> = merge(settings.changes.map { }, refresh.map { })
 
 /** State-mutation helpers shared by the dispatch extension files. */
 

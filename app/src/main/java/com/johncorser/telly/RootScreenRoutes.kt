@@ -12,6 +12,8 @@ import com.johncorser.telly.features.multiview.MultiviewScreen
 import com.johncorser.telly.features.playback.PlaybackDeps
 import com.johncorser.telly.features.playback.PlaybackScreen
 import com.johncorser.telly.features.playlist.PlaylistRepository
+import com.johncorser.telly.features.recording.RecordingDeps
+import com.johncorser.telly.features.recording.RecordingsScreen
 import com.johncorser.telly.features.search.SearchDeps
 import com.johncorser.telly.features.search.SearchScreen
 import com.johncorser.telly.features.vod.VodDeps
@@ -30,6 +32,7 @@ internal fun RootScreenRoutes(
     multiviewDeps: MultiviewDeps,
     vodDeps: VodDeps,
     onEnterPip: () -> Unit = {},
+    recordingDeps: RecordingDeps? = null,
 ) {
     ScreenCrossfade(baseRoute) { target ->
         when (target) {
@@ -51,6 +54,7 @@ internal fun RootScreenRoutes(
                     onEnterPip = onEnterPip,
                     onOpenManageFavorites = { navigator.push(Route.ManageFavorites) },
                     onOpenReorderChannels = { group -> navigator.push(Route.ReorderChannels(group)) },
+                    onOpenRecordings = { navigator.push(Route.Recordings) },
                 )
             // BACK at the pane grid exits to fullscreen playback of the
             // focused pane's channel (multiview-spec: exit chain).
@@ -62,6 +66,7 @@ internal fun RootScreenRoutes(
                     onOpenSearch = { navigator.push(Route.Search) },
                     onOpenSettings = { navigator.push(Route.Settings) },
                     onOpenVod = { navigator.push(Route.Vod) },
+                    onOpenRecordings = { navigator.push(Route.Recordings) },
                     settingsOpen = settingsOpen,
                     onOpenMyList = { navigator.push(Route.MyList) },
                     onOpenManageFavorites = { navigator.push(Route.ManageFavorites) },
@@ -88,6 +93,9 @@ internal fun RootScreenRoutes(
                 )
             Route.MyList, Route.ManageFavorites, is Route.ReorderChannels ->
                 RootScreenMyListRoutes(target, navigator, playbackDeps)
+            // The DVR library (recording slice): BACK pops back to wherever
+            // it was opened from (quick-bar slot or the guide rail's icon).
+            Route.Recordings -> recordingDeps?.let { RecordingsScreen(deps = it) } ?: BootScreen()
         }
     }
 }
