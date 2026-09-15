@@ -2,6 +2,17 @@ package com.johncorser.telly.features.playback
 
 import com.johncorser.telly.features.panel.PanelViewModel
 
+/** The command executor's outward seams (nav + clock re-seed + catch-up). */
+data class PlaybackCommandSeams(
+    /** Re-seeds the overlay's "now" instant from the injected clock. */
+    val refreshInstant: () -> Unit = {},
+    val exitToGuide: () -> Unit = {},
+    /** Appearance -> Player -> Panels timeout, sec (default = today's constants). */
+    val timeouts: () -> PanelTimeouts = { PanelTimeouts.DEFAULT },
+    /** Every live tune leaves catch-up mode (zap keys, panel rows, recents). */
+    val onLiveTune: () -> Unit = {},
+)
+
 /**
  * Executes [PlaybackCommand]s against the tuner and overlay state — the
  * transition half of the playback state machine, split from the ViewModel
@@ -11,21 +22,17 @@ class PlaybackCommands(
     private val tuner: TuneController,
     private val overlays: OverlayState,
     private val panel: PanelViewModel,
-    /** Re-seeds the overlay's "now" instant from the injected clock. */
-    private val refreshInstant: () -> Unit,
-    private val exitToGuide: () -> Unit,
-    /** Appearance -> Player -> Panels timeout, sec (default = today's constants). */
-    private val timeouts: () -> PanelTimeouts = { PanelTimeouts.DEFAULT },
+    private val seams: PlaybackCommandSeams = PlaybackCommandSeams(),
 ) {
     fun execute(command: PlaybackCommand) {
         when (command) {
             PlaybackCommand.ShowInfo -> showInfo()
             PlaybackCommand.ShowTransport ->
-                overlays.showAutoHiding(PlaybackOverlay.InfoTransport, timeouts().infoMs)
-            PlaybackCommand.ExitToGuide -> exitToGuide()
+                overlays.showAutoHiding(PlaybackOverlay.InfoTransport, seams.timeouts().infoMs)
+            PlaybackCommand.ExitToGuide -> seams.exitToGuide()
             is PlaybackCommand.Zap -> zap(command.delta)
             PlaybackCommand.OpenQuickBar ->
-                overlays.showAutoHiding(PlaybackOverlay.QuickBar, timeouts().quickBarMs)
+                overlays.showAutoHiding(PlaybackOverlay.QuickBar, seams.timeouts().quickBarMs)
             PlaybackCommand.OpenPanel -> openPanel()
             PlaybackCommand.Dismiss -> overlays.set(PlaybackOverlay.None)
             PlaybackCommand.BackToPanel -> overlays.set(PlaybackOverlay.Panel)
@@ -41,13 +48,14 @@ class PlaybackCommands(
 
     /** Zap keeps the old frame on screen; the compact overlay identifies the target. */
     fun showZapInfo() {
-        refreshInstant()
-        overlays.showAutoHiding(PlaybackOverlay.ZapInfo, timeouts().zapMs)
+        seams.onLiveTune()
+        seams.refreshInstant()
+        overlays.showAutoHiding(PlaybackOverlay.ZapInfo, seams.timeouts().zapMs)
     }
 
     private fun showInfo() {
-        refreshInstant()
-        overlays.showAutoHiding(PlaybackOverlay.Info, timeouts().infoMs)
+        seams.refreshInstant()
+        overlays.showAutoHiding(PlaybackOverlay.Info, seams.timeouts().infoMs)
     }
 
     private fun zap(delta: Int) {

@@ -27,6 +27,17 @@ data class ChannelFlags(
 )
 
 /**
+ * Catch-up capability as declared on the channel's `#EXTINF` line
+ * (`catchup` / `catchup-source` / `catchup-days`); re-imported from the
+ * playlist on every refresh like the rest of [ChannelSource].
+ */
+data class ChannelCatchup(
+    val catchupType: String? = null,
+    val catchupSource: String? = null,
+    val catchupDays: Int? = null,
+)
+
+/**
  * One channel row. `number` is the TiviMate-style sequential channel number
  * assigned from playlist order on import; `sortIndex` preserves that order
  * independently of future renumbering.
@@ -50,4 +61,5 @@ data class ChannelEntity(
     val sortIndex: Int,
     @Embedded val source: ChannelSource,
     @Embedded val flags: ChannelFlags = ChannelFlags(),
+    @Embedded val catchup: ChannelCatchup = ChannelCatchup(),
 )

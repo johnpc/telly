@@ -60,6 +60,10 @@ class Media3PlayerEngine(
         player.volume = if (muted) 0f else 1f
     }
 
+    override fun positionMs(): Long = player.currentPosition
+
+    override fun seekTo(positionMs: Long) = player.seekTo(positionMs)
+
     override fun onPlaybackStateChanged(playbackState: Int) {
         when (playbackState) {
             Player.STATE_BUFFERING -> mutableState.value = PlayerState.Buffering

@@ -69,25 +69,40 @@ class TuneController(
     /**
      * Tunes [channel], or opens the [gate]'s PIN prompt when it is blocked
      * (the gate fires FIRST — a blocked channel never reaches the external
-     * app either). While "Use external player" is On, a user-initiated tune
-     * opens the stream in the external app instead of the internal engine
-     * (ux-spec §3.18); with no handler installed it falls back to internal
-     * playback. Restore paths (cold start, guide resume) pass
-     * [allowExternal] = false so app start never bounces to another app.
+     * app either, and a blocked channel's archive needs the PIN too; the
+     * verified PIN's re-tune replays the intercepted catch-up URL). While
+     * "Use external player" is On, a user-initiated tune opens the stream
+     * in the external app instead of the internal engine (ux-spec §3.18);
+     * with no handler installed it falls back to internal playback. Restore
+     * paths (cold start, guide resume) pass [allowExternal] = false so app
+     * start never bounces to another app. A non-null [catchupUrl] plays
+     * that already-aired programme stream instead of the live one: it stays
+     * on the internal engine (the archive URL is not the live URL the
+     * external app expects) and no watch-history event fires (catch-up is
+     * not a live watch).
      */
     fun tune(
         channel: ChannelEntity,
         allowExternal: Boolean = true,
+        catchupUrl: String? = null,
     ) {
-        if (gate.intercept(channel)) return
+        if (gate.intercept(channel)) return pendingCatchup.stash(channel.id, catchupUrl)
+        val archiveUrl = pendingCatchup.consume(channel.id, catchupUrl)
         mutableCurrent.value = channel
         suspended = false
         store.putLong(LAST_CHANNEL_KEY, channel.id)
+        if (archiveUrl != null) {
+            engine.load(archiveUrl)
+            return
+        }
         scope.launch { history.record(channel) }
         if (!(allowExternal && external.maybeLaunch(channel.source.streamUrl))) {
             engine.load(channel.source.streamUrl)
         }
     }
+
+    /** The gate-intercepted archive tune the PIN unlock should replay. */
+    private val pendingCatchup = PendingCatchup()
 
     private var suspended = false
 

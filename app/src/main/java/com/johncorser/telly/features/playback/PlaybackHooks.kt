@@ -1,6 +1,7 @@
 package com.johncorser.telly.features.playback
 
 import com.johncorser.telly.core.settings.ParentalControls
+import com.johncorser.telly.features.catchup.CatchupDeps
 import com.johncorser.telly.features.mylist.MyListHooks
 import com.johncorser.telly.features.panel.PanelLock
 import com.johncorser.telly.features.pip.PipState
@@ -38,4 +39,6 @@ data class PlaybackHooks(
     val parental: ParentalControls? = null,
     /** Shared by the guide's and playback's gates ("Until app restart"). */
     val blockSession: BlockSession = BlockSession(),
+    /** Catch-up hand-off session + the Remote-control seek toggles + steps. */
+    val catchup: CatchupDeps = CatchupDeps(),
 )

@@ -66,9 +66,18 @@ const VOD_ITEMS = [
   { id: "vod-big-buck.fixture", name: "Big Buck Bunny", group: "Cinema" },
   { id: "vod-sintel.fixture", name: "Sintel", group: "Cinema" },
 ];
+// Catch-up e2e (mirrored 1:1 by FixturePlan): News One is the only
+// catch-up-enabled channel; the template resolves to the same fixture .ts
+// (query params are ignored by the servers).
+const CATCHUP_ID = "news-one-1.fixture";
+const CATCHUP_DAYS = 2;
+const catchupAttrs = (c) =>
+  c.id === CATCHUP_ID
+    ? ` catchup="default" catchup-source="${c.url}?utc={utc}&lutc={lutc}&d={duration}" catchup-days="${CATCHUP_DAYS}"`
+    : "";
 let m3u = `#EXTM3U url-tvg="${BASE}/epg.xml"\n`;
 for (const c of channels) {
-  m3u += `#EXTINF:-1 tvg-id="${c.id}" tvg-name="${c.name}" tvg-logo="${c.logo}" group-title="${c.group}",${c.name}\n${c.url}\n`;
+  m3u += `#EXTINF:-1 tvg-id="${c.id}" tvg-name="${c.name}" tvg-logo="${c.logo}"${catchupAttrs(c)} group-title="${c.group}",${c.name}\n${c.url}\n`;
 }
 for (const v of VOD_ITEMS) {
   m3u += `#EXTINF:-1 tvg-id="${v.id}" tvg-name="${v.name}" tvg-logo="${BASE}/logos/movie-house.png" group-title="${v.group}",${v.name}\n${BASE}/streams/vod-sample.mp4\n`;
@@ -115,6 +124,30 @@ for (const c of channels) {
     xml += `  </programme>\n`;
     t = stop;
     ep++;
+  }
+}
+// News One + News One HD carry EPG a full extra day into the past ("Past …"
+// titles, generated BACKWARDS from the main window so now/next phases never
+// shift) — a −24 h guide day jump lands on real programmes for the catch-up
+// scenarios. Deterministic; mirrored 1:1 by FixturePlan.deepPastSchedule.
+const DEEP_PAST_IDS = new Set(["news-one-1.fixture", "news-one-2.fixture"]);
+const DEEP_PAST_HOURS = 30;
+const PAST_DURATIONS = [30, 45, 60, 75, 90];
+for (const c of channels) {
+  if (!DEEP_PAST_IDS.has(c.id)) continue;
+  const floor = snapped - (DEEP_PAST_HOURS - 6) * 3600e3;
+  let end = snapped;
+  let index = 1;
+  while (end > floor) {
+    const start = end - PAST_DURATIONS[(c.num + index) % PAST_DURATIONS.length] * 60e3;
+    const title = `Past ${c.titles[(c.num * 3 + index) % c.titles.length]}`;
+    xml += `  <programme start="${fmt(start)}" stop="${fmt(end)}" channel="${esc(c.id)}">\n`;
+    xml += `    <title lang="en">${esc(title)}</title>\n`;
+    xml += `    <sub-title lang="en">${esc(title)} Special</sub-title>\n`;
+    xml += `    <desc lang="en">${esc(DESCS[(c.num + index) % DESCS.length])}</desc>\n`;
+    xml += `  </programme>\n`;
+    end = start;
+    index += 1;
   }
 }
 xml += `</tv>\n`;

@@ -1,5 +1,5 @@
 #EXTM3U url-tvg="http://10.0.2.2:8090/epg.xml"
-#EXTINF:-1 tvg-id="news-one-1.fixture" tvg-name="News One" tvg-logo="http://10.0.2.2:8090/logos/news-one.png" group-title="News",News One
+#EXTINF:-1 tvg-id="news-one-1.fixture" tvg-name="News One" tvg-logo="http://10.0.2.2:8090/logos/news-one.png" catchup="default" catchup-source="http://10.0.2.2:8090/streams/news-one.ts?utc={utc}&lutc={lutc}&d={duration}" catchup-days="2" group-title="News",News One
 http://10.0.2.2:8090/streams/news-one.ts
 #EXTINF:-1 tvg-id="news-one-2.fixture" tvg-name="News One HD" tvg-logo="http://10.0.2.2:8090/logos/news-one.png" group-title="News",News One HD
 http://10.0.2.2:8090/streams/news-one.ts

@@ -3,6 +3,9 @@ package com.johncorser.telly.core
 import android.content.Context
 import com.johncorser.telly.core.settings.ParentalControls
 import com.johncorser.telly.core.settings.TellySettings
+import com.johncorser.telly.features.catchup.CatchupDeps
+import com.johncorser.telly.features.catchup.CatchupSession
+import com.johncorser.telly.features.catchup.CatchupToggles
 import com.johncorser.telly.features.guide.GuideDeps
 import com.johncorser.telly.features.guide.GuideKeymap
 import com.johncorser.telly.features.history.WatchHistory
@@ -15,12 +18,16 @@ import com.johncorser.telly.features.playback.PlaybackSources
 import com.johncorser.telly.features.playback.PlaybackTime
 import com.johncorser.telly.features.playback.PlayerKeymap
 import com.johncorser.telly.features.player.Media3PlayerEngine
+import com.johncorser.telly.features.player.skip.SkipSteps
 import com.johncorser.telly.features.recording.recordingCenter
 import com.johncorser.telly.features.reminders.remindersHub
 import com.johncorser.telly.features.vod.VodDeps
 
 /** One block-unlock session per process ("Until app restart" relock). */
 private val sharedBlockSession = BlockSession()
+
+/** ONE catch-up hand-off slot: the guide fills it, playback consumes it. */
+private val catchupSession = CatchupSession()
 
 /** Playback slice bundle over [ServiceLocator]'s app-scoped singletons. */
 fun ServiceLocator.playbackDeps(
@@ -53,6 +60,12 @@ fun ServiceLocator.playbackDeps(
                 recording = recordingCenter(context),
                 parental = ParentalControls(settingsRepository(context)),
                 blockSession = sharedBlockSession,
+                catchup =
+                    CatchupDeps(
+                        session = catchupSession,
+                        toggles = CatchupToggles { setting -> settingsRepository(context).get(setting) },
+                        skipSteps = { SkipSteps.of(settingsRepository(context)) },
+                    ),
             ),
     )
 

@@ -8,6 +8,7 @@ import com.johncorser.telly.core.kv.KeyValueStore
 import com.johncorser.telly.core.kv.SharedPrefsKeyValueStore
 import com.johncorser.telly.core.settings.SettingsRepository
 import com.johncorser.telly.core.settings.TellySettings
+import com.johncorser.telly.features.catchup.db.CatchupMigration
 import com.johncorser.telly.features.epg.EpgRefresher
 import com.johncorser.telly.features.epg.EpgRepository
 import com.johncorser.telly.features.epg.EpgRetention
@@ -53,6 +54,7 @@ object ServiceLocator {
                     VodMigrations.MIGRATION_6_7,
                     RecordingMigration.MIGRATION_7_8,
                     BlockedMigration.MIGRATION_8_9,
+                    CatchupMigration.MIGRATION_9_10,
                 )
                 .build()
                 .also { database = it }

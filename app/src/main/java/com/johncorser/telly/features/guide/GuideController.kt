@@ -1,5 +1,6 @@
 package com.johncorser.telly.features.guide
 
+import com.johncorser.telly.features.catchup.GuideCatchup
 import com.johncorser.telly.features.history.WatchHistory
 import com.johncorser.telly.features.mylist.MyListMenu
 import com.johncorser.telly.features.panel.PanelViewModel
@@ -30,6 +31,9 @@ class GuideController(
     seams: GuideSeams = GuideSeams(),
 ) {
     val zone = env.time.zone
+
+    /** OK on a playable past cell hands the archive to fullscreen playback. */
+    private val catchup = GuideCatchup(env.hooks.catchup.session, env.time.clock, callbacks.onFullscreen)
 
     /** Settings → Remote control → TV guide key remaps, read per key press. */
     private val keymap = seams.keymap
@@ -133,6 +137,7 @@ class GuideController(
             is GuideAction.TunePreview -> tuner.tune(action.channel)
             GuideAction.GoFullscreen -> callbacks.onFullscreen()
             is GuideAction.OpenCellMenu -> menu.show(GuideLayer.CellMenu(action.cell))
+            is GuideAction.PlayCatchup -> catchup.play(action.channel, action.cell)
         }
     }
 }

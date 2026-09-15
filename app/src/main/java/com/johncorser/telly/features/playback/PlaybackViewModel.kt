@@ -1,5 +1,6 @@
 package com.johncorser.telly.features.playback
 
+import com.johncorser.telly.features.catchup.CatchupPlayback
 import com.johncorser.telly.features.history.WatchHistory
 import com.johncorser.telly.features.mylist.MyListMenu
 import com.johncorser.telly.features.mylist.panelMyListHost
@@ -74,25 +75,29 @@ class PlaybackViewModel(
     val current: StateFlow<ChannelEntity?> = tuner.current
     val overlay: StateFlow<PlaybackOverlay> = overlays.overlay
     val playerState: StateFlow<PlayerState> = env.engine.state
-    val info: StateFlow<PlaybackInfoData?> =
-        PlaybackInfoFeed(tuner.current, instant, env.engine.video, env.epgRepository, env.time.zone, scope).info
 
-    init {
-        tuner.start()
-        // AFR: the engine's detected/estimated frame rate feeds the display
-        // mode switch through the hook (MainActivity applies it).
-        feedFrameRates(video, scope, hooks.platform.onFrameRateChanged)
-    }
+    /** Catch-up mode: pending guide request, seek keys, transport position. */
+    val catchup: CatchupPlayback =
+        CatchupPlayback(env, tuner, { commands.execute(PlaybackCommand.ShowTransport) }, scope, exitToGuide)
+
+    /** During catch-up the overlay swaps to the archived programme + position. */
+    val info: StateFlow<PlaybackInfoData?> = catchupInfoFeed(env, tuner, instant, catchup, scope)
 
     private val commands =
         PlaybackCommands(
             tuner = tuner,
             overlays = overlays,
             panel = panel,
-            refreshInstant = { instant.value = clock() },
-            exitToGuide = exitToGuide,
-            timeouts = env.time.panelTimeouts,
+            seams = commandSeams(env, { instant.value = clock() }, exitToGuide, catchup),
         )
+
+    init {
+        // The guide's pending catch-up request owns the tune when present.
+        if (!catchup.resumePending()) tuner.start()
+        // AFR: the engine's detected/estimated frame rate feeds the display
+        // mode switch through the hook (MainActivity applies it).
+        feedFrameRates(video, scope, hooks.platform.onFrameRateChanged)
+    }
 
     /** Quick-bar PIP: clear the chrome first, then the activity swaps windows. */
     val enterPip = PipEnterAction(clearChrome = { overlays.set(PlaybackOverlay.None) }, enter = env.hooks.onEnterPip)
@@ -118,9 +123,15 @@ class PlaybackViewModel(
 
     private val playerKeymap = env.hooks.playerKeymap
 
-    /** Routes a key through the catalogue's key-by-context map; true = consumed. */
-    fun onKey(key: PlaybackKey): Boolean =
-        PlaybackKeyPolicy.commandFor(overlays.value, key, playerKeymap())?.also(commands::execute) != null
+    /**
+     * Routes a key through the catalogue's key-by-context map; true =
+     * consumed. The catch-up context pre-routes seek keys (delegation, not
+     * a fork — everything it declines falls through to the live keymap).
+     */
+    fun onKey(key: PlaybackKey): Boolean {
+        if (catchup.onKey(overlays.value, key)) return true
+        return PlaybackKeyPolicy.commandFor(overlays.value, key, playerKeymap())?.also(commands::execute) != null
+    }
 
     /** OK on a panel row tunes it and shows the compact zap overlay (round3-ref 10). */
     fun tuneFromPanel(channel: ChannelEntity) {

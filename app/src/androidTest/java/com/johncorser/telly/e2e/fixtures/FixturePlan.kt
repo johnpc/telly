@@ -48,13 +48,46 @@ object FixturePlan {
     fun schedule(anchorMs: Long): List<FixtureProgramme> {
         val windowStart = (anchorMs - PAST_HOURS * 3_600_000L).floorTo(HALF_HOUR_MS)
         val windowEnd = anchorMs + FUTURE_HOURS * 3_600_000L
-        return channels.flatMap { channel -> channelSchedule(channel, windowStart, windowEnd) }
+        return channels.flatMap { channel -> channelSchedule(channel, windowStart, windowEnd) } +
+            channels.filter { it.tvgId in deepPastTvgIds }.flatMap { deepPastSchedule(it, windowStart) }
+    }
+
+    /** Backwards from the main window so existing now/next phases never shift. */
+    private fun deepPastSchedule(
+        channel: FixtureChannel,
+        windowStart: Long,
+    ): List<FixtureProgramme> {
+        val titles = groups.getValue(channel.group).titles
+        val floor = windowStart - (DEEP_PAST_HOURS - PAST_HOURS) * 3_600_000L
+        val out = mutableListOf<FixtureProgramme>()
+        var end = windowStart
+        var index = 1
+        while (end > floor) {
+            val start = end - durationsMinutes[(channel.number + index) % durationsMinutes.size] * 60_000L
+            val title = "Past " + titles[(channel.number * 3 + index) % titles.size]
+            val description = DESCRIPTIONS[(channel.number + index) % DESCRIPTIONS.size]
+            out += FixtureProgramme(channel.tvgId, start, end, title, "$title Special", description)
+            end = start
+            index += 1
+        }
+        return out
     }
 
     // One channel ships WITHOUT EPG so "No information" cells are real:
     // Sports Arena (7) is visible in the guide's initial 7 rows but outside
     // the news family the search scenarios assert complete cards for.
     val noEpgTvgIds: Set<String> = setOf("sports-arena-1.fixture")
+
+    // Catch-up e2e: News One is the ONLY catch-up-enabled channel (standard
+    // #EXTINF attributes; the template resolves to the same fixture .ts —
+    // query params are ignored by the servers). News One + News One HD also
+    // carry EPG a full extra day into the past so a −24 h guide day jump
+    // lands on real "Past …" programmes; News One HD stays catch-up-free so
+    // the past dropdown behavior is assertable. Mirrors gen-fixtures.mjs 1:1.
+    const val CATCHUP_TVG_ID = "news-one-1.fixture"
+    const val CATCHUP_DAYS = 2
+    private val deepPastTvgIds = setOf("news-one-1.fixture", "news-one-2.fixture")
+    private const val DEEP_PAST_HOURS = 30
 
     // epg-alt.xml (custom-EPG-source scenarios): covers ONE channel epg.xml
     // misses (Sports Arena) plus ONE it also covers (News One) with distinct
@@ -141,7 +174,8 @@ object FixturePlan {
             channels.forEach { c ->
                 append(
                     "#EXTINF:-1 tvg-id=\"${c.tvgId}\" tvg-name=\"${c.name}\" " +
-                        "tvg-logo=\"$baseUrl/logos/${c.stream}.png\" group-title=\"${c.group}\",${c.name}\n",
+                        "tvg-logo=\"$baseUrl/logos/${c.stream}.png\"${catchupAttributes(c, baseUrl)} " +
+                        "group-title=\"${c.group}\",${c.name}\n",
                 )
                 append("$baseUrl/streams/${c.stream}.ts\n")
             }
@@ -152,6 +186,17 @@ object FixturePlan {
                 )
                 append("$baseUrl/streams/vod-sample.mp4\n")
             }
+        }
+
+    private fun catchupAttributes(
+        c: FixtureChannel,
+        baseUrl: String,
+    ): String =
+        if (c.tvgId == CATCHUP_TVG_ID) {
+            " catchup=\"default\" catchup-source=\"$baseUrl/streams/${c.stream}.ts" +
+                "?utc={utc}&lutc={lutc}&d={duration}\" catchup-days=\"$CATCHUP_DAYS\""
+        } else {
+            ""
         }
 
     fun xmltv(

@@ -1,9 +1,12 @@
 package com.johncorser.telly.features.playback
 
+import com.johncorser.telly.features.catchup.CatchupInfo
+import com.johncorser.telly.features.catchup.CatchupPlayback
 import com.johncorser.telly.features.history.WatchHistory
 import com.johncorser.telly.features.panel.PanelViewModel
 import com.johncorser.telly.features.player.external.ExternalPlayer
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.flow.StateFlow
 
 // Tuner assembly shared by the playback and guide hosts: both build the
 // same PIN-gated TuneController over their PlaybackEnv's hooks.
@@ -27,6 +30,32 @@ fun gatedTuner(
                 gate = BlockGate(env.hooks.parental, env.hooks.blockSession),
             ),
     )
+
+/** The command executor's seams over the ViewModel's clock/nav/catch-up. */
+internal fun commandSeams(
+    env: PlaybackEnv,
+    refreshInstant: () -> Unit,
+    exitToGuide: () -> Unit,
+    catchup: CatchupPlayback,
+): PlaybackCommandSeams =
+    PlaybackCommandSeams(
+        refreshInstant = refreshInstant,
+        exitToGuide = exitToGuide,
+        timeouts = env.time.panelTimeouts,
+        onLiveTune = catchup::onLiveTune,
+    )
+
+/** The live info feed, swapped to the archived programme during catch-up. */
+internal fun catchupInfoFeed(
+    env: PlaybackEnv,
+    tuner: TuneController,
+    instant: StateFlow<Long>,
+    catchup: CatchupPlayback,
+    scope: CoroutineScope,
+): StateFlow<PlaybackInfoData?> {
+    val live = PlaybackInfoFeed(tuner.current, instant, env.engine.video, env.epgRepository, env.time.zone, scope).info
+    return CatchupInfo.merged(live, catchup.state, catchup.position, env.time.zone, scope)
+}
 
 /**
  * The playback host's tune-gate prompt: a verified PIN tunes and shows the

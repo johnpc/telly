@@ -32,7 +32,7 @@ internal fun onPreviewKey(
     if (overlay != PlaybackOverlay.Info && overlay != PlaybackOverlay.InfoTransport) return false
     return when (event.key) {
         Key.DirectionCenter, Key.Enter -> onPreviewCenter(event, viewModel, detector)
-        Key.Menu, Key.DirectionUp, Key.ChannelUp, Key.ChannelDown ->
+        Key.Menu, Key.DirectionUp, Key.ChannelUp, Key.ChannelDown, Key.MediaRewind, Key.MediaFastForward ->
             event.type == KeyEventType.KeyDown && viewModel.onKey(previewKeyOf(event.key))
         else -> false
     }
@@ -54,6 +54,8 @@ private fun previewKeyOf(key: Key): PlaybackKey =
         Key.Menu -> PlaybackKey.MENU
         Key.DirectionUp -> PlaybackKey.UP
         Key.ChannelUp -> PlaybackKey.CHANNEL_UP
+        Key.MediaRewind -> PlaybackKey.REWIND
+        Key.MediaFastForward -> PlaybackKey.FAST_FORWARD
         else -> PlaybackKey.CHANNEL_DOWN
     }
 
@@ -72,6 +74,8 @@ private fun mapKeyEvent(
         Key.ChannelUp -> PlaybackKey.CHANNEL_UP.takeIf { down }
         Key.ChannelDown -> PlaybackKey.CHANNEL_DOWN.takeIf { down }
         Key.Menu -> PlaybackKey.MENU.takeIf { down }
+        Key.MediaRewind -> PlaybackKey.REWIND.takeIf { down }
+        Key.MediaFastForward -> PlaybackKey.FAST_FORWARD.takeIf { down }
         else -> null
     }
 }
