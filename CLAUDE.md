@@ -88,6 +88,46 @@ Local SDK note: `local.properties` must contain
 
 ## Decisions log
 
+- **2026-09-15** Explicit EPG source configuration (final-sweep P2-1). The
+  corpus PROVES both halves: the wizard HAS an EPG step (capture 13 +
+  uidump 13 — title "EPG URL", guidance "Enter EPG URL for the playlist.
+  You can add or change it later in the settings. XMLTV format is only
+  supported.", `url-tvg` pre-filled into **Enter URL**, rows Paste from
+  clipboard / Paste playlist URL (+ "similar format" hint) / greyed
+  **Use default source**, actions Done/Back; Done lands on the guide,
+  capture 14), and Settings → EPG → **EPG sources** (captures 57/58:
+  "host (default)" row with URL sub-line + blue check, **Add source**,
+  footer "EPG sources should be assigned in the playlist settings").
+  Implementation: new `WizardStep.EPG_URL` between PROCESSED and DONE —
+  persistence moved from `confirm()` to the EPG step's Done
+  (`finishEpg()`), the committed URL overriding `url-tvg` (blank = no
+  EPG, skippable per ux-spec §2 step 5; invalid non-blank re-uses the
+  URL-step validation error). Custom sources = Room table `epg_sources`
+  (v4, MIGRATION_3_4), keyed by the playlist's URL because the reference
+  models sources per playlist (capture 58 footer + capture 20's per-
+  playlist "EPG sources (1 source)" row); the auto-detected source stays
+  on `playlists.epgUrl`. `EpgSourceStore` (Room + in-memory impls) feeds
+  both the settings sheets and `EpgRefresher.customSources`; trim knobs
+  grouped into `EpgRetention` (detekt LongParameterList — fix the code).
+  **Deliberate deviation (director's directive):** the free reference
+  LOCKS "Add source"; telly ships Add + per-source Edit URL/Delete
+  unlocked, shaped after TiviMate's documented premium flow (ux-spec
+  §3.10) — the per-source detail pane and "Delete EPG source?" confirm
+  are NOT capturable and follow the playlist-detail/GuidedStep-confirm
+  precedents. **Merge rule (not capturable — free tier can't add a 2nd
+  source):** sources fetch auto-detected FIRST then custom in added
+  order, and `EpgRepository.refresh` replaces a channel's whole schedule
+  per document, so the LAST source covering a channel owns it — custom
+  takes precedence per channel. Add commits attach to the enclosing
+  playlist-detail pane's playlist, else the first playlist. Custom
+  sources are NOT in backup JSON yet (deferred; reference backup content
+  uncapturable). e2e: `epg-alt.xml` fixture (deterministic, covers the
+  no-EPG Sports Arena + News One with "Alt " titles; gen-fixtures.mjs +
+  FixturePlan.altSchedule mirror 1:1) drives the new epg-data scenarios
+  (settings add→merge→precedence; wizard URL override) and the extended
+  add-playlist happy path. Verified locally (quality.sh); on-device
+  acceptance legs pending (emulators occupied this round).
+
 - **2026-09-15** GitHub Actions credits are exhausted: CI/deploy workflows stay in
   the repo but must be treated as unavailable. The authoritative gate is local —
   `./scripts/quality.sh` (pre-commit enforced) plus the acceptance legs on the

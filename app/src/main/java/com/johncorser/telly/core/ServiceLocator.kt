@@ -10,7 +10,10 @@ import com.johncorser.telly.core.settings.SettingsRepository
 import com.johncorser.telly.core.settings.TellySettings
 import com.johncorser.telly.features.epg.EpgRefresher
 import com.johncorser.telly.features.epg.EpgRepository
+import com.johncorser.telly.features.epg.EpgRetention
+import com.johncorser.telly.features.epg.EpgSourceStore
 import com.johncorser.telly.features.epg.RefreshScheduler
+import com.johncorser.telly.features.epg.RoomEpgSourceStore
 import com.johncorser.telly.features.playlist.PlaylistRepository
 import com.johncorser.telly.features.playlist.RoomPlaylistRepository
 import com.johncorser.telly.core.settings.SharedPrefsKeyValueStore as SettingsPrefsStore
@@ -34,7 +37,11 @@ object ServiceLocator {
         database ?: synchronized(this) {
             database ?: Room
                 .databaseBuilder(context.applicationContext, TellyDatabase::class.java, DATABASE_NAME)
-                .addMigrations(TellyDatabase.MIGRATION_1_2, TellyDatabase.MIGRATION_2_3)
+                .addMigrations(
+                    TellyDatabase.MIGRATION_1_2,
+                    TellyDatabase.MIGRATION_2_3,
+                    TellyDatabase.MIGRATION_3_4,
+                )
                 .build()
                 .also { database = it }
         }
@@ -49,6 +56,8 @@ object ServiceLocator {
         }
 
     fun playlistRepository(context: Context): PlaylistRepository = RoomPlaylistRepository(database(context), clock)
+
+    fun epgSourceStore(context: Context): EpgSourceStore = RoomEpgSourceStore(database(context).epgSourceDao(), clock)
 
     fun epgRepository(context: Context): EpgRepository =
         EpgRepository(
@@ -73,8 +82,12 @@ object ServiceLocator {
                 ),
             clock = clock,
             refresh = repository::refresh,
-            keepPastMs = { EpgRefresher.daysToMs(prefs.get(TellySettings.EPG_PAST_DAYS_TO_KEEP)) },
-            trim = repository::trimEndedBefore,
+            retention =
+                EpgRetention(
+                    keepPastMs = { EpgRefresher.daysToMs(prefs.get(TellySettings.EPG_PAST_DAYS_TO_KEEP)) },
+                    trim = repository::trimEndedBefore,
+                ),
+            customSources = { playlistUrl -> epgSourceStore(context).forPlaylist(playlistUrl).map { it.url } },
         )
     }
 

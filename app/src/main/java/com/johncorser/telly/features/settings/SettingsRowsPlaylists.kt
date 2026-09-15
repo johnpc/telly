@@ -8,6 +8,14 @@ import com.johncorser.telly.core.settings.boolSetting
 /** Per-playlist enable flag, keyed by the playlist URL. */
 fun playlistEnabledSetting(url: String): Setting<Boolean> = boolSetting("playlist_enabled:$url", true)
 
+/** "No sources" / "1 source" / "N sources", as capture 20 words it. */
+fun epgSourceCountSummary(count: Int): String =
+    when (count) {
+        0 -> "No sources"
+        1 -> "1 source"
+        else -> "$count sources"
+    }
+
 /** What the Playlists pane needs to know about one stored playlist. */
 data class PlaylistItem(
     val url: String,
@@ -51,6 +59,7 @@ fun playlistsRows(
 fun playlistDetailRows(
     s: SettingsRepository,
     item: PlaylistItem,
+    customEpgSourceCount: Int = 0,
 ): List<SettingsRow> =
     panePrelude() +
         listOf(
@@ -64,7 +73,7 @@ fun playlistDetailRows(
             SettingsRow.Value(
                 id = RowIds.PLAYLIST_EPG_SOURCES,
                 title = "EPG sources",
-                summary = if (item.epgUrl == null) "No sources" else "1 source",
+                summary = epgSourceCountSummary((if (item.epgUrl == null) 0 else 1) + customEpgSourceCount),
             ),
             SettingsRow.Value(
                 id = RowIds.PLAYLIST_USER_AGENT,

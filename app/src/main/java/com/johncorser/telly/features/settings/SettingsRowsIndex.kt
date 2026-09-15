@@ -1,6 +1,7 @@
 package com.johncorser.telly.features.settings
 
 import com.johncorser.telly.core.settings.SettingsRepository
+import com.johncorser.telly.features.epg.EpgSource
 
 /**
  * Routes a sheet to its row builder — the whole captured settings tree.
@@ -12,6 +13,7 @@ fun rowsFor(
     settings: SettingsRepository,
     playlists: List<PlaylistItem>,
     versionName: String,
+    epgSources: List<EpgSource> = emptyList(),
 ): List<SettingsRow> =
     when (pane) {
         null -> rootRows()
@@ -19,9 +21,14 @@ fun rowsFor(
         is SettingsPane.PlaylistDetail ->
             playlists
                 .firstOrNull { it.url == pane.url }
-                ?.let { playlistDetailRows(settings, it) }
+                ?.let { item -> playlistDetailRows(settings, item, epgSources.count { it.playlistUrl == item.url }) }
                 .orEmpty()
-        SettingsPane.EpgSources -> epgSourcesRows(playlists)
+        SettingsPane.EpgSources -> epgSourcesRows(playlists, epgSources)
+        is SettingsPane.EpgSourceDetail ->
+            epgSources
+                .firstOrNull { it.id == pane.sourceId }
+                ?.let { epgSourceDetailRows(it) }
+                .orEmpty()
     }
 
 private fun rootRows(): List<SettingsRow> =
@@ -52,10 +59,13 @@ private fun sectionRows(
 fun paneTitle(
     pane: SettingsPane?,
     playlists: List<PlaylistItem>,
+    epgSources: List<EpgSource> = emptyList(),
 ): String =
     when (pane) {
         null -> "Settings"
         is SettingsPane.Section -> pane.section.title
         is SettingsPane.PlaylistDetail -> playlists.firstOrNull { it.url == pane.url }?.name ?: pane.url
         SettingsPane.EpgSources -> "EPG sources"
+        is SettingsPane.EpgSourceDetail ->
+            epgSources.firstOrNull { it.id == pane.sourceId }?.name ?: "EPG source"
     }

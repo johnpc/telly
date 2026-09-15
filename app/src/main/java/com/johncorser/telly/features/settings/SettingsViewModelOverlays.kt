@@ -19,6 +19,8 @@ fun SettingsViewModel.submitText(value: String) {
             }
         RowIds.USER_AGENT -> settings.set(TellySettings.USER_AGENT, value.trim())
         RowIds.UDP_PROXY -> settings.set(TellySettings.UDP_PROXY, value.trim())
+        RowIds.EPG_ADD_SOURCE -> addEpgSource(value)
+        RowIds.EPG_SOURCE_URL -> setEpgSourceUrl(value)
     }
     dismissOverlay()
 }

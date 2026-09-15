@@ -56,6 +56,48 @@ object FixturePlan {
     // the news family the search scenarios assert complete cards for.
     val noEpgTvgIds: Set<String> = setOf("sports-arena-1.fixture")
 
+    // epg-alt.xml (custom-EPG-source scenarios): covers ONE channel epg.xml
+    // misses (Sports Arena) plus ONE it also covers (News One) with distinct
+    // "Alt "-prefixed titles, so merge and per-channel precedence are both
+    // observable. Mirrors e2e/fixtures/gen-fixtures.mjs 1:1.
+    private val altTvgIds = setOf("news-one-1.fixture", "sports-arena-1.fixture")
+
+    /** The deterministic schedule served at /epg-alt.xml around [anchorMs]. */
+    fun altSchedule(anchorMs: Long): List<FixtureProgramme> {
+        val windowStart = (anchorMs - PAST_HOURS * 3_600_000L).floorTo(HALF_HOUR_MS)
+        val windowEnd = anchorMs + FUTURE_HOURS * 3_600_000L
+        return channels
+            .filter { it.tvgId in altTvgIds }
+            .flatMap { channel -> altChannelSchedule(channel, windowStart, windowEnd) }
+    }
+
+    private fun altChannelSchedule(
+        channel: FixtureChannel,
+        windowStart: Long,
+        windowEnd: Long,
+    ): List<FixtureProgramme> {
+        val titles = groups.getValue(channel.group).titles
+        val out = mutableListOf<FixtureProgramme>()
+        var start = windowStart
+        var index = 0
+        while (start < windowEnd) {
+            val end = start + durationsMinutes[(channel.number + index) % durationsMinutes.size] * 60_000L
+            val title = "Alt " + titles[(channel.number * 3 + index) % titles.size]
+            out +=
+                FixtureProgramme(
+                    channelTvgId = channel.tvgId,
+                    startMs = start,
+                    endMs = end,
+                    title = title,
+                    subTitle = "$title Special",
+                    description = DESCRIPTIONS[(channel.number + index) % DESCRIPTIONS.size],
+                )
+            start = end
+            index += 1
+        }
+        return out
+    }
+
     private fun channelSchedule(
         channel: FixtureChannel,
         windowStart: Long,

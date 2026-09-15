@@ -11,6 +11,10 @@ sealed interface SettingsPane {
     ) : SettingsPane
 
     data object EpgSources : SettingsPane
+
+    data class EpgSourceDetail(
+        val sourceId: Long,
+    ) : SettingsPane
 }
 
 /** Modal state over the sheet stack. */
@@ -28,6 +32,11 @@ sealed interface SettingsOverlay {
 
     data class ConfirmDelete(
         val url: String,
+        val name: String,
+    ) : SettingsOverlay
+
+    data class ConfirmDeleteSource(
+        val sourceId: Long,
         val name: String,
     ) : SettingsOverlay
 

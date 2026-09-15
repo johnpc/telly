@@ -58,6 +58,7 @@ class MainActivity : ComponentActivity() {
                     backup = SettingsBackupManager(settings, repository, filesDir),
                 ),
             versionName = appVersionName(),
+            epgSources = ServiceLocator.epgSourceStore(this),
         )
     }
 

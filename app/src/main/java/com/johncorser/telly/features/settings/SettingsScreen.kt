@@ -34,6 +34,7 @@ fun SettingsScreen(
     val state by model.state.collectAsState()
     val rows by model.rows.collectAsState()
     val playlists by model.playlistItems.collectAsState()
+    val epgSources by model.epgSourceItems.collectAsState()
     BackHandler(enabled = true) { if (!model.back()) onClose() }
     val focusMemory = remember { mutableMapOf<SettingsPane?, String>() }
     // One trap around the whole surface: focus roams freely between the
@@ -60,7 +61,7 @@ fun SettingsScreen(
                 transitionSpec = { fadeIn(tween(PANE_FADE_MS)) togetherWith fadeOut(tween(PANE_FADE_MS)) },
                 contentKey = { it.first },
             ) { (pane, paneRows) ->
-                SettingsScreenSheet(title = paneTitle(pane, playlists)) {
+                SettingsScreenSheet(title = paneTitle(pane, playlists, epgSources)) {
                     SettingsScreenRows(
                         rows = paneRows,
                         onActivate = model::activate,

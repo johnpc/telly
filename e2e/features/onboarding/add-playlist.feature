@@ -29,6 +29,13 @@ Feature: Add playlist onboarding
     And I see "10.0.2.2"
     And I see "TV playlist"
     When I select "Next"
+    # EPG step (capture 13): the url-tvg from the M3U header is pre-filled.
+    Then I see "EPG URL"
+    And I see "Enter EPG URL for the playlist. You can add or change it later in the settings. XMLTV format is only supported."
+    And I see "http://10.0.2.2:8090/epg.xml"
+    And I see "Paste playlist URL"
+    And I see "Use default source"
+    When I select "Done"
     Then playback starts fullscreen on channel 1 "News One"
 
   Scenario: A non-http URL is rejected on the URL step

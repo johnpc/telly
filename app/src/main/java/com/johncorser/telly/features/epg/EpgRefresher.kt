@@ -4,18 +4,24 @@ import com.johncorser.telly.features.playlist.db.PlaylistDao
 import kotlinx.coroutines.CancellationException
 
 /**
- * Applies the [RefreshScheduler] policy: refreshes the EPG of every playlist
- * whose data is due and stamps the ones that succeed. Failures are swallowed
- * per playlist so one bad EPG source cannot starve the others. After a run
- * it trims stored programmes past the "Past days to keep EPG" horizon.
+ * Applies the [RefreshScheduler] policy: refreshes every configured EPG
+ * source — the auto-detected `url-tvg` plus the playlist's custom sources —
+ * of every playlist whose data is due, and stamps the playlists where at
+ * least one source succeeded. Failures are swallowed per source so one bad
+ * EPG source cannot starve the others. Merge rule (the reference free tier
+ * cannot show one): sources are fetched auto-detected FIRST, then custom in
+ * added order, and [EpgRepository.refresh] replaces a channel's whole
+ * schedule per fetched document — so the last source covering a channel
+ * owns it, i.e. custom sources take precedence per channel. After a run it
+ * trims stored programmes past the "Past days to keep EPG" horizon.
  */
 class EpgRefresher(
     private val playlistDao: PlaylistDao,
     private val scheduler: RefreshScheduler,
     private val clock: () -> Long,
     private val refresh: suspend (epgUrl: String) -> Int,
-    private val keepPastMs: () -> Long = { DEFAULT_KEEP_PAST_MS },
-    private val trim: suspend (cutoffMs: Long) -> Unit = {},
+    private val retention: EpgRetention = EpgRetention(),
+    private val customSources: suspend (playlistUrl: String) -> List<String> = { emptyList() },
 ) {
     /** Refreshes everything due; returns the ids of the playlists updated. */
     suspend fun refreshDue(): List<Long> = refreshWhere { scheduler.isDue(it, clock()) }
@@ -28,18 +34,20 @@ class EpgRefresher(
             playlistDao
                 .all()
                 .mapNotNull { playlist ->
-                    val epgUrl = playlist.epgUrl ?: return@mapNotNull null
-                    if (!due(playlist.epgLastUpdatedMs)) return@mapNotNull null
-                    runCatching { refresh(epgUrl) }
-                        .onFailure { if (it is CancellationException) throw it }
-                        .map {
-                            playlistDao.markEpgUpdated(playlist.id, clock())
-                            playlist.id
-                        }.getOrNull()
+                    val sources = listOfNotNull(playlist.epgUrl) + customSources(playlist.url)
+                    if (sources.isEmpty() || !due(playlist.epgLastUpdatedMs)) return@mapNotNull null
+                    if (sources.count { refreshSource(it) } == 0) return@mapNotNull null
+                    playlistDao.markEpgUpdated(playlist.id, clock())
+                    playlist.id
                 }
-        trim(clock() - keepPastMs())
+        retention.trim(clock() - retention.keepPastMs())
         return updated
     }
+
+    private suspend fun refreshSource(url: String): Boolean =
+        runCatching { refresh(url) }
+            .onFailure { if (it is CancellationException) throw it }
+            .isSuccess
 
     companion object {
         private const val DAY_MS: Long = 24L * 60L * 60L * 1000L
@@ -51,3 +59,9 @@ class EpgRefresher(
         fun daysToMs(days: Int): Long = days.coerceAtLeast(0) * DAY_MS
     }
 }
+
+/** The "Past days to keep EPG" horizon and the trim that enforces it. */
+class EpgRetention(
+    val keepPastMs: () -> Long = { EpgRefresher.DEFAULT_KEEP_PAST_MS },
+    val trim: suspend (cutoffMs: Long) -> Unit = {},
+)

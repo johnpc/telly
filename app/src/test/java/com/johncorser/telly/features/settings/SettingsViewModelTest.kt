@@ -4,6 +4,7 @@ import com.johncorser.telly.core.settings.InMemoryKeyValueStore
 import com.johncorser.telly.core.settings.ParentalControls
 import com.johncorser.telly.core.settings.SettingsRepository
 import com.johncorser.telly.core.settings.TellySettings
+import com.johncorser.telly.features.epg.InMemoryEpgSourceStore
 import com.johncorser.telly.features.playlist.InMemoryPlaylistRepository
 import com.johncorser.telly.features.playlist.M3uChannel
 import com.johncorser.telly.features.playlist.M3uPlaylist
@@ -23,6 +24,7 @@ class SettingsViewModelTest {
     private val store = InMemoryKeyValueStore()
     private val settings = SettingsRepository(store)
     private val playlists = InMemoryPlaylistRepository()
+    private val epgSourceStore = InMemoryEpgSourceStore()
     private val fetched = mutableListOf<String>()
     private var epgUpdates = 0
     private val exports = mutableListOf<String>()
@@ -55,6 +57,7 @@ class SettingsViewModelTest {
                     backup = SettingsBackupManager(settings, playlists),
                 ),
             versionName = "0.1.0",
+            epgSources = epgSourceStore,
         )
 
     private fun TestScope.model(): SettingsViewModel =
@@ -218,6 +221,104 @@ class SettingsViewModelTest {
             model.activate(RowIds.EPG_SOURCES)
             assertEquals(SettingsPane.EpgSources, model.state.value.activePane)
             assertTrue(model.rows.value.any { it.id == RowIds.EPG_SOURCE_PREFIX + "http://p/x.m3u" })
+        }
+
+    @Test
+    fun `add source commits a valid url against the first playlist`() =
+        runTest {
+            seedPlaylist()
+            val model = model()
+            model.activate(RowIds.EPG_SOURCES)
+            model.activate(RowIds.EPG_ADD_SOURCE)
+            assertEquals("EPG URL", (model.state.value.overlay as SettingsOverlay.TextEdit).title)
+
+            model.submitText("http://e/extra.xml")
+
+            assertNull(model.state.value.overlay)
+            val source = model.epgSourceItems.value.single()
+            assertEquals("http://e/extra.xml", source.url)
+            assertEquals("http://p/x.m3u", source.playlistUrl)
+            assertTrue(model.rows.value.any { it.id == RowIds.EPG_CUSTOM_SOURCE_PREFIX + source.id })
+        }
+
+    @Test
+    fun `add source from a playlist detail pane attaches to that playlist`() =
+        runTest {
+            seedPlaylist()
+            playlists.add("http://p/y.m3u", M3uPlaylist(channels = emptyList()), name = "Second")
+            val model = model()
+            model.activate(RowIds.PLAYLIST_PREFIX + "http://p/y.m3u")
+            model.activate(RowIds.PLAYLIST_EPG_SOURCES)
+            model.activate(RowIds.EPG_ADD_SOURCE)
+
+            model.submitText("http://e/extra.xml")
+
+            assertEquals("http://p/y.m3u", model.epgSourceItems.value.single().playlistUrl)
+        }
+
+    @Test
+    fun `invalid or blank source urls are ignored on commit`() =
+        runTest {
+            seedPlaylist()
+            val model = model()
+            model.activate(RowIds.EPG_SOURCES)
+            model.activate(RowIds.EPG_ADD_SOURCE)
+            model.submitText("not-a-url")
+            model.activate(RowIds.EPG_ADD_SOURCE)
+            model.submitText("   ")
+            assertTrue(model.epgSourceItems.value.isEmpty())
+        }
+
+    @Test
+    fun `a custom source row opens its pane where the url can be edited`() =
+        runTest {
+            seedPlaylist()
+            epgSourceStore.add("http://p/x.m3u", "http://e/extra.xml")
+            val model = model()
+            val source = model.epgSourceItems.value.single()
+
+            model.activate(RowIds.EPG_CUSTOM_SOURCE_PREFIX + source.id)
+            assertEquals(SettingsPane.EpgSourceDetail(source.id), model.state.value.activePane)
+            assertEquals(
+                "e",
+                paneTitle(model.state.value.activePane, model.playlistItems.value, model.epgSourceItems.value),
+            )
+            assertTrue(model.rows.value.any { it.id == RowIds.EPG_SOURCE_DELETE })
+
+            model.activate(RowIds.EPG_SOURCE_URL)
+            assertEquals("http://e/extra.xml", (model.state.value.overlay as SettingsOverlay.TextEdit).value)
+            model.submitText("http://e/other.xml")
+            assertEquals("http://e/other.xml", model.epgSourceItems.value.single().url)
+        }
+
+    @Test
+    fun `delete source confirms then removes it and pops its pane`() =
+        runTest {
+            seedPlaylist()
+            epgSourceStore.add("http://p/x.m3u", "http://e/extra.xml")
+            val model = model()
+            val source = model.epgSourceItems.value.single()
+            model.activate(RowIds.EPG_SOURCES)
+            model.activate(RowIds.EPG_CUSTOM_SOURCE_PREFIX + source.id)
+            model.activate(RowIds.EPG_SOURCE_DELETE)
+            assertEquals("e", (model.state.value.overlay as SettingsOverlay.ConfirmDeleteSource).name)
+
+            model.confirmDeleteEpgSource()
+
+            assertTrue(model.epgSourceItems.value.isEmpty())
+            assertEquals(SettingsPane.EpgSources, model.state.value.activePane)
+            assertNull(model.state.value.overlay)
+        }
+
+    @Test
+    fun `source handlers ignore calls without an open source pane`() =
+        runTest {
+            seedPlaylist()
+            val model = model()
+            model.activate(RowIds.EPG_SOURCE_URL)
+            model.activate(RowIds.EPG_SOURCE_DELETE)
+            model.confirmDeleteEpgSource()
+            assertNull(model.state.value.overlay)
         }
 
     @Test

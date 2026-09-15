@@ -19,14 +19,14 @@ import okhttp3.HttpUrl.Companion.toHttpUrlOrNull
  * The playlist is persisted only when the processed step is confirmed.
  */
 class AddPlaylistViewModel(
-    private val scope: CoroutineScope,
+    internal val scope: CoroutineScope,
     private val fetchPlaylist: suspend (String) -> String,
-    private val repository: PlaylistRepository,
+    internal val repository: PlaylistRepository,
 ) {
-    private val mutableState = MutableStateFlow(WizardUiState())
+    internal val mutableState = MutableStateFlow(WizardUiState())
     val state: StateFlow<WizardUiState> = mutableState.asStateFlow()
     private var loadJob: Job? = null
-    private var parsed: M3uPlaylist? = null
+    internal var parsed: M3uPlaylist? = null
 
     /** Only the M3U path exists in this slice; other types are inert. */
     fun chooseType(type: PlaylistType) {
@@ -85,12 +85,12 @@ class AddPlaylistViewModel(
         }
     }
 
-    /** Next on the processed step: persist under the chosen name, finish. */
+    /** Next on the processed step: forward to the EPG step (capture 13),
+     * with the M3U's url-tvg pre-filled into the URL draft. */
     fun confirm() {
         val playlist = parsed ?: return
-        scope.launch {
-            repository.add(state.value.url.trim(), playlist, state.value.name.trim().ifEmpty { null })
-            mutableState.update { it.copy(step = WizardStep.DONE) }
+        mutableState.update {
+            it.copy(step = WizardStep.EPG_URL, epgUrl = playlist.epgUrl.orEmpty(), error = null)
         }
     }
 
@@ -109,6 +109,10 @@ class AddPlaylistViewModel(
             WizardStep.PROCESSED -> {
                 parsed = null
                 mutableState.update { it.copy(step = WizardStep.URL_ENTRY) }
+                true
+            }
+            WizardStep.EPG_URL -> {
+                mutableState.update { it.copy(step = WizardStep.PROCESSED, error = null) }
                 true
             }
             else -> false

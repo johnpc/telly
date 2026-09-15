@@ -11,6 +11,9 @@ internal fun SettingsViewModel.runAction(rowId: String) {
         RowIds.UNLOCK_PREMIUM -> showOverlay(SettingsOverlay.Paywall)
         RowIds.EPG_SOURCES, RowIds.PLAYLIST_EPG_SOURCES -> push(SettingsPane.EpgSources)
         RowIds.EPG_UPDATE_NOW -> launch { updateEpgNow() }
+        RowIds.EPG_ADD_SOURCE -> showOverlay(SettingsOverlay.TextEdit(rowId, title = "EPG URL", value = ""))
+        RowIds.EPG_SOURCE_URL -> editEpgSourceUrlOverlay()
+        RowIds.EPG_SOURCE_DELETE -> confirmDeleteEpgSourceOverlay()
         RowIds.USER_AGENT -> textEditOverlay(rowId, "User-Agent", settings.get(TellySettings.USER_AGENT))
         RowIds.UDP_PROXY -> textEditOverlay(rowId, "UDP proxy (address:port)", settings.get(TellySettings.UDP_PROXY))
         RowIds.BACK_UP_DATA ->

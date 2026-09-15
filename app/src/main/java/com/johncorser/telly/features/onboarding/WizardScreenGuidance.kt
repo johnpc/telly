@@ -31,6 +31,7 @@ fun WizardScreenGuidance(state: WizardUiState) {
             WizardStep.TYPE_CHOOSER -> R.drawable.ic_wizard_playlist_add to R.string.wizard_playlist_type
             WizardStep.URL_ENTRY -> R.drawable.ic_wizard_link to R.string.wizard_m3u_playlist
             WizardStep.PROCESSING -> R.drawable.ic_wizard_download to R.string.wizard_processing
+            WizardStep.EPG_URL -> R.drawable.ic_wizard_link to R.string.wizard_epg_url
             else -> R.drawable.ic_wizard_download to R.string.wizard_processed
         }
     Row(
@@ -61,9 +62,14 @@ fun WizardScreenGuidance(state: WizardUiState) {
     }
 }
 
-/** The "Channels: N" / "Movies: N" line under the processed-step title. */
+/** The muted line under the title: "Channels: N" / "Movies: N" on the
+ * processed step, the EPG explainer on the EPG step (capture 13). */
 @Composable
 private fun WizardScreenGuidanceSummary(state: WizardUiState) {
+    if (state.step == WizardStep.EPG_URL) {
+        WizardScreenGuidanceText(stringResource(R.string.wizard_epg_guidance))
+        return
+    }
     if (state.step != WizardStep.PROCESSED && state.step != WizardStep.DONE) return
     val summary =
         if (state.liveCount == 0 && state.movieCount > 0) {
@@ -71,8 +77,13 @@ private fun WizardScreenGuidanceSummary(state: WizardUiState) {
         } else {
             stringResource(R.string.wizard_channels_count, state.liveCount)
         }
+    WizardScreenGuidanceText(summary)
+}
+
+@Composable
+private fun WizardScreenGuidanceText(text: String) {
     Text(
-        text = summary,
+        text = text,
         color = Color(TELLY_TEXT_GUIDANCE_MUTED),
         fontSize = 14.sp,
         lineHeight = 19.sp,

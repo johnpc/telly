@@ -2,6 +2,8 @@ package com.johncorser.telly.features.settings
 
 import com.johncorser.telly.core.settings.ParentalControls
 import com.johncorser.telly.core.settings.SettingsRepository
+import com.johncorser.telly.features.epg.EpgSource
+import com.johncorser.telly.features.epg.EpgSourceStore
 import com.johncorser.telly.features.playlist.PlaylistRepository
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -26,6 +28,7 @@ class SettingsViewModel(
 ) {
     internal val settings: SettingsRepository = graph.settings
     internal val playlistRepository: PlaylistRepository = graph.playlists
+    internal val epgSources: EpgSourceStore = graph.epgSources
     internal val parental: ParentalControls = graph.parental
     internal val updater: PlaylistUpdater = graph.actions.updater
     internal val updateEpgNow: suspend () -> Unit = graph.actions.updateEpgNow
@@ -48,10 +51,14 @@ class SettingsViewModel(
                 }
             }.stateIn(scope, SharingStarted.Eagerly, emptyList())
 
+    /** Custom EPG sources, in added order (Settings -> EPG -> EPG sources). */
+    val epgSourceItems: StateFlow<List<EpgSource>> =
+        epgSources.sources.stateIn(scope, SharingStarted.Eagerly, emptyList())
+
     /** The active sheet's rows (root section list when nothing is pushed). */
     val rows: StateFlow<List<SettingsRow>> =
-        combine(mutableState, playlistItems, settings.changes) { uiState, playlists, _ ->
-            rowsFor(uiState.activePane, settings, playlists, versionName)
+        combine(mutableState, playlistItems, epgSourceItems, settings.changes) { uiState, playlists, sources, _ ->
+            rowsFor(uiState.activePane, settings, playlists, versionName, sources)
         }.stateIn(scope, SharingStarted.Eagerly, emptyList())
 
     /** OK on a section row pushes its sheet over the root list. */
@@ -75,6 +82,10 @@ class SettingsViewModel(
             rowId.startsWith(
                 RowIds.PLAYLIST_PREFIX,
             ) -> push(SettingsPane.PlaylistDetail(rowId.removePrefix(RowIds.PLAYLIST_PREFIX)))
+            rowId.startsWith(RowIds.EPG_CUSTOM_SOURCE_PREFIX) ->
+                rowId.removePrefix(RowIds.EPG_CUSTOM_SOURCE_PREFIX).toLongOrNull()?.let {
+                    push(SettingsPane.EpgSourceDetail(it))
+                }
             else -> runAction(rowId)
         }
     }
