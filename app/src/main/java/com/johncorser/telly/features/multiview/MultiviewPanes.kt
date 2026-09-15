@@ -1,6 +1,5 @@
 package com.johncorser.telly.features.multiview
 
-import com.johncorser.telly.features.playback.ChannelZapper
 import com.johncorser.telly.features.player.PlayerEngine
 import com.johncorser.telly.features.player.PlayerEnginePool
 import com.johncorser.telly.features.playlist.db.ChannelEntity
@@ -19,9 +18,10 @@ data class MultiviewPane(
 /**
  * The pane list and its audio ownership: the FOCUSED pane is the only
  * unmuted engine (N players cannot all own audio), adding focuses the new
- * pane, removing collapses the grid onto a neighbour, and CH+/- retune the
- * focused pane in place. All uncapturable (premium in the reference) —
- * telly design decisions, see the decisions log.
+ * pane, removing collapses the grid onto a neighbour, and the ViewModel's
+ * PIN-gated CH+/- zap retunes the focused pane via [change]. All
+ * uncapturable (premium in the reference) — telly design decisions, see
+ * the decisions log.
  */
 class MultiviewPanes(
     private val pool: PlayerEnginePool,
@@ -69,14 +69,6 @@ class MultiviewPanes(
         if (mutablePanes.value.none { it.id == paneId }) return
         mutableFocusedId.value = paneId
         mutablePanes.value.forEach { it.engine.setMuted(it.id != paneId) }
-    }
-
-    /** CH+/- zap the focused pane within [channels], wrapping at both ends. */
-    fun zap(
-        channels: List<ChannelEntity>,
-        delta: Int,
-    ) {
-        ChannelZapper.neighbour(channels, focused?.channel, delta)?.let(::change)
     }
 
     fun releaseAll() = pool.releaseAll()

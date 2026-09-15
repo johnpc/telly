@@ -39,6 +39,16 @@ class SearchViewModelTest {
         )
     private val historyStore = InMemoryKeyValueStore()
     private val lastChannelStore = FakeKeyValueStore()
+    private val voiceNotices = mutableListOf<String>()
+    private var voiceLaunches = 0
+    private val voice =
+        VoiceSearch(
+            launch = {
+                voiceLaunches += 1
+                true
+            },
+            notify = voiceNotices::add,
+        )
 
     private fun TestScope.buildVm(): SearchViewModel =
         SearchViewModel(
@@ -50,10 +60,11 @@ class SearchViewModelTest {
                             channelDao,
                             testEpgRepository(programDao),
                         ),
-                    historyStore = historyStore,
+                    history = SearchHistory(historyStore),
                     lastChannelStore = lastChannelStore,
                     clock = { now },
                     zone = TimeZone.getTimeZone("UTC"),
+                    hooks = SearchHooks(voice = voice),
                 ),
             scope = CoroutineScope(SupervisorJob() + UnconfinedTestDispatcher(testScheduler)),
         )
@@ -231,13 +242,37 @@ class SearchViewModelTest {
         }
 
     @Test
-    fun `voice search routes to the branded placeholder`() =
+    fun `the voice orb launches the platform recognizer`() =
         runTest {
             val vm = buildVm()
 
-            vm.overlays.show(SearchOverlay.ComingSoon("Voice search"))
+            vm.voice.start()
 
-            assertEquals(SearchOverlay.ComingSoon("Voice search"), vm.overlays.current.value)
+            assertEquals(1, voiceLaunches)
+            assertTrue(voiceNotices.isEmpty())
+        }
+
+    @Test
+    fun `a recognized transcript becomes the typed query exactly once`() =
+        runTest {
+            val vm = buildVm()
+
+            voice.onResult("news")
+
+            assertEquals("news", vm.query.value)
+            assertFalse(vm.results.value.isEmpty)
+            assertNull(voice.transcripts.value)
+        }
+
+    @Test
+    fun `dismissing the custom-recording overlay drops the DVR form state`() =
+        runTest {
+            val vm = buildVm()
+            vm.overlays.show(SearchOverlay.CustomRecording)
+
+            assertTrue(vm.programMenu.closeOverlay())
+
+            assertEquals(SearchOverlay.None, vm.overlays.current.value)
         }
 
     @Test

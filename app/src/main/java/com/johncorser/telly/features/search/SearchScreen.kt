@@ -40,7 +40,7 @@ fun SearchScreen(
     // geometrically nearest one (ref-round6 07-search-down-from-querybar).
     val firstResult = remember { FocusRequester() }
     val restore = rememberSearchScreenRestore(viewModel)
-    BackHandler(enabled = overlay != SearchOverlay.None) { viewModel.overlays.dismiss() }
+    BackHandler(enabled = overlay != SearchOverlay.None) { viewModel.programMenu.closeOverlay() }
     Box(
         Modifier
             .fillMaxSize()

@@ -14,6 +14,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.unit.dp
 import com.johncorser.telly.core.design.TELLY_GUIDANCE_PANE
 import com.johncorser.telly.features.reminders.ReminderScreenConfirmDelete
@@ -40,7 +41,11 @@ internal fun SettingsScreenOverlay(
     }
 }
 
-/** Dimming scrim + the 360 dp right sheet every settings surface uses. */
+/**
+ * Dimming scrim + the 360 dp right sheet every settings surface uses. The
+ * test tag is the e2e harness's shell sentinel: it is present for EVERY
+ * pane at any depth (the deleted premium footer used to play that role).
+ */
 @OptIn(ExperimentalComposeUiApi::class)
 @Composable
 internal fun SettingsScreenSheet(
@@ -57,7 +62,8 @@ internal fun SettingsScreenSheet(
             Modifier
                 .width(SettingsScreenDims.leftPaneWidth)
                 .fillMaxHeight()
-                .background(Color(TELLY_GUIDANCE_PANE)),
+                .background(Color(TELLY_GUIDANCE_PANE))
+                .testTag("settings-sheet"),
         ) {
             SettingsScreenPane(title = title) { content() }
         }

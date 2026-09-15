@@ -16,7 +16,9 @@ import kotlinx.coroutines.launch
  * Multiview state machine (multiview-round/multiview-spec.md): entry = one
  * centered pane on the current channel, OK on a pane opens its menu, every
  * menu row opens the channel picker, BACK walks picker/menu -> panes ->
- * fullscreen playback of the focused pane's channel. Plain class, JVM-tested.
+ * fullscreen playback of the focused pane's channel. Every tune path (entry
+ * pane, picker pick, CH+/- zap) passes the blocked-channel PIN [gate]; a
+ * wrong or cancelled PIN never tunes. Plain class, JVM-tested.
  */
 class MultiviewViewModel(
     private val deps: MultiviewDeps,
@@ -25,6 +27,9 @@ class MultiviewViewModel(
 ) {
     val panes = MultiviewPanes(PlayerEnginePool(deps.engines))
     val picker = MultiviewPicker(deps.channelDao, deps.epgRepository, deps.clock, scope, deps.zone)
+
+    /** The PIN prompt over the multiview layers (blocked-channel tunes). */
+    val gate = MultiviewTuneGate(deps.gate)
 
     private val mutableLayer = MutableStateFlow<MultiviewLayer>(MultiviewLayer.Panes)
     val layer: StateFlow<MultiviewLayer> get() = mutableLayer
@@ -37,7 +42,9 @@ class MultiviewViewModel(
         scope.launch {
             val list = channels.first { it.isNotEmpty() }
             if (panes.panes.value.isEmpty()) {
-                ChannelZapper.restore(list, deps.store.getLong(TuneController.LAST_CHANNEL_KEY))?.let(panes::add)
+                ChannelZapper
+                    .restore(list, deps.store.getLong(TuneController.LAST_CHANNEL_KEY))
+                    ?.let { channel -> gate.tune(channel) { panes.add(it) } }
             }
         }
     }
@@ -68,26 +75,34 @@ class MultiviewViewModel(
 
     /** Picker OK: Add fills the next pane, Change retunes the focused one. */
     fun onPick(channel: ChannelEntity) {
-        when ((mutableLayer.value as? MultiviewLayer.Picker)?.mode) {
-            MultiviewPickerMode.ADD -> panes.add(channel)
-            MultiviewPickerMode.CHANGE -> panes.change(channel)
-            null -> return
-        }
-        mutableLayer.value = MultiviewLayer.Panes
-    }
-
-    /** BACK: picker/menu -> panes; panes -> fullscreen on the focused channel. */
-    fun onBack() {
-        if (mutableLayer.value == MultiviewLayer.Panes) {
-            exitToFullscreen()
-        } else {
+        val mode = (mutableLayer.value as? MultiviewLayer.Picker)?.mode ?: return
+        gate.tune(channel) { unlocked ->
+            if (mode == MultiviewPickerMode.ADD) panes.add(unlocked) else panes.change(unlocked)
             mutableLayer.value = MultiviewLayer.Panes
         }
     }
 
-    /** CH+/- zap the focused pane in place (panes layer only). */
+    /**
+     * BACK: an open PIN prompt cancels first (never tunes; a paneless entry
+     * exits multiview); then picker/menu -> panes; panes -> fullscreen.
+     */
+    fun onBack() {
+        when {
+            gate.promptOpen -> {
+                gate.dismiss()
+                if (panes.panes.value.isEmpty()) onExit()
+            }
+            mutableLayer.value == MultiviewLayer.Panes -> exitToFullscreen()
+            else -> mutableLayer.value = MultiviewLayer.Panes
+        }
+    }
+
+    /** CH+/- zap the focused pane in place (panes layer only, PIN-gated). */
     fun onChannelKey(delta: Int) {
-        if (mutableLayer.value == MultiviewLayer.Panes) panes.zap(channels.value, delta)
+        if (mutableLayer.value != MultiviewLayer.Panes || gate.promptOpen) return
+        ChannelZapper
+            .neighbour(channels.value, panes.focused?.channel, delta)
+            ?.let { next -> gate.tune(next) { panes.change(it) } }
     }
 
     fun close() = panes.releaseAll()

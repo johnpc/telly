@@ -78,13 +78,21 @@ Feature: Search channels and programmes
     And I press ok on the channel card "News One HD"
     Then playback starts fullscreen on channel 2 "News One HD"
 
-  Scenario: OK on a programme result opens the guide-cell dropdown
+  # The dropdown's rows are live like the guide's cell dropdown (shared
+  # reminders / DVR / My-list stores); the Remind label flips to "Remove
+  # reminder" while one is set, mirroring the guide's reminders scenarios.
+  # A later (30+ min out) row keeps the popup from firing mid-scenario.
+  Scenario: The programme dropdown's Remind row sets and removes a reminder
     When I focus the query bar
     And I type "newsroom"
-    And I press ok on the first programme row
+    And I press ok on a later programme row
     Then I see the dropdown rows "Remind", "Record", "Custom recording", "Add to My list", "Program description"
     When I select "Remind"
-    Then I see "Coming soon to telly"
+    And I press ok on a later programme row
+    Then I see the dropdown rows "Remove reminder", "Record", "Custom recording", "Add to My list", "Program description"
+    When I select "Remove reminder"
+    And I press ok on a later programme row
+    Then I see the dropdown rows "Remind", "Record", "Custom recording", "Add to My list", "Program description"
 
   Scenario: Committed queries land in the history and the trash clears them
     When I focus the query bar

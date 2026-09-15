@@ -128,7 +128,11 @@ Local SDK note: `local.properties` must contain
   says so), and the quick-bar/rail DVR icon opens the recordings library.
 - **2026-09-15** Block channel: the context sheet's Block channel row flags the
   channel (v9); every tune path — including lastChannelId restores — passes the
-  parental PIN gate first. Multiview pane tunes stay deliberately ungated.
+  parental PIN gate first. SUPERSEDED half-sentence: multiview pane tunes were
+  briefly left ungated; that was a P0 security-consistency hole and is closed —
+  `MultiviewTuneGate` (over the shared `BlockGate` + `BlockSession`) now gates
+  the entry pane, every picker pick and the CH+/- zap behind the same PIN card
+  rendered over the multiview layers; wrong/cancelled PINs never tune a pane.
 - **2026-09-15** Quick-bar track pickers: the Video/Audio/CC slots open real
   track-selection pickers off the engine's track groups and the Latency slot is
   an audio-sync stepper; all nine quick-bar slots are now live.

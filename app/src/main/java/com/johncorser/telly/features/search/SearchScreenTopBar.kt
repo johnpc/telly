@@ -27,7 +27,8 @@ import com.johncorser.telly.features.search.SearchScreenDims as Dims
 /**
  * Search top bar (capture 49): the voice orb takes default focus, RIGHT
  * reaches the light-grey query bar (system IME on device), gear at the far
- * right. Voice input is a placeholder; the gear opens the real Settings
+ * right. The orb launches Android voice recognition (a device without a
+ * recognizer gets an honest toast); the gear opens the real Settings
  * screen (the same route the rest of the app uses).
  */
 @Composable
@@ -47,7 +48,7 @@ internal fun SearchScreenTopBar(
     ) {
         TellyScreenIconCircle(
             icon = R.drawable.ic_search_mic,
-            onClick = { viewModel.overlays.show(SearchOverlay.ComingSoon(voiceLabel)) },
+            onClick = viewModel.voice::start,
             modifier = Modifier.focusRequester(orbFocus),
             size = Dims.orbSize,
             iconSize = 24.dp,

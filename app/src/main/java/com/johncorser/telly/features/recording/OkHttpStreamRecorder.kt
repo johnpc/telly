@@ -1,5 +1,6 @@
 package com.johncorser.telly.features.recording
 
+import com.johncorser.telly.features.player.STREAM_USER_AGENT
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
@@ -13,13 +14,15 @@ import java.io.InputStream
 /**
  * The production [StreamRecorder]: a plain OkHttp GET appended chunk by
  * chunk onto the capture file. Redirects (including the cross-protocol
- * token/load-balancer hops IPTV providers love) are followed and the app's
- * stream User-Agent is sent — the same treatment the player's
+ * token/load-balancer hops IPTV providers love) are followed and the
+ * stream User-Agent is resolved per URL through [userAgentFor] — the same
+ * per-playlist > global > default precedence the player's
  * StreamMediaSourceFactory gives the same URLs.
  */
 class OkHttpStreamRecorder(
     private val client: OkHttpClient = defaultClient(),
     private val dispatcher: CoroutineDispatcher = Dispatchers.IO,
+    private val userAgentFor: (streamUrl: String) -> String = { STREAM_USER_AGENT },
 ) : StreamRecorder {
     override suspend fun copy(
         url: String,
@@ -27,7 +30,7 @@ class OkHttpStreamRecorder(
         shouldStop: () -> Boolean,
     ): Long =
         withContext(dispatcher) {
-            val request = Request.Builder().url(url).header("User-Agent", USER_AGENT).build()
+            val request = Request.Builder().url(url).header("User-Agent", userAgentFor(url)).build()
             client.newCall(request).execute().use { response ->
                 if (!response.isSuccessful) throw IOException("HTTP ${response.code} while recording")
                 val body = response.body ?: return@use 0L
@@ -55,11 +58,6 @@ class OkHttpStreamRecorder(
 
     companion object {
         private const val CHUNK_BYTES = 64 * 1024
-
-        /** Same client UA the player sends; some providers gate streams on it. */
-        const val USER_AGENT =
-            "Mozilla/5.0 (Linux; Android 11; SHIELD Android TV) AppleWebKit/537.36 " +
-                "(KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
 
         private fun defaultClient(): OkHttpClient =
             OkHttpClient

@@ -8,10 +8,16 @@ import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.isFocused
 import androidx.compose.ui.test.onFirst
 import androidx.compose.ui.test.performSemanticsAction
+import com.johncorser.telly.core.ServiceLocator
 import com.johncorser.telly.e2e.PlaybackDriver
 import com.johncorser.telly.e2e.TellyWorld
+import com.johncorser.telly.features.recording.RecordingStatus
+import com.johncorser.telly.features.recording.recordingCenter
+import com.johncorser.telly.features.recording.recordingStatus
 import io.cucumber.java.en.Then
 import io.cucumber.java.en.When
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.runBlocking
 
 /**
  * Steps for the recording / DVR slice: opening the library, recording the
@@ -76,6 +82,22 @@ class RecordingSteps(
 
     @Then("the recording plays back fullscreen")
     fun playsBack() = world.waitFor(hasTestTag("recording-player"))
+
+    /**
+     * DVR-facade assertion (no library UI involved) so the guide/panel
+     * sheet scenarios stay independent of recording.feature's flows.
+     */
+    @Then("a recording of {string} is in progress")
+    fun recordingInProgress(channel: String) {
+        val center = ServiceLocator.recordingCenter(world.targetContext)
+        driver.awaitCondition("a live recording of $channel") {
+            runBlocking {
+                center.recordings.first().any {
+                    it.channelName == channel && it.recordingStatus == RecordingStatus.RECORDING
+                }
+            }
+        }
+    }
 
     private fun recordingRow(channel: String): SemanticsMatcher =
         hasTestTag("recording-row") and hasText(channel, substring = true)

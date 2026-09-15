@@ -93,14 +93,15 @@ Feature: TV guide
     And I select "Hide channel"
     Then the channel column no longer lists "News One HD"
 
-  # telly has no premium tier: the reference's paywalled rows share the
-  # branded coming-soon placeholder with the uncaptured rows.
-  Scenario: Formerly-premium sheet rows open the coming-soon placeholder and BACK pops back to the sheet
+  # The sheet's Record row is live DVR (recording slice): it instant-records
+  # the focused row's channel — fixture News One is a recordable .ts stream —
+  # and the sheet closes back onto the grid. The library flows live in
+  # e2e/features/recording; this asserts the guide sheet's own behavior.
+  Scenario: The sheet's Record row starts recording the focused channel
     When I long-press ok
     And I select "Record"
-    Then I see "Coming soon to telly"
-    When I press back
-    Then I see the menu rows "Search" and "Settings"
+    Then the programme grid is focused again
+    And a recording of "News One" is in progress
 
   Scenario: Program description shows the focused programme's synopsis
     When I long-press ok

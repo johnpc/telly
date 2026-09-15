@@ -10,6 +10,7 @@ import com.johncorser.telly.features.guide.GuideDeps
 import com.johncorser.telly.features.guide.GuideKeymap
 import com.johncorser.telly.features.history.WatchHistory
 import com.johncorser.telly.features.multiview.MultiviewDeps
+import com.johncorser.telly.features.playback.BlockGate
 import com.johncorser.telly.features.playback.BlockSession
 import com.johncorser.telly.features.playback.PanelTimeouts
 import com.johncorser.telly.features.playback.PlaybackDeps
@@ -85,7 +86,9 @@ fun ServiceLocator.guideDeps(
 /**
  * Multiview slice: one independent engine per pane from the factory. The
  * pane engines do NOT handle audio focus (N players grabbing focus pause
- * one another); the focused pane owns audio via mute state instead.
+ * one another); the focused pane owns audio via mute state instead. The
+ * gate shares [sharedBlockSession] so multiview honors the same
+ * "Until app restart" relock as the playback and guide tuners.
  */
 fun ServiceLocator.multiviewDeps(context: Context): MultiviewDeps =
     MultiviewDeps(
@@ -99,7 +102,8 @@ fun ServiceLocator.multiviewDeps(context: Context): MultiviewDeps =
             )
         },
         store = keyValueStore(context),
-        clock = clock,
+        time = PlaybackTime(clock = clock),
+        gate = BlockGate(ParentalControls(settingsRepository(context)), sharedBlockSession),
     )
 
 /** VOD slice: the Movies browser + seekable playback with resume. */

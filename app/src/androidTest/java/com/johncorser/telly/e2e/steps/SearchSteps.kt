@@ -178,12 +178,20 @@ class SearchSteps(
     @When("I press ok on the channel card {string}")
     fun okOnChannelCard(name: String) = world.select(name)
 
-    @When("I press ok on the first programme row")
-    fun okOnFirstProgrammeRow() {
+    /**
+     * OK on the selected channel's first airing at least ~30 min out, so a
+     * Remind set here can never fire (default 5-min lead) mid-scenario —
+     * the same guard the guide's reminders steps use.
+     */
+    @When("I press ok on a later programme row")
+    fun okOnLaterProgrammeRow() {
+        val later =
+            airingsOn(selectedChannel(airingsTitle), airingsTitle)
+                .first { it.startMs > now() + LATER_MARGIN_MS }
         // A synthetic DPAD_CENTER pair can leak its UP into the dropdown
         // that the row's click opens (its first row takes focus while the
         // key is in flight); the semantics click IS the row's OK action.
-        focusFirstProgrammeRow(hasText("Newsroom Live", substring = true))
+        focusFirstProgrammeRow(hasText(airTime(later), substring = true))
             .performSemanticsAction(SemanticsActions.OnClick)
     }
 
@@ -280,5 +288,6 @@ class SearchSteps(
 
     private companion object {
         const val BAND_TOLERANCE_PX = 5f
+        const val LATER_MARGIN_MS = 30 * 60_000L
     }
 }
