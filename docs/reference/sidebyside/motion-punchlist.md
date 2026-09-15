@@ -96,3 +96,30 @@ which this round re-confirms against telly's live behaviour.
   sheet; pop lands on the grid/panel) are fixed in the same change — see the
   visual-round5 punch-list rows. Exact on-screen timings still need the
   usual on-device eyeball round.
+
+  **VERIFIED + CORRECTED (round 7, on-device — evidence `round7/`):**
+
+  - Entrance: telly settles in ~250 ms (last sheet-less frame 3.496 s →
+    settled 3.746 s) with the scrim landing within a frame — MATCH vs the
+    reference's 150–280 ms envelope.
+  - Close: telly's sheet is a one-frame cut followed by a ~318 ms scrim
+    fade (target 300) — MATCH (reference: cut + short dim fade).
+  - **Scrim darkness corrected:** the round-6 "(15,20,22)→(4,6,6) = 72 %"
+    read came from screenrecord frames (limited-range video crushes darks).
+    Screencap probes put the true reference dim at a ×0.40–0.42 factor
+    (≈60 % black) — `MENU_SCRIM` is now 0x99000000 and telly measures
+    0.40–0.42 on both the guide and the panel host (round7/02-*, 05-*).
+  - **Channel-options push/pop implemented:** was an instant swap both
+    ways; now the shared `PlaybackScreenMenuSurfaceSwitch` (AnimatedContent
+    keyed on menu surface, both hosts) cross-fades the pane in place —
+    sheet fadeOut 170 ms under pane fadeIn 350 ms; pop fadeOut 140 ms
+    landing directly on the grid/panel with the originating row focused.
+    Frame-stepped after the fix: pill fade ~110 ms visible, pane ramp
+    ~230 ms visible, pop ~90–140 ms — same class as the fresh reference
+    take (~85–100 ms out / ~450 ms in / ~130 ms pop; short fades are
+    take-dependent under only-on-change frame emission).
+  - Fresh sheet still lands on Search; below-fold restore (Manage
+    Favorites → paywall → BACK) re-focuses the row and D-pad moves from it.
+  - NEW P2 (round7 punch list): the reference does NOT dim the originating
+    row under the sheet (white outline, full brightness); telly's
+    fullscreen scrim dims the whole grid uniformly.

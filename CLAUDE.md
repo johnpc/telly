@@ -177,11 +177,12 @@ Local SDK note: `local.properties` must contain
   `Route.Search`, reached from the playback quick-bar's Search slot. Room
   queries live in a dedicated `features/search/db/SearchDao` (LIKE with
   `ESCAPE '\'`; `SearchQuery` escapes `%`/`_`/`\`): channels by name
-  substring OR number prefix (digits-only queries) in case-insensitive
-  name order — live 5.2.0 side-by-side (`tm-02`) showed name order, not
-  the zap order originally guessed when the cap was "not capturable" —
-  programmes by title substring still airing/upcoming (LIMIT 100 — the
-  reference cap is not capturable). **The Programs section is a
+  WORD-PREFIX (round7 corrected the earlier substring read — see the
+  2026-09-14 round-7 bullet) OR number prefix (digits-only queries) in
+  case-insensitive name order — live 5.2.0 side-by-side (`tm-02`) showed
+  name order, not the zap order originally guessed when the cap was "not
+  capturable" — programmes by title word-prefix still airing/upcoming
+  (LIMIT 100 — the reference cap is not capturable). **The Programs section is a
   channel-master / airings-detail two-pane (ref-round6 §D supersedes the
   earlier flat soonest-first reading of capture 50):** a vertical master
   lane with ONE 120×103 dp card (logo + name, adjacent) per channel that
@@ -197,9 +198,10 @@ Local SDK note: `local.properties` must contain
   lands on the FIRST channel card via an explicit `FocusRequester`
   (round6 07 — Compose's spatial `moveFocus` picked the nearest card).
   DOWN in the rows pane stops dead at the last airing
-  (`focusProperties down = Cancel`). OK on a master card tunes the channel
-  (uncaptured; assumed to match the Channels-shelf semantics — pending
-  device check). Currently-airing rows append the shared dash progress +
+  (`focusProperties down = Cancel`). OK on a master card opens the shared
+  Unlock Premium screen (round7 device check FLIPPED the earlier
+  tunes-like-the-Channels-shelf assumption). Currently-airing rows append
+  the shared dash progress +
   "N min" remaining to the times and tint the title light blue, and
   hidden/unknown channels drop out with their airings.
   Air times: bare "03:45 — 05:15 PM"
@@ -343,3 +345,40 @@ Local SDK note: `local.properties` must contain
   now-dead Channel-options case. The one-level pop back to the sheet
   stays for the uncaptured pushed layers (description/paywall/
   coming-soon). Exact timings remain to be eyeballed on-device.
+- **2026-09-14** Round-7 on-device verification (evidence
+  `docs/reference/sidebyside/round7/`, verdicts `round7-punchlist.md`)
+  corrected three round-6-era readings and confirmed the rest:
+  **(1) Sheet scrim = 60 % black, not 72 %.** Round 6 measured the dim on
+  screenrecord frames, whose limited-range video encode crushes darks;
+  screencap probes put the true factor at ×0.40–0.42 on live TiviMate.
+  `MENU_SCRIM` is 0x99000000 (same value the settings sheet already used)
+  and telly now measures ×0.40–0.42 on both hosts. New P2: the reference
+  does NOT dim the originating row under the sheet (white outline, full
+  brightness); telly dims uniformly.
+  **(2) Channel-options cross-fade implemented:** the shared
+  `PlaybackScreenMenuSurfaceSwitch` (`AnimatedContent` keyed on a
+  `PlayerMenuSurface` contentKey, in `PlaybackScreenMenuMotion.kt`, hosted
+  by `GuideScreen` and `PlaybackScreenMenuLayers`) fades the sheet out
+  170 ms under the pane's 350 ms fade-in on push and fades the pane out
+  140 ms on pop, landing directly on the grid/panel with the originating
+  row focused; every other surface change stays an instant swap so the
+  sheet's 250 ms entrance and instant close are untouched.
+  **(3) Search matches per-word PREFIXES, not substrings** ("xtra"/"room"
+  find nothing; "o" only reaches "One", "spec"/"epis" reach "…Special"/
+  "Episode…"): `SearchQuery.nameLike` = `"% q%"` matched against
+  `' ' || column` in both `SearchDao` queries.
+  **(4) OK on a Programs master card opens the shared Unlock Premium
+  screen** — live 5.2.0 does not tune from the master lane
+  (`SearchViewModel.onProgramChannelResult`).
+  Also per live probes: the selected-but-unfocused master card carries a
+  1 dp grey outline (0xFF37393C sampled; `restingOutline` on
+  `SearchScreenFocusRow`, drawn outside the 42 % alpha layer); DOWN from
+  the query bar with NO channel matches lands on the first AIRING ROW
+  (fixed; with channels it stays the first card, and after visiting a
+  scrolled shelf the reference restores the LAST-focused card — logged P2,
+  telly still targets card 1); each result batch resets the selection to
+  the first master card in the reference too (telly already matched); the
+  detail-card title needs `letterSpacing = 0.sp` to fit the reference's
+  one-line layout. Two-pane geometry verified within a few px (P3 nits
+  logged). Acceptance legs after fixes: search 12/12, tv-guide 16/16
+  (one steps-layer anchor fix), channel-panel 13/13.

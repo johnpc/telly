@@ -54,3 +54,30 @@ telly evidence: `search-smoke/` in this directory. Geometry in px on the
 - ~~Live TiviMate collapsed the "news" programme list to 2 rows (one per title?) where the ref capture 50 showed duplicates across channels; telly lists per airing/channel like ref 50.~~
   **ANSWERED (round6): the Programs section is a channel-master / airings-detail two-pane, one row per AIRING, no title dedupe.** Left lane = one card per matching channel in case-insensitive NAME order; right lane = ONLY the selected card's airings, chronological, repeats included (News One shows "Newsroom Live: Newsroom Live Special" twice; verified 1:1 against fixture EPG ground truth for 4 channels). Same-titled airings are never merged across channels. DOWN stops at the selected channel's last row; LEFT+DOWN selects the next channel card, which swaps the rows pane and preselects its first row into the detail card. The old "2 rows" observation was one selected channel's 2 airings, NOT a per-title collapse.
   **FIXED (round-6 fix pass, branch `fix/search-round6-two-pane`):** `SearchResultsBuilder.programs` now groups matches into `SearchProgramChannel` entries (name order, ties by number; airings chronological, never deduped/merged), `SearchViewModel.selectedChannel` holds the master-lane selection (first channel per batch; focusing a card swaps the rows pane and preselects its first airing into the detail card — state only while the IME is up), and `SearchScreenPrograms` renders the two-pane at round-6 geometry: 120×103 dp adjacent master cards (72×48 dp logo, 16 dp insets), 60 dp airing rows (119–120 px pitch), 404 dp rows lane (776 px title boxes), row text still at x=360 px. DOWN in the rows pane stops at the last airing (`focusProperties down = Cancel`). Airing-row dash progress + "N min", TELLY_CLOCK_BLUE airing titles, 42 % resting alpha and ProgramTitle air-time formats all carried over. OK on a master card tunes the channel (uncaptured — assumption to check on-device). e2e scenarios reworked (see feature file) — **needs on-device re-verification**.
+
+## Round 7 — on-device verification of the two-pane (see `round7-punchlist.md` + `round7/`)
+
+- Geometry VERIFIED vs live "news": master-card pitch 206 px both, airing-row
+  pitch 119–120 px both, row titles x=360 both, detail card x=1240 both,
+  section gap 84 vs 86 px. P3 nits logged (rows lane ~16 px high; airing time
+  line a size up).
+- **OK on a master card FLIPPED:** live 5.2.0 opens the Unlock Premium screen,
+  it does NOT tune. Fixed (`SearchViewModel.onProgramChannelResult`) + e2e
+  scenario.
+- **Selected-but-unfocused card:** the reference outlines it (grey 1 dp
+  rounded border, edge pixels (55,57,60)). Fixed (`restingOutline` +
+  `searchSelectedCardBorder`, drawn outside the 42 % alpha layer).
+- **DOWN from the query bar:** fresh batch with channels → first card (matches,
+  re-verified on device); fresh batch with NO channels → the reference lands
+  on the first AIRING ROW, not the master card — fixed + e2e scenario. With a
+  visited, scrolled shelf the reference RESTORES the last-focused card (focus
+  memory) — logged P2, telly still always requests card 1.
+- **Selection vs typing:** the reference resets the selection to the first
+  master card on every result batch — telly already matches, no change.
+- **Match rule FLIPPED:** live search is per-word PREFIX, not substring
+  ("xtra"/"room" find nothing; "o"→"One", "spec"→"…Special",
+  "epis"→"Episode…"). Fixed: `SearchQuery.nameLike` = `"% q%"` against
+  `' ' || column` in both DAO queries; unit + DAO tests pin the negatives.
+- Detail-card title now fits one line like the reference (letterSpacing 0).
+- Regressions PASS: IME-up detail pre-render, dash + "N min", blue airing
+  titles, name order, last-airing DOWN stop. `search` acceptance leg 12/12.
