@@ -9,6 +9,7 @@ import com.johncorser.telly.features.multiview.MultiviewDeps
 import com.johncorser.telly.features.playback.PlaybackDeps
 import com.johncorser.telly.features.playback.PlaybackSources
 import com.johncorser.telly.features.player.Media3PlayerEngine
+import com.johncorser.telly.features.reminders.remindersHub
 import com.johncorser.telly.features.search.SearchDeps
 import com.johncorser.telly.features.search.SearchRepository
 import com.johncorser.telly.core.settings.SharedPrefsKeyValueStore as SettingsPrefsStore
@@ -35,6 +36,7 @@ fun ServiceLocator.guideDeps(context: Context): GuideDeps =
     GuideDeps(
         playback = playbackDeps(context),
         pastDays = { settingsRepository(context).get(TellySettings.EPG_PAST_DAYS_TO_KEEP) },
+        reminders = remindersHub(context).guide,
     )
 
 /**

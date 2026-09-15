@@ -5,12 +5,16 @@ import com.johncorser.telly.core.settings.SettingsRepository
 import com.johncorser.telly.features.epg.EpgSource
 import com.johncorser.telly.features.epg.EpgSourceStore
 import com.johncorser.telly.features.playlist.PlaylistRepository
+import com.johncorser.telly.features.reminders.ReminderListItem
+import com.johncorser.telly.features.reminders.ReminderSettingsFeed
+import com.johncorser.telly.features.reminders.confirmDeleteReminderOverlay
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
@@ -33,6 +37,7 @@ class SettingsViewModel(
     internal val updater: PlaylistUpdater = graph.actions.updater
     internal val updateEpgNow: suspend () -> Unit = graph.actions.updateEpgNow
     internal val backup: SettingsBackupManager = graph.actions.backup
+    internal val reminders: ReminderSettingsFeed? = graph.reminders
     private val versionName: String = graph.versionName
 
     internal val mutableState = MutableStateFlow(SettingsUiState())
@@ -55,10 +60,14 @@ class SettingsViewModel(
     val epgSourceItems: StateFlow<List<EpgSource>> =
         epgSources.sources.stateIn(scope, SharingStarted.Eagerly, emptyList())
 
+    /** Scheduled reminders in air order (Settings -> Other -> Reminders). */
+    val reminderItems: StateFlow<List<ReminderListItem>> =
+        (reminders?.items ?: flowOf(emptyList())).stateIn(scope, SharingStarted.Eagerly, emptyList())
+
     /** The active sheet's rows (root section list when nothing is pushed). */
     val rows: StateFlow<List<SettingsRow>> =
-        combine(mutableState, playlistItems, epgSourceItems, settings.changes) { uiState, playlists, sources, _ ->
-            rowsFor(uiState.activePane, settings, playlists, versionName, sources)
+        combine(mutableState, playlistItems, epgSourceItems, reminderItems, settings.changes) { state, pls, s, r, _ ->
+            rowsFor(state.activePane, settings, pls, versionName, SettingsFeeds(s, r))
         }.stateIn(scope, SharingStarted.Eagerly, emptyList())
 
     /** OK on a section row pushes its sheet over the root list. */
@@ -86,6 +95,7 @@ class SettingsViewModel(
                 rowId.removePrefix(RowIds.EPG_CUSTOM_SOURCE_PREFIX).toLongOrNull()?.let {
                     push(SettingsPane.EpgSourceDetail(it))
                 }
+            rowId.startsWith(RowIds.REMINDER_PREFIX) -> confirmDeleteReminderOverlay(rowId)
             else -> runAction(rowId)
         }
     }

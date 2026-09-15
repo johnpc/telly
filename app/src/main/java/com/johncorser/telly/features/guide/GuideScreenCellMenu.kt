@@ -26,6 +26,7 @@ internal fun GuideScreenCellMenu(
     layer: GuideLayer,
 ) {
     if (layer !is GuideLayer.CellMenu) return
+    val reminderKeys by controller.menu.remind.keys.collectAsState()
     val focus by controller.focus.collectAsState()
     val firstRow by controller.firstVisibleRow.collectAsState()
     val scrollX by controller.scrollX.collectAsState()
@@ -46,7 +47,7 @@ internal fun GuideScreenCellMenu(
     ) {
         GuideCellAction.entries.forEachIndexed { index, action ->
             TellyScreenMenuRow(
-                label = action.label,
+                label = controller.menu.remind.label(action, reminderKeys),
                 onClick = { controller.menu.onCellAction(action) },
                 height = GuideDropdownAnchor.MENU_ROW_DP.dp,
                 requestFocus = index == 0,

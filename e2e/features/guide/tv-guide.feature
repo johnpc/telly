@@ -39,11 +39,13 @@ Feature: TV guide
     When I press ok
     Then playback goes fullscreen on channel 2 "News One HD"
 
+  # The Remind row is live (reminders slice, e2e/features/reminders); the
+  # remaining dropdown rows are unbuilt and open the coming-soon placeholder.
   Scenario: OK on a future programme opens the cell dropdown
     When I press dpad right
     And I press ok
     Then a dropdown anchored under the cell lists exactly "Remind", "Record", "Custom recording", "Add to My list", "Program description"
-    When I select "Remind"
+    When I select "Program description"
     Then I see "Coming soon to telly"
     When I press back
     Then the programme grid is focused again

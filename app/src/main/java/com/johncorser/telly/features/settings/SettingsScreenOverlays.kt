@@ -16,6 +16,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import com.johncorser.telly.core.design.TELLY_GUIDANCE_PANE
+import com.johncorser.telly.features.reminders.ReminderScreenConfirmDelete
 
 /** Routes the active overlay to its dialog; nothing when idle. */
 @Composable
@@ -29,6 +30,7 @@ internal fun SettingsScreenOverlay(
         is SettingsOverlay.TextEdit -> SettingsScreenTextEdit(model, overlay)
         is SettingsOverlay.ConfirmDelete -> SettingsScreenConfirmDelete(model, overlay)
         is SettingsOverlay.ConfirmDeleteSource -> SettingsScreenConfirmDeleteSource(model, overlay)
+        is SettingsOverlay.ConfirmDeleteReminder -> ReminderScreenConfirmDelete(model, overlay)
         SettingsOverlay.PinSetup -> SettingsScreenPinDialog(model)
     }
 }

@@ -4,6 +4,7 @@ import com.johncorser.telly.core.settings.ParentalControls
 import com.johncorser.telly.core.settings.SettingsRepository
 import com.johncorser.telly.features.epg.EpgSourceStore
 import com.johncorser.telly.features.playlist.PlaylistRepository
+import com.johncorser.telly.features.reminders.ReminderSettingsFeed
 import kotlinx.coroutines.CoroutineScope
 
 /** The imperative actions the settings tree can trigger. */
@@ -25,6 +26,9 @@ class SettingsGraph(
     val versionName: String,
     val epgSources: EpgSourceStore,
 ) {
+    /** The reminders feed (Other -> Reminders); attached by the composition root. */
+    var reminders: ReminderSettingsFeed? = null
+
     fun viewModel(
         scope: CoroutineScope,
         callbacks: SettingsCallbacks,

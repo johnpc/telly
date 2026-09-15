@@ -18,6 +18,7 @@ import com.johncorser.telly.features.onboarding.StartRoute
 import com.johncorser.telly.features.pip.PipActivityBridge
 import com.johncorser.telly.features.pip.PipState
 import com.johncorser.telly.features.playlist.M3uFetcher
+import com.johncorser.telly.features.reminders.remindersHub
 import com.johncorser.telly.features.settings.PlaylistUpdater
 import com.johncorser.telly.features.settings.SettingsActions
 import com.johncorser.telly.features.settings.SettingsBackupManager
@@ -64,6 +65,7 @@ class MainActivity : ComponentActivity() {
                 searchDeps = ServiceLocator.searchDeps(this),
                 multiviewDeps = ServiceLocator.multiviewDeps(this),
                 onEnterPip = pip::enter,
+                reminders = ServiceLocator.remindersHub(this),
             )
         }
     }
@@ -84,7 +86,7 @@ class MainActivity : ComponentActivity() {
                 ),
             versionName = appVersionName(),
             epgSources = ServiceLocator.epgSourceStore(this),
-        )
+        ).apply { reminders = ServiceLocator.remindersHub(this@MainActivity).settingsFeed }
     }
 
     private fun appVersionName(): String =

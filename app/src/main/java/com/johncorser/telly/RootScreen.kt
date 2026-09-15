@@ -7,6 +7,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.key
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.tv.material3.MaterialTheme
@@ -20,6 +21,8 @@ import com.johncorser.telly.features.guide.GuideDeps
 import com.johncorser.telly.features.multiview.MultiviewDeps
 import com.johncorser.telly.features.playback.PlaybackDeps
 import com.johncorser.telly.features.playlist.PlaylistRepository
+import com.johncorser.telly.features.reminders.ReminderScreenPopupHost
+import com.johncorser.telly.features.reminders.RemindersHub
 import com.johncorser.telly.features.search.SearchDeps
 import com.johncorser.telly.features.settings.SettingsGraph
 import com.johncorser.telly.features.settings.SettingsScreenHost
@@ -36,6 +39,7 @@ fun RootScreen(
     searchDeps: SearchDeps,
     multiviewDeps: MultiviewDeps,
     onEnterPip: () -> Unit = {},
+    reminders: RemindersHub? = null,
 ) {
     val stack by navigator.stack.collectAsState()
     val route = stack.last()
@@ -54,18 +58,23 @@ fun RootScreen(
                 ),
         ) {
             Box(Modifier.fillMaxSize()) {
-                RootScreenRoutes(
-                    baseRoute,
-                    settingsOpen,
-                    navigator,
-                    repository,
-                    fetchPlaylist,
-                    playbackDeps,
-                    guideDeps,
-                    searchDeps,
-                    multiviewDeps,
-                    onEnterPip,
-                )
+                // A reminder "Watch" bumps the epoch so a same-route tune
+                // still recreates the playback screen (cold-start path).
+                val reminderEpoch = reminders?.popup?.tuneEpoch?.collectAsState()?.value ?: 0
+                key(reminderEpoch) {
+                    RootScreenRoutes(
+                        baseRoute,
+                        settingsOpen,
+                        navigator,
+                        repository,
+                        fetchPlaylist,
+                        playbackDeps,
+                        guideDeps,
+                        searchDeps,
+                        multiviewDeps,
+                        onEnterPip,
+                    )
+                }
                 if (settingsOpen) {
                     SettingsScreenHost(
                         graph = settingsGraph,
@@ -73,6 +82,7 @@ fun RootScreen(
                         onClose = { navigator.pop() },
                     )
                 }
+                if (reminders != null) ReminderScreenPopupHost(reminders, navigator)
             }
         }
     }

@@ -25,6 +25,7 @@ private fun sameRaw(labels: List<String>) = labels.map { PickerOption(it, it) }
 object SettingsPickers {
     val EPG_INTERVAL_HOURS = listOf(0, 1, 2, 3, 6, 12, 24)
     val EPG_PAST_DAYS = listOf(1, 2, 3, 4, 5, 6, 7)
+    val REMINDER_LEAD_MINUTES = listOf(1, 5, 10, 15, 30)
 
     private val all =
         listOf(
@@ -45,6 +46,12 @@ object SettingsPickers {
                 title = "Past days to keep EPG",
                 key = TellySettings.EPG_PAST_DAYS_TO_KEEP.key,
                 options = EPG_PAST_DAYS.map { PickerOption(it.toString(), it.toString()) },
+            ),
+            PickerSpec(
+                rowId = RowIds.REMINDERS_LEAD,
+                title = "Show reminder before, min",
+                key = TellySettings.REMINDER_LEAD_MINUTES.key,
+                options = REMINDER_LEAD_MINUTES.map { PickerOption(it.toString(), it.toString()) },
             ),
             PickerSpec(
                 rowId = RowIds.APPEARANCE_COLOR_THEME,
@@ -87,17 +94,12 @@ object SettingsPickers {
     val byRowId: Map<String, PickerSpec> = all.associateBy { it.rowId }
 
     private val defaultRawByKey: Map<String, String> =
-        mapOf(
-            TellySettings.PLAYLISTS_SORTING.key to TellySettings.PLAYLISTS_SORTING.default,
-            TellySettings.EPG_UPDATE_INTERVAL_HOURS.key to TellySettings.EPG_UPDATE_INTERVAL_HOURS.default.toString(),
-            TellySettings.EPG_PAST_DAYS_TO_KEEP.key to TellySettings.EPG_PAST_DAYS_TO_KEEP.default.toString(),
-            TellySettings.ACCENT_COLOR.key to TellySettings.ACCENT_COLOR.default,
-            TellySettings.BUFFER_SIZE.key to TellySettings.BUFFER_SIZE.default,
-            TellySettings.AUDIO_DECODER.key to TellySettings.AUDIO_DECODER.default,
-            TellySettings.VIDEO_DECODER.key to TellySettings.VIDEO_DECODER.default,
-            TellySettings.PARENTAL_PIN_INPUT_METHOD.key to TellySettings.PARENTAL_PIN_INPUT_METHOD.default,
-            TellySettings.PARENTAL_RELOCK.key to TellySettings.PARENTAL_RELOCK.default,
-        )
+        listOf(
+            TellySettings.PLAYLISTS_SORTING, TellySettings.EPG_UPDATE_INTERVAL_HOURS,
+            TellySettings.EPG_PAST_DAYS_TO_KEEP, TellySettings.REMINDER_LEAD_MINUTES,
+            TellySettings.ACCENT_COLOR, TellySettings.BUFFER_SIZE, TellySettings.AUDIO_DECODER,
+            TellySettings.VIDEO_DECODER, TellySettings.PARENTAL_PIN_INPUT_METHOD, TellySettings.PARENTAL_RELOCK,
+        ).associate { it.key to it.default.toString() }
 
     /** The raw value a picker should highlight given the store [snapshot]. */
     fun currentRaw(
