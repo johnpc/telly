@@ -15,6 +15,7 @@ import androidx.compose.ui.input.key.onPreviewKeyEvent
 import com.johncorser.telly.core.input.HoldKeyDetector
 import com.johncorser.telly.core.ui.ScreenLifecycleStartStop
 import com.johncorser.telly.features.panel.PanelLock
+import com.johncorser.telly.features.pip.PipState
 import com.johncorser.telly.features.player.PlayerScreenSurface
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -34,6 +35,8 @@ fun PlaybackScreen(
     onOpenSearch: () -> Unit = {},
     onOpenSettings: () -> Unit = {},
     onOpenMultiview: () -> Unit = {},
+    onEnterPip: () -> Unit = {},
+    pip: PipState = PipState.shared,
 ) {
     // A dedicated main-thread scope instead of rememberCoroutineScope(): the
     // ViewModel drives ExoPlayer (main-thread-affine) and wall-clock overlay
@@ -56,6 +59,8 @@ fun PlaybackScreen(
                                 panelLock = PanelLock(deps.parental),
                                 onOpenSettings = onOpenSettings,
                                 onOpenMultiview = onOpenMultiview,
+                                onEnterPip = onEnterPip,
+                                pip = pip,
                             ),
                     ),
                 history = deps.sources.history,
@@ -72,6 +77,7 @@ fun PlaybackScreen(
         }
     }
     val overlay by viewModel.overlay.collectAsState()
+    val inPip by pip.inPip.collectAsState()
     val previewDetector = remember { HoldKeyDetector(PlaybackKey.OK, PlaybackKey.LONG_OK) }
     // Background/resume: stop the stream on STOP, re-tune on the START
     // after it — the reference re-tunes on resume (round7 resume P2).
@@ -84,9 +90,12 @@ fun PlaybackScreen(
             .onPreviewKeyEvent { event -> onPreviewKey(event, overlay, viewModel, previewDetector) },
     ) {
         PlayerScreenSurface(engine, Modifier.fillMaxSize())
-        if (overlay == PlaybackOverlay.None || overlay == PlaybackOverlay.ZapInfo) {
-            PlaybackScreenKeyAnchor(onKey = viewModel::onKey)
+        // In the tiny PIP window every piece of chrome hides: clean video only.
+        if (!inPip) {
+            if (overlay == PlaybackOverlay.None || overlay == PlaybackOverlay.ZapInfo) {
+                PlaybackScreenKeyAnchor(onKey = viewModel::onKey)
+            }
+            PlaybackScreenOverlays(viewModel, overlay)
         }
-        PlaybackScreenOverlays(viewModel, overlay)
     }
 }

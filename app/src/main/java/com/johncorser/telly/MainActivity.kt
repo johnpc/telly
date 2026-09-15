@@ -1,5 +1,6 @@
 package com.johncorser.telly
 
+import android.content.res.Configuration
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -14,6 +15,8 @@ import com.johncorser.telly.core.searchDeps
 import com.johncorser.telly.core.settings.ParentalControls
 import com.johncorser.telly.core.settings.TellySettings
 import com.johncorser.telly.features.onboarding.StartRoute
+import com.johncorser.telly.features.pip.PipActivityBridge
+import com.johncorser.telly.features.pip.PipState
 import com.johncorser.telly.features.playlist.M3uFetcher
 import com.johncorser.telly.features.settings.PlaylistUpdater
 import com.johncorser.telly.features.settings.SettingsActions
@@ -25,6 +28,25 @@ import kotlinx.coroutines.launch
 class MainActivity : ComponentActivity() {
     private val navigator = Navigator(start = Route.Boot)
     private val fetcher = M3uFetcher()
+    private val pip = PipActivityBridge(this, PipState.shared, ::pipOnHome, ::playbackIsFullscreen)
+
+    private fun pipOnHome() = ServiceLocator.settingsRepository(this).get(TellySettings.PIP_ON_HOME)
+
+    private fun playbackIsFullscreen() = navigator.stack.value.lastOrNull() == Route.Playback
+
+    /** HOME with fullscreen playback up switches to PIP when the setting is on. */
+    override fun onUserLeaveHint() {
+        super.onUserLeaveHint()
+        pip.onUserLeaveHint()
+    }
+
+    override fun onPictureInPictureModeChanged(
+        isInPictureInPictureMode: Boolean,
+        newConfig: Configuration,
+    ) {
+        super.onPictureInPictureModeChanged(isInPictureInPictureMode, newConfig)
+        pip.onModeChanged(isInPictureInPictureMode)
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -41,6 +63,7 @@ class MainActivity : ComponentActivity() {
                 settingsGraph = settingsGraph(),
                 searchDeps = ServiceLocator.searchDeps(this),
                 multiviewDeps = ServiceLocator.multiviewDeps(this),
+                onEnterPip = pip::enter,
             )
         }
     }

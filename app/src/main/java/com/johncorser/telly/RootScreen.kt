@@ -35,6 +35,7 @@ fun RootScreen(
     settingsGraph: SettingsGraph,
     searchDeps: SearchDeps,
     multiviewDeps: MultiviewDeps,
+    onEnterPip: () -> Unit = {},
 ) {
     val stack by navigator.stack.collectAsState()
     val route = stack.last()
@@ -63,6 +64,7 @@ fun RootScreen(
                     guideDeps,
                     searchDeps,
                     multiviewDeps,
+                    onEnterPip,
                 )
                 if (settingsOpen) {
                     SettingsScreenHost(

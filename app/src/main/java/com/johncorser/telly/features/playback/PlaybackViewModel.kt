@@ -3,8 +3,8 @@ package com.johncorser.telly.features.playback
 import com.johncorser.telly.core.kv.KeyValueStore
 import com.johncorser.telly.features.epg.EpgRepository
 import com.johncorser.telly.features.history.WatchHistory
-import com.johncorser.telly.features.panel.PanelLock
 import com.johncorser.telly.features.panel.PanelViewModel
+import com.johncorser.telly.features.pip.PipEnterAction
 import com.johncorser.telly.features.player.PlayerEngine
 import com.johncorser.telly.features.player.PlayerState
 import com.johncorser.telly.features.playlist.db.ChannelDao
@@ -12,13 +12,6 @@ import com.johncorser.telly.features.playlist.db.ChannelEntity
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
-
-/** Cross-slice hooks the playback surface plugs into (nav + parental). */
-class PlaybackHooks(
-    val panelLock: PanelLock = PanelLock(),
-    val onOpenSettings: () -> Unit = {},
-    val onOpenMultiview: () -> Unit = {},
-)
 
 /** Everything [PlaybackViewModel] needs injected, bundled for readability. */
 class PlaybackEnv(
@@ -85,6 +78,9 @@ class PlaybackViewModel(
 
     private val commands = PlaybackCommands(tuner, overlays, panel, instant, clock, onExitToGuide)
 
+    /** Quick-bar PIP: clear the chrome first, then the activity swaps windows. */
+    val enterPip = PipEnterAction(clearChrome = { overlays.set(PlaybackOverlay.None) }, enter = env.hooks.onEnterPip)
+
     /** The info-row recent-channel cards + Clear (history-round2 §1). */
     val recents =
         PlaybackRecents(
@@ -95,8 +91,14 @@ class PlaybackViewModel(
             keepAlive = overlays::keepAlive,
         )
 
-    /** Resume after a background stop leaves fullscreen for the guide, like the reference (round7 P2). */
-    val lifecycle = PlaybackLifecycle(tuner, recover = onExitToGuide)
+    /**
+     * Resume after a background stop leaves fullscreen for the guide, like the
+     * reference (round7 P2). PIP-aware: while the PIP window is up the video
+     * keeps playing, so a STOP there must not kill the stream; closing the
+     * window flips PIP off before its stop lands, which then passes normally.
+     */
+    val lifecycle =
+        PlaybackLifecycle(tuner, recover = onExitToGuide, shouldStop = env.hooks.pip::allowsBackgroundStop)
 
     /** Routes a key through the catalogue's key-by-context map; true = consumed. */
     fun onKey(key: PlaybackKey): Boolean {
@@ -115,12 +117,13 @@ class PlaybackViewModel(
 
     fun showComingSoon(feature: String) = overlays.set(PlaybackOverlay.ComingSoon(feature))
 
-    /** Quick-bar OK: Search, Channels list and Multiview are real, the rest later slices. */
+    /** Quick-bar OK: Search, Channels list, Multiview and PIP are real, the rest later slices. */
     fun onQuickBarItem(action: QuickBarAction) {
         when (action) {
             QuickBarAction.CHANNELS_LIST -> openPanel()
             QuickBarAction.SEARCH -> openSearch()
             QuickBarAction.MULTIVIEW -> openMultiview()
+            QuickBarAction.PICTURE_IN_PICTURE -> enterPip()
             else -> showComingSoon(action.feature)
         }
     }

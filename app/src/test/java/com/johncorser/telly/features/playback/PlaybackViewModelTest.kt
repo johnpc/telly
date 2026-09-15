@@ -1,6 +1,7 @@
 package com.johncorser.telly.features.playback
 
 import com.johncorser.telly.features.history.WatchHistory
+import com.johncorser.telly.features.pip.PipState
 import com.johncorser.telly.features.player.VideoDetails
 import com.johncorser.telly.testutil.FakeChannelDao
 import com.johncorser.telly.testutil.FakeKeyValueStore
@@ -46,6 +47,8 @@ class PlaybackViewModelTest {
         clock: () -> Long = { now },
         onOpenSettings: () -> Unit = {},
         onOpenMultiview: () -> Unit = {},
+        onEnterPip: () -> Unit = {},
+        pip: PipState = PipState(),
     ): PlaybackViewModel =
         PlaybackViewModel(
             env =
@@ -55,7 +58,13 @@ class PlaybackViewModelTest {
                     engine = engine,
                     store = store,
                     time = PlaybackTime(clock, TimeZone.getTimeZone("UTC")),
-                    hooks = PlaybackHooks(onOpenSettings = onOpenSettings, onOpenMultiview = onOpenMultiview),
+                    hooks =
+                        PlaybackHooks(
+                            onOpenSettings = onOpenSettings,
+                            onOpenMultiview = onOpenMultiview,
+                            onEnterPip = onEnterPip,
+                            pip = pip,
+                        ),
                 ),
             history = WatchHistory(historyDao, clock),
             scope = CoroutineScope(SupervisorJob() + UnconfinedTestDispatcher(testScheduler)),
@@ -296,6 +305,39 @@ class PlaybackViewModelTest {
             vm.onQuickBarItem(QuickBarAction.MULTIVIEW)
 
             assertEquals(1, opened)
+        }
+
+    @Test
+    fun `the quick-bar's picture-in-picture slot clears the chrome then enters pip`() =
+        runTest {
+            var entered = 0
+            val vm = buildVm(onEnterPip = { entered += 1 })
+            vm.onKey(PlaybackKey.LONG_OK)
+            assertEquals(PlaybackOverlay.QuickBar, vm.overlay.value)
+
+            vm.onQuickBarItem(QuickBarAction.PICTURE_IN_PICTURE)
+
+            assertEquals(1, entered)
+            assertEquals(PlaybackOverlay.None, vm.overlay.value)
+        }
+
+    @Test
+    fun `a background stop is vetoed while the pip window plays`() =
+        runTest {
+            val pip = PipState()
+            val vm = buildVm(pip = pip)
+            pip.setInPip(true)
+
+            vm.lifecycle.onBackground()
+            vm.lifecycle.onForeground()
+
+            assertEquals(0, engine.stops)
+            assertEquals(0, exitedToGuide)
+
+            // Closing the PIP window flips the mode off before the stop lands.
+            pip.setInPip(false)
+            vm.lifecycle.onBackground()
+            assertEquals(1, engine.stops)
         }
 
     @Test

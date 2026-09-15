@@ -35,6 +35,7 @@ internal fun RootScreenRoutes(
     guideDeps: GuideDeps,
     searchDeps: SearchDeps,
     multiviewDeps: MultiviewDeps,
+    onEnterPip: () -> Unit = {},
 ) {
     ScreenCrossfade(baseRoute) { target ->
         when (target) {
@@ -64,6 +65,7 @@ internal fun RootScreenRoutes(
                     onOpenSearch = { navigator.push(Route.Search) },
                     onOpenSettings = { navigator.push(Route.Settings) },
                     onOpenMultiview = { navigator.push(Route.Multiview) },
+                    onEnterPip = onEnterPip,
                 )
             // BACK at the pane grid exits to fullscreen playback of the
             // focused pane's channel (multiview-spec: exit chain).
