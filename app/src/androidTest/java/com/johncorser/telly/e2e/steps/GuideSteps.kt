@@ -29,6 +29,12 @@ class GuideSteps(
     /** The time anchor guide focus keeps while navigating (starts at now). */
     private var anchorMs: Long = 0L
 
+    /** Scenarios that never moved focus anchor at "now" on first use. */
+    private fun anchorOrNow(): Long {
+        if (anchorMs == 0L) anchorMs = System.currentTimeMillis()
+        return anchorMs
+    }
+
     private fun programmeAt(
         channelNumber: Int,
         atMs: Long,
@@ -122,7 +128,7 @@ class GuideSteps(
 
     @Then("the focused cell is on channel {int} at roughly the same time")
     fun focusedCellOnChannel(number: Int) {
-        world.waitForText(programmeAt(number, anchorMs).rangeText(), substring = true)
+        world.waitForText(programmeAt(number, anchorOrNow()).rangeText(), substring = true)
     }
 
     @Then("the timeline header has scrolled forward with the cells")
