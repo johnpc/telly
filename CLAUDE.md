@@ -88,6 +88,60 @@ Local SDK note: `local.properties` must contain
 
 ## Decisions log
 
+- **2026-09-15** Multiview (multiview-round captures + `multiview-spec.md`).
+  **Captured facts, matched exactly:** the quick-bar Multiview slot opens
+  `Route.Multiview` — a single centered half-size 16:9 pane on black
+  (cell fractions .25/.25/.5/.5 = the captured [480,270][1440,810]) with
+  the verbatim hint "Press OK to show menu" / "Your IPTV provider may
+  limit the number of concurrent connections"; OK on the pane → 200 dp
+  menu right of the pane, vertically centered, 40 dp rows in captured
+  order (Add screen / Search and add / Change channel); all three open
+  the channel picker — channel list left (REUSED `PanelViewModel` +
+  `ChannelPanelScreenRow`, play arrow on the pane's channel), focused
+  channel's schedule middle, airing-programme detail card top-right;
+  BACK: picker → panes → fullscreen playback. **Deliberate deviation
+  (charter's no-premium-tier precedent):** the reference gates every
+  picker selection behind Unlock Premium; telly actually adds panes.
+  Everything multi-pane is therefore DESIGNED, not cloned: 2 panes =
+  side-by-side halves, 3 = one large left + two stacked right (no dead
+  cell, primary stream keeps prominence — chosen over 2×2-with-empty),
+  4 = 2×2; panes letterbox 16:9 via the surface's RESIZE_MODE_FIT.
+  Cap = 4 panes (`MultiviewGrid.MAX_PANES`; emulator codec budgets).
+  Add screen focuses the NEW pane; Search and add opens the SAME picker
+  (the free reference does exactly that, capture 10, and telly's search
+  is a full IME route — not embeddable cheaply); Change channel retunes
+  the focused pane in place; Remove screen appears only at >1 pane and
+  collapses the grid onto the removal index's neighbour. D-pad moves
+  between panes (2 dp white focus border); the FOCUSED pane owns audio —
+  others are muted via the new `PlayerEngine.setMuted` (ExoPlayer
+  volume), because N simultaneous audio owners is nonsense on TV.
+  CH+/− zap the focused pane (wrapping). BACK at the grid exits with NO
+  confirmation to fullscreen playback of the focused pane's channel: it
+  persists `lastChannelId` and pops — the playback screen beneath was
+  uncomposed while multiview ran (its engine released, so pane codecs
+  never fight the fullscreen player) and restores through its normal
+  cold-start path. Multiview pane tunes do NOT record watch history
+  (only the exit commit writes `lastChannelId`; the reference free build
+  can't accumulate multiview history to compare against). **Engine
+  seam:** `PlayerEngineFactory` (fun interface) + `PlayerEnginePool`
+  (acquire per pane / release per removal / releaseAll on dispose) in
+  `features/player`; pane engines come from
+  `Media3PlayerEngine.create(context, handleAudioFocus = false)` — N
+  players each grabbing audio focus pause one another, so the pool's
+  players share the app's focus and mute state picks the audible one.
+  Single playback keeps `PlaybackDeps.engineFactory` and the zap
+  keep-frame behavior untouched. Per-pane engine errors render inside
+  the pane (channel name + `TELLY_ERROR_TEXT` message). Picker details:
+  the list reuses the panel's 39 dp single-line rows instead of the
+  capture's 62.5 dp two-line rows (share-primitives mandate at jscpd 0
+  beats pixel parity here; name + now-programme parity is kept), the
+  schedule window is now−6 h..now+18 h (the capture shows ~4 h of past;
+  the anchor is not capturable), the detail card is the focused row's
+  airing programme. e2e scenarios live in the existing watch-and-zap
+  feature (playback area, already in the CI matrix — no ci.yml edit);
+  audio ownership is asserted via pane semantics ("audio"/"muted").
+  Verified locally (quality.sh); on-device acceptance legs pending.
+
 - **2026-09-15** Explicit EPG source configuration (final-sweep P2-1). The
   corpus PROVES both halves: the wizard HAS an EPG step (capture 13 +
   uidump 13 — title "EPG URL", guidance "Enter EPG URL for the playlist.
