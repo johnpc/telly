@@ -35,7 +35,8 @@ class GuideController(
     val now: StateFlow<Long> = ticker.now
     val originMs = GuideGeometry.halfHourFloor(now.value, zone)
 
-    private val tuner = TuneController(env.engine, env.store, scope, env.channelDao, history)
+    private val tuner =
+        TuneController(env.engine, env.store, scope, env.channelDao, history, external = callbacks.external)
 
     /** Background stop + foreground re-seed/re-tune (round7 resume P2). */
     val lifecycle = PlaybackLifecycle(tuner, onForegrounded = ticker::reseed, recover = tuner::retune)

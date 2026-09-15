@@ -40,8 +40,9 @@ object TellySettings {
     val AUTO_FRAME_RATE = stringSetting("playback_afr", "Off")
     val SURROUND_BY_DEFAULT = boolSetting("playback_surround_default", false)
     val AUDIO_PASSTHROUGH = boolSetting("playback_audio_passthrough", false)
-    val USE_EXTERNAL_PLAYER = stringSetting("playback_external_player", "No")
+    val USE_EXTERNAL_PLAYER = stringSetting("playback_external_player", "Off")
     val RESIZE_MODE = stringSetting("playback_resize_mode", "Fit")
+    val SKIP_STEPS = stringSetting("playback_skip_steps", "10s / 30s / 1m / 5m")
 
     // Remote control seeking options (catalogue 64–65).
     val SEEK_RWFF_CATCHUP = boolSetting("remote_seek_rwff_catchup", true)

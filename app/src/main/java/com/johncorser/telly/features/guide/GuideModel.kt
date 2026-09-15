@@ -68,6 +68,20 @@ sealed interface GuideLayer {
     ) : GuideLayer
 }
 
+/**
+ * One BACK level per layer: pushed screens → sheet, everything else → grid.
+ * Channel options is NOT a pushed screen: in the reference it replaces the
+ * sheet (in-place cross-fade), so one BACK from it lands on the grid with
+ * the originating row's focus restored by [GuideFocusMemory] (ref-round6
+ * §A — the reference never returns to the sheet).
+ */
+internal fun backOf(layer: GuideLayer): GuideLayer =
+    when (layer) {
+        is GuideLayer.ComingSoon -> layer.back
+        is GuideLayer.Description -> GuideLayer.RowMenu
+        else -> GuideLayer.Grid
+    }
+
 /** D-pad keys the guide reacts to (mapped from KeyEvents in the UI). */
 enum class GuideKey { OK, LONG_OK, MENU, BACK, UP, DOWN, LEFT, RIGHT, LONG_LEFT, LONG_RIGHT }
 

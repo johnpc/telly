@@ -16,7 +16,7 @@ data class PickerOption(
     val raw: String,
 )
 
-private fun sameRaw(labels: List<String>) = labels.map { PickerOption(it, it) }
+internal fun sameRaw(labels: List<String>) = labels.map { PickerOption(it, it) }
 
 /**
  * Row id -> picker. Captured defaults are in TellySettings; option lists of
@@ -91,15 +91,16 @@ object SettingsPickers {
             ),
         )
 
-    val byRowId: Map<String, PickerSpec> = all.associateBy { it.rowId }
+    val byRowId: Map<String, PickerSpec> = (all + playbackExtrasPickerSpecs()).associateBy { it.rowId }
 
     private val defaultRawByKey: Map<String, String> =
-        listOf(
-            TellySettings.PLAYLISTS_SORTING, TellySettings.EPG_UPDATE_INTERVAL_HOURS,
-            TellySettings.EPG_PAST_DAYS_TO_KEEP, TellySettings.REMINDER_LEAD_MINUTES,
-            TellySettings.ACCENT_COLOR, TellySettings.BUFFER_SIZE, TellySettings.AUDIO_DECODER,
-            TellySettings.VIDEO_DECODER, TellySettings.PARENTAL_PIN_INPUT_METHOD, TellySettings.PARENTAL_RELOCK,
-        ).associate { it.key to it.default.toString() }
+        playbackExtrasDefaultRaws() +
+            listOf(
+                TellySettings.PLAYLISTS_SORTING, TellySettings.EPG_UPDATE_INTERVAL_HOURS,
+                TellySettings.EPG_PAST_DAYS_TO_KEEP, TellySettings.REMINDER_LEAD_MINUTES,
+                TellySettings.ACCENT_COLOR, TellySettings.BUFFER_SIZE, TellySettings.AUDIO_DECODER,
+                TellySettings.VIDEO_DECODER, TellySettings.PARENTAL_PIN_INPUT_METHOD, TellySettings.PARENTAL_RELOCK,
+            ).associate { it.key to it.default.toString() }
 
     /** The raw value a picker should highlight given the store [snapshot]. */
     fun currentRaw(

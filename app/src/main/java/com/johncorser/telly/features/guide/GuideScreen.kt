@@ -48,6 +48,7 @@ fun GuideScreen(
                 onOpenSettings = onOpenSettings,
                 onOpenManageFavorites = onOpenManageFavorites,
                 onOpenReorderChannels = onOpenReorderChannels,
+                external = deps.playback.hooks.platform.external,
             )
         }
     val controller = rememberGuideController(deps, engine, callbacks)

@@ -12,17 +12,12 @@ import com.johncorser.telly.core.navigation.Navigator
 import com.johncorser.telly.core.navigation.Route
 import com.johncorser.telly.core.playbackDeps
 import com.johncorser.telly.core.searchDeps
-import com.johncorser.telly.core.settings.ParentalControls
 import com.johncorser.telly.core.settings.TellySettings
 import com.johncorser.telly.features.onboarding.StartRoute
 import com.johncorser.telly.features.pip.PipActivityBridge
 import com.johncorser.telly.features.pip.PipState
 import com.johncorser.telly.features.playlist.M3uFetcher
 import com.johncorser.telly.features.reminders.remindersHub
-import com.johncorser.telly.features.settings.PlaylistUpdater
-import com.johncorser.telly.features.settings.SettingsActions
-import com.johncorser.telly.features.settings.SettingsBackupManager
-import com.johncorser.telly.features.settings.SettingsGraph
 import kotlinx.coroutines.launch
 
 /** Single-activity entry point; all UI is Compose for TV. */
@@ -30,6 +25,7 @@ class MainActivity : ComponentActivity() {
     private val navigator = Navigator(start = Route.Boot)
     private val fetcher = M3uFetcher()
     private val pip = PipActivityBridge(this, PipState.shared, ::pipOnHome, ::playbackIsFullscreen)
+    private val afr by lazy { afrController() }
 
     private fun pipOnHome() = ServiceLocator.settingsRepository(this).get(TellySettings.PIP_ON_HOME)
 
@@ -52,6 +48,7 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         val repository = ServiceLocator.playlistRepository(this)
+        val hooks = playbackHooks(afr)
         restoreStartRoute()
         keepEpgFresh()
         setContent {
@@ -59,9 +56,9 @@ class MainActivity : ComponentActivity() {
                 navigator = navigator,
                 repository = repository,
                 fetchPlaylist = fetcher::fetch,
-                playbackDeps = ServiceLocator.playbackDeps(this),
-                guideDeps = ServiceLocator.guideDeps(this),
-                settingsGraph = settingsGraph(),
+                playbackDeps = ServiceLocator.playbackDeps(this, hooks),
+                guideDeps = ServiceLocator.guideDeps(this, hooks),
+                settingsGraph = settingsGraph(fetcher),
                 searchDeps = ServiceLocator.searchDeps(this),
                 multiviewDeps = ServiceLocator.multiviewDeps(this),
                 onEnterPip = pip::enter,
@@ -70,28 +67,11 @@ class MainActivity : ComponentActivity() {
         }
     }
 
-    /** Assembles the settings slice over the shared composition root. */
-    private fun settingsGraph(): SettingsGraph {
-        val settings = ServiceLocator.settingsRepository(this)
-        val repository = ServiceLocator.playlistRepository(this)
-        return SettingsGraph(
-            settings = settings,
-            playlists = repository,
-            parental = ParentalControls(settings),
-            actions =
-                SettingsActions(
-                    updater = PlaylistUpdater(fetcher::fetch, repository),
-                    updateEpgNow = { ServiceLocator.epgRefresher(this).refreshAllNow() },
-                    backup = SettingsBackupManager(settings, repository, filesDir),
-                ),
-            versionName = appVersionName(),
-            epgSources = ServiceLocator.epgSourceStore(this),
-        ).apply { reminders = ServiceLocator.remindersHub(this@MainActivity).settingsFeed }
+    /** Backgrounding is an AFR restore point (the restore-on-stop variant). */
+    override fun onStop() {
+        afr.onPlaybackStopped()
+        super.onStop()
     }
-
-    private fun appVersionName(): String =
-        runCatching { packageManager.getPackageInfo(packageName, 0).versionName }
-            .getOrNull() ?: "unknown"
 
     /** Boot stays blank until Room answers; then playback or onboarding. */
     private fun restoreStartRoute() {

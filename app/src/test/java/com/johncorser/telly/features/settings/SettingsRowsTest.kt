@@ -202,7 +202,7 @@ class SettingsRowsTest {
     }
 
     @Test
-    fun `playback matches capture 60 with locked afr external and skip steps`() {
+    fun `playback matches capture 60 with afr external and skip steps unlocked`() {
         val rows = playbackRows(s)
         assertEquals(
             listOf(
@@ -220,9 +220,21 @@ class SettingsRowsTest {
         assertEquals("Small", (rows[0] as SettingsRow.Value).summary)
         assertEquals("Hardware", (rows[1] as SettingsRow.Value).summary)
         assertEquals("Off", (rows[3] as SettingsRow.Value).summary)
-        assertTrue((rows[3] as SettingsRow.Value).locked)
-        assertEquals("No", (rows[6] as SettingsRow.Value).summary)
-        assertTrue((rows[7] as SettingsRow.Value).locked)
+        assertEquals("Off", (rows[6] as SettingsRow.Value).summary)
+        assertEquals("10s / 30s / 1m / 5m", (rows[7] as SettingsRow.Value).summary)
+        // telly has no premium tier: the reference's locked rows ship live.
+        listOf(3, 6, 7).forEach { assertFalse((rows[it] as SettingsRow.Value).locked) }
+    }
+
+    @Test
+    fun `playback extras summaries reflect changed settings`() {
+        s.set(TellySettings.AUTO_FRAME_RATE, "On")
+        s.set(TellySettings.USE_EXTERNAL_PLAYER, "On")
+        s.set(TellySettings.SKIP_STEPS, "30s / 1m / 5m / 10m")
+        val rows = playbackRows(s)
+        assertEquals("On", (rows[3] as SettingsRow.Value).summary)
+        assertEquals("On", (rows[6] as SettingsRow.Value).summary)
+        assertEquals("30s / 1m / 5m / 10m", (rows[7] as SettingsRow.Value).summary)
     }
 
     @Test

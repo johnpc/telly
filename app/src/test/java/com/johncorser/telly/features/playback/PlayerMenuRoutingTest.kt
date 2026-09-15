@@ -18,7 +18,7 @@ class PlayerMenuRoutingTest {
             mapOf(
                 PlayerMenuItem.SEARCH to PlayerMenuRoute.SEARCH,
                 PlayerMenuItem.SETTINGS to PlayerMenuRoute.SETTINGS,
-                PlayerMenuItem.OPEN_IN_EXTERNAL_PLAYER to PlayerMenuRoute.COMING_SOON,
+                PlayerMenuItem.OPEN_IN_EXTERNAL_PLAYER to PlayerMenuRoute.EXTERNAL_PLAYER,
                 PlayerMenuItem.RECORD to PlayerMenuRoute.COMING_SOON,
                 PlayerMenuItem.CUSTOM_RECORDING to PlayerMenuRoute.COMING_SOON,
                 PlayerMenuItem.ADD_TO_MY_LIST to PlayerMenuRoute.MY_LIST_TOGGLE,

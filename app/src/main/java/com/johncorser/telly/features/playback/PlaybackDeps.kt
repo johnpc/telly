@@ -7,6 +7,7 @@ import com.johncorser.telly.features.history.WatchHistory
 import com.johncorser.telly.features.mylist.InMemoryMyListStore
 import com.johncorser.telly.features.mylist.MyListStore
 import com.johncorser.telly.features.player.Media3PlayerEngine
+import com.johncorser.telly.features.player.PlayerEngine
 import com.johncorser.telly.features.playlist.db.ChannelDao
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
@@ -39,6 +40,8 @@ class PlaybackSources(
     val channelDao: ChannelDao,
     val epgRepository: EpgRepository,
     val history: WatchHistory,
+    /** Saved My-list programmes (Room on device, in-memory in tests). */
+    val myList: MyListStore = InMemoryMyListStore(),
 )
 
 /**
@@ -52,6 +55,19 @@ class PlaybackDeps(
     val engineFactory: () -> Media3PlayerEngine,
     val clock: () -> Long,
     val parental: ParentalControls? = null,
-    /** Saved My-list programmes (Room on device, in-memory in tests). */
-    val myList: MyListStore = InMemoryMyListStore(),
+    /** MainActivity's platform hooks (AFR + external player); screens copy nav lambdas in. */
+    val hooks: PlaybackHooks = PlaybackHooks(),
+) {
+    /** Saved My-list programmes; shared with the guide via [sources]. */
+    val myList: MyListStore get() = sources.myList
+}
+
+/** Everything [PlaybackViewModel] needs injected, bundled for readability. */
+class PlaybackEnv(
+    val channelDao: ChannelDao,
+    val epgRepository: EpgRepository,
+    val engine: PlayerEngine,
+    val store: KeyValueStore,
+    val time: PlaybackTime,
+    val hooks: PlaybackHooks = PlaybackHooks(),
 )

@@ -1,29 +1,15 @@
 package com.johncorser.telly.features.playback
 
-import com.johncorser.telly.core.kv.KeyValueStore
-import com.johncorser.telly.features.epg.EpgRepository
 import com.johncorser.telly.features.history.WatchHistory
 import com.johncorser.telly.features.mylist.MyListMenu
 import com.johncorser.telly.features.mylist.panelMyListHost
 import com.johncorser.telly.features.panel.PanelViewModel
 import com.johncorser.telly.features.pip.PipEnterAction
-import com.johncorser.telly.features.player.PlayerEngine
 import com.johncorser.telly.features.player.PlayerState
-import com.johncorser.telly.features.playlist.db.ChannelDao
 import com.johncorser.telly.features.playlist.db.ChannelEntity
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
-
-/** Everything [PlaybackViewModel] needs injected, bundled for readability. */
-class PlaybackEnv(
-    val channelDao: ChannelDao,
-    val epgRepository: EpgRepository,
-    val engine: PlayerEngine,
-    val store: KeyValueStore,
-    val time: PlaybackTime,
-    val hooks: PlaybackHooks = PlaybackHooks(),
-)
 
 /**
  * Fullscreen-playback state machine: which channel is tuned, which overlay
@@ -40,6 +26,7 @@ class PlaybackViewModel(
     private val openSearch: () -> Unit = {},
 ) {
     private val clock = env.time.clock
+    private val hooks = env.hooks
 
     /**
      * Opens the multiview grid. The reference reaches it ONLY from the
@@ -51,7 +38,7 @@ class PlaybackViewModel(
 
     val panel = PanelViewModel(env.channelDao, env.epgRepository, clock, scope, env.time.zone, env.hooks.panelLock)
 
-    private val tuner = TuneController(env.engine, env.store, scope, env.channelDao, history)
+    private val tuner = TuneController(env.engine, env.store, scope, env.channelDao, history, hooks.platform.external)
     private val overlays = OverlayState(scope)
     private val instant = MutableStateFlow(clock())
 
@@ -64,7 +51,7 @@ class PlaybackViewModel(
             actions = ChannelActions(env.channelDao, scope, myList = panelMyListHost(myList, panel, env.hooks)),
             overlays = overlays,
             tuner = tuner,
-            openSettings = env.hooks.onOpenSettings,
+            hooks = hooks,
             openSearch = openSearch,
             rowOf = { id -> panel.rows.value.firstOrNull { it.channel.id == id } },
         )
@@ -79,6 +66,9 @@ class PlaybackViewModel(
 
     init {
         tuner.start()
+        // AFR: the engine's detected/estimated frame rate feeds the display
+        // mode switch through the hook (MainActivity applies it).
+        feedFrameRates(video, scope, hooks.platform.onFrameRateChanged)
     }
 
     private val commands = PlaybackCommands(tuner, overlays, panel, instant, clock, onExitToGuide)
@@ -138,7 +128,10 @@ class PlaybackViewModel(
 
     fun onOverlayInteraction() = overlays.keepAlive()
 
-    fun close() = tuner.release()
+    fun close() {
+        hooks.platform.onPlaybackStopped()
+        tuner.release()
+    }
 
     /** BACK at bare playback + the overlay's TV-guide card both leave here. */
     val exitToGuide: () -> Unit = onExitToGuide

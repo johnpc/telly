@@ -96,6 +96,11 @@ class GuideMenuController(
             PlayerMenuRoute.SETTINGS -> callbacks.onOpenSettings()
             PlayerMenuRoute.TOGGLE_FAVORITE -> toggleFavorite(row.channel)
             PlayerMenuRoute.HIDE_CHANNEL -> hide(row.channel)
+            // The row fires the chooser regardless of the tune-time setting.
+            PlayerMenuRoute.EXTERNAL_PLAYER -> {
+                callbacks.external.open(row.channel.source.streamUrl)
+                reset()
+            }
             PlayerMenuRoute.DESCRIPTION -> show(description())
             PlayerMenuRoute.CHANNEL_OPTIONS -> show(GuideLayer.ChannelOptions(row.channel.source.name))
             // My-list rows act (or push their route) and land on the grid,
@@ -132,17 +137,3 @@ class GuideMenuController(
         )
     }
 }
-
-/**
- * One BACK level per layer: pushed screens → sheet, everything else → grid.
- * Channel options is NOT a pushed screen: in the reference it replaces the
- * sheet (in-place cross-fade), so one BACK from it lands on the grid with
- * the originating row's focus restored by [GuideFocusMemory] (ref-round6
- * §A — the reference never returns to the sheet).
- */
-private fun backOf(layer: GuideLayer): GuideLayer =
-    when (layer) {
-        is GuideLayer.ComingSoon -> layer.back
-        is GuideLayer.Description -> GuideLayer.RowMenu
-        else -> GuideLayer.Grid
-    }
