@@ -31,6 +31,7 @@ internal fun GuideScreenGroups(
     controller: GuideController,
     onOpenSearch: () -> Unit,
     onOpenSettings: () -> Unit,
+    onOpenVod: () -> Unit,
 ) {
     val groups by controller.groups.collectAsState()
     val selected by controller.selectedGroup.collectAsState()
@@ -38,7 +39,7 @@ internal fun GuideScreenGroups(
     val gearFocus = remember { FocusRequester() }
     val groupsFocus = remember { FocusRequester() }
     Row(Modifier.fillMaxHeight()) {
-        GuideScreenRail(onOpenSearch, onOpenSettings, searchFocus, gearFocus, groupsFocus)
+        GuideScreenRail(onOpenSearch, onOpenSettings, onOpenVod, searchFocus, gearFocus, groupsFocus)
         // RIGHT leaves the column back to the grid (capture 25); the grid
         // has no focusables for the focus search to find, so the key is
         // routed to the layer policy before it dead-ends.

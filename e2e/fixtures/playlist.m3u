@@ -59,3 +59,7 @@ http://10.0.2.2:8090/streams/music-box.ts
 http://10.0.2.2:8090/streams/music-box.ts
 #EXTINF:-1 tvg-id="music-box-6.fixture" tvg-name="Music Box 24" tvg-logo="http://10.0.2.2:8090/logos/music-box.png" group-title="Music",Music Box 24
 http://10.0.2.2:8090/streams/music-box.ts
+#EXTINF:-1 tvg-id="vod-big-buck.fixture" tvg-name="Big Buck Bunny" tvg-logo="http://10.0.2.2:8090/logos/movie-house.png" group-title="Cinema",Big Buck Bunny
+http://10.0.2.2:8090/streams/vod-sample.mp4
+#EXTINF:-1 tvg-id="vod-sintel.fixture" tvg-name="Sintel" tvg-logo="http://10.0.2.2:8090/logos/movie-house.png" group-title="Cinema",Sintel
+http://10.0.2.2:8090/streams/vod-sample.mp4

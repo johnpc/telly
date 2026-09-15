@@ -102,6 +102,54 @@ class RoomPlaylistRepositoryTest {
         }
 
     @Test
+    fun `video-file entries import as VOD items, never as channels`() =
+        runTest {
+            val withVod =
+                playlist.copy(
+                    channels =
+                        playlist.channels +
+                            M3uChannel(
+                                title = "Big Buck Bunny",
+                                streamUrl = "http://s/bbb.mp4",
+                                tvgLogo = "http://l/bbb.png",
+                                groupTitle = "Cinema",
+                            ),
+                )
+
+            repository.add("http://p/playlist.m3u", withVod)
+
+            val row = database.playlistDao().all().single()
+            assertEquals(
+                listOf("News One", "Sports Arena"),
+                database.channelDao().forPlaylist(row.id).map { it.source.name },
+            )
+            val vod = database.vodItemDao().observeAll().first().single()
+            assertEquals("Big Buck Bunny", vod.name)
+            assertEquals("Cinema", vod.groupTitle)
+            assertEquals("http://l/bbb.png", vod.logoUrl)
+            assertEquals("http://s/bbb.mp4", vod.streamUrl)
+
+            // A refresh without the entry replaces the playlist's VOD rows.
+            repository.add("http://p/playlist.m3u", playlist)
+            assertEquals(0, database.vodItemDao().totalCount())
+        }
+
+    @Test
+    fun `deleting a playlist cascades to its VOD items`() =
+        runTest {
+            val withVod =
+                playlist.copy(
+                    channels = listOf(M3uChannel(title = "Movie", streamUrl = "http://s/m.mkv")),
+                )
+            repository.add("http://p/playlist.m3u", withVod)
+            assertEquals(1, database.vodItemDao().totalCount())
+
+            repository.delete("http://p/playlist.m3u")
+
+            assertEquals(0, database.vodItemDao().totalCount())
+        }
+
+    @Test
     fun `distinct urls stay as separate playlists`() =
         runTest {
             repository.add("http://p/a.m3u", playlist)

@@ -92,6 +92,10 @@ object RowIds {
     const val OTHER_RECORDING = "other.recording"
     const val OTHER_VOD = "other.vod"
 
+    // Other -> VOD (unlocked in telly; the reference sells VOD as premium).
+    const val VOD_REMEMBER_POSITION = "vod.remember_position"
+    const val VOD_CLEAR_POSITIONS = "vod.clear_positions"
+
     // About.
     const val ABOUT_STATISTICS = "about.statistics"
     const val ABOUT_PRIVACY_POLICY = "about.privacy_policy"

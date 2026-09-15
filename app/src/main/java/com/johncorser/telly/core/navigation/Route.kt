@@ -31,4 +31,12 @@ sealed interface Route {
      * (history-round2 §3): pushed over playback, BACK pops to the player.
      */
     data object History : Route
+
+    /** The VOD "Movies" browser behind the guide rail's film icon. */
+    data object Vod : Route
+
+    /** Fullscreen seekable playback of one VOD item, keyed for resume. */
+    data class VodPlayback(
+        val itemKey: String,
+    ) : Route
 }

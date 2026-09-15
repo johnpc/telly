@@ -4,6 +4,8 @@ import androidx.room.withTransaction
 import com.johncorser.telly.core.db.TellyDatabase
 import com.johncorser.telly.features.playlist.db.ChannelEntity
 import com.johncorser.telly.features.playlist.db.PlaylistEntity
+import com.johncorser.telly.features.vod.VodClassifier
+import com.johncorser.telly.features.vod.VodImporter
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 
@@ -18,6 +20,7 @@ class RoomPlaylistRepository(
 ) : PlaylistRepository {
     private val playlistDao = database.playlistDao()
     private val channelDao = database.channelDao()
+    private val vodItemDao = database.vodItemDao()
 
     override val playlists: Flow<List<StoredPlaylist>> =
         playlistDao.observeAll().map { rows -> rows.map { toStored(it) } }
@@ -28,6 +31,9 @@ class RoomPlaylistRepository(
         name: String?,
     ) {
         database.withTransaction {
+            // TiviMate classification: video-file entries are VOD "Movies",
+            // never guide channels (they'd pollute the guide/panel/search).
+            val (vod, live) = playlist.channels.partition { VodClassifier.isVod(it.streamUrl) }
             val existing = playlistDao.byUrl(sourceUrl)
             val previousChannels = existing?.let { channelDao.forPlaylist(it.id) }.orEmpty()
             val playlistId =
@@ -42,7 +48,9 @@ class RoomPlaylistRepository(
                     ),
                 )
             channelDao.deleteForPlaylist(playlistId)
-            channelDao.insertAll(ChannelImporter.import(playlistId, playlist.channels, previousChannels))
+            channelDao.insertAll(ChannelImporter.import(playlistId, live, previousChannels))
+            vodItemDao.deleteForPlaylist(playlistId)
+            vodItemDao.insertAll(VodImporter.import(playlistId, vod))
         }
     }
 

@@ -11,6 +11,8 @@ class SettingsActions(
     val updater: PlaylistUpdater,
     val updateEpgNow: suspend () -> Unit,
     val backup: SettingsBackupManager,
+    /** Other -> VOD -> Clear playback positions (empties vod_positions). */
+    val clearVodPositions: suspend () -> Unit = {},
 )
 
 /**

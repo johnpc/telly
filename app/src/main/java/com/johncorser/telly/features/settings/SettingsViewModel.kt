@@ -33,6 +33,7 @@ class SettingsViewModel(
     internal val updater: PlaylistUpdater = graph.actions.updater
     internal val updateEpgNow: suspend () -> Unit = graph.actions.updateEpgNow
     internal val backup: SettingsBackupManager = graph.actions.backup
+    internal val clearVodPositions: suspend () -> Unit = graph.actions.clearVodPositions
     private val versionName: String = graph.versionName
 
     internal val mutableState = MutableStateFlow(SettingsUiState())

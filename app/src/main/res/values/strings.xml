@@ -44,6 +44,12 @@
     <string name="history_empty">No history</string>
     <string name="history_clear_all">Clear history</string>
 
+    <string name="vod_title">Movies</string>
+    <string name="vod_empty">No VOD content in your playlists</string>
+    <string name="vod_resume_title">Resume playback?</string>
+    <string name="vod_resume">Resume</string>
+    <string name="vod_start_over">Start over</string>
+
     <string name="search_hint">Speak to search</string>
     <string name="search_history">Search history</string>
     <string name="search_no_history">No history</string>

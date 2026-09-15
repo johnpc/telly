@@ -3,13 +3,13 @@ package com.johncorser.telly.features.settings
 import com.johncorser.telly.core.settings.SettingsRepository
 import com.johncorser.telly.core.settings.TellySettings
 
-/** Other pane rows (catalogue 68): four locked sub-screens. */
+/** Other pane rows (catalogue 68); VOD is live now that the slice shipped. */
 fun otherRows(): List<SettingsRow> =
     listOf(
         SettingsRow.Value(id = RowIds.OTHER_SEARCH, title = "Search", locked = true),
         SettingsRow.Value(id = RowIds.OTHER_REMINDERS, title = "Reminders", locked = true),
         SettingsRow.Value(id = RowIds.OTHER_RECORDING, title = "Recording", locked = true),
-        SettingsRow.Value(id = RowIds.OTHER_VOD, title = "VOD", locked = true),
+        SettingsRow.Value(id = RowIds.OTHER_VOD, title = "VOD"),
     )
 
 /** About pane rows (catalogue 53). */

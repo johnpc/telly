@@ -11,6 +11,7 @@ import com.johncorser.telly.features.playback.PlaybackSources
 import com.johncorser.telly.features.player.Media3PlayerEngine
 import com.johncorser.telly.features.search.SearchDeps
 import com.johncorser.telly.features.search.SearchRepository
+import com.johncorser.telly.features.vod.VodDeps
 import com.johncorser.telly.core.settings.SharedPrefsKeyValueStore as SettingsPrefsStore
 
 private const val SEARCH_PREFS_NAME = "telly-search"
@@ -48,6 +49,16 @@ fun ServiceLocator.multiviewDeps(context: Context): MultiviewDeps =
         epgRepository = epgRepository(context),
         engines = { Media3PlayerEngine.create(context.applicationContext, handleAudioFocus = false) },
         store = keyValueStore(context),
+        clock = clock,
+    )
+
+/** VOD slice: the Movies browser + seekable playback with resume. */
+fun ServiceLocator.vodDeps(context: Context): VodDeps =
+    VodDeps(
+        items = database(context).vodItemDao(),
+        positions = database(context).vodPositionDao(),
+        engineFactory = { Media3PlayerEngine.create(context.applicationContext) },
+        rememberPosition = { settingsRepository(context).get(TellySettings.VOD_REMEMBER_POSITION) },
         clock = clock,
     )
 

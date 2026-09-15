@@ -15,14 +15,19 @@ import com.johncorser.telly.features.playlist.db.ChannelEntity
 import com.johncorser.telly.features.playlist.db.PlaylistDao
 import com.johncorser.telly.features.playlist.db.PlaylistEntity
 import com.johncorser.telly.features.search.db.SearchDao
+import com.johncorser.telly.features.vod.db.VodItemDao
+import com.johncorser.telly.features.vod.db.VodItemEntity
+import com.johncorser.telly.features.vod.db.VodPositionDao
+import com.johncorser.telly.features.vod.db.VodPositionEntity
 
 /** The single app database; schema JSON is exported to app/schemas. */
 @Database(
     entities = [
         PlaylistEntity::class, ChannelEntity::class, ProgramEntity::class,
         WatchHistoryEntity::class, EpgSourceEntity::class,
+        VodItemEntity::class, VodPositionEntity::class,
     ],
-    version = 4,
+    version = 5,
     exportSchema = true,
 )
 abstract class TellyDatabase : RoomDatabase() {
@@ -37,6 +42,10 @@ abstract class TellyDatabase : RoomDatabase() {
     abstract fun searchDao(): SearchDao
 
     abstract fun watchHistoryDao(): WatchHistoryDao
+
+    abstract fun vodItemDao(): VodItemDao
+
+    abstract fun vodPositionDao(): VodPositionDao
 
     companion object {
         /** v2 adds the programme `<sub-title>` column (round3 P0 item 1). */

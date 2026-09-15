@@ -16,6 +16,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import com.johncorser.telly.core.design.TELLY_GUIDANCE_PANE
+import com.johncorser.telly.features.vod.VodSettingsScreenConfirm
 
 /** Routes the active overlay to its dialog; nothing when idle. */
 @Composable
@@ -29,6 +30,7 @@ internal fun SettingsScreenOverlay(
         is SettingsOverlay.TextEdit -> SettingsScreenTextEdit(model, overlay)
         is SettingsOverlay.ConfirmDelete -> SettingsScreenConfirmDelete(model, overlay)
         is SettingsOverlay.ConfirmDeleteSource -> SettingsScreenConfirmDeleteSource(model, overlay)
+        SettingsOverlay.ConfirmClearVodPositions -> VodSettingsScreenConfirm(model)
         SettingsOverlay.PinSetup -> SettingsScreenPinDialog(model)
     }
 }

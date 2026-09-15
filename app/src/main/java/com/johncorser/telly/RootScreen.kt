@@ -23,6 +23,7 @@ import com.johncorser.telly.features.playlist.PlaylistRepository
 import com.johncorser.telly.features.search.SearchDeps
 import com.johncorser.telly.features.settings.SettingsGraph
 import com.johncorser.telly.features.settings.SettingsScreenHost
+import com.johncorser.telly.features.vod.VodDeps
 
 /** Renders the top of the navigator's back stack and owns global BACK. */
 @Composable
@@ -35,6 +36,7 @@ fun RootScreen(
     settingsGraph: SettingsGraph,
     searchDeps: SearchDeps,
     multiviewDeps: MultiviewDeps,
+    vodDeps: VodDeps,
 ) {
     val stack by navigator.stack.collectAsState()
     val route = stack.last()
@@ -63,6 +65,7 @@ fun RootScreen(
                     guideDeps,
                     searchDeps,
                     multiviewDeps,
+                    vodDeps,
                 )
                 if (settingsOpen) {
                     SettingsScreenHost(

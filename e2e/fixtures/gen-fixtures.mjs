@@ -60,9 +60,18 @@ for (const [group, def] of Object.entries(GROUPS)) {
 }
 
 // ---- playlist.m3u ---------------------------------------------------------
+// VOD entries: video-file (.mp4) stream URLs that telly must classify as
+// "Movies", never as guide channels. Mirrored 1:1 by FixturePlan.vodItems.
+const VOD_ITEMS = [
+  { id: "vod-big-buck.fixture", name: "Big Buck Bunny", group: "Cinema" },
+  { id: "vod-sintel.fixture", name: "Sintel", group: "Cinema" },
+];
 let m3u = `#EXTM3U url-tvg="${BASE}/epg.xml"\n`;
 for (const c of channels) {
   m3u += `#EXTINF:-1 tvg-id="${c.id}" tvg-name="${c.name}" tvg-logo="${c.logo}" group-title="${c.group}",${c.name}\n${c.url}\n`;
+}
+for (const v of VOD_ITEMS) {
+  m3u += `#EXTINF:-1 tvg-id="${v.id}" tvg-name="${v.name}" tvg-logo="${BASE}/logos/movie-house.png" group-title="${v.group}",${v.name}\n${BASE}/streams/vod-sample.mp4\n`;
 }
 writeFileSync(join(DIR, "playlist.m3u"), m3u);
 

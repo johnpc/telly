@@ -13,6 +13,7 @@ import com.johncorser.telly.core.playbackDeps
 import com.johncorser.telly.core.searchDeps
 import com.johncorser.telly.core.settings.ParentalControls
 import com.johncorser.telly.core.settings.TellySettings
+import com.johncorser.telly.core.vodDeps
 import com.johncorser.telly.features.onboarding.StartRoute
 import com.johncorser.telly.features.playlist.M3uFetcher
 import com.johncorser.telly.features.settings.PlaylistUpdater
@@ -41,6 +42,7 @@ class MainActivity : ComponentActivity() {
                 settingsGraph = settingsGraph(),
                 searchDeps = ServiceLocator.searchDeps(this),
                 multiviewDeps = ServiceLocator.multiviewDeps(this),
+                vodDeps = ServiceLocator.vodDeps(this),
             )
         }
     }
@@ -58,6 +60,7 @@ class MainActivity : ComponentActivity() {
                     updater = PlaylistUpdater(fetcher::fetch, repository),
                     updateEpgNow = { ServiceLocator.epgRefresher(this).refreshAllNow() },
                     backup = SettingsBackupManager(settings, repository, filesDir),
+                    clearVodPositions = { ServiceLocator.database(this).vodPositionDao().clearAll() },
                 ),
             versionName = appVersionName(),
             epgSources = ServiceLocator.epgSourceStore(this),

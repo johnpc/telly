@@ -15,6 +15,9 @@ sealed interface SettingsPane {
     data class EpgSourceDetail(
         val sourceId: Long,
     ) : SettingsPane
+
+    /** Other -> VOD (remember-position toggle + clear positions). */
+    data object Vod : SettingsPane
 }
 
 /** Modal state over the sheet stack. */
@@ -39,6 +42,9 @@ sealed interface SettingsOverlay {
         val sourceId: Long,
         val name: String,
     ) : SettingsOverlay
+
+    /** "Clear playback positions?" confirm on the VOD pane. */
+    data object ConfirmClearVodPositions : SettingsOverlay
 
     data object PinSetup : SettingsOverlay
 }
