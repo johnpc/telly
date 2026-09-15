@@ -73,7 +73,7 @@ open class PlaybackVmHarness {
                 ),
             history = WatchHistory(historyDao, clock),
             scope = CoroutineScope(SupervisorJob() + UnconfinedTestDispatcher(testScheduler)),
-            onExitToGuide = { exitedToGuide += 1 },
-            onOpenHistory = { openedHistory += 1 },
+            exitToGuide = { exitedToGuide += 1 },
+            openHistory = { openedHistory += 1 },
         )
 }

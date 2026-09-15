@@ -227,13 +227,13 @@ class SettingsRowsTest {
     }
 
     @Test
-    fun `appearance locks the sub-screens and language but not color theme`() {
+    fun `appearance unlocks every row with the captured defaults`() {
         val rows = appearanceRows(s)
         assertEquals(
             listOf("TV guide", "Player", "Groups", "Logos", "Language", "Font size", "Color theme"),
             titles(rows),
         )
-        assertEquals(listOf(true, true, true, true, true, true, false), rows.map { (it as SettingsRow.Value).locked })
+        rows.forEach { assertFalse(it.id, (it as SettingsRow.Value).locked) }
         assertEquals("Dark  •  Blue", (rows[6] as SettingsRow.Value).summary)
         assertEquals("System", (rows[4] as SettingsRow.Value).summary)
         assertEquals("Medium", (rows[5] as SettingsRow.Value).summary)

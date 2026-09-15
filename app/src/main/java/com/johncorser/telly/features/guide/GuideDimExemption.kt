@@ -20,10 +20,11 @@ object GuideDimExemption {
         channelId: Long?,
         rows: List<GuideRow>,
         firstRow: Int,
+        rowHeightDp: Float = GuideGeometry.ROW_HEIGHT_DP,
     ): Float? {
         val id = channelId ?: return null
         val rowIndex = rows.indexOfFirst { it.channel.id == id }
-        val offsetDp = (rowIndex - firstRow) * GuideGeometry.ROW_HEIGHT_DP
+        val offsetDp = (rowIndex - firstRow) * rowHeightDp
         return (GuideGeometry.GRID_TOP_DP + offsetDp)
             .takeIf { rowIndex >= firstRow && offsetDp < GuideGeometry.GRID_HEIGHT_DP }
     }

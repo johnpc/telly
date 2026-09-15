@@ -65,7 +65,8 @@ fun GuideScreen(
     Box(
         Modifier
             .fillMaxSize()
-            .background(Color(TELLY_ONBOARDING_BACKGROUND)),
+            // Appearance -> TV guide -> Panel transparency (Opaque = today).
+            .background(Color(TELLY_ONBOARDING_BACKGROUND).copy(alpha = LocalGuideStyle.current.backgroundAlpha)),
     ) {
         Row(Modifier.fillMaxSize()) {
             if (layer == GuideLayer.Groups) {

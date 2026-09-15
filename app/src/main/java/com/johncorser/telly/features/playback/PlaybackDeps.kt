@@ -14,12 +14,14 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
 import java.util.TimeZone
 
-/** The injected wall clock + zone (no wall-clock reads in logic). */
+/** The injected wall clock + zone + overlay timing (no wall-clock reads in logic). */
 class PlaybackTime(
     val clock: () -> Long,
     val zone: TimeZone = TimeZone.getDefault(),
     /** Fires just past each minute boundary of [clock]; tests inject their own. */
     val minuteTicks: Flow<Unit> = minuteBoundaryTicks(clock),
+    /** Appearance -> Player -> Panels timeout, sec (5 = today's constants). */
+    val panelTimeouts: () -> PanelTimeouts = { PanelTimeouts.DEFAULT },
 ) {
     companion object {
         const val MINUTE_MS = 60_000L
@@ -53,11 +55,14 @@ class PlaybackDeps(
     val sources: PlaybackSources,
     val keyValueStore: KeyValueStore,
     val engineFactory: () -> Media3PlayerEngine,
-    val clock: () -> Long,
+    /** Clock + zone + panel-timeout provider (Appearance -> Player). */
+    val time: PlaybackTime,
     val parental: ParentalControls? = null,
     /** MainActivity's platform hooks (AFR + external player); screens copy nav lambdas in. */
     val hooks: PlaybackHooks = PlaybackHooks(),
 ) {
+    val clock: () -> Long get() = time.clock
+
     /** Saved My-list programmes; shared with the guide via [sources]. */
     val myList: MyListStore get() = sources.myList
 }

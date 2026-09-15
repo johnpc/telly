@@ -19,26 +19,45 @@ fun rowsFor(
     when (pane) {
         null -> rootRows()
         is SettingsPane.Section -> sectionRows(pane.section, settings, playlists, versionName)
-        is SettingsPane.PlaylistDetail ->
-            playlists
-                .firstOrNull { it.url == pane.url }
-                ?.let { item ->
-                    playlistDetailRows(settings, item, feeds.epgSources.count { it.playlistUrl == item.url })
-                }.orEmpty()
-        is SettingsPane.PlaylistGroups ->
-            playlists
-                .firstOrNull { it.url == pane.url }
-                ?.let { item -> playlistGroupRows(settings, item) }
-                .orEmpty()
+        is SettingsPane.PlaylistDetail -> playlistDetailRowsFor(pane.url, settings, playlists, feeds)
+        is SettingsPane.PlaylistGroups -> playlistGroupRowsFor(pane.url, settings, playlists)
         SettingsPane.EpgSources -> epgSourcesRows(playlists, feeds.epgSources)
-        is SettingsPane.EpgSourceDetail ->
-            feeds.epgSources
-                .firstOrNull { it.id == pane.sourceId }
-                ?.let { epgSourceDetailRows(it) }
-                .orEmpty()
+        is SettingsPane.EpgSourceDetail -> epgSourceDetailRowsFor(pane.sourceId, feeds)
         SettingsPane.Reminders -> remindersRows(settings, feeds.reminders)
         SettingsPane.Vod -> vodSettingsRows(settings)
+        else -> appearancePaneRows(pane, settings)
     }
+
+private fun playlistDetailRowsFor(
+    url: String,
+    settings: SettingsRepository,
+    playlists: List<PlaylistItem>,
+    feeds: SettingsFeeds,
+): List<SettingsRow> =
+    playlists
+        .firstOrNull { it.url == url }
+        ?.let { item ->
+            playlistDetailRows(settings, item, feeds.epgSources.count { it.playlistUrl == item.url })
+        }.orEmpty()
+
+private fun playlistGroupRowsFor(
+    url: String,
+    settings: SettingsRepository,
+    playlists: List<PlaylistItem>,
+): List<SettingsRow> =
+    playlists
+        .firstOrNull { it.url == url }
+        ?.let { item -> playlistGroupRows(settings, item) }
+        .orEmpty()
+
+private fun epgSourceDetailRowsFor(
+    sourceId: Long,
+    feeds: SettingsFeeds,
+): List<SettingsRow> =
+    feeds.epgSources
+        .firstOrNull { it.id == sourceId }
+        ?.let { epgSourceDetailRows(it) }
+        .orEmpty()
 
 private fun rootRows(): List<SettingsRow> =
     SettingsSection.entries.map { section ->
@@ -79,4 +98,5 @@ fun paneTitle(
             epgSources.firstOrNull { it.id == pane.sourceId }?.name ?: "EPG source"
         SettingsPane.Reminders -> "Reminders"
         SettingsPane.Vod -> "VOD"
+        else -> appearancePaneTitle(pane)
     }

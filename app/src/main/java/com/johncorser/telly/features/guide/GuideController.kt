@@ -41,7 +41,8 @@ class GuideController(
     /** Background stop + foreground re-seed/re-tune (round7 resume P2). */
     val lifecycle = PlaybackLifecycle(tuner, onForegrounded = ticker::reseed, recover = tuner::retune)
     private val selected = MutableStateFlow(PanelViewModel.ALL_CHANNELS)
-    private val focusEngine = GuideFocusEngine(originMs, pastFloorDp = { GuideWindowMath.scrollFloorDp(pastDays()) })
+    private val focusEngine =
+        GuideFocusEngine(originMs, { GuideWindowMath.scrollFloorDp(pastDays()) }, visibleRows = seams.visibleRows)
     private val feed =
         GuideRowsFeed(
             GuideRowsSources(tuner.channels, selected.asStateFlow()),
@@ -76,7 +77,7 @@ class GuideController(
             focusedRow = ::focusedRow,
             info = { info.value },
             callbacks = callbacks,
-            focusMemory = GuideFocusMemory(focusEngine) { rows.value },
+            focusMemory = GuideFocusMemory(focusEngine, seams.visibleRows) { rows.value },
         )
 
     val layer: StateFlow<GuideLayer> = menu.layer

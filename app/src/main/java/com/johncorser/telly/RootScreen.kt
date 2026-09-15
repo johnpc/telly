@@ -59,33 +59,35 @@ fun RootScreen(
                     surface = Color(TELLY_GUIDANCE_PANE),
                 ),
         ) {
-            Box(Modifier.fillMaxSize()) {
-                // A reminder "Watch" bumps the epoch so a same-route tune
-                // still recreates the playback screen (cold-start path).
-                val reminderEpoch = reminders?.popup?.tuneEpoch?.collectAsState()?.value ?: 0
-                key(reminderEpoch) {
-                    RootScreenRoutes(
-                        baseRoute,
-                        settingsOpen,
-                        navigator,
-                        repository,
-                        fetchPlaylist,
-                        playbackDeps,
-                        guideDeps,
-                        searchDeps,
-                        multiviewDeps,
-                        vodDeps,
-                        onEnterPip,
-                    )
+            ProvideAppearanceSettings(settingsGraph.settings) {
+                Box(Modifier.fillMaxSize()) {
+                    // A reminder "Watch" bumps the epoch so a same-route tune
+                    // still recreates the playback screen (cold-start path).
+                    val reminderEpoch = reminders?.popup?.tuneEpoch?.collectAsState()?.value ?: 0
+                    key(reminderEpoch) {
+                        RootScreenRoutes(
+                            baseRoute,
+                            settingsOpen,
+                            navigator,
+                            repository,
+                            fetchPlaylist,
+                            playbackDeps,
+                            guideDeps,
+                            searchDeps,
+                            multiviewDeps,
+                            vodDeps,
+                            onEnterPip,
+                        )
+                    }
+                    if (settingsOpen) {
+                        SettingsScreenHost(
+                            graph = settingsGraph,
+                            onAddPlaylist = { navigator.push(Route.AddPlaylistWizard) },
+                            onClose = { navigator.pop() },
+                        )
+                    }
+                    if (reminders != null) ReminderScreenPopupHost(reminders, navigator)
                 }
-                if (settingsOpen) {
-                    SettingsScreenHost(
-                        graph = settingsGraph,
-                        onAddPlaylist = { navigator.push(Route.AddPlaylistWizard) },
-                        onClose = { navigator.pop() },
-                    )
-                }
-                if (reminders != null) ReminderScreenPopupHost(reminders, navigator)
             }
         }
     }

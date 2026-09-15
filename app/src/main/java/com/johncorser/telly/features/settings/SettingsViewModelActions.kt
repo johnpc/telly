@@ -33,7 +33,7 @@ private fun SettingsViewModel.runGeneralAction(rowId: String) {
         RowIds.OTHER_REMINDERS -> push(SettingsPane.Reminders)
         RowIds.PARENTAL_CHANGE_PIN -> showOverlay(SettingsOverlay.PinSetup)
         RowIds.ABOUT_PRIVACY_POLICY -> callbacks.onOpenPrivacyPolicy()
-        else -> runPlaylistAction(rowId)
+        else -> appearancePaneFor(rowId)?.let(::push) ?: runPlaylistAction(rowId)
     }
 }
 

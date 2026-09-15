@@ -438,4 +438,33 @@ class SettingsViewModelTest {
             assertNull(model.state.value.activePane)
             assertEquals("0.1.0", graph.versionName)
         }
+
+    @Test
+    fun `appearance sub-screen rows push their panes and BACK pops them`() =
+        runTest {
+            val model = model()
+            model.activate(RowIds.APPEARANCE_TV_GUIDE)
+            assertEquals(SettingsPane.AppearanceTvGuide, model.state.value.activePane)
+            assertTrue(model.rows.value.any { it.id == RowIds.APPEARANCE_GUIDE_VISIBLE_CHANNELS })
+            model.activate(RowIds.APPEARANCE_GROUPS)
+            assertEquals(SettingsPane.AppearanceGroups, model.state.value.activePane)
+            assertTrue(model.back())
+            assertEquals(SettingsPane.AppearanceTvGuide, model.state.value.activePane)
+        }
+
+    @Test
+    fun `language and font size open pickers seeded with the captured defaults`() =
+        runTest {
+            val model = model()
+            model.activate(RowIds.APPEARANCE_LANGUAGE)
+            val language = model.state.value.overlay as SettingsOverlay.Picker
+            assertEquals("System", language.current)
+            model.choosePickerOption("Español")
+            assertEquals("Español", settings.get(TellySettings.LANGUAGE))
+            model.activate(RowIds.APPEARANCE_FONT_SIZE)
+            val fontSize = model.state.value.overlay as SettingsOverlay.Picker
+            assertEquals("Medium", fontSize.current)
+            model.choosePickerOption("Large")
+            assertEquals("Large", settings.get(TellySettings.FONT_SIZE))
+        }
 }

@@ -4,7 +4,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.remember
 import com.johncorser.telly.features.playback.PlaybackEnv
-import com.johncorser.telly.features.playback.PlaybackTime
 import com.johncorser.telly.features.player.Media3PlayerEngine
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -31,13 +30,13 @@ internal fun rememberGuideController(
                         epgRepository = deps.playback.sources.epgRepository,
                         engine = engine,
                         store = deps.playback.keyValueStore,
-                        time = PlaybackTime(deps.playback.clock),
+                        time = deps.playback.time,
                     ),
                 history = deps.playback.sources.history,
                 pastDays = deps.pastDays,
                 scope = scope,
                 callbacks = callbacks,
-                seams = GuideSeams(reminders = deps.reminders, myList = deps.myList),
+                seams = GuideSeams(reminders = deps.reminders, myList = deps.myList, visibleRows = deps.visibleRows),
             )
         }
     DisposableEffect(Unit) {

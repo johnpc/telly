@@ -25,6 +25,7 @@ data class GuideFocusSnapshot(
  */
 class GuideFocusMemory(
     private val engine: GuideFocusEngine,
+    private val visibleRows: () -> Int = { GuideGeometry.VISIBLE_ROWS },
     private val rows: () -> List<GuideRow>,
 ) {
     private var snapshot: GuideFocusSnapshot? = null
@@ -57,7 +58,7 @@ class GuideFocusMemory(
         val rowIndex = list.indexOfFirst { it.channel.id == saved.channelId }
         val cell = rowIndex.takeIf { it >= 0 }?.let { cellFor(list[it].cells, focus) } ?: return
         val firstRow =
-            GuideScrollPlanner.rowWindow(saved.state.firstRow, rowIndex, GuideGeometry.VISIBLE_ROWS, list.size)
+            GuideScrollPlanner.rowWindow(saved.state.firstRow, rowIndex, visibleRows(), list.size)
         engine.apply(saved.state.copy(focus = GuideFocus(rowIndex, cell, focus.anchorMs), firstRow = firstRow))
     }
 

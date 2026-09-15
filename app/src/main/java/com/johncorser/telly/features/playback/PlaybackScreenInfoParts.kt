@@ -34,13 +34,15 @@ internal fun PlaybackScreenOverlayScaffold(
     clockText: String,
     content: @Composable ColumnScope.() -> Unit,
 ) {
+    // Appearance -> Player -> Panels transparency scales today's sampled alphas (0% = exactly today).
+    val bottomAlpha = LocalPanelStyle.current.scale(0.8f)
     Box(Modifier.fillMaxSize()) {
         PlaybackScreenTopScrim(group, clockText, Modifier.align(Alignment.TopCenter))
         Column(
             Modifier
                 .align(Alignment.BottomStart)
                 .fillMaxWidth()
-                .background(Brush.verticalGradient(listOf(Color.Transparent, Color.Black.copy(alpha = 0.8f)))),
+                .background(Brush.verticalGradient(listOf(Color.Transparent, Color.Black.copy(alpha = bottomAlpha)))),
             content = content,
         )
     }
@@ -53,11 +55,14 @@ internal fun PlaybackScreenTopScrim(
     clockText: String,
     modifier: Modifier = Modifier,
 ) {
+    val style = LocalPanelStyle.current
     Box(
         modifier
             .fillMaxWidth()
             .height(90.dp)
-            .background(Brush.verticalGradient(listOf(Color.Black.copy(alpha = 0.65f), Color.Transparent))),
+            .background(
+                Brush.verticalGradient(listOf(Color.Black.copy(alpha = style.scale(0.65f)), Color.Transparent)),
+            ),
     ) {
         Row(
             Modifier
@@ -66,7 +71,8 @@ internal fun PlaybackScreenTopScrim(
         ) {
             Text(text = group.orEmpty(), color = Color.White, fontSize = 16.sp)
             Spacer(Modifier.weight(1f))
-            Text(text = clockText, color = Color.White, fontSize = 16.sp)
+            // Appearance -> Player -> Show clock (on = today).
+            if (style.showClock) Text(text = clockText, color = Color.White, fontSize = 16.sp)
         }
     }
 }

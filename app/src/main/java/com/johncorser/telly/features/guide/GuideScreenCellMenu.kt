@@ -41,6 +41,7 @@ internal fun GuideScreenCellMenu(
             firstVisibleRow = firstRow,
             originMs = controller.originMs,
             scrollXDp = scrollX,
+            rowHeightDp = LocalGuideStyle.current.rowHeightDp,
         )
     Column(
         Modifier

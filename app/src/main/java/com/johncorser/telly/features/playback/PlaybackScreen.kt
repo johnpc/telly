@@ -56,7 +56,7 @@ fun PlaybackScreen(
                         epgRepository = deps.sources.epgRepository,
                         engine = engine,
                         store = deps.keyValueStore,
-                        time = PlaybackTime(deps.clock),
+                        time = deps.time,
                         hooks =
                             deps.hooks.copy(
                                 panelLock = PanelLock(deps.parental),
@@ -74,8 +74,8 @@ fun PlaybackScreen(
                     ),
                 history = deps.sources.history,
                 scope = scope,
-                onExitToGuide = onExitToGuide,
-                onOpenHistory = onOpenHistory,
+                exitToGuide = onExitToGuide,
+                openHistory = onOpenHistory,
                 openSearch = onOpenSearch,
             )
         }

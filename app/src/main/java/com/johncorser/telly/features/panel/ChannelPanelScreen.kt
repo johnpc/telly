@@ -16,6 +16,7 @@ import androidx.compose.ui.unit.sp
 import androidx.tv.material3.Text
 import com.johncorser.telly.core.design.TELLY_CLOCK_BLUE
 import com.johncorser.telly.core.design.TELLY_ONBOARDING_BACKGROUND
+import com.johncorser.telly.features.playback.LocalPanelStyle
 import com.johncorser.telly.features.playlist.db.ChannelEntity
 
 /**
@@ -40,9 +41,11 @@ fun ChannelPanelScreen(
     Row(
         Modifier
             .fillMaxSize()
-            .background(Color(TELLY_ONBOARDING_BACKGROUND).copy(alpha = 0.68f)),
+            // Appearance -> Player -> Panels transparency scales today's 0.68 scrim (0% = exactly today).
+            .background(Color(TELLY_ONBOARDING_BACKGROUND).copy(alpha = LocalPanelStyle.current.scale(0.68f))),
     ) {
-        ChannelPanelScreenGroups(groups, selected, panel::selectGroup)
+        // Appearance -> Groups: hidden synthetic groups drop out of the list.
+        ChannelPanelScreenGroups(LocalGroupVisibility.current.filter(groups), selected, panel::selectGroup)
         Column(Modifier.weight(1f).padding(top = 8.dp, end = 16.dp)) {
             Text(
                 text = clockText,

@@ -64,9 +64,19 @@ Feature: Settings
     And I see "M3U playlist"
 
   Scenario: Locked rows render dimmed with a padlock and skip focus
+    When I open the "Playback" section
+    Then the row "Auto frame rate (AFR)" is locked
+    And the row "Skip steps" is locked
+    And the row "Buffer size" is not locked
+
+  Scenario: The Appearance rows are all unlocked
     When I open the "Appearance" section
-    Then the row "TV guide" is locked
-    And the row "Language" is locked
+    Then the row "TV guide" is not locked
+    And the row "Player" is not locked
+    And the row "Groups" is not locked
+    And the row "Logos" is not locked
+    And the row "Language" is not locked
+    And the row "Font size" is not locked
     And the row "Color theme" is not locked
 
   # Playback extras (AFR / external player / skip steps): the reference
@@ -152,3 +162,51 @@ Feature: Settings
     Then the groups column does not list "Music"
     And the groups column lists "News" and "Movies"
     And the channels column no longer lists "Music Box"
+
+  Scenario: The TV guide sub-pane persists a density choice
+    When I open the "Appearance" section
+    And I activate "TV guide"
+    Then the "Number of visible channels" row shows "7"
+    When I activate "Number of visible channels"
+    And I choose "9"
+    Then the "Number of visible channels" row shows "9"
+
+  Scenario: The Player sub-pane persists the panels timeout
+    When I open the "Appearance" section
+    And I activate "Player"
+    Then the "Panels timeout, sec" row shows "5"
+    When I activate "Panels timeout, sec"
+    And I choose "8"
+    Then the "Panels timeout, sec" row shows "8"
+
+  Scenario: Hiding the Favorites group removes it from the channel panel
+    When I open the "Appearance" section
+    And I activate "Groups"
+    And I activate "Show 'Favorites' group"
+    Then the "Show 'Favorites' group" toggle is off
+    And the channel panel group list does not include "Favorites"
+
+  Scenario: The Logos sub-pane persists a background choice
+    When I open the "Appearance" section
+    And I activate "Logos"
+    Then the "Logo background" row shows "Default"
+    When I activate "Logo background"
+    And I choose "Dark"
+    Then the "Logo background" row shows "Dark"
+
+  Scenario: The Language picker persists
+    When I open the "Appearance" section
+    Then the "Language" row shows "System"
+    When I activate "Language"
+    And I choose "Español"
+    Then the "Language" row shows "Español"
+
+  Scenario: Font size persists across an app relaunch
+    When I open the "Appearance" section
+    And I activate "Font size"
+    And I choose "Large"
+    Then the "Font size" row shows "Large"
+    When I relaunch telly
+    And I open Settings
+    And I open the "Appearance" section
+    Then the "Font size" row shows "Large"

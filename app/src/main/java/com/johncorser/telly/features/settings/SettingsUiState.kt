@@ -26,6 +26,14 @@ sealed interface SettingsPane {
 
     /** Other -> VOD (remember-position toggle + clear positions). */
     data object Vod : SettingsPane
+
+    data object AppearanceTvGuide : SettingsPane
+
+    data object AppearancePlayer : SettingsPane
+
+    data object AppearanceGroups : SettingsPane
+
+    data object AppearanceLogos : SettingsPane
 }
 
 /** Modal state over the sheet stack. */

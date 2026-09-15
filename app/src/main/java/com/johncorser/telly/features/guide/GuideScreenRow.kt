@@ -42,7 +42,8 @@ internal fun GuideScreenRow(
     Row(
         Modifier
             .fillMaxWidth()
-            .height(GuideGeometry.ROW_HEIGHT_DP.dp),
+            // Appearance -> TV guide -> Number of visible channels (7 = today's 39 dp pitch).
+            .height(LocalGuideStyle.current.rowHeightDp.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         GuideScreenChannelColumn(row, playing)
@@ -80,13 +81,16 @@ private fun GuideScreenChannelColumn(
             .padding(start = 16.dp, end = 10.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        Text(
-            text = row.displayNumber.toString(),
-            modifier = Modifier.width(28.dp),
-            color = if (playing) LocalAccentColor.current else Color(TELLY_TEXT_MUTED),
-            fontSize = 17.sp,
-        )
-        Spacer(Modifier.width(8.dp))
+        // Appearance -> TV guide -> Show channel numbers (on = today).
+        if (LocalGuideStyle.current.showChannelNumbers) {
+            Text(
+                text = row.displayNumber.toString(),
+                modifier = Modifier.width(28.dp),
+                color = if (playing) LocalAccentColor.current else Color(TELLY_TEXT_MUTED),
+                fontSize = 17.sp,
+            )
+            Spacer(Modifier.width(8.dp))
+        }
         TellyScreenLogoTile(
             logoUrl = row.channel.source.logoUrl,
             name = row.channel.source.name,

@@ -14,6 +14,8 @@ class GuideDeps(
     val playback: PlaybackDeps,
     val pastDays: () -> Int,
     val reminders: GuideReminders? = null,
+    /** Appearance -> TV guide -> Number of visible channels (7 = today). */
+    val visibleRows: () -> Int = { GuideGeometry.VISIBLE_ROWS },
 ) {
     /** Saved My-list programmes; the guide shares the playback store. */
     val myList: MyListStore get() = playback.myList

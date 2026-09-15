@@ -1,0 +1,51 @@
+<resources>
+    <string name="welcome_headline">O telly não fornece nenhuma fonte de canais de TV</string>
+    <string name="welcome_subtitle">Para assistir a canais de TV, adicione uma playlist fornecida pelo seu serviço de IPTV</string>
+    <string name="welcome_add_playlist">Adicionar playlist</string>
+    <string name="welcome_settings">Configurações</string>
+
+    <string name="settings_title">Configurações</string>
+
+    <string name="wizard_playlist_type">Tipo de playlist</string>
+    <string name="wizard_m3u_playlist">Playlist M3U</string>
+    <string name="wizard_xtream_codes">Xtream Codes</string>
+    <string name="wizard_stalker_portal">Stalker Portal</string>
+    <string name="wizard_cancel">Cancelar</string>
+    <string name="wizard_enter_url">Inserir URL</string>
+    <string name="wizard_paste_from_clipboard">Colar da área de transferência</string>
+    <string name="wizard_select_local_playlist">Selecionar playlist local</string>
+    <string name="wizard_next">Avançar</string>
+    <string name="wizard_back">Voltar</string>
+    <string name="wizard_processing">Processando a playlist</string>
+    <string name="wizard_processed">A playlist foi processada</string>
+    <string name="wizard_channels_count">Canais: %1$d</string>
+    <string name="wizard_movies_count">Filmes: %1$d</string>
+    <string name="wizard_playlist_name">Nome da playlist</string>
+    <string name="wizard_tv_playlist">Playlist de TV</string>
+    <string name="wizard_vod_playlist">Playlist VOD (sem canais de TV)</string>
+    <string name="wizard_epg_url">URL do EPG</string>
+    <string name="wizard_epg_guidance">Insira a URL do EPG para a playlist. Você pode adicioná-la ou alterá-la depois nas configurações. Apenas o formato XMLTV é suportado.</string>
+    <string name="wizard_paste_playlist_url">Colar URL da playlist</string>
+    <string name="wizard_paste_playlist_hint">Você pode editar a URL da playlist se ela tiver um formato semelhante</string>
+    <string name="wizard_use_default_source">Usar fonte padrão</string>
+    <string name="wizard_done">Concluído</string>
+    <string name="wizard_error_invalid_url">Insira uma URL http(s) válida</string>
+    <string name="wizard_error_load_failed">Não foi possível carregar a playlist. Verifique a URL e tente novamente.</string>
+
+    <string name="playback_card_tv_guide">Guia de TV</string>
+    <string name="playback_card_history">Histórico</string>
+    <string name="playback_card_multiview">Multiview</string>
+    <string name="playback_card_clear">Limpar</string>
+    <string name="playback_coming_soon">Em breve no telly</string>
+
+    <string name="history_title">Histórico</string>
+    <string name="history_empty">Sem histórico</string>
+    <string name="history_clear_all">Limpar histórico</string>
+
+    <string name="search_hint">Fale para pesquisar</string>
+    <string name="search_history">Histórico de pesquisa</string>
+    <string name="search_no_history">Sem histórico</string>
+    <string name="search_channels">Canais</string>
+    <string name="search_programs">Programas</string>
+    <string name="search_voice">Pesquisa por voz</string>
+</resources>

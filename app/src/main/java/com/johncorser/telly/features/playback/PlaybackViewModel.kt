@@ -21,8 +21,10 @@ class PlaybackViewModel(
     env: PlaybackEnv,
     history: WatchHistory,
     scope: CoroutineScope,
-    onExitToGuide: () -> Unit = {},
-    onOpenHistory: () -> Unit = {},
+    /** BACK at bare playback + the overlay's TV-guide card both leave here. */
+    val exitToGuide: () -> Unit = {},
+    /** The overlay's History card pushes the History screen (history-round2 §3). */
+    val openHistory: () -> Unit = {},
     private val openSearch: () -> Unit = {},
 ) {
     private val clock = env.time.clock
@@ -71,7 +73,15 @@ class PlaybackViewModel(
         feedFrameRates(video, scope, hooks.platform.onFrameRateChanged)
     }
 
-    private val commands = PlaybackCommands(tuner, overlays, panel, instant, clock, onExitToGuide)
+    private val commands =
+        PlaybackCommands(
+            tuner = tuner,
+            overlays = overlays,
+            panel = panel,
+            refreshInstant = { instant.value = clock() },
+            exitToGuide = exitToGuide,
+            timeouts = env.time.panelTimeouts,
+        )
 
     /** Quick-bar PIP: clear the chrome first, then the activity swaps windows. */
     val enterPip = PipEnterAction(clearChrome = { overlays.set(PlaybackOverlay.None) }, enter = env.hooks.onEnterPip)
@@ -93,7 +103,7 @@ class PlaybackViewModel(
      * window flips PIP off before its stop lands, which then passes normally.
      */
     val lifecycle =
-        PlaybackLifecycle(tuner, recover = onExitToGuide, shouldStop = env.hooks.pip::allowsBackgroundStop)
+        PlaybackLifecycle(tuner, recover = exitToGuide, shouldStop = env.hooks.pip::allowsBackgroundStop)
 
     /** Routes a key through the catalogue's key-by-context map; true = consumed. */
     fun onKey(key: PlaybackKey): Boolean {
@@ -132,12 +142,6 @@ class PlaybackViewModel(
         hooks.platform.onPlaybackStopped()
         tuner.release()
     }
-
-    /** BACK at bare playback + the overlay's TV-guide card both leave here. */
-    val exitToGuide: () -> Unit = onExitToGuide
-
-    /** The overlay's History card pushes the History screen (history-round2 §3). */
-    val openHistory: () -> Unit = onOpenHistory
 
     /** The quick-bar's Channels list opens the panel at the tuned row. */
     fun openPanel() = commands.openPanel()
