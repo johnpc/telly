@@ -5,6 +5,7 @@ import com.johncorser.telly.features.epg.EpgRepository
 import com.johncorser.telly.features.history.WatchHistory
 import com.johncorser.telly.features.panel.PanelLock
 import com.johncorser.telly.features.panel.PanelViewModel
+import com.johncorser.telly.features.playback.tracks.PlaybackQuickBar
 import com.johncorser.telly.features.player.PlayerEngine
 import com.johncorser.telly.features.player.PlayerState
 import com.johncorser.telly.features.playlist.db.ChannelDao
@@ -71,8 +72,6 @@ class PlaybackViewModel(
             rowOf = { id -> panel.rows.value.firstOrNull { it.channel.id == id } },
         )
 
-    private val video = env.engine.video
-
     val current: StateFlow<ChannelEntity?> = tuner.current
     val overlay: StateFlow<PlaybackOverlay> = overlays.overlay
     val playerState: StateFlow<PlayerState> = env.engine.state
@@ -115,18 +114,18 @@ class PlaybackViewModel(
 
     fun showComingSoon(feature: String) = overlays.set(PlaybackOverlay.ComingSoon(feature))
 
-    /** Quick-bar OK: Search, Channels list and Multiview are real, the rest later slices. */
-    fun onQuickBarItem(action: QuickBarAction) {
-        when (action) {
-            QuickBarAction.CHANNELS_LIST -> openPanel()
-            QuickBarAction.SEARCH -> openSearch()
-            QuickBarAction.MULTIVIEW -> openMultiview()
-            else -> showComingSoon(action.feature)
-        }
-    }
+    /** Quick-bar slot dispatch + live labels; the stream-slot pickers live in tracks/. */
+    private val quickBar =
+        PlaybackQuickBar(env.engine, overlays, ::showComingSoon, ::openPanel, openSearch, openMultiview)
+
+    /** Quick-bar track pickers: video / audio / audio-sync / CC dialogs. */
+    val trackPickers get() = quickBar.pickers
+
+    /** Quick-bar OK: Search, Channels list, Multiview and the track pickers are real. */
+    fun onQuickBarItem(action: QuickBarAction) = quickBar.onItem(action)
 
     /** The nine quick-bar slots with live stream labels (round3-ref 07). */
-    fun quickBarItems(): List<QuickBarItem> = QuickBar.items(video.value)
+    fun quickBarItems(): List<QuickBarItem> = quickBar.items()
 
     fun onOverlayInteraction() = overlays.keepAlive()
 

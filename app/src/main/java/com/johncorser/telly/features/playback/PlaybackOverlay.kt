@@ -1,5 +1,7 @@
 package com.johncorser.telly.features.playback
 
+import com.johncorser.telly.features.playback.tracks.TrackPickerKind
+
 /** Which layer currently covers the fullscreen video. */
 sealed interface PlaybackOverlay {
     /** Bare playback: zero chrome (capture 33). */
@@ -50,6 +52,15 @@ sealed interface PlaybackOverlay {
      */
     data class ChannelOptions(
         val channelName: String,
+        override val back: PlaybackOverlay = None,
+    ) : Pushed
+
+    /**
+     * Quick-bar track picker dialog (video / audio / audio-sync / CC,
+     * ux-spec §3.14). Sticky — BACK or a pick closes it.
+     */
+    data class TrackPicker(
+        val kind: TrackPickerKind,
         override val back: PlaybackOverlay = None,
     ) : Pushed
 }

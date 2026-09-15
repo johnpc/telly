@@ -33,7 +33,11 @@ object QuickBar {
     private const val STEREO_CHANNELS = 2
     private const val UNKNOWN = "—"
 
-    fun items(video: VideoDetails?): List<QuickBarItem> =
+    fun items(
+        video: VideoDetails?,
+        sync: String = "0 ms",
+        subtitles: String = "Off",
+    ): List<QuickBarItem> =
         QuickBarAction.entries.map { action ->
             QuickBarItem(
                 action = action,
@@ -41,8 +45,8 @@ object QuickBar {
                     when (action) {
                         QuickBarAction.RESOLUTION -> resolution(video)
                         QuickBarAction.AUDIO -> audio(video)
-                        QuickBarAction.LATENCY -> "0 ms"
-                        QuickBarAction.SUBTITLES -> "Off"
+                        QuickBarAction.LATENCY -> sync
+                        QuickBarAction.SUBTITLES -> subtitles
                         else -> action.feature
                     },
             )

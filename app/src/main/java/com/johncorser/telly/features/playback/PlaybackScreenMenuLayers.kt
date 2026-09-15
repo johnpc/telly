@@ -5,6 +5,7 @@ import androidx.compose.ui.res.stringResource
 import com.johncorser.telly.R
 import com.johncorser.telly.core.ui.OnboardingScreenMessage
 import com.johncorser.telly.features.guide.GuideScreenChannelOptionsPane
+import com.johncorser.telly.features.playback.tracks.PlaybackScreenTrackPicker
 
 /**
  * The quick-bar, the long-OK sheet and the screens its rows push, hosted in
@@ -25,6 +26,7 @@ internal fun PlaybackScreenMenuLayers(
                 OnboardingScreenMessage(headline = active.title, subtitle = active.text)
             is PlaybackOverlay.ChannelOptions ->
                 GuideScreenChannelOptionsPane(active.channelName, viewModel.menu::onChannelOption)
+            is PlaybackOverlay.TrackPicker -> PlaybackScreenTrackPicker(viewModel.trackPickers, active.kind)
             is PlaybackOverlay.ComingSoon ->
                 OnboardingScreenMessage(
                     headline = active.feature,

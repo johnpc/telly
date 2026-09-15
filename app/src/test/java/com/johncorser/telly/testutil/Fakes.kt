@@ -167,6 +167,7 @@ fun sqlLike(
 class FakePlayerEngine : PlayerEngine {
     override val state = MutableStateFlow<PlayerState>(PlayerState.Idle)
     override val video = MutableStateFlow<VideoDetails?>(null)
+    override val tracks = FakeTrackFacade()
     val loaded = mutableListOf<String>()
     var stops = 0
     var released = false

@@ -1,6 +1,7 @@
 package com.johncorser.telly.features.player
 
 import android.content.Context
+import androidx.media3.common.C
 import androidx.media3.common.Format
 import androidx.media3.common.PlaybackException
 import androidx.media3.common.Player
@@ -144,6 +145,20 @@ class Media3PlayerEngineTest {
         assertNotNull(engine.player)
         assertEquals(PlayerState.Idle, engine.state.value)
         assertNull(engine.video.value)
+        engine.release()
+    }
+
+    @Test
+    fun `create wires the track facade with captions off by default`() {
+        val engine = Media3PlayerEngine.create(ApplicationProvider.getApplicationContext<Context>())
+
+        assertEquals(
+            true,
+            engine.player.trackSelectionParameters.disabledTrackTypes.contains(C.TRACK_TYPE_TEXT),
+        )
+        assertEquals(0L, engine.tracks.audioOffsetMs.value)
+        engine.tracks.setAudioOffsetMs(100)
+        assertEquals(100L, engine.tracks.audioOffsetMs.value)
         engine.release()
     }
 

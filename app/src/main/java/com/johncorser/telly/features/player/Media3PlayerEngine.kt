@@ -7,6 +7,11 @@ import androidx.media3.common.MediaItem
 import androidx.media3.common.PlaybackException
 import androidx.media3.common.Player
 import androidx.media3.exoplayer.ExoPlayer
+import com.johncorser.telly.features.player.tracks.AudioOffsetHolder
+import com.johncorser.telly.features.player.tracks.ExoTrackFacade
+import com.johncorser.telly.features.player.tracks.OffsetRenderersFactory
+import com.johncorser.telly.features.player.tracks.TrackFacade
+import com.johncorser.telly.features.player.tracks.disableCaptionsByDefault
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -21,6 +26,7 @@ import kotlinx.coroutines.flow.update
  */
 class Media3PlayerEngine(
     val player: ExoPlayer,
+    override val tracks: TrackFacade = ExoTrackFacade(player),
 ) : PlayerEngine,
     Player.Listener {
     private val mutableState = MutableStateFlow<PlayerState>(PlayerState.Idle)
@@ -107,13 +113,17 @@ class Media3PlayerEngine(
                     .setUsage(C.USAGE_MEDIA)
                     .setContentType(C.AUDIO_CONTENT_TYPE_MOVIE)
                     .build()
+            // The audio sink is wrapped so the quick-bar's audio-sync offset
+            // can shift the A/V clock live (features/player/tracks).
+            val offsets = AudioOffsetHolder()
             val player =
                 ExoPlayer
-                    .Builder(context)
+                    .Builder(context, OffsetRenderersFactory(context, offsets))
                     .setMediaSourceFactory(streamMediaSourceFactory(context))
                     .setAudioAttributes(audioAttributes, handleAudioFocus)
                     .build()
-            return Media3PlayerEngine(player)
+            player.disableCaptionsByDefault()
+            return Media3PlayerEngine(player, ExoTrackFacade(player, offsets))
         }
     }
 }

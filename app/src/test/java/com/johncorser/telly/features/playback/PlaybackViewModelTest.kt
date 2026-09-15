@@ -1,6 +1,7 @@
 package com.johncorser.telly.features.playback
 
 import com.johncorser.telly.features.history.WatchHistory
+import com.johncorser.telly.features.playback.tracks.TrackPickerKind
 import com.johncorser.telly.features.player.VideoDetails
 import com.johncorser.telly.testutil.FakeChannelDao
 import com.johncorser.telly.testutil.FakeKeyValueStore
@@ -313,6 +314,35 @@ class PlaybackViewModelTest {
                 ),
                 labels,
             )
+        }
+
+    @Test
+    fun `the quick-bar stream slots open their pickers and back dismisses`() =
+        runTest {
+            val vm = buildVm()
+            vm.onKey(PlaybackKey.MENU)
+
+            vm.onQuickBarItem(QuickBarAction.RESOLUTION)
+            assertEquals(PlaybackOverlay.TrackPicker(TrackPickerKind.VIDEO), vm.overlay.value)
+
+            vm.onQuickBarItem(QuickBarAction.SUBTITLES)
+            assertEquals(PlaybackOverlay.TrackPicker(TrackPickerKind.SUBTITLES), vm.overlay.value)
+
+            assertTrue(vm.onKey(PlaybackKey.BACK))
+            assertEquals(PlaybackOverlay.None, vm.overlay.value)
+        }
+
+    @Test
+    fun `stepping the audio sync updates the quick-bar slot label`() =
+        runTest {
+            val vm = buildVm()
+
+            vm.onQuickBarItem(QuickBarAction.LATENCY)
+            val plus50 = vm.trackPickers.rows(TrackPickerKind.SYNC).first { it.label == "+50 ms" }.id
+            vm.trackPickers.onRow(TrackPickerKind.SYNC, plus50)
+
+            assertEquals(PlaybackOverlay.TrackPicker(TrackPickerKind.SYNC), vm.overlay.value)
+            assertEquals("+50 ms", vm.quickBarItems()[7].label)
         }
 
     @Test
