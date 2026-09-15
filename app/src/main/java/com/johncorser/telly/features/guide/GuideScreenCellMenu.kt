@@ -14,6 +14,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import com.johncorser.telly.core.design.TELLY_MENU_SHEET
 import com.johncorser.telly.core.ui.TellyScreenMenuRow
+import com.johncorser.telly.features.mylist.MyListKeys
 
 /**
  * The future-cell dropdown, anchored under the focused cell (capture 27):
@@ -29,7 +30,10 @@ internal fun GuideScreenCellMenu(
     val focus by controller.focus.collectAsState()
     val firstRow by controller.firstVisibleRow.collectAsState()
     val scrollX by controller.scrollX.collectAsState()
+    val rows by controller.rows.collectAsState()
+    val myListKeys by controller.myList.keys.collectAsState()
     val focused = focus ?: return
+    val channel = rows.getOrNull(focused.rowIndex)?.channel
     val anchor =
         GuideDropdownAnchor.position(
             focus = focused,
@@ -44,9 +48,10 @@ internal fun GuideScreenCellMenu(
             .width(GuideDropdownAnchor.MENU_WIDTH_DP.dp)
             .background(Color(TELLY_MENU_SHEET), RoundedCornerShape(4.dp)),
     ) {
+        val saved = channel != null && MyListKeys.saved(myListKeys, channel, layer.cell.program?.startMs)
         GuideCellAction.entries.forEachIndexed { index, action ->
             TellyScreenMenuRow(
-                label = action.label,
+                label = if (action == GuideCellAction.ADD_TO_MY_LIST) MyListKeys.label(saved) else action.label,
                 onClick = { controller.menu.onCellAction(action) },
                 height = GuideDropdownAnchor.MENU_ROW_DP.dp,
                 requestFocus = index == 0,

@@ -10,6 +10,8 @@ import com.johncorser.telly.features.epg.db.ProgramDao
 import com.johncorser.telly.features.epg.db.ProgramEntity
 import com.johncorser.telly.features.history.db.WatchHistoryDao
 import com.johncorser.telly.features.history.db.WatchHistoryEntity
+import com.johncorser.telly.features.mylist.db.MyListDao
+import com.johncorser.telly.features.mylist.db.MyListEntity
 import com.johncorser.telly.features.playlist.db.ChannelDao
 import com.johncorser.telly.features.playlist.db.ChannelEntity
 import com.johncorser.telly.features.playlist.db.PlaylistDao
@@ -20,9 +22,9 @@ import com.johncorser.telly.features.search.db.SearchDao
 @Database(
     entities = [
         PlaylistEntity::class, ChannelEntity::class, ProgramEntity::class,
-        WatchHistoryEntity::class, EpgSourceEntity::class,
+        WatchHistoryEntity::class, EpgSourceEntity::class, MyListEntity::class,
     ],
-    version = 4,
+    version = 5,
     exportSchema = true,
 )
 abstract class TellyDatabase : RoomDatabase() {
@@ -37,6 +39,9 @@ abstract class TellyDatabase : RoomDatabase() {
     abstract fun searchDao(): SearchDao
 
     abstract fun watchHistoryDao(): WatchHistoryDao
+
+    /** v5: My-list saved programmes (migration in MyListMigration). */
+    abstract fun myListDao(): MyListDao
 
     companion object {
         /** v2 adds the programme `<sub-title>` column (round3 P0 item 1). */

@@ -28,6 +28,7 @@ fun ServiceLocator.playbackDeps(context: Context): PlaybackDeps =
         engineFactory = { Media3PlayerEngine.create(context.applicationContext) },
         clock = clock,
         parental = ParentalControls(settingsRepository(context)),
+        myList = myListStore(context),
     )
 
 /** Guide slice = the playback bundle + the settings the grid honors. */

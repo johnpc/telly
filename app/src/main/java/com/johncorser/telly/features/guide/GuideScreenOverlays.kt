@@ -23,14 +23,15 @@ import com.johncorser.telly.features.panel.GroupColumnMetrics
 
 /**
  * Nav rail + groups column slid in at the guide's left (capture 25), grid
- * shifts right. The rail is the nav slice's visual placeholder: 56 dp,
- * decorative only, focus stays in the groups list.
+ * shifts right. The rail's search, bookmark (My List) and gear icons are
+ * live targets; focus otherwise stays in the groups list.
  */
 @Composable
 internal fun GuideScreenGroups(
     controller: GuideController,
     onOpenSearch: () -> Unit,
     onOpenSettings: () -> Unit,
+    onOpenMyList: () -> Unit = {},
 ) {
     val groups by controller.groups.collectAsState()
     val selected by controller.selectedGroup.collectAsState()
@@ -38,7 +39,7 @@ internal fun GuideScreenGroups(
     val gearFocus = remember { FocusRequester() }
     val groupsFocus = remember { FocusRequester() }
     Row(Modifier.fillMaxHeight()) {
-        GuideScreenRail(onOpenSearch, onOpenSettings, searchFocus, gearFocus, groupsFocus)
+        GuideScreenRail(onOpenSearch, onOpenSettings, onOpenMyList, searchFocus, gearFocus, groupsFocus)
         // RIGHT leaves the column back to the grid (capture 25); the grid
         // has no focusables for the focus search to find, so the key is
         // routed to the layer policy before it dead-ends.

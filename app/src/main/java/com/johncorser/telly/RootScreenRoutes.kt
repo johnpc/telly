@@ -64,6 +64,8 @@ internal fun RootScreenRoutes(
                     onOpenSearch = { navigator.push(Route.Search) },
                     onOpenSettings = { navigator.push(Route.Settings) },
                     onOpenMultiview = { navigator.push(Route.Multiview) },
+                    onOpenManageFavorites = { navigator.push(Route.ManageFavorites) },
+                    onOpenReorderChannels = { group -> navigator.push(Route.ReorderChannels(group)) },
                 )
             // BACK at the pane grid exits to fullscreen playback of the
             // focused pane's channel (multiview-spec: exit chain).
@@ -75,6 +77,9 @@ internal fun RootScreenRoutes(
                     onOpenSearch = { navigator.push(Route.Search) },
                     onOpenSettings = { navigator.push(Route.Settings) },
                     settingsOpen = settingsOpen,
+                    onOpenMyList = { navigator.push(Route.MyList) },
+                    onOpenManageFavorites = { navigator.push(Route.ManageFavorites) },
+                    onOpenReorderChannels = { group -> navigator.push(Route.ReorderChannels(group)) },
                 )
             // Tuning from search adopts the guide-root BACK chain: the
             // guide becomes the stack root with fullscreen playback above.
@@ -94,6 +99,8 @@ internal fun RootScreenRoutes(
                     deps = playbackDeps,
                     onTuned = { navigator.pop() },
                 )
+            Route.MyList, Route.ManageFavorites, is Route.ReorderChannels ->
+                RootScreenMyListRoutes(target, navigator, playbackDeps)
         }
     }
 }

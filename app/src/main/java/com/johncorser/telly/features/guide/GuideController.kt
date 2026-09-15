@@ -1,6 +1,9 @@
 package com.johncorser.telly.features.guide
 
 import com.johncorser.telly.features.history.WatchHistory
+import com.johncorser.telly.features.mylist.InMemoryMyListStore
+import com.johncorser.telly.features.mylist.MyListMenu
+import com.johncorser.telly.features.mylist.MyListStore
 import com.johncorser.telly.features.panel.PanelViewModel
 import com.johncorser.telly.features.playback.ChannelActions
 import com.johncorser.telly.features.playback.PlaybackEnv
@@ -25,6 +28,7 @@ class GuideController(
     private val pastDays: () -> Int,
     scope: CoroutineScope,
     private val callbacks: GuideCallbacks,
+    myListStore: MyListStore = InMemoryMyListStore(),
 ) {
     val zone = env.time.zone
 
@@ -61,10 +65,14 @@ class GuideController(
 
     val info: StateFlow<GuideInfoData?> = GuideInfoBuilder.feed(rows, focusEngine.focus, now, zone, scope)
 
+    /** My-list toggle state: the dropdown/sheet labels flip on its keys. */
+    val myList = MyListMenu(myListStore, env.time.clock, scope)
+
     /** Layers + the long-OK row context sheet (catalogue §3 38-42). */
     val menu =
         GuideMenuController(
-            actions = ChannelActions(env.channelDao, scope),
+            actions =
+                ChannelActions(env.channelDao, scope, guideMyListHost(myList, focus, { selected.value }, callbacks)),
             zapAway = tuner::zapAwayFrom,
             focusedRow = ::focusedRow,
             info = { info.value },

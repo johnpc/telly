@@ -49,7 +49,9 @@ class FakeChannelDao(
         }
 
     override fun observeVisible(): Flow<List<ChannelEntity>> =
-        channels.map { list -> list.filter { !it.flags.hidden }.sortedBy { it.number } }
+        channels.map { list ->
+            list.filter { !it.flags.hidden }.sortedWith(compareBy({ it.sortIndex }, { it.number }))
+        }
 
     override suspend fun totalCount(): Int = channels.value.size
 

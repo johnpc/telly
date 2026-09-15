@@ -1,6 +1,8 @@
 package com.johncorser.telly.features.playback
 
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.res.stringResource
 import com.johncorser.telly.R
 import com.johncorser.telly.core.ui.OnboardingScreenMessage
@@ -50,10 +52,12 @@ private fun PlaybackScreenChannelMenu(
     channelId: Long,
 ) {
     val channel = viewModel.menu.menuChannel()
+    val myListKeys by viewModel.myList.keys.collectAsState()
     PlaybackScreenMenu(
         sections = PlayerMenu.sections(viewModel.panel.nowTitleOf(channelId), channel?.source?.name.orEmpty()),
         favorite = channel?.flags?.favorite == true,
         onItem = viewModel.menu::onMenuItem,
         restore = viewModel.menu.sheetFocus.restore,
+        inMyList = channel != null && viewModel.menu.myList?.savedFor(channel, myListKeys) == true,
     )
 }

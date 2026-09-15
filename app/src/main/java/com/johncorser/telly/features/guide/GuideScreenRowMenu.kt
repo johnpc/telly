@@ -6,6 +6,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.res.stringResource
 import com.johncorser.telly.R
 import com.johncorser.telly.core.ui.OnboardingScreenMessage
+import com.johncorser.telly.features.mylist.MyListKeys
 import com.johncorser.telly.features.playback.PlaybackScreenMenu
 import com.johncorser.telly.features.playback.PlayerMenu
 import com.johncorser.telly.features.settings.SettingsScreenRows
@@ -26,12 +27,14 @@ internal fun GuideScreenRowMenu(
     val rows by controller.rows.collectAsState()
     val focus by controller.focus.collectAsState()
     val info by controller.info.collectAsState()
+    val myListKeys by controller.myList.keys.collectAsState()
     val row = focus?.let { rows.getOrNull(it.rowIndex) } ?: return
     PlaybackScreenMenu(
         sections = PlayerMenu.sections(info?.title, row.channel.source.name),
         favorite = row.channel.flags.favorite,
         onItem = controller.menu::onMenuItem,
         restore = controller.menu.sheetFocus.restore,
+        inMyList = MyListKeys.saved(myListKeys, row.channel, focus?.cell?.program?.startMs),
     )
 }
 

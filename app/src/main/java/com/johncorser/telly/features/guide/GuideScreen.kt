@@ -35,9 +35,21 @@ fun GuideScreen(
     onOpenSearch: () -> Unit = {},
     onOpenSettings: () -> Unit = {},
     settingsOpen: Boolean = false,
+    onOpenMyList: () -> Unit = {},
+    onOpenManageFavorites: () -> Unit = {},
+    onOpenReorderChannels: (String) -> Unit = {},
 ) {
     val engine = remember { deps.playback.engineFactory() }
-    val callbacks = remember { GuideCallbacks(onFullscreen, onOpenSearch, onOpenSettings) }
+    val callbacks =
+        remember {
+            GuideCallbacks(
+                onFullscreen = onFullscreen,
+                onOpenSearch = onOpenSearch,
+                onOpenSettings = onOpenSettings,
+                onOpenManageFavorites = onOpenManageFavorites,
+                onOpenReorderChannels = onOpenReorderChannels,
+            )
+        }
     val controller = rememberGuideController(deps, engine, callbacks)
     val detectors = remember { GuideScreenKeyDetectors() }
     val layer by controller.layer.collectAsState()
@@ -54,7 +66,7 @@ fun GuideScreen(
             .background(Color(TELLY_ONBOARDING_BACKGROUND)),
     ) {
         Row(Modifier.fillMaxSize()) {
-            if (layer == GuideLayer.Groups) GuideScreenGroups(controller, onOpenSearch, onOpenSettings)
+            if (layer == GuideLayer.Groups) GuideScreenGroups(controller, onOpenSearch, onOpenSettings, onOpenMyList)
             Box(Modifier.weight(1f)) {
                 Column(Modifier.fillMaxSize()) {
                     GuideScreenTop(controller, engine)

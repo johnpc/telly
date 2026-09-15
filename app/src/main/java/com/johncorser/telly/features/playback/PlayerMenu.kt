@@ -1,5 +1,7 @@
 package com.johncorser.telly.features.playback
 
+import com.johncorser.telly.features.mylist.MyListKeys
+
 /**
  * Verbatim TiviMate 5.2.0 context-menu rows (captures 38-40 + round3-ref 05:
  * this sheet belongs to long-OK on a panel/guide row, with the panel still
@@ -30,9 +32,19 @@ enum class PlayerMenuItem(
     GROUP_OPTIONS("Group options"),
     ;
 
-    /** "Add to Favorites" flips once the channel is already a favorite. */
-    fun labelFor(favorite: Boolean): String =
-        if (this == ADD_TO_FAVORITES && favorite) "Remove from Favorites" else label
+    /**
+     * "Add to Favorites" flips once the channel is already a favorite;
+     * "Add to My list" flips once the focused programme is saved.
+     */
+    fun labelFor(
+        favorite: Boolean,
+        inMyList: Boolean = false,
+    ): String =
+        when {
+            this == ADD_TO_FAVORITES && favorite -> "Remove from Favorites"
+            this == ADD_TO_MY_LIST && inMyList -> MyListKeys.REMOVE_LABEL
+            else -> label
+        }
 }
 
 /** One blue-headed section of the menu sheet; a null header renders no strip. */

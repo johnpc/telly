@@ -1,5 +1,6 @@
 package com.johncorser.telly.features.guide
 
+import com.johncorser.telly.features.mylist.MyListProgramme
 import com.johncorser.telly.features.playback.ChannelActions
 import com.johncorser.telly.features.playback.PlayerMenuFocus
 import com.johncorser.telly.features.playback.PlayerMenuItem
@@ -58,8 +59,21 @@ class GuideMenuController(
         show(GuideLayer.RowMenu)
     }
 
-    /** Every dropdown row is an unbuilt feature: coming-soon placeholder. */
-    fun onCellAction(action: GuideCellAction) = show(GuideLayer.ComingSoon(action.label))
+    /**
+     * The dropdown's "Add to My list" toggles the cell's programme and
+     * returns to the grid; every other row is an unbuilt feature and lands
+     * on the coming-soon placeholder.
+     */
+    fun onCellAction(action: GuideCellAction) {
+        val programme = (mutable.value as? GuideLayer.CellMenu)?.cell?.program?.let(MyListProgramme::of)
+        val row = focusedRow()
+        if (action == GuideCellAction.ADD_TO_MY_LIST && programme != null && row != null) {
+            actions.myList?.menu?.toggle(row.channel, programme)
+            reset()
+        } else {
+            show(GuideLayer.ComingSoon(action.label))
+        }
+    }
 
     /** All §41 pane rows are locked; any activation lands on coming-soon. */
     fun onChannelOption(rowId: String) = show(GuideLayer.ComingSoon(rowId, back = mutable.value))
@@ -67,7 +81,7 @@ class GuideMenuController(
     fun onMenuItem(item: PlayerMenuItem) {
         val row = focusedRow() ?: return
         sheetFocus.onActivated(item)
-        when (PlayerMenuRouting.routeOf(item)) {
+        when (val route = PlayerMenuRouting.routeOf(item)) {
             PlayerMenuRoute.SEARCH -> {
                 reset()
                 callbacks.onOpenSearch()
@@ -77,6 +91,15 @@ class GuideMenuController(
             PlayerMenuRoute.HIDE_CHANNEL -> hide(row.channel)
             PlayerMenuRoute.DESCRIPTION -> show(description())
             PlayerMenuRoute.CHANNEL_OPTIONS -> show(GuideLayer.ChannelOptions(row.channel.source.name))
+            // My-list rows act (or push their route) and land on the grid,
+            // the management screens closing the sheet first like Search.
+            PlayerMenuRoute.MY_LIST_TOGGLE,
+            PlayerMenuRoute.MANAGE_FAVORITES,
+            PlayerMenuRoute.REORDER_CHANNELS,
+            -> {
+                reset()
+                actions.myList?.run(route, row.channel)
+            }
             PlayerMenuRoute.COMING_SOON -> show(GuideLayer.ComingSoon(item.label, back = GuideLayer.RowMenu))
         }
     }

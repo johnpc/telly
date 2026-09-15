@@ -3,7 +3,8 @@ package com.johncorser.telly.features.playback
 import com.johncorser.telly.core.kv.KeyValueStore
 import com.johncorser.telly.features.epg.EpgRepository
 import com.johncorser.telly.features.history.WatchHistory
-import com.johncorser.telly.features.panel.PanelLock
+import com.johncorser.telly.features.mylist.MyListMenu
+import com.johncorser.telly.features.mylist.panelMyListHost
 import com.johncorser.telly.features.panel.PanelViewModel
 import com.johncorser.telly.features.player.PlayerEngine
 import com.johncorser.telly.features.player.PlayerState
@@ -12,13 +13,6 @@ import com.johncorser.telly.features.playlist.db.ChannelEntity
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
-
-/** Cross-slice hooks the playback surface plugs into (nav + parental). */
-class PlaybackHooks(
-    val panelLock: PanelLock = PanelLock(),
-    val onOpenSettings: () -> Unit = {},
-    val onOpenMultiview: () -> Unit = {},
-)
 
 /** Everything [PlaybackViewModel] needs injected, bundled for readability. */
 class PlaybackEnv(
@@ -60,10 +54,13 @@ class PlaybackViewModel(
     private val overlays = OverlayState(scope)
     private val instant = MutableStateFlow(clock())
 
+    /** My-list toggle state; the sheet labels flip on its keys (mylist). */
+    val myList = MyListMenu(env.hooks.myListStore, clock, scope)
+
     /** Executes context-menu rows; also resolves the channel they act on. */
     val menu =
         PlaybackMenuHandler(
-            actions = ChannelActions(env.channelDao, scope),
+            actions = ChannelActions(env.channelDao, scope, myList = panelMyListHost(myList, panel, env.hooks)),
             overlays = overlays,
             tuner = tuner,
             openSettings = env.hooks.onOpenSettings,
