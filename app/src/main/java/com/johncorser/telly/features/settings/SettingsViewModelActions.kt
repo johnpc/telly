@@ -23,12 +23,12 @@ internal fun SettingsViewModel.runAction(rowId: String) {
         RowIds.RESTORE_DATA -> callbacks.onImportBackup()
         RowIds.PARENTAL_CHANGE_PIN -> showOverlay(SettingsOverlay.PinSetup)
         RowIds.ABOUT_PRIVACY_POLICY -> callbacks.onOpenPrivacyPolicy()
-        else -> runPlaylistAction(rowId)
+        else -> runBlockedOrSearchAction(rowId)
     }
 }
 
 /** Playlist-list and per-playlist actions. */
-private fun SettingsViewModel.runPlaylistAction(rowId: String) {
+internal fun SettingsViewModel.runPlaylistAction(rowId: String) {
     when (rowId) {
         RowIds.ADD_PLAYLIST -> addPlaylist()
         RowIds.UPDATE_ALL_PLAYLISTS -> launch { updater.updateAll(playlistItems.value.map { it.url }) }

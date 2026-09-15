@@ -13,7 +13,7 @@ import com.johncorser.telly.features.playlist.db.ChannelEntity
  * §A) — and every unbuilt row keeps the coming-soon placeholder.
  */
 class PlaybackMenuHandler(
-    private val actions: ChannelActions,
+    private val actions: SheetActions,
     private val overlays: OverlayState,
     private val tuner: TuneController,
     private val openSettings: () -> Unit = {},
@@ -49,7 +49,9 @@ class PlaybackMenuHandler(
             PlayerMenuRoute.SETTINGS -> openScreen(openSettings)
             PlayerMenuRoute.TOGGLE_FAVORITE -> toggleFavorite(channel)
             PlayerMenuRoute.HIDE_CHANNEL -> hide(channel)
-            PlayerMenuRoute.DESCRIPTION -> push { back -> description(channel, back) }
+            PlayerMenuRoute.TOGGLE_BLOCK ->
+                push { back -> PlaybackOverlay.BlockPin(channel, actions.blocker.mode(), back) }
+            PlayerMenuRoute.DESCRIPTION -> push { back -> descriptionOf(rowOf(channel.id), back) }
             PlayerMenuRoute.CHANNEL_OPTIONS ->
                 overlays.set(PlaybackOverlay.ChannelOptions(channel.source.name, back = afterAction()))
             PlayerMenuRoute.COMING_SOON -> push { back -> PlaybackOverlay.ComingSoon(item.label, back) }
@@ -58,6 +60,20 @@ class PlaybackMenuHandler(
 
     /** All §41 pane rows are locked; any activation lands on coming-soon. */
     fun onChannelOption(rowId: String) = push { back -> PlaybackOverlay.ComingSoon(rowId, back) }
+
+    /**
+     * The Block/Unblock PIN dialog's commit: a verified (or freshly set)
+     * PIN flips the flag and lands where favorite/hide land; a wrong PIN
+     * keeps the dialog up.
+     */
+    fun submitBlockPin(pin: String) {
+        val dialog = overlays.value as? PlaybackOverlay.BlockPin ?: return
+        if (actions.blocker.submit(pin, dialog.mode, dialog.channel)) {
+            overlays.set(
+                if (dialog.back is PlaybackOverlay.ChannelMenu) PlaybackOverlay.Panel else PlaybackOverlay.None,
+            )
+        }
+    }
 
     /** Pushed screens remember the overlay behind them; BACK pops to it. */
     private fun push(next: (back: PlaybackOverlay) -> PlaybackOverlay) = overlays.set(next(overlays.value))
@@ -71,29 +87,16 @@ class PlaybackMenuHandler(
         open()
     }
 
-    /** The sheet row's airing programme: title + synopsis (dump 40). */
-    private fun description(
-        channel: ChannelEntity,
-        back: PlaybackOverlay,
-    ): PlaybackOverlay {
-        val row = rowOf(channel.id)
-        return PlaybackOverlay.Description(
-            title = row?.nowTitle ?: PlayerMenu.NO_INFORMATION,
-            text = row?.description ?: PlayerMenu.NO_INFORMATION,
-            back = back,
-        )
-    }
-
     private fun toggleFavorite(channel: ChannelEntity) {
         val next = afterAction()
-        actions.toggleFavorite(channel)
+        actions.channels.toggleFavorite(channel)
         overlays.set(next)
     }
 
     private fun hide(channel: ChannelEntity) {
         val next = afterAction()
         tuner.zapAwayFrom(channel)
-        actions.hide(channel)
+        actions.channels.hide(channel)
         overlays.set(next)
     }
 
@@ -105,3 +108,14 @@ class PlaybackMenuHandler(
     private fun afterAction(): PlaybackOverlay =
         if (overlays.value is PlaybackOverlay.ChannelMenu) PlaybackOverlay.Panel else PlaybackOverlay.None
 }
+
+/** The sheet row's airing programme: title + synopsis (dump 40). */
+private fun descriptionOf(
+    row: PanelRow?,
+    back: PlaybackOverlay,
+): PlaybackOverlay =
+    PlaybackOverlay.Description(
+        title = row?.nowTitle ?: PlayerMenu.NO_INFORMATION,
+        text = row?.description ?: PlayerMenu.NO_INFORMATION,
+        back = back,
+    )

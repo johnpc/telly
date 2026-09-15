@@ -85,9 +85,15 @@ object RowIds {
     const val PARENTAL_CHANNELS_ONLY = "parental.channels_only"
     const val PARENTAL_REQUIRE_SETTINGS = "parental.require_settings"
     const val PARENTAL_REQUIRE_PLAYLISTS = "parental.require_playlists"
+    const val PARENTAL_BLOCKED_CHANNELS = "parental.blocked_channels"
+
+    /** Blocked-channels pane rows append the channel row id after the prefix. */
+    const val BLOCKED_CHANNEL_PREFIX = "blocked_channel:"
 
     // Other.
     const val OTHER_SEARCH = "other.search"
+    const val SEARCH_SAVE_HISTORY = "other_search.save_history"
+    const val SEARCH_CLEAR_HISTORY = "other_search.clear_history"
     const val OTHER_REMINDERS = "other.reminders"
     const val OTHER_RECORDING = "other.recording"
     const val OTHER_VOD = "other.vod"

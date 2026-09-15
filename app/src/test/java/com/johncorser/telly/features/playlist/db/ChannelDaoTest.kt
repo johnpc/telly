@@ -96,6 +96,19 @@ class ChannelDaoTest {
         }
 
     @Test
+    fun `a blocked channel stays visible and its flag persists`() =
+        runTest {
+            val playlistId = seed()
+            val target = channelDao.forPlaylist(playlistId).first()
+
+            channelDao.update(target.copy(flags = target.flags.copy(blocked = true)))
+
+            val visible = channelDao.observeVisible().first()
+            assertEquals(listOf("News One", "Sports Arena", "Loose Channel"), visible.map { it.source.name })
+            assertEquals(listOf(true, false, false), visible.map { it.flags.blocked })
+        }
+
+    @Test
     fun `updating a row persists user flags`() =
         runTest {
             val playlistId = seed()

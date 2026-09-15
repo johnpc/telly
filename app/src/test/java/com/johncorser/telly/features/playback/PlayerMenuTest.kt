@@ -46,6 +46,17 @@ class PlayerMenuTest {
     }
 
     @Test
+    fun `the block row flips its label for blocked channels`() {
+        assertEquals("Block channel", PlayerMenuItem.BLOCK_CHANNEL.labelFor(favorite = false))
+        assertEquals("Unblock channel", PlayerMenuItem.BLOCK_CHANNEL.labelFor(favorite = false, blocked = true))
+        assertEquals("Hide channel", PlayerMenuItem.HIDE_CHANNEL.labelFor(favorite = false, blocked = true))
+        assertEquals(
+            "Remove from Favorites",
+            PlayerMenuItem.ADD_TO_FAVORITES.labelFor(favorite = true, blocked = true),
+        )
+    }
+
+    @Test
     fun `flat indexes count section headers as lazy rows`() {
         val sections = PlayerMenu.sections("Business Hour", "News One")
 

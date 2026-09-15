@@ -64,10 +64,13 @@ object FocusScreenDefaults {
     fun scale(): ClickableSurfaceScale = ClickableSurfaceDefaults.scale(focusedScale = 1f)
 
     @Composable
-    fun colors(restingContainer: Color): ClickableSurfaceColors =
+    fun colors(
+        restingContainer: Color,
+        restingContent: Color = Color(TELLY_TEXT_PRIMARY),
+    ): ClickableSurfaceColors =
         ClickableSurfaceDefaults.colors(
             containerColor = restingContainer,
-            contentColor = Color(TELLY_TEXT_PRIMARY),
+            contentColor = restingContent,
             focusedContainerColor = Color(TELLY_FOCUS_FILL),
             focusedContentColor = Color(TELLY_FOCUS_TEXT),
             pressedContainerColor = Color(TELLY_FOCUS_FILL),

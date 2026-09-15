@@ -4,7 +4,9 @@ import com.johncorser.telly.core.kv.KeyValueStore
 import com.johncorser.telly.core.settings.ParentalControls
 import com.johncorser.telly.features.epg.EpgRepository
 import com.johncorser.telly.features.history.WatchHistory
+import com.johncorser.telly.features.panel.PanelLock
 import com.johncorser.telly.features.player.Media3PlayerEngine
+import com.johncorser.telly.features.player.PlayerEngine
 import com.johncorser.telly.features.playlist.db.ChannelDao
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
@@ -39,6 +41,25 @@ class PlaybackSources(
     val history: WatchHistory,
 )
 
+/** Cross-slice hooks the playback surface plugs into (nav + parental). */
+class PlaybackHooks(
+    val panelLock: PanelLock = PanelLock(),
+    val onOpenSettings: () -> Unit = {},
+    val onOpenMultiview: () -> Unit = {},
+    val parental: ParentalControls? = null,
+    val blockSession: BlockSession = BlockSession(),
+)
+
+/** Everything [PlaybackViewModel] needs injected, bundled for readability. */
+class PlaybackEnv(
+    val channelDao: ChannelDao,
+    val epgRepository: EpgRepository,
+    val engine: PlayerEngine,
+    val store: KeyValueStore,
+    val time: PlaybackTime,
+    val hooks: PlaybackHooks = PlaybackHooks(),
+)
+
 /**
  * Everything the playback screen needs from the composition root. The engine
  * comes as a factory so each visit to the playback route gets a fresh
@@ -50,4 +71,6 @@ class PlaybackDeps(
     val engineFactory: () -> Media3PlayerEngine,
     val clock: () -> Long,
     val parental: ParentalControls? = null,
+    /** Shared by the guide's and playback's gates ("Until app restart"). */
+    val blockSession: BlockSession = BlockSession(),
 )

@@ -11,14 +11,18 @@ import com.johncorser.telly.core.navigation.Navigator
 import com.johncorser.telly.core.navigation.Route
 import com.johncorser.telly.core.playbackDeps
 import com.johncorser.telly.core.searchDeps
+import com.johncorser.telly.core.searchHistoryStore
 import com.johncorser.telly.core.settings.ParentalControls
 import com.johncorser.telly.core.settings.TellySettings
 import com.johncorser.telly.features.onboarding.StartRoute
 import com.johncorser.telly.features.playlist.M3uFetcher
+import com.johncorser.telly.features.search.SearchHistory
+import com.johncorser.telly.features.settings.BlockedChannels
 import com.johncorser.telly.features.settings.PlaylistUpdater
 import com.johncorser.telly.features.settings.SettingsActions
 import com.johncorser.telly.features.settings.SettingsBackupManager
 import com.johncorser.telly.features.settings.SettingsGraph
+import com.johncorser.telly.features.settings.SettingsStores
 import kotlinx.coroutines.launch
 
 /** Single-activity entry point; all UI is Compose for TV. */
@@ -60,7 +64,16 @@ class MainActivity : ComponentActivity() {
                     backup = SettingsBackupManager(settings, repository, filesDir),
                 ),
             versionName = appVersionName(),
-            epgSources = ServiceLocator.epgSourceStore(this),
+            stores =
+                SettingsStores(
+                    epgSources = ServiceLocator.epgSourceStore(this),
+                    blocked = BlockedChannels(ServiceLocator.database(this).channelDao()),
+                    searchHistory =
+                        SearchHistory(
+                            store = ServiceLocator.searchHistoryStore(this),
+                            saveEnabled = { settings.get(TellySettings.SEARCH_SAVE_HISTORY) },
+                        ),
+                ),
         )
     }
 

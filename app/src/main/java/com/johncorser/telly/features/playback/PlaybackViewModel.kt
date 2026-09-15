@@ -1,34 +1,12 @@
 package com.johncorser.telly.features.playback
 
-import com.johncorser.telly.core.kv.KeyValueStore
-import com.johncorser.telly.features.epg.EpgRepository
 import com.johncorser.telly.features.history.WatchHistory
-import com.johncorser.telly.features.panel.PanelLock
 import com.johncorser.telly.features.panel.PanelViewModel
-import com.johncorser.telly.features.player.PlayerEngine
 import com.johncorser.telly.features.player.PlayerState
-import com.johncorser.telly.features.playlist.db.ChannelDao
 import com.johncorser.telly.features.playlist.db.ChannelEntity
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
-
-/** Cross-slice hooks the playback surface plugs into (nav + parental). */
-class PlaybackHooks(
-    val panelLock: PanelLock = PanelLock(),
-    val onOpenSettings: () -> Unit = {},
-    val onOpenMultiview: () -> Unit = {},
-)
-
-/** Everything [PlaybackViewModel] needs injected, bundled for readability. */
-class PlaybackEnv(
-    val channelDao: ChannelDao,
-    val epgRepository: EpgRepository,
-    val engine: PlayerEngine,
-    val store: KeyValueStore,
-    val time: PlaybackTime,
-    val hooks: PlaybackHooks = PlaybackHooks(),
-)
 
 /**
  * Fullscreen-playback state machine: which channel is tuned, which overlay
@@ -56,19 +34,41 @@ class PlaybackViewModel(
 
     val panel = PanelViewModel(env.channelDao, env.epgRepository, clock, scope, env.time.zone, env.hooks.panelLock)
 
-    private val tuner = TuneController(env.engine, env.store, scope, env.channelDao, history)
+    private val tuner =
+        TuneController(
+            engine = env.engine,
+            store = env.store,
+            scope = scope,
+            channelDao = env.channelDao,
+            history = history,
+            gate = BlockGate(env.hooks.parental, env.hooks.blockSession),
+        )
     private val overlays = OverlayState(scope)
     private val instant = MutableStateFlow(clock())
 
     /** Executes context-menu rows; also resolves the channel they act on. */
     val menu =
         PlaybackMenuHandler(
-            actions = ChannelActions(env.channelDao, scope),
+            actions = SheetActions.over(env, scope),
             overlays = overlays,
             tuner = tuner,
             openSettings = env.hooks.onOpenSettings,
             openSearch = openSearch,
             rowOf = { id -> panel.rows.value.firstOrNull { it.channel.id == id } },
+        )
+
+    /**
+     * The blocked-channel tune gate (any path): a verified PIN tunes and
+     * shows the zap overlay; cancelling stays put and hands focus back to
+     * the panel when it is open.
+     */
+    val blockPrompt =
+        TuneBlockPrompt(
+            tuner = tuner,
+            onUnlocked = { commands.showZapInfo() },
+            onDismissed = {
+                if (overlays.value == PlaybackOverlay.Panel) panel.openFocusedOn(tuner.current.value?.id)
+            },
         )
 
     private val video = env.engine.video
@@ -108,7 +108,9 @@ class PlaybackViewModel(
     /** OK on a panel row tunes it and shows the compact zap overlay (round3-ref 10). */
     fun tuneFromPanel(channel: ChannelEntity) {
         tuner.tune(channel)
-        commands.showZapInfo()
+        // A blocked channel prompts for the PIN instead; the overlay follows
+        // a verified PIN (blockPrompt.submit), never a cancelled one.
+        if (blockPrompt.channel.value == null) commands.showZapInfo()
     }
 
     fun showChannelMenu(channel: ChannelEntity) = menu.openChannelMenu(channel.id)

@@ -164,6 +164,18 @@ class PlaybackDriver(
         world.waitFor(rowMatcher(name) and isFocused())
     }
 
+    /** Drives the four PIN digit wheels: UP spins the digit, RIGHT advances. */
+    fun spinPinWheels(pin: String) {
+        world.waitFor(hasTestTag("pin-wheel") and isFocused())
+        pin.forEachIndexed { index, digit ->
+            world.pressKey(KeyEvent.KEYCODE_DPAD_UP, times = digit.digitToInt())
+            if (index < pin.length - 1) {
+                world.pressKey(KeyEvent.KEYCODE_DPAD_RIGHT)
+            }
+        }
+        world.pressKey(KeyEvent.KEYCODE_DPAD_CENTER)
+    }
+
     /** Long-OK on a panel row; opens its context menu ("Search" first row). */
     fun longPressRow(name: String) {
         focusRow(name)

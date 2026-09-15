@@ -19,6 +19,7 @@ import androidx.compose.ui.unit.sp
 import androidx.tv.material3.Text
 import com.johncorser.telly.core.design.TELLY_TEXT_MUTED
 import com.johncorser.telly.core.ui.LocalAccentColor
+import com.johncorser.telly.core.ui.TellyScreenBlockedLock
 import com.johncorser.telly.core.ui.TellyScreenLogoTile
 
 /**
@@ -102,6 +103,7 @@ private fun GuideScreenChannelColumn(
             maxLines = 1,
             overflow = TextOverflow.Ellipsis,
         )
+        if (row.channel.flags.blocked) TellyScreenBlockedLock()
         if (playing) Text(text = "▶", color = LocalAccentColor.current, fontSize = 10.sp)
     }
 }

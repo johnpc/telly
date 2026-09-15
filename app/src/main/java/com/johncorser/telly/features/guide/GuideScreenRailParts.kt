@@ -15,6 +15,7 @@ import androidx.tv.material3.Icon
 import androidx.tv.material3.LocalContentColor
 import androidx.tv.material3.Surface
 import androidx.tv.material3.Text
+import com.johncorser.telly.core.design.TELLY_TEXT_PRIMARY
 import com.johncorser.telly.core.ui.FocusScreenDefaults
 import com.johncorser.telly.core.ui.LocalAccentColor
 
@@ -34,21 +35,23 @@ internal fun GuideScreenRailLogo(modifier: Modifier = Modifier) {
     )
 }
 
-/** A focusable rail icon (search / gear) styled like the settings gear. */
+/** A focusable rail icon (search / live-TV / gear) styled like the gear. */
 @Composable
 internal fun GuideScreenRailButton(
     icon: Int,
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
+    restingTint: Color = Color(TELLY_TEXT_PRIMARY),
+    contentDescription: String? = null,
 ) {
     Surface(
         onClick = onClick,
         modifier = modifier,
         shape = FocusScreenDefaults.shape(),
         scale = FocusScreenDefaults.scale(),
-        colors = FocusScreenDefaults.colors(restingContainer = Color.Transparent),
+        colors = FocusScreenDefaults.colors(restingContainer = Color.Transparent, restingContent = restingTint),
     ) {
-        GuideScreenRailIcon(icon, Color.Unspecified, Modifier.padding(8.dp))
+        GuideScreenRailIcon(icon, Color.Unspecified, Modifier.padding(8.dp), contentDescription)
     }
 }
 
@@ -57,10 +60,11 @@ internal fun GuideScreenRailIcon(
     icon: Int,
     tint: Color,
     modifier: Modifier = Modifier,
+    contentDescription: String? = null,
 ) {
     Icon(
         painter = painterResource(icon),
-        contentDescription = null,
+        contentDescription = contentDescription,
         modifier = modifier,
         tint = if (tint == Color.Unspecified) LocalContentColor.current else tint,
     )

@@ -62,6 +62,9 @@ object TellySettings {
     val PARENTAL_REQUIRE_FOR_PLAYLISTS = boolSetting("parental_require_settings_playlists", false)
     val PARENTAL_LOCKED_GROUPS = stringSetSetting("parental_locked_groups")
 
+    // Other -> Search. Off = committed queries are no longer recorded.
+    val SEARCH_SAVE_HISTORY = boolSetting("search_save_history", true)
+
     // About (catalogue 53) — the only free toggle in the reference.
     val SEND_STATISTICS = boolSetting("about_send_statistics", true)
 }

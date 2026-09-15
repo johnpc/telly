@@ -22,7 +22,7 @@ import com.johncorser.telly.features.search.db.SearchDao
         PlaylistEntity::class, ChannelEntity::class, ProgramEntity::class,
         WatchHistoryEntity::class, EpgSourceEntity::class,
     ],
-    version = 4,
+    version = TELLY_DB_VERSION,
     exportSchema = true,
 )
 abstract class TellyDatabase : RoomDatabase() {

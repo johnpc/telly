@@ -95,6 +95,40 @@ Feature: Search channels and programmes
     When I press ok on the trash icon
     Then the empty state reads "No history"
 
+  # Settings -> Other -> Search (the reference locks this pane behind
+  # premium; telly ships it): save toggle + confirmed clear.
+  Scenario: Turning off Save search history stops recording queries
+    When I press back
+    And I open Settings
+    And I open the "Other" section
+    And I activate "Search"
+    And I activate "Save search history"
+    Then the "Save search history" toggle is off
+    When I leave settings
+    And I press menu
+    And I press ok on the quick-bar "Search" slot
+    And I focus the query bar
+    And I type "news"
+    And I press the IME search action
+    And I clear the query
+    Then the empty state reads "No history"
+
+  Scenario: Clear search history removes committed queries after the confirm
+    When I focus the query bar
+    And I type "news"
+    And I press the IME search action
+    And I press back
+    And I open Settings
+    And I open the "Other" section
+    And I activate "Search"
+    And I activate "Clear search history"
+    Then I see "Clear search history?"
+    When I select "Clear"
+    And I leave settings
+    And I press menu
+    And I press ok on the quick-bar "Search" slot
+    Then the empty state reads "No history"
+
   Scenario: Back returns to fullscreen playback
     When I press back
     Then no chrome is visible over the video

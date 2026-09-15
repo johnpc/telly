@@ -12,9 +12,10 @@ fun rowsFor(
     settings: SettingsRepository,
     playlists: List<PlaylistItem>,
     versionName: String,
-    epgSources: List<EpgSource> = emptyList(),
-): List<SettingsRow> =
-    when (pane) {
+    sources: SettingsRowSources = SettingsRowSources(),
+): List<SettingsRow> {
+    val epgSources = sources.epgSources
+    return when (pane) {
         null -> rootRows()
         is SettingsPane.Section -> sectionRows(pane.section, settings, playlists, versionName)
         is SettingsPane.PlaylistDetail ->
@@ -28,7 +29,10 @@ fun rowsFor(
                 .firstOrNull { it.id == pane.sourceId }
                 ?.let { epgSourceDetailRows(it) }
                 .orEmpty()
+        SettingsPane.OtherSearch -> otherSearchRows(settings)
+        SettingsPane.BlockedChannels -> blockedChannelRows(sources.blockedChannels)
     }
+}
 
 private fun rootRows(): List<SettingsRow> =
     SettingsSection.entries.map { section ->
@@ -66,4 +70,6 @@ fun paneTitle(
         SettingsPane.EpgSources -> "EPG sources"
         is SettingsPane.EpgSourceDetail ->
             epgSources.firstOrNull { it.id == pane.sourceId }?.name ?: "EPG source"
+        SettingsPane.OtherSearch -> "Search"
+        SettingsPane.BlockedChannels -> "Blocked channels"
     }

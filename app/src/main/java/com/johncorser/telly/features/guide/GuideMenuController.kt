@@ -1,10 +1,10 @@
 package com.johncorser.telly.features.guide
 
-import com.johncorser.telly.features.playback.ChannelActions
 import com.johncorser.telly.features.playback.PlayerMenuFocus
 import com.johncorser.telly.features.playback.PlayerMenuItem
 import com.johncorser.telly.features.playback.PlayerMenuRoute
 import com.johncorser.telly.features.playback.PlayerMenuRouting
+import com.johncorser.telly.features.playback.SheetActions
 import com.johncorser.telly.features.playlist.db.ChannelEntity
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -19,7 +19,7 @@ import kotlinx.coroutines.flow.asStateFlow
  * slice ships.
  */
 class GuideMenuController(
-    private val actions: ChannelActions,
+    private val actions: SheetActions,
     private val zapAway: (ChannelEntity) -> Unit,
     private val focusedRow: () -> GuideRow?,
     private val info: () -> GuideInfoData?,
@@ -75,33 +75,43 @@ class GuideMenuController(
             PlayerMenuRoute.SETTINGS -> callbacks.onOpenSettings()
             PlayerMenuRoute.TOGGLE_FAVORITE -> toggleFavorite(row.channel)
             PlayerMenuRoute.HIDE_CHANNEL -> hide(row.channel)
-            PlayerMenuRoute.DESCRIPTION -> show(description())
+            PlayerMenuRoute.TOGGLE_BLOCK -> show(GuideLayer.BlockPin(row.channel, actions.blocker.mode()))
+            PlayerMenuRoute.DESCRIPTION -> show(descriptionOf(info()))
             PlayerMenuRoute.CHANNEL_OPTIONS -> show(GuideLayer.ChannelOptions(row.channel.source.name))
             PlayerMenuRoute.COMING_SOON -> show(GuideLayer.ComingSoon(item.label, back = GuideLayer.RowMenu))
         }
     }
 
+    /**
+     * The Block/Unblock PIN dialog's commit: a verified (or freshly set)
+     * PIN flips the flag and returns to the grid like favorite/hide; a
+     * wrong PIN keeps the dialog up.
+     */
+    fun submitBlockPin(pin: String) {
+        val dialog = mutable.value as? GuideLayer.BlockPin ?: return
+        if (actions.blocker.submit(pin, dialog.mode, dialog.channel)) reset()
+    }
+
     /** A sheet channel action returns to the grid, like the panel's sheet. */
     private fun toggleFavorite(channel: ChannelEntity) {
-        actions.toggleFavorite(channel)
+        actions.channels.toggleFavorite(channel)
         reset()
     }
 
     /** Hiding the previewed channel retunes first, like the panel's sheet. */
     private fun hide(channel: ChannelEntity) {
         zapAway(channel)
-        actions.hide(channel)
+        actions.channels.hide(channel)
         reset()
     }
-
-    private fun description(): GuideLayer.Description {
-        val data = info()
-        return GuideLayer.Description(
-            title = data?.title ?: GuideInfoBuilder.NO_INFORMATION,
-            text = data?.description ?: GuideInfoBuilder.NO_INFORMATION,
-        )
-    }
 }
+
+/** The "Program description" layer: the focused cell's title + synopsis. */
+private fun descriptionOf(data: GuideInfoData?): GuideLayer.Description =
+    GuideLayer.Description(
+        title = data?.title ?: GuideInfoBuilder.NO_INFORMATION,
+        text = data?.description ?: GuideInfoBuilder.NO_INFORMATION,
+    )
 
 /**
  * One BACK level per layer: pushed screens → sheet, everything else → grid.
@@ -113,6 +123,6 @@ class GuideMenuController(
 private fun backOf(layer: GuideLayer): GuideLayer =
     when (layer) {
         is GuideLayer.ComingSoon -> layer.back
-        is GuideLayer.Description -> GuideLayer.RowMenu
+        is GuideLayer.Description, is GuideLayer.BlockPin -> GuideLayer.RowMenu
         else -> GuideLayer.Grid
     }

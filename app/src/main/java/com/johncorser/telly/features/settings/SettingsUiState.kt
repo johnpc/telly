@@ -15,6 +15,12 @@ sealed interface SettingsPane {
     data class EpgSourceDetail(
         val sourceId: Long,
     ) : SettingsPane
+
+    /** Other -> Search: the save-history toggle + clear action. */
+    data object OtherSearch : SettingsPane
+
+    /** Parental controls -> Blocked channels (entry PIN-gated once). */
+    data object BlockedChannels : SettingsPane
 }
 
 /** Modal state over the sheet stack. */
@@ -41,6 +47,12 @@ sealed interface SettingsOverlay {
     ) : SettingsOverlay
 
     data object PinSetup : SettingsOverlay
+
+    /** Entering the blocked-channels pane confirms the parental PIN once. */
+    data object PinVerify : SettingsOverlay
+
+    /** GuidedStep confirm for Other -> Search -> Clear search history. */
+    data object ConfirmClearHistory : SettingsOverlay
 }
 
 /**

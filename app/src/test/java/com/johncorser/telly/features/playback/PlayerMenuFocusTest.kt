@@ -14,6 +14,8 @@ class PlayerMenuFocusTest {
             PlayerMenuItem.PROGRAM_DESCRIPTION,
             PlayerMenuItem.RECORD,
             PlayerMenuItem.ASSIGN_EPG,
+            // The Block PIN dialog cancels back to the sheet too.
+            PlayerMenuItem.BLOCK_CHANNEL,
         ).forEach { item ->
             focus.onActivated(item)
             assertEquals(item, focus.restore)

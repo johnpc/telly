@@ -11,4 +11,6 @@ class SearchDeps(
     val lastChannelStore: KeyValueStore,
     val clock: () -> Long,
     val zone: TimeZone = TimeZone.getDefault(),
+    /** Settings -> Other -> Search "Save search history" (default on). */
+    val saveHistory: () -> Boolean = { true },
 )

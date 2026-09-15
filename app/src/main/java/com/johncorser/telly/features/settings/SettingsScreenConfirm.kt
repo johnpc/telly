@@ -26,6 +26,25 @@ internal fun SettingsScreenConfirmDelete(
 }
 
 /**
+ * "Clear search history?" confirm (Other -> Search): uncapturable (the
+ * reference locks the Search pane behind premium), shaped after the
+ * captured delete-playlist GuidedStep above.
+ */
+@Composable
+internal fun SettingsScreenConfirmClearHistory(model: SettingsViewModel) {
+    SettingsScreenGuidedStep(
+        iconRes = R.drawable.ic_settings_warning,
+        title = "Clear search history?",
+        bodyLines = listOf("All saved search queries will be removed"),
+        actions =
+            listOf(
+                "Clear" to { model.confirmClearHistory() },
+                "Cancel" to { model.dismissOverlay() },
+            ),
+    )
+}
+
+/**
  * "Delete EPG source?" confirm: uncapturable (the reference locks source
  * management behind premium), shaped after the captured delete-playlist
  * GuidedStep above.

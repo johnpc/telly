@@ -30,9 +30,16 @@ enum class PlayerMenuItem(
     GROUP_OPTIONS("Group options"),
     ;
 
-    /** "Add to Favorites" flips once the channel is already a favorite. */
-    fun labelFor(favorite: Boolean): String =
-        if (this == ADD_TO_FAVORITES && favorite) "Remove from Favorites" else label
+    /** "Add to Favorites"/"Block channel" flip on an already-flagged channel. */
+    fun labelFor(
+        favorite: Boolean,
+        blocked: Boolean = false,
+    ): String =
+        when {
+            this == ADD_TO_FAVORITES && favorite -> "Remove from Favorites"
+            this == BLOCK_CHANNEL && blocked -> "Unblock channel"
+            else -> label
+        }
 }
 
 /** One blue-headed section of the menu sheet; a null header renders no strip. */

@@ -6,14 +6,19 @@ import com.johncorser.telly.core.settings.TellySettings
 import com.johncorser.telly.features.guide.GuideDeps
 import com.johncorser.telly.features.history.WatchHistory
 import com.johncorser.telly.features.multiview.MultiviewDeps
+import com.johncorser.telly.features.playback.BlockSession
 import com.johncorser.telly.features.playback.PlaybackDeps
 import com.johncorser.telly.features.playback.PlaybackSources
 import com.johncorser.telly.features.player.Media3PlayerEngine
 import com.johncorser.telly.features.search.SearchDeps
 import com.johncorser.telly.features.search.SearchRepository
+import com.johncorser.telly.core.settings.KeyValueStore as StringKeyValueStore
 import com.johncorser.telly.core.settings.SharedPrefsKeyValueStore as SettingsPrefsStore
 
 private const val SEARCH_PREFS_NAME = "telly-search"
+
+/** One block-unlock session per process ("Until app restart" relock). */
+private val sharedBlockSession = BlockSession()
 
 /** Playback slice bundle over [ServiceLocator]'s app-scoped singletons. */
 fun ServiceLocator.playbackDeps(context: Context): PlaybackDeps =
@@ -28,6 +33,7 @@ fun ServiceLocator.playbackDeps(context: Context): PlaybackDeps =
         engineFactory = { Media3PlayerEngine.create(context.applicationContext) },
         clock = clock,
         parental = ParentalControls(settingsRepository(context)),
+        blockSession = sharedBlockSession,
     )
 
 /** Guide slice = the playback bundle + the settings the grid honors. */
@@ -60,10 +66,14 @@ fun ServiceLocator.searchDeps(context: Context): SearchDeps =
                 channelDao = database(context).channelDao(),
                 epgRepository = epgRepository(context),
             ),
-        historyStore =
-            SettingsPrefsStore(
-                context.applicationContext.getSharedPreferences(SEARCH_PREFS_NAME, Context.MODE_PRIVATE),
-            ),
+        historyStore = searchHistoryStore(context),
         lastChannelStore = keyValueStore(context),
         clock = clock,
+        saveHistory = { settingsRepository(context).get(TellySettings.SEARCH_SAVE_HISTORY) },
+    )
+
+/** The search-history prefs file, shared with Settings -> Other -> Search. */
+fun ServiceLocator.searchHistoryStore(context: Context): StringKeyValueStore =
+    SettingsPrefsStore(
+        context.applicationContext.getSharedPreferences(SEARCH_PREFS_NAME, Context.MODE_PRIVATE),
     )

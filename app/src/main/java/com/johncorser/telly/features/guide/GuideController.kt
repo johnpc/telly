@@ -2,9 +2,11 @@ package com.johncorser.telly.features.guide
 
 import com.johncorser.telly.features.history.WatchHistory
 import com.johncorser.telly.features.panel.PanelViewModel
-import com.johncorser.telly.features.playback.ChannelActions
+import com.johncorser.telly.features.playback.BlockGate
 import com.johncorser.telly.features.playback.PlaybackEnv
 import com.johncorser.telly.features.playback.PlaybackLifecycle
+import com.johncorser.telly.features.playback.SheetActions
+import com.johncorser.telly.features.playback.TuneBlockPrompt
 import com.johncorser.telly.features.playback.TuneController
 import com.johncorser.telly.features.playlist.db.ChannelEntity
 import kotlinx.coroutines.CoroutineScope
@@ -33,7 +35,11 @@ class GuideController(
     val now: StateFlow<Long> = ticker.now
     val originMs = GuideGeometry.halfHourFloor(now.value, zone)
 
-    private val tuner = TuneController(env.engine, env.store, scope, env.channelDao, history)
+    private val gate = BlockGate(env.hooks.parental, env.hooks.blockSession)
+    private val tuner = TuneController(env.engine, env.store, scope, env.channelDao, history, gate)
+
+    /** The blocked-channel tune gate's prompt (guide OK / preview restore). */
+    val blockPrompt = TuneBlockPrompt(tuner)
 
     /** Background stop + foreground re-seed/re-tune (round7 resume P2). */
     val lifecycle = PlaybackLifecycle(tuner, onForegrounded = ticker::reseed, recover = tuner::retune)
@@ -64,7 +70,7 @@ class GuideController(
     /** Layers + the long-OK row context sheet (catalogue §3 38-42). */
     val menu =
         GuideMenuController(
-            actions = ChannelActions(env.channelDao, scope),
+            actions = SheetActions.over(env, scope),
             zapAway = tuner::zapAwayFrom,
             focusedRow = ::focusedRow,
             info = { info.value },

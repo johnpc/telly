@@ -56,6 +56,8 @@ fun PlaybackScreen(
                                 panelLock = PanelLock(deps.parental),
                                 onOpenSettings = onOpenSettings,
                                 onOpenMultiview = onOpenMultiview,
+                                parental = deps.parental,
+                                blockSession = deps.blockSession,
                             ),
                     ),
                 history = deps.sources.history,
@@ -72,6 +74,7 @@ fun PlaybackScreen(
         }
     }
     val overlay by viewModel.overlay.collectAsState()
+    val blockPrompt by viewModel.blockPrompt.channel.collectAsState()
     val previewDetector = remember { HoldKeyDetector(PlaybackKey.OK, PlaybackKey.LONG_OK) }
     // Background/resume: stop the stream on STOP, re-tune on the START
     // after it — the reference re-tunes on resume (round7 resume P2).
@@ -84,9 +87,17 @@ fun PlaybackScreen(
             .onPreviewKeyEvent { event -> onPreviewKey(event, overlay, viewModel, previewDetector) },
     ) {
         PlayerScreenSurface(engine, Modifier.fillMaxSize())
-        if (overlay == PlaybackOverlay.None || overlay == PlaybackOverlay.ZapInfo) {
+        val bare = overlay == PlaybackOverlay.None || overlay == PlaybackOverlay.ZapInfo
+        if (bare && blockPrompt == null) {
             PlaybackScreenKeyAnchor(onKey = viewModel::onKey)
         }
         PlaybackScreenOverlays(viewModel, overlay)
+        // Tuning a blocked channel (zap, panel row, restore) gates on the PIN.
+        if (blockPrompt != null) {
+            PlaybackScreenBlockGate(
+                onSubmit = viewModel.blockPrompt::submit,
+                onDismiss = viewModel.blockPrompt::dismiss,
+            )
+        }
     }
 }

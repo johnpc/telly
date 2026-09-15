@@ -14,6 +14,9 @@ enum class PlayerMenuRoute {
     /** Zaps away from the watched channel first, hides, then returns. */
     HIDE_CHANNEL,
 
+    /** Opens the PIN dialog (confirm or first-time setup) then flips blocked. */
+    TOGGLE_BLOCK,
+
     /** Shows the focused programme's title + synopsis. */
     DESCRIPTION,
 
@@ -37,6 +40,7 @@ object PlayerMenuRouting {
             PlayerMenuItem.SETTINGS -> PlayerMenuRoute.SETTINGS
             PlayerMenuItem.ADD_TO_FAVORITES -> PlayerMenuRoute.TOGGLE_FAVORITE
             PlayerMenuItem.HIDE_CHANNEL -> PlayerMenuRoute.HIDE_CHANNEL
+            PlayerMenuItem.BLOCK_CHANNEL -> PlayerMenuRoute.TOGGLE_BLOCK
             PlayerMenuItem.PROGRAM_DESCRIPTION -> PlayerMenuRoute.DESCRIPTION
             PlayerMenuItem.CHANNEL_OPTIONS -> PlayerMenuRoute.CHANNEL_OPTIONS
             else -> PlayerMenuRoute.COMING_SOON

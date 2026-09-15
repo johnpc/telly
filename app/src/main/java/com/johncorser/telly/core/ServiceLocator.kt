@@ -3,6 +3,7 @@ package com.johncorser.telly.core
 import android.content.Context
 import android.util.Xml
 import androidx.room.Room
+import com.johncorser.telly.core.db.MIGRATION_TO_BLOCKED_CHANNELS
 import com.johncorser.telly.core.db.TellyDatabase
 import com.johncorser.telly.core.kv.KeyValueStore
 import com.johncorser.telly.core.kv.SharedPrefsKeyValueStore
@@ -41,6 +42,7 @@ object ServiceLocator {
                     TellyDatabase.MIGRATION_1_2,
                     TellyDatabase.MIGRATION_2_3,
                     TellyDatabase.MIGRATION_3_4,
+                    MIGRATION_TO_BLOCKED_CHANNELS,
                 )
                 .build()
                 .also { database = it }

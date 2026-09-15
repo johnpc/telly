@@ -59,4 +59,15 @@ class ParentalControlsTest {
         parental.setEnabled(true)
         assertTrue(parental.isSettingsLocked())
     }
+
+    @Test
+    fun `the captured relock default always re-locks after an unlock`() {
+        assertTrue(parental.relocksAfterUnlock())
+
+        settings.set(TellySettings.PARENTAL_RELOCK, ParentalControls.RELOCK_UNTIL_RESTART)
+        assertFalse(parental.relocksAfterUnlock())
+
+        settings.set(TellySettings.PARENTAL_RELOCK, "Always require")
+        assertTrue(parental.relocksAfterUnlock())
+    }
 }

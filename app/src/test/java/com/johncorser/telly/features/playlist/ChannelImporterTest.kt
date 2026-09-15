@@ -80,6 +80,28 @@ class ChannelImporterTest {
     }
 
     @Test
+    fun `the blocked flag survives a refresh like favorite and hidden`() {
+        val previous =
+            ChannelEntity(
+                id = 9,
+                playlistId = 1,
+                number = 5,
+                sortIndex = 4,
+                source = ChannelSource(name = "Old Name", streamUrl = "http://old/x.ts", tvgId = "keep-1"),
+                flags = ChannelFlags(blocked = true),
+            )
+
+        val rows =
+            ChannelImporter.import(
+                playlistId = 1,
+                parsed = listOf(channel("New Name", streamUrl = "http://new/y.ts", tvgId = "keep-1")),
+                previous = listOf(previous),
+            )
+
+        assertEquals(ChannelFlags(blocked = true), rows.single().flags)
+    }
+
+    @Test
     fun `flags fall back to stream url plus name when tvg id is missing`() {
         val previous =
             ChannelEntity(

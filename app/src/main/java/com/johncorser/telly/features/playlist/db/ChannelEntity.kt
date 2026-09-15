@@ -1,5 +1,6 @@
 package com.johncorser.telly.features.playlist.db
 
+import androidx.room.ColumnInfo
 import androidx.room.Embedded
 import androidx.room.Entity
 import androidx.room.ForeignKey
@@ -19,6 +20,8 @@ data class ChannelSource(
 data class ChannelFlags(
     val favorite: Boolean = false,
     val hidden: Boolean = false,
+    /** PIN-gated to tune (ux-spec: blocked channels stay listed with a lock). */
+    @ColumnInfo(defaultValue = "0") val blocked: Boolean = false,
 )
 
 /**

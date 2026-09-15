@@ -23,7 +23,7 @@ class PlayerMenuRoutingTest {
                 PlayerMenuItem.ADD_TO_MY_LIST to PlayerMenuRoute.COMING_SOON,
                 PlayerMenuItem.PROGRAM_DESCRIPTION to PlayerMenuRoute.DESCRIPTION,
                 PlayerMenuItem.ADD_TO_FAVORITES to PlayerMenuRoute.TOGGLE_FAVORITE,
-                PlayerMenuItem.BLOCK_CHANNEL to PlayerMenuRoute.COMING_SOON,
+                PlayerMenuItem.BLOCK_CHANNEL to PlayerMenuRoute.TOGGLE_BLOCK,
                 PlayerMenuItem.HIDE_CHANNEL to PlayerMenuRoute.HIDE_CHANNEL,
                 PlayerMenuItem.ASSIGN_EPG to PlayerMenuRoute.COMING_SOON,
                 PlayerMenuItem.CHANNEL_OPTIONS to PlayerMenuRoute.CHANNEL_OPTIONS,

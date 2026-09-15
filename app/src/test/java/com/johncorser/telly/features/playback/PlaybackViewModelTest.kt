@@ -1,5 +1,8 @@
 package com.johncorser.telly.features.playback
 
+import com.johncorser.telly.core.settings.InMemoryKeyValueStore
+import com.johncorser.telly.core.settings.ParentalControls
+import com.johncorser.telly.core.settings.SettingsRepository
 import com.johncorser.telly.features.history.WatchHistory
 import com.johncorser.telly.features.player.VideoDetails
 import com.johncorser.telly.testutil.FakeChannelDao
@@ -46,6 +49,7 @@ class PlaybackViewModelTest {
         clock: () -> Long = { now },
         onOpenSettings: () -> Unit = {},
         onOpenMultiview: () -> Unit = {},
+        parental: ParentalControls? = null,
     ): PlaybackViewModel =
         PlaybackViewModel(
             env =
@@ -55,13 +59,97 @@ class PlaybackViewModelTest {
                     engine = engine,
                     store = store,
                     time = PlaybackTime(clock, TimeZone.getTimeZone("UTC")),
-                    hooks = PlaybackHooks(onOpenSettings = onOpenSettings, onOpenMultiview = onOpenMultiview),
+                    hooks =
+                        PlaybackHooks(
+                            onOpenSettings = onOpenSettings,
+                            onOpenMultiview = onOpenMultiview,
+                            parental = parental,
+                        ),
                 ),
             history = WatchHistory(historyDao, clock),
             scope = CoroutineScope(SupervisorJob() + UnconfinedTestDispatcher(testScheduler)),
             onExitToGuide = { exitedToGuide += 1 },
             onOpenHistory = { openedHistory += 1 },
         )
+
+    @Test
+    fun `the sheet's block row walks pin setup and lands back on the panel`() =
+        runTest {
+            val parental = ParentalControls(SettingsRepository(InMemoryKeyValueStore()))
+            val vm = buildVm(parental = parental)
+            vm.showChannelMenu(dao.channels.value[2])
+
+            vm.menu.onMenuItem(PlayerMenuItem.BLOCK_CHANNEL)
+            val dialog = vm.overlay.value as PlaybackOverlay.BlockPin
+            assertEquals(BlockPinMode.SETUP, dialog.mode)
+            assertEquals(3L, dialog.channel.id)
+
+            vm.menu.submitBlockPin("2468")
+
+            assertTrue(dao.channels.value[2].flags.blocked)
+            assertTrue(parental.verifyPin("2468"))
+            assertEquals(PlaybackOverlay.Panel, vm.overlay.value)
+        }
+
+    @Test
+    fun `a wrong block pin keeps the dialog and back cancels to the sheet`() =
+        runTest {
+            val parental = ParentalControls(SettingsRepository(InMemoryKeyValueStore()))
+            parental.setPin("2468")
+            val vm = buildVm(parental = parental)
+            vm.showChannelMenu(dao.channels.value[2])
+            vm.menu.onMenuItem(PlayerMenuItem.BLOCK_CHANNEL)
+
+            vm.menu.submitBlockPin("1111")
+            assertTrue(vm.overlay.value is PlaybackOverlay.BlockPin)
+            assertFalse(dao.channels.value[2].flags.blocked)
+
+            assertTrue(vm.onKey(PlaybackKey.BACK))
+            assertTrue(vm.overlay.value is PlaybackOverlay.ChannelMenu)
+            assertEquals(PlayerMenuItem.BLOCK_CHANNEL, vm.menu.sheetFocus.restore)
+        }
+
+    @Test
+    fun `tuning a blocked channel from the panel pin-gates before the zap overlay`() =
+        runTest {
+            val parental = ParentalControls(SettingsRepository(InMemoryKeyValueStore()))
+            parental.setPin("2468")
+            val blocked = dao.channels.value[2].let { it.copy(flags = it.flags.copy(blocked = true)) }
+            dao.channels.value = listOf(dao.channels.value[0], dao.channels.value[1], blocked)
+            val vm = buildVm(parental = parental)
+            engine.loaded.clear()
+
+            vm.tuneFromPanel(blocked)
+            assertEquals(blocked, vm.blockPrompt.channel.value)
+            assertEquals(1L, vm.current.value?.id)
+            assertTrue(engine.loaded.isEmpty())
+
+            vm.blockPrompt.submit("1111")
+            assertEquals(1L, vm.current.value?.id)
+
+            vm.blockPrompt.submit("2468")
+            assertEquals(3L, vm.current.value?.id)
+            assertEquals(PlaybackOverlay.ZapInfo, vm.overlay.value)
+        }
+
+    @Test
+    fun `cancelling the tune prompt stays on the playing channel`() =
+        runTest {
+            val parental = ParentalControls(SettingsRepository(InMemoryKeyValueStore()))
+            parental.setPin("2468")
+            val blocked = dao.channels.value[2].let { it.copy(flags = it.flags.copy(blocked = true)) }
+            dao.channels.value = listOf(dao.channels.value[0], dao.channels.value[1], blocked)
+            val vm = buildVm(parental = parental)
+
+            vm.tuneFromPanel(blocked)
+            vm.blockPrompt.dismiss()
+
+            assertNull(vm.blockPrompt.channel.value)
+            assertEquals(1L, vm.current.value?.id)
+            // No dialog was submitted, so no zap overlay appears either.
+            vm.blockPrompt.submit("2468")
+            assertEquals(1L, vm.current.value?.id)
+        }
 
     @Test
     fun `the settings menu row opens the settings shell`() =

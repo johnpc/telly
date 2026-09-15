@@ -1,5 +1,7 @@
 package com.johncorser.telly.features.playback
 
+import com.johncorser.telly.features.playlist.db.ChannelEntity
+
 /** Which layer currently covers the fullscreen video. */
 sealed interface PlaybackOverlay {
     /** Bare playback: zero chrome (capture 33). */
@@ -50,6 +52,13 @@ sealed interface PlaybackOverlay {
      */
     data class ChannelOptions(
         val channelName: String,
+        override val back: PlaybackOverlay = None,
+    ) : Pushed
+
+    /** The sheet's Block/Unblock PIN dialog; BACK cancels back to the sheet. */
+    data class BlockPin(
+        val channel: ChannelEntity,
+        val mode: BlockPinMode,
         override val back: PlaybackOverlay = None,
     ) : Pushed
 }

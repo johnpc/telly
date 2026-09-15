@@ -6,6 +6,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.res.stringResource
 import com.johncorser.telly.R
 import com.johncorser.telly.core.ui.OnboardingScreenMessage
+import com.johncorser.telly.features.panel.ChannelPanelScreenPin
 import com.johncorser.telly.features.playback.PlaybackScreenMenu
 import com.johncorser.telly.features.playback.PlayerMenu
 import com.johncorser.telly.features.settings.SettingsScreenRows
@@ -32,6 +33,7 @@ internal fun GuideScreenRowMenu(
         favorite = row.channel.flags.favorite,
         onItem = controller.menu::onMenuItem,
         restore = controller.menu.sheetFocus.restore,
+        blocked = row.channel.flags.blocked,
     )
 }
 
@@ -54,6 +56,8 @@ internal fun GuideScreenRowMenuLayers(
                 headline = layer.feature,
                 subtitle = stringResource(R.string.playback_coming_soon),
             )
+        is GuideLayer.BlockPin ->
+            ChannelPanelScreenPin(onSubmit = controller.menu::submitBlockPin, title = layer.mode.title)
         else -> Unit
     }
 }

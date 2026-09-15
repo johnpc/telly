@@ -42,14 +42,15 @@ class SettingsRowsIndexTest {
 
     @Test
     fun `rowsFor renders the epg sources pane`() {
-        val rows = rowsFor(SettingsPane.EpgSources, s, listOf(item), "0.1.0", listOf(source))
+        val rows = rowsFor(SettingsPane.EpgSources, s, listOf(item), "0.1.0", SettingsRowSources(listOf(source)))
         assertTrue(rows.any { it.id == RowIds.EPG_SOURCE_PREFIX + "http://p/x.m3u" })
         assertTrue(rows.any { it.id == RowIds.EPG_CUSTOM_SOURCE_PREFIX + "5" })
     }
 
     @Test
     fun `rowsFor renders a source detail pane and is empty once deleted`() {
-        val rows = rowsFor(SettingsPane.EpgSourceDetail(5), s, listOf(item), "0.1.0", listOf(source))
+        val rows =
+            rowsFor(SettingsPane.EpgSourceDetail(5), s, listOf(item), "0.1.0", SettingsRowSources(listOf(source)))
         assertTrue(rows.any { it.id == RowIds.EPG_SOURCE_DELETE })
         assertEquals(
             emptyList<SettingsRow>(),

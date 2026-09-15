@@ -30,6 +30,7 @@ internal fun PlaybackScreenMenuLayers(
                     headline = active.feature,
                     subtitle = stringResource(R.string.playback_coming_soon),
                 )
+            is PlaybackOverlay.BlockPin -> PlaybackScreenBlockPinDialog(viewModel, active)
             else -> Unit
         }
     }
@@ -55,5 +56,6 @@ private fun PlaybackScreenChannelMenu(
         favorite = channel?.flags?.favorite == true,
         onItem = viewModel.menu::onMenuItem,
         restore = viewModel.menu.sheetFocus.restore,
+        blocked = channel?.flags?.blocked == true,
     )
 }

@@ -1,5 +1,6 @@
 package com.johncorser.telly.features.panel
 
+import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -17,12 +18,18 @@ import com.johncorser.telly.core.ui.TellyScreenProgramTitle
 import com.johncorser.telly.features.settings.SettingsScreenPinWheel
 
 /**
- * The parental prompt over the panel when a locked group is selected:
- * centered card with the shared PIN wheel. The reference dialog is
- * premium-locked and uncapturable — minimal matching style.
+ * The parental prompt over the panel when a locked group is selected —
+ * also reused by the blocked-channel gates: centered card with the shared
+ * PIN wheel. The reference dialog is premium-locked and uncapturable —
+ * minimal matching style. A non-null [onDismiss] lets BACK cancel.
  */
 @Composable
-internal fun ChannelPanelScreenPin(onSubmit: (String) -> Unit) {
+internal fun ChannelPanelScreenPin(
+    onSubmit: (String) -> Unit,
+    title: String = "Enter PIN",
+    onDismiss: (() -> Unit)? = null,
+) {
+    onDismiss?.let { dismiss -> BackHandler { dismiss() } }
     Box(
         Modifier
             .fillMaxSize()
@@ -36,7 +43,7 @@ internal fun ChannelPanelScreenPin(onSubmit: (String) -> Unit) {
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.spacedBy(16.dp),
         ) {
-            TellyScreenProgramTitle("Enter PIN")
+            TellyScreenProgramTitle(title)
             SettingsScreenPinWheel(onSubmit = onSubmit)
         }
     }

@@ -25,6 +25,8 @@ class TuneController(
     private val scope: CoroutineScope,
     channelDao: ChannelDao,
     private val history: WatchHistory,
+    /** Owns the PIN prompt for blocked channels ([TuneBlockPrompt] drives it). */
+    val gate: BlockGate = BlockGate(),
 ) {
     /** All visible channels in TiviMate "All channels" order. */
     val channels: StateFlow<List<ChannelEntity>> =
@@ -52,7 +54,9 @@ class TuneController(
         }
     }
 
+    /** Tunes [channel], or opens the [gate]'s PIN prompt when it is blocked. */
     fun tune(channel: ChannelEntity) {
+        if (gate.intercept(channel)) return
         mutableCurrent.value = channel
         suspended = false
         engine.load(channel.source.streamUrl)
@@ -81,11 +85,11 @@ class TuneController(
         mutableCurrent.value?.let { engine.load(it.source.streamUrl) }
     }
 
-    /** Tunes the channel [delta] steps away (wraps); false when impossible. */
+    /** Tunes the channel [delta] steps away (wraps); false when impossible or PIN-gated. */
     fun zap(delta: Int): Boolean {
         val next = ChannelZapper.neighbour(channels.value, mutableCurrent.value, delta) ?: return false
         tune(next)
-        return true
+        return mutableCurrent.value?.id == next.id
     }
 
     fun byId(channelId: Long): ChannelEntity? = channels.value.firstOrNull { it.id == channelId }

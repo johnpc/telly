@@ -33,6 +33,7 @@ fun parentalRows(s: SettingsRepository): List<SettingsRow> {
             title = "Don't require for channels only",
             checked = s.get(TellySettings.PARENTAL_CHANNELS_ONLY),
         ),
+        SettingsRow.Action(id = RowIds.PARENTAL_BLOCKED_CHANNELS, title = "Blocked channels"),
         SettingsRow.Header("Require PIN for"),
         SettingsRow.Toggle(
             id = RowIds.PARENTAL_REQUIRE_SETTINGS,

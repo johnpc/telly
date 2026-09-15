@@ -5,12 +5,14 @@ import com.johncorser.telly.core.settings.SettingsRepository
 import com.johncorser.telly.features.epg.EpgSource
 import com.johncorser.telly.features.epg.EpgSourceStore
 import com.johncorser.telly.features.playlist.PlaylistRepository
+import com.johncorser.telly.features.playlist.db.ChannelEntity
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
@@ -28,8 +30,10 @@ class SettingsViewModel(
 ) {
     internal val settings: SettingsRepository = graph.settings
     internal val playlistRepository: PlaylistRepository = graph.playlists
-    internal val epgSources: EpgSourceStore = graph.epgSources
+    internal val epgSources: EpgSourceStore = graph.stores.epgSources
     internal val parental: ParentalControls = graph.parental
+    internal val blocked: BlockedChannels? = graph.stores.blocked
+    internal val searchHistory = graph.stores.searchHistory
     internal val updater: PlaylistUpdater = graph.actions.updater
     internal val updateEpgNow: suspend () -> Unit = graph.actions.updateEpgNow
     internal val backup: SettingsBackupManager = graph.actions.backup
@@ -55,10 +59,15 @@ class SettingsViewModel(
     val epgSourceItems: StateFlow<List<EpgSource>> =
         epgSources.sources.stateIn(scope, SharingStarted.Eagerly, emptyList())
 
+    /** Blocked channels (Parental controls -> Blocked channels). */
+    val blockedItems: StateFlow<List<ChannelEntity>> =
+        (blocked?.channels ?: flowOf(emptyList())).stateIn(scope, SharingStarted.Eagerly, emptyList())
+
     /** The active sheet's rows (root section list when nothing is pushed). */
     val rows: StateFlow<List<SettingsRow>> =
-        combine(mutableState, playlistItems, epgSourceItems, settings.changes) { uiState, playlists, sources, _ ->
-            rowsFor(uiState.activePane, settings, playlists, versionName, sources)
+        combine(mutableState, playlistItems, epgSourceItems, settings.changes, blockedItems) {
+                uiState, playlists, sources, _, blockedChannels ->
+            rowsFor(uiState.activePane, settings, playlists, versionName, SettingsRowSources(sources, blockedChannels))
         }.stateIn(scope, SharingStarted.Eagerly, emptyList())
 
     /** OK on a section row pushes its sheet over the root list. */
@@ -86,6 +95,7 @@ class SettingsViewModel(
                 rowId.removePrefix(RowIds.EPG_CUSTOM_SOURCE_PREFIX).toLongOrNull()?.let {
                     push(SettingsPane.EpgSourceDetail(it))
                 }
+            rowId.startsWith(RowIds.BLOCKED_CHANNEL_PREFIX) -> unblockChannel(rowId)
             else -> runAction(rowId)
         }
     }

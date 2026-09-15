@@ -31,6 +31,7 @@ class PlayerMenuFocus {
             setOf(
                 PlayerMenuRoute.DESCRIPTION,
                 PlayerMenuRoute.COMING_SOON,
+                PlayerMenuRoute.TOGGLE_BLOCK,
             )
     }
 }

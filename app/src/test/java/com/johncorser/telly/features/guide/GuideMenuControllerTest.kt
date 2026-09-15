@@ -1,7 +1,13 @@
 package com.johncorser.telly.features.guide
 
+import com.johncorser.telly.core.settings.InMemoryKeyValueStore
+import com.johncorser.telly.core.settings.ParentalControls
+import com.johncorser.telly.core.settings.SettingsRepository
+import com.johncorser.telly.features.playback.BlockPinMode
 import com.johncorser.telly.features.playback.ChannelActions
+import com.johncorser.telly.features.playback.ChannelBlocker
 import com.johncorser.telly.features.playback.PlayerMenuItem
+import com.johncorser.telly.features.playback.SheetActions
 import com.johncorser.telly.testutil.FakeChannelDao
 import com.johncorser.telly.testutil.testChannel
 import io.mockk.mockk
@@ -36,9 +42,13 @@ class GuideMenuControllerTest {
             favorite = false,
         )
 
-    private fun TestScope.build(focusMemory: GuideFocusMemory? = null): GuideMenuController =
-        GuideMenuController(
-            actions = ChannelActions(dao, CoroutineScope(SupervisorJob() + UnconfinedTestDispatcher(testScheduler))),
+    private val parentalStore = InMemoryKeyValueStore()
+    private val parental = ParentalControls(SettingsRepository(parentalStore))
+
+    private fun TestScope.build(focusMemory: GuideFocusMemory? = null): GuideMenuController {
+        val actions = ChannelActions(dao, CoroutineScope(SupervisorJob() + UnconfinedTestDispatcher(testScheduler)))
+        return GuideMenuController(
+            actions = SheetActions(actions, ChannelBlocker(actions, parental)),
             zapAway = { zapped += it.id },
             focusedRow = { row },
             info = { infoData },
@@ -50,6 +60,7 @@ class GuideMenuControllerTest {
                 ),
             focusMemory = focusMemory,
         )
+    }
 
     private fun TestScope.buildOpenSheet(): GuideMenuController = build().apply { openRowMenu() }
 
@@ -176,7 +187,6 @@ class GuideMenuControllerTest {
                     PlayerMenuItem.RECORD,
                     PlayerMenuItem.CUSTOM_RECORDING,
                     PlayerMenuItem.ADD_TO_MY_LIST,
-                    PlayerMenuItem.BLOCK_CHANNEL,
                     PlayerMenuItem.MANAGE_FAVORITES,
                     PlayerMenuItem.REORDER_CHANNELS,
                     PlayerMenuItem.ASSIGN_EPG,
@@ -194,6 +204,63 @@ class GuideMenuControllerTest {
                 menu.close()
                 assertEquals(GuideLayer.RowMenu, menu.layer.value)
             }
+        }
+    }
+
+    @Test
+    fun `block channel without a pin opens the setup dialog and a set pin blocks`() {
+        runTest {
+            val menu = buildOpenSheet()
+
+            menu.onMenuItem(PlayerMenuItem.BLOCK_CHANNEL)
+            val dialog = menu.layer.value as GuideLayer.BlockPin
+            assertEquals(BlockPinMode.SETUP, dialog.mode)
+
+            menu.submitBlockPin("2468")
+
+            assertTrue(dao.channels.value.single().flags.blocked)
+            assertTrue(parental.verifyPin("2468"))
+            assertEquals(GuideLayer.Grid, menu.layer.value)
+        }
+    }
+
+    @Test
+    fun `block channel with a pin demands the pin and a wrong one keeps the dialog`() {
+        runTest {
+            parental.setPin("1234")
+            val menu = buildOpenSheet()
+
+            menu.onMenuItem(PlayerMenuItem.BLOCK_CHANNEL)
+            val dialog = menu.layer.value as GuideLayer.BlockPin
+            assertEquals(BlockPinMode.CONFIRM, dialog.mode)
+
+            menu.submitBlockPin("9999")
+            assertTrue(dao.channels.value.none { it.flags.blocked })
+            assertEquals(dialog, menu.layer.value)
+
+            menu.submitBlockPin("1234")
+            assertTrue(dao.channels.value.single().flags.blocked)
+            assertEquals(GuideLayer.Grid, menu.layer.value)
+        }
+    }
+
+    @Test
+    fun `unblocking is pin-gated too and back cancels to the sheet`() {
+        runTest {
+            parental.setPin("1234")
+            val single = dao.channels.value.single()
+            dao.channels.value = listOf(single.copy(flags = single.flags.copy(blocked = true)))
+            row = GuideRow(dao.channels.value.first(), 1, emptyList())
+            val menu = buildOpenSheet()
+
+            menu.onMenuItem(PlayerMenuItem.BLOCK_CHANNEL)
+            menu.close()
+            assertEquals(GuideLayer.RowMenu, menu.layer.value)
+            assertTrue(dao.channels.value.single().flags.blocked)
+
+            menu.onMenuItem(PlayerMenuItem.BLOCK_CHANNEL)
+            menu.submitBlockPin("1234")
+            assertTrue(dao.channels.value.none { it.flags.blocked })
         }
     }
 
