@@ -110,6 +110,7 @@ class Media3PlayerEngine(
             val player =
                 ExoPlayer
                     .Builder(context)
+                    .setMediaSourceFactory(streamMediaSourceFactory(context))
                     .setAudioAttributes(audioAttributes, handleAudioFocus)
                     .build()
             return Media3PlayerEngine(player)
