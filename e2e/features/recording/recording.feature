@@ -42,6 +42,15 @@ Feature: Record live TV to disk and manage recordings (DVR)
     When I select "Delete"
     Then the recordings library is empty
 
+  Scenario: The transport record dot reflects and toggles instant recording
+    When I open the playback transport row
+    And I activate the transport record dot
+    Then the transport record dot shows the channel recording
+    When I activate the transport record dot
+    Then I see "Stop recording?"
+    When I select "Stop"
+    Then the transport record dot is idle again
+
   Scenario: Custom recording schedules a future capture
     When I open the custom recording form for the playing channel
     Then I see "Custom recording"

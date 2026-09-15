@@ -1,9 +1,8 @@
 package com.johncorser.telly.features.catchup
 
 import com.johncorser.telly.features.playback.PlaybackEnv
-import com.johncorser.telly.features.playback.PlaybackKey
-import com.johncorser.telly.features.playback.PlaybackOverlay
 import com.johncorser.telly.features.playback.TuneController
+import com.johncorser.telly.features.player.PlayerState
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -18,40 +17,51 @@ data class CatchupState(
 
 /**
  * Catch-up playback mode inside the fullscreen player: consumes the guide's
- * pending request, owns the seek keys (via [CatchupKeyPolicy], honoring the
- * Remote-control toggles), tracks the position for the transport, and
- * leaves the mode on BACK (to live when entered from live, else to the
- * guide) or on any live tune.
+ * pending request, owns the seek keys (via [CatchupKeyRouting], honoring
+ * the Remote-control toggles), the transport's [pause] and programme
+ * [hop]s, tracks the position for the transport, and leaves the mode on
+ * BACK (to live when entered from live, else to the guide), on any live
+ * tune, or when the finished archive returns to live playback of the same
+ * channel ([PlayerState.Ended]).
  */
 class CatchupPlayback(
     private val env: PlaybackEnv,
     private val tuner: TuneController,
     private val showTransport: () -> Unit,
+    pinTransport: () -> Unit,
     private val scope: CoroutineScope,
     private val exitToGuide: () -> Unit,
 ) {
     private val mutableState = MutableStateFlow<CatchupState?>(null)
     private val tracker = CatchupPosition(env.engine)
-    private val liveEdge = CatchupLiveEdge(env.epgRepository, env.time.clock)
+
+    /** The seek/rewind-live/back keys; true = the key was a catch-up action. */
+    val keys = CatchupKeyRouting(env.hooks.catchup, this)
 
     val state: StateFlow<CatchupState?> = mutableState.asStateFlow()
     val position: StateFlow<Long> = tracker.position
+
+    /** Transport ⏸: pause pins the overlay, resume re-arms its auto-hide. */
+    val pause = CatchupPause(env.engine, { mutableState.value != null }, showTransport, pinTransport)
+
+    /** Transport ⏮/⏭ + the rewind-live entry (programme jumps). */
+    val hop =
+        CatchupProgrammeHop(
+            neighbours = CatchupNeighbours(env.epgRepository, env.time.clock),
+            liveEdge = CatchupLiveEdge(env.epgRepository, env.time.clock),
+            scope = scope,
+            host = CatchupProgrammeHop.Host(mutableState::value, ::enter, ::toLive, ::seekTo),
+        )
+
+    init {
+        // A finished archive returns to LIVE playback of the same channel.
+        scope.launch { env.engine.state.collect { if (it == PlayerState.Ended) toLive() } }
+    }
 
     /** Consumes the guide's pending request; true = catch-up owns the tune. */
     fun resumePending(): Boolean {
         val request = env.hooks.catchup.session.consume() ?: return false
         enter(request, fromLive = false)
-        return true
-    }
-
-    /** True when the key was a catch-up action (seek / rewind-live / back). */
-    fun onKey(
-        overlay: PlaybackOverlay,
-        key: PlaybackKey,
-    ): Boolean {
-        val keys = env.hooks.catchup.toggles.snapshot()
-        val command = CatchupKeyPolicy.commandFor(overlay, key, mode(), keys, skip()) ?: return false
-        execute(command)
         return true
     }
 
@@ -73,24 +83,21 @@ class CatchupPlayback(
         if (mutableState.value != null) tracker.refresh()
     }
 
-    private fun mode(): CatchupMode =
+    internal fun mode(): CatchupMode =
         when {
             mutableState.value != null -> CatchupMode.PLAYING
             tuner.current.value?.catchupAttributes() != null -> CatchupMode.LIVE_CAPABLE
             else -> CatchupMode.NONE
         }
 
+    internal fun rewindLive(deltaMs: Long) = hop.rewindFromLive(tuner.current.value, deltaMs, env.time.clock())
+
     /** BACK at bare catch-up playback returns where catch-up was entered from. */
-    private fun execute(command: CatchupCommand) {
-        when (command) {
-            is CatchupCommand.Seek -> seekBy(command.deltaMs)
-            is CatchupCommand.RewindLive -> rewindFromLive(command.deltaMs)
-            CatchupCommand.Back ->
-                mutableState.value?.let { active ->
-                    onLiveTune()
-                    if (active.fromLive) tuner.tune(active.request.channel) else exitToGuide()
-                }
-        }
+    internal fun back() {
+        val active = mutableState.value ?: return
+        if (active.fromLive) return toLive()
+        onLiveTune()
+        exitToGuide()
     }
 
     private fun enter(
@@ -103,13 +110,11 @@ class CatchupPlayback(
         showTransport()
     }
 
-    private fun rewindFromLive(deltaMs: Long) {
-        val channel = tuner.current.value ?: return
-        scope.launch {
-            val request = liveEdge.requestFor(channel) ?: return@launch
-            enter(request, fromLive = true)
-            seekTo((env.time.clock() - deltaMs - request.startMs).coerceAtLeast(0L))
-        }
+    /** Archive end and the hop's newest edge both retune live in place. */
+    private fun toLive() {
+        val active = mutableState.value ?: return
+        onLiveTune()
+        tuner.tune(active.request.channel)
     }
 
     private fun seekTo(positionMs: Long) {

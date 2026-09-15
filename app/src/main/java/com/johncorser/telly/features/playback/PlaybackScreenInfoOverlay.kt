@@ -29,6 +29,8 @@ internal fun PlaybackScreenInfoOverlay(
     val info by viewModel.info.collectAsState()
     val recents by viewModel.recents.cards.collectAsState()
     val catchupState by viewModel.catchup.state.collectAsState()
+    val paused by viewModel.catchup.pause.paused.collectAsState()
+    val recording by viewModel.record.active.collectAsState()
     var focusedRecent by remember { mutableStateOf<RecentCard?>(null) }
     if (catchupState != null) {
         // The visible overlay drives the catch-up position readout.
@@ -50,8 +52,8 @@ internal fun PlaybackScreenInfoOverlay(
             PlaybackScreenTransportRow(
                 data = data,
                 onFeature = viewModel::showComingSoon,
-                onSeek = if (catchupState != null) viewModel.catchup::seekBy else null,
-                skip = viewModel.catchup.skip(),
+                catchup = if (catchupState != null) transportCatchup(viewModel, paused) else null,
+                record = TransportRecord(recording = recording, onToggle = viewModel.record::toggle),
             )
         }
         Spacer(Modifier.height(30.dp))
@@ -77,3 +79,17 @@ internal fun PlaybackScreenInfoOverlay(
         Spacer(Modifier.height(29.dp))
     }
 }
+
+/** The seek transport's controls over the catch-up mode's surface. */
+private fun transportCatchup(
+    viewModel: PlaybackViewModel,
+    paused: Boolean,
+): TransportCatchup =
+    TransportCatchup(
+        paused = paused,
+        skip = viewModel.catchup.skip(),
+        onPause = viewModel.catchup.pause::toggle,
+        onSeek = viewModel.catchup::seekBy,
+        onPrevious = viewModel.catchup.hop::previous,
+        onNext = viewModel.catchup.hop::next,
+    )

@@ -10,7 +10,6 @@ import com.johncorser.telly.features.player.tracks.TrackFacade
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.update
 
 /**
  * Media3-backed [PlayerEngine]. HLS, progressive and raw TS streams are all
@@ -26,22 +25,24 @@ class Media3PlayerEngine(
 ) : PlayerEngine,
     Player.Listener {
     private val mutableState = MutableStateFlow<PlayerState>(PlayerState.Idle)
-    private val mutableVideo = MutableStateFlow<VideoDetails?>(null)
-    private var frameRates = FrameRateEstimator()
+    private val videoFeed = EngineVideoFeed()
+    private val mutablePaused = MutableStateFlow(false)
 
     override val state: StateFlow<PlayerState> = mutableState.asStateFlow()
-    override val video: StateFlow<VideoDetails?> = mutableVideo.asStateFlow()
+    override val video: StateFlow<VideoDetails?> = videoFeed.video
+    override val paused: StateFlow<Boolean> = mutablePaused.asStateFlow()
 
     init {
         player.addListener(this)
         player.setVideoFrameMetadataListener { presentationTimeUs, _, _, _ ->
-            frameRates.onFrame(presentationTimeUs)?.let(::onFrameRateMeasured)
+            videoFeed.onFrame(presentationTimeUs)
         }
     }
 
     override fun load(streamUrl: String) {
         mutableState.value = PlayerState.Buffering
-        frameRates = FrameRateEstimator()
+        mutablePaused.value = false
+        videoFeed.reset()
         userAgent?.onLoad(streamUrl)
         player.setMediaItem(MediaItem.fromUri(streamUrl))
         player.prepare()
@@ -51,6 +52,7 @@ class Media3PlayerEngine(
     override fun stop() {
         player.stop()
         mutableState.value = PlayerState.Idle
+        mutablePaused.value = false
     }
 
     override fun release() {
@@ -61,6 +63,16 @@ class Media3PlayerEngine(
         player.volume = if (muted) 0f else 1f
     }
 
+    override fun pause() {
+        player.pause()
+        mutablePaused.value = true
+    }
+
+    override fun resume() {
+        player.play()
+        mutablePaused.value = false
+    }
+
     override fun positionMs(): Long = player.currentPosition
 
     override fun seekTo(positionMs: Long) = player.seekTo(positionMs)
@@ -68,32 +80,17 @@ class Media3PlayerEngine(
     override fun onPlaybackStateChanged(playbackState: Int) {
         when (playbackState) {
             Player.STATE_BUFFERING -> mutableState.value = PlayerState.Buffering
-            Player.STATE_READY -> onReady()
+            Player.STATE_READY -> {
+                mutableState.value = PlayerState.Playing
+                videoFeed.onReady(player)
+            }
+            Player.STATE_ENDED -> mutableState.value = PlayerState.Ended
             else -> Unit
         }
     }
 
     override fun onPlayerError(error: PlaybackException) {
         mutableState.value = PlayerState.Error(error.errorCodeName)
-    }
-
-    private fun onReady() {
-        mutableState.value = PlayerState.Playing
-        val videoFormat = player.videoFormat
-        mutableVideo.value =
-            VideoDetails(
-                width = videoFormat?.width ?: 0,
-                height = videoFormat?.height ?: 0,
-                frameRate = (videoFormat?.frameRate ?: 0f).coerceAtLeast(0f),
-                audioChannels = player.audioFormat?.channelCount ?: 0,
-            )
-    }
-
-    /** TS formats report no frame rate; the render-time estimate fills it in. */
-    private fun onFrameRateMeasured(fps: Float) {
-        mutableVideo.update { details ->
-            if (details != null && details.frameRate <= 0f) details.copy(frameRate = fps) else details
-        }
     }
 
     companion object {

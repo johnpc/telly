@@ -31,6 +31,23 @@ fun gatedTuner(
             ),
     )
 
+/** Catch-up mode over the shared tuner; transport show/pin route as commands. */
+internal fun catchupPlayback(
+    env: PlaybackEnv,
+    tuner: TuneController,
+    execute: (PlaybackCommand) -> Unit,
+    scope: CoroutineScope,
+    exitToGuide: () -> Unit,
+): CatchupPlayback =
+    CatchupPlayback(
+        env = env,
+        tuner = tuner,
+        showTransport = { execute(PlaybackCommand.ShowTransport) },
+        pinTransport = { execute(PlaybackCommand.PinTransport) },
+        scope = scope,
+        exitToGuide = exitToGuide,
+    )
+
 /** The command executor's seams over the ViewModel's clock/nav/catch-up. */
 internal fun commandSeams(
     env: PlaybackEnv,

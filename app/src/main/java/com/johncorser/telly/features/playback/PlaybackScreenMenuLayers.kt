@@ -39,10 +39,10 @@ internal fun PlaybackScreenMenuLayers(
             is PlaybackOverlay.RecordingStop ->
                 RecordingScreenStopConfirm(
                     channelName = active.channelName,
-                    onStop = { viewModel.recordingMenu?.confirmStop(active.recordingId) },
+                    onStop = { viewModel.record.menu?.confirmStop(active.recordingId) },
                     onDismiss = { viewModel.onKey(PlaybackKey.BACK) },
                 )
-            is PlaybackOverlay.CustomRecording -> viewModel.recordingMenu?.let { RecordingScreenForm(it) }
+            is PlaybackOverlay.CustomRecording -> viewModel.record.menu?.let { RecordingScreenForm(it) }
             is PlaybackOverlay.BlockPin -> PlaybackScreenBlockPinDialog(viewModel, active)
             else -> Unit
         }

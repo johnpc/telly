@@ -695,3 +695,8 @@ Local SDK note: `local.properties` must contain
   (was shelfTop 14) and `TellyScreenTimesLine` gained a `fontSize`
   parameter (default 15 sp unchanged elsewhere; search airing rows pass
   13 sp, detail card 14 sp).
+- **2026-09-15** Playback-core parity: `PlayerEngine` gains pause/resume +
+  `PlayerState.Ended`; catch-up pauses with the transport pinned, archive end
+  retunes live, and prev/next hop programmes via `CatchupNeighbours`; the live
+  transport shows a red record dot (instant-record toggle), finishing a VOD
+  clears its resume position, and recordings stop at programme end.

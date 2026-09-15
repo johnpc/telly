@@ -3,6 +3,7 @@ package com.johncorser.telly.e2e.steps
 import android.view.KeyEvent
 import androidx.compose.ui.semantics.SemanticsActions
 import androidx.compose.ui.test.SemanticsMatcher
+import androidx.compose.ui.test.hasContentDescription
 import androidx.compose.ui.test.hasTestTag
 import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.isFocused
@@ -41,6 +42,50 @@ class RecordingSteps(
         driver.openPanel()
         driver.longPressRow(driver.currentChannel.name)
         world.select("Custom recording")
+    }
+
+    /** Bare playback -> info overlay -> transport row (second UP). */
+    @When("I open the playback transport row")
+    fun openTransportRow() {
+        driver.dismissChrome()
+        ensureTransportVisible()
+    }
+
+    @When("I activate the transport record dot")
+    fun activateRecordDot() {
+        ensureTransportVisible()
+        world.compose
+            .onAllNodes(recordDot())
+            .onFirst()
+            .performSemanticsAction(SemanticsActions.RequestFocus)
+        world.waitFor(recordDot() and isFocused())
+        world.pressKey(KeyEvent.KEYCODE_DPAD_CENTER)
+    }
+
+    @Then("the transport record dot shows the channel recording")
+    fun recordDotRecording() {
+        ensureTransportVisible()
+        world.waitFor(recordDot() and hasContentDescription("Recording"))
+    }
+
+    @Then("the transport record dot is idle again")
+    fun recordDotIdle() {
+        ensureTransportVisible()
+        world.waitFor(recordDot() and hasContentDescription("Record"))
+    }
+
+    private fun recordDot(): SemanticsMatcher = hasTestTag("transport-record")
+
+    /** A completed dot action clears the chrome; UP UP re-opens the row. */
+    private fun ensureTransportVisible() {
+        driver.awaitCondition("transport row visible") {
+            if (world.nodeCount(recordDot()) > 0) {
+                true
+            } else {
+                world.pressKey(KeyEvent.KEYCODE_DPAD_UP)
+                false
+            }
+        }
     }
 
     @Then("the recordings library is empty")

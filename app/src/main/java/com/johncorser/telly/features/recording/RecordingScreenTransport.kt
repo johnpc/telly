@@ -19,6 +19,7 @@ import androidx.compose.ui.input.key.key
 import androidx.compose.ui.input.key.type
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.media3.common.Player
 import androidx.media3.exoplayer.ExoPlayer
 import androidx.tv.material3.Text
 import com.johncorser.telly.core.design.TELLY_BADGE_FILL
@@ -83,10 +84,24 @@ internal fun onRecordingPlayerKey(
             true
         }
         Key.DirectionCenter, Key.Enter -> {
-            player.playWhenReady = !player.playWhenReady
+            toggleRecordingPlayback(player)
             true
         }
         else -> false
+    }
+}
+
+/**
+ * OK: pause/resume — and at the capture's end (the player stops on its
+ * last frame with the transport showing the full progress) it replays
+ * from the start instead of toggling a dead playWhenReady flag.
+ */
+internal fun toggleRecordingPlayback(player: ExoPlayer) {
+    if (player.playbackState == Player.STATE_ENDED) {
+        player.seekTo(0)
+        player.playWhenReady = true
+    } else {
+        player.playWhenReady = !player.playWhenReady
     }
 }
 

@@ -4,6 +4,7 @@ import com.johncorser.telly.features.catchup.CatchupDeps
 import com.johncorser.telly.features.catchup.CatchupRequest
 import com.johncorser.telly.features.catchup.CatchupSession
 import com.johncorser.telly.features.history.WatchHistory
+import com.johncorser.telly.features.player.PlayerState
 import com.johncorser.telly.testutil.FakeChannelDao
 import com.johncorser.telly.testutil.FakeKeyValueStore
 import com.johncorser.telly.testutil.FakePlayerEngine
@@ -17,6 +18,7 @@ import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.UnconfinedTestDispatcher
+import kotlinx.coroutines.test.advanceTimeBy
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
@@ -124,6 +126,37 @@ class PlaybackCatchupWiringTest {
 
             assertEquals(listOf(50_000L), engine.seeks)
             assertEquals(PlaybackOverlay.InfoTransport, vm.overlay.value)
+        }
+
+    @Test
+    fun `pause pins the transport overlay until resume re-arms its auto-hide`() =
+        runTest {
+            session.set(request)
+            val vm = buildVm()
+
+            vm.catchup.pause.toggle()
+            advanceTimeBy(60_000)
+            assertEquals(PlaybackOverlay.InfoTransport, vm.overlay.value)
+            assertTrue(vm.catchup.pause.paused.value)
+
+            vm.catchup.pause.toggle()
+            assertEquals(PlaybackOverlay.InfoTransport, vm.overlay.value)
+            advanceTimeBy(60_000)
+            assertEquals(PlaybackOverlay.None, vm.overlay.value)
+        }
+
+    @Test
+    fun `the archive's end during catch-up retunes the same channel live`() =
+        runTest {
+            session.set(request)
+            val vm = buildVm()
+
+            engine.state.value = PlayerState.Ended
+
+            assertNull(vm.catchup.state.value)
+            assertEquals(channel.source.streamUrl, engine.loaded.last())
+            assertEquals(channel.id, vm.current.value?.id)
+            assertEquals(0, exitedToGuide)
         }
 
     @Test

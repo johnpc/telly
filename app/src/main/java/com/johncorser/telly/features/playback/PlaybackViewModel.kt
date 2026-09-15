@@ -9,7 +9,6 @@ import com.johncorser.telly.features.pip.PipEnterAction
 import com.johncorser.telly.features.playback.tracks.TrackPickerController
 import com.johncorser.telly.features.player.PlayerState
 import com.johncorser.telly.features.playlist.db.ChannelEntity
-import com.johncorser.telly.features.recording.RecordingMenu
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -52,21 +51,19 @@ class PlaybackViewModel(
     val myList = MyListMenu(env.hooks.myList.store, clock, scope)
 
     /** Executes context-menu rows; also resolves the channel they act on. */
-    val menu =
+    val menu: PlaybackMenuHandler =
         PlaybackMenuHandler(
             actions = SheetActions.over(env, scope, myList = panelMyListHost(myList, panel, env.hooks)),
             overlays = overlays,
             tuner = tuner,
             hooks = hooks.copy(onOpenSearch = openSearch),
             rowOf = { id -> panel.rows.value.firstOrNull { it.channel.id == id } },
-            recording = { recordingMenu },
+            recording = { record.menu },
         )
 
-    /** The sheet's Record rows act through this (null while no DVR wired). */
-    val recordingMenu: RecordingMenu? =
-        env.hooks.recording?.let { center ->
-            RecordingMenu(center, scope, clock) { prompt -> menu.onRecordingPrompt(prompt) }
-        }
+    /** DVR surface: the sheet's Record rows + the transport record dot. */
+    val record: PlaybackRecord =
+        PlaybackRecord(env.hooks.recording, tuner, scope, clock, { menu.onRecordingPrompt(it) }, ::showComingSoon)
 
     /** The blocked-channel tune gate (any path); see [panelBlockPrompt]. */
     val blockPrompt = panelBlockPrompt(tuner, overlays, panel) { commands.showZapInfo() }
@@ -77,9 +74,8 @@ class PlaybackViewModel(
     val overlay: StateFlow<PlaybackOverlay> = overlays.overlay
     val playerState: StateFlow<PlayerState> = env.engine.state
 
-    /** Catch-up mode: pending guide request, seek keys, transport position. */
-    val catchup: CatchupPlayback =
-        CatchupPlayback(env, tuner, { commands.execute(PlaybackCommand.ShowTransport) }, scope, exitToGuide)
+    /** Catch-up mode: pending guide request, seek keys, pause, programme hops. */
+    val catchup: CatchupPlayback = catchupPlayback(env, tuner, { commands.execute(it) }, scope, exitToGuide)
 
     /** During catch-up the overlay swaps to the archived programme + position. */
     val info: StateFlow<PlaybackInfoData?> = catchupInfoFeed(env, tuner, instant, catchup, scope)
@@ -130,7 +126,7 @@ class PlaybackViewModel(
      * a fork — everything it declines falls through to the live keymap).
      */
     fun onKey(key: PlaybackKey): Boolean {
-        if (catchup.onKey(overlays.value, key)) return true
+        if (catchup.keys.onKey(overlays.value, key)) return true
         return PlaybackKeyPolicy.commandFor(overlays.value, key, playerKeymap())?.also(commands::execute) != null
     }
 
