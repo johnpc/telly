@@ -212,6 +212,19 @@ class TellyWorld(
         return visible
     }
 
+    /**
+     * Hides the soft keyboard in-process. Never dispatch BACK for this: the
+     * visibility check races the IME's own hide animation, and a BACK that
+     * lands after the keyboard is gone reaches the app instead — popping the
+     * settings pane whose content the next step asserts on (the epg-data
+     * add-source scenario failed exactly this way on tv34).
+     */
+    fun hideIme() {
+        scenario?.onActivity { activity ->
+            activity.window.decorView.windowInsetsController?.hide(WindowInsets.Type.ime())
+        }
+    }
+
     /** Rewrites dev-server fixture URLs/hosts to the embedded server's. */
     fun mapFixtureText(text: String): String = FixtureServer.mapHost(text)
 

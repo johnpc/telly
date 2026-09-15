@@ -2,8 +2,14 @@ package com.johncorser.telly.core.ui
 
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.withFrameNanos
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
+import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.tv.material3.ClickableSurfaceColors
@@ -16,13 +22,31 @@ import com.johncorser.telly.core.design.TELLY_TEXT_DISABLED
 import com.johncorser.telly.core.design.TELLY_TEXT_PRIMARY
 
 /**
- * Grabs D-pad focus once when the element enters composition — the shared
+ * Grabs D-pad focus when the element enters composition and KEEPS asking
+ * until the grab sticks (bounded, see [grabFocusUntilLanded]) — the shared
  * "focus me on appear" pattern of menus, cards and key anchors.
  */
 @Composable
 fun Modifier.focusOnAppear(enabled: Boolean = true): Modifier {
-    if (!enabled) return this
-    return focusRequester(rememberAutoFocus())
+    val grab = rememberStickyFocusGrab()
+    return if (enabled) then(grab) else this
+}
+
+/** The sticky grab as a standalone modifier: requester + bounded retry. */
+@Composable
+private fun rememberStickyFocusGrab(): Modifier {
+    val requester = remember { FocusRequester() }
+    val landed = remember { mutableStateOf(false) }
+    LaunchedEffect(Unit) {
+        grabFocusUntilLanded(
+            landed = { landed.value },
+            request = { requester.requestFocus() },
+            awaitFrame = { withFrameNanos { } },
+        )
+    }
+    return Modifier
+        .focusRequester(requester)
+        .onFocusChanged { if (it.hasFocus) landed.value = true }
 }
 
 /**

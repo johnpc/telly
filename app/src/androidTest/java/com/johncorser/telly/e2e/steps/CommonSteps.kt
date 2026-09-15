@@ -111,10 +111,11 @@ class CommonSteps(
                 world.compose.onAllNodes(setTextNodes()).onFirst().performImeAction()
             }
             // Compose does not always hide the IME when the field leaves the
-            // tree; BACK goes to the keyboard window while it is up.
+            // tree; hide it in-process (never via BACK — a BACK racing the
+            // IME's own hide reaches the app and pops the pane under test).
             driver.awaitCondition("IME dismissed") {
                 if (world.imeVisible()) {
-                    world.pressKey(KeyEvent.KEYCODE_BACK)
+                    world.hideIme()
                     false
                 } else {
                     true
