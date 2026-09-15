@@ -91,25 +91,31 @@ class TellyWorld(
     }
 
     /** Hold DPAD-center: down, auto-repeats while held, then release. */
-    fun longPressOk() {
+    fun longPressOk() = longPressKey(KeyEvent.KEYCODE_DPAD_CENTER)
+
+    /** Hold any key: down, auto-repeats while held, then release. */
+    fun longPressKey(keyCode: Int) {
         compose.waitForIdle()
         val instrumentation = InstrumentationRegistry.getInstrumentation()
         val downTime = SystemClock.uptimeMillis()
-        instrumentation.sendKeySync(centerEvent(downTime, KeyEvent.ACTION_DOWN, repeat = 0))
+        instrumentation.sendKeySync(heldEvent(downTime, KeyEvent.ACTION_DOWN, repeat = 0, keyCode = keyCode))
         repeat(LONG_PRESS_REPEATS) { index ->
             SystemClock.sleep(LONG_PRESS_STEP_MS)
-            instrumentation.sendKeySync(centerEvent(downTime, KeyEvent.ACTION_DOWN, repeat = index + 1))
+            instrumentation.sendKeySync(
+                heldEvent(downTime, KeyEvent.ACTION_DOWN, repeat = index + 1, keyCode = keyCode),
+            )
         }
         SystemClock.sleep(LONG_PRESS_STEP_MS)
-        instrumentation.sendKeySync(centerEvent(downTime, KeyEvent.ACTION_UP, repeat = 0))
+        instrumentation.sendKeySync(heldEvent(downTime, KeyEvent.ACTION_UP, repeat = 0, keyCode = keyCode))
         compose.waitForIdle()
     }
 
-    private fun centerEvent(
+    private fun heldEvent(
         downTime: Long,
         action: Int,
         repeat: Int,
-    ): KeyEvent = KeyEvent(downTime, SystemClock.uptimeMillis(), action, KeyEvent.KEYCODE_DPAD_CENTER, repeat)
+        keyCode: Int,
+    ): KeyEvent = KeyEvent(downTime, SystemClock.uptimeMillis(), action, keyCode, repeat)
 
     // ---- semantics ----------------------------------------------------------
 

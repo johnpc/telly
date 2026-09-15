@@ -10,6 +10,7 @@ import com.johncorser.telly.features.history.db.WatchHistoryEntity
 import com.johncorser.telly.features.player.PlayerEngine
 import com.johncorser.telly.features.player.PlayerState
 import com.johncorser.telly.features.player.VideoDetails
+import com.johncorser.telly.features.playlist.db.ChannelCatchup
 import com.johncorser.telly.features.playlist.db.ChannelDao
 import com.johncorser.telly.features.playlist.db.ChannelEntity
 import com.johncorser.telly.features.playlist.db.ChannelFlags
@@ -190,6 +191,16 @@ class FakePlayerEngine : PlayerEngine {
     override fun setMuted(muted: Boolean) {
         mutedState = muted
     }
+
+    var position = 0L
+    val seeks = mutableListOf<Long>()
+
+    override fun positionMs(): Long = position
+
+    override fun seekTo(positionMs: Long) {
+        seeks += positionMs
+        position = positionMs
+    }
 }
 
 /** In-memory [WatchHistoryDao] mirroring the real one's ordering and trim. */
@@ -255,6 +266,12 @@ fun testChannel(
     )
 
 fun ChannelEntity.asFavorite(): ChannelEntity = copy(flags = flags.copy(favorite = true))
+
+fun ChannelEntity.withCatchup(
+    type: String? = "default",
+    source: String? = "http://s/catchup?utc={utc}&d={duration}",
+    days: Int? = null,
+): ChannelEntity = copy(catchup = ChannelCatchup(catchupType = type, catchupSource = source, catchupDays = days))
 
 fun testProgram(
     tvgId: String,

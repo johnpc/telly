@@ -1,34 +1,14 @@
 package com.johncorser.telly.features.playback
 
-import com.johncorser.telly.core.kv.KeyValueStore
-import com.johncorser.telly.features.epg.EpgRepository
+import com.johncorser.telly.features.catchup.CatchupInfo
+import com.johncorser.telly.features.catchup.CatchupPlayback
 import com.johncorser.telly.features.history.WatchHistory
-import com.johncorser.telly.features.panel.PanelLock
 import com.johncorser.telly.features.panel.PanelViewModel
-import com.johncorser.telly.features.player.PlayerEngine
 import com.johncorser.telly.features.player.PlayerState
-import com.johncorser.telly.features.playlist.db.ChannelDao
 import com.johncorser.telly.features.playlist.db.ChannelEntity
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
-
-/** Cross-slice hooks the playback surface plugs into (nav + parental). */
-class PlaybackHooks(
-    val panelLock: PanelLock = PanelLock(),
-    val onOpenSettings: () -> Unit = {},
-    val onOpenMultiview: () -> Unit = {},
-)
-
-/** Everything [PlaybackViewModel] needs injected, bundled for readability. */
-class PlaybackEnv(
-    val channelDao: ChannelDao,
-    val epgRepository: EpgRepository,
-    val engine: PlayerEngine,
-    val store: KeyValueStore,
-    val time: PlaybackTime,
-    val hooks: PlaybackHooks = PlaybackHooks(),
-)
 
 /**
  * Fullscreen-playback state machine: which channel is tuned, which overlay
@@ -76,14 +56,24 @@ class PlaybackViewModel(
     val current: StateFlow<ChannelEntity?> = tuner.current
     val overlay: StateFlow<PlaybackOverlay> = overlays.overlay
     val playerState: StateFlow<PlayerState> = env.engine.state
-    val info: StateFlow<PlaybackInfoData?> =
+
+    /** Catch-up mode: pending guide request, seek keys, transport position. */
+    val catchup: CatchupPlayback =
+        CatchupPlayback(env, tuner, { commands.execute(PlaybackCommand.ShowTransport) }, scope, onExitToGuide)
+
+    private val liveInfo =
         PlaybackInfoFeed(tuner.current, instant, env.engine.video, env.epgRepository, env.time.zone, scope).info
 
-    init {
-        tuner.start()
-    }
+    /** During catch-up the overlay swaps to the archived programme + position. */
+    val info: StateFlow<PlaybackInfoData?> =
+        CatchupInfo.merged(liveInfo, catchup.state, catchup.position, env.time.zone, scope)
 
-    private val commands = PlaybackCommands(tuner, overlays, panel, instant, clock, onExitToGuide)
+    private val commands: PlaybackCommands =
+        PlaybackCommands(tuner, overlays, panel, { instant.value = clock() }, onExitToGuide, catchup::onLiveTune)
+
+    init {
+        if (!catchup.resumePending()) tuner.start()
+    }
 
     /** The info-row recent-channel cards + Clear (history-round2 §1). */
     val recents =
@@ -100,6 +90,7 @@ class PlaybackViewModel(
 
     /** Routes a key through the catalogue's key-by-context map; true = consumed. */
     fun onKey(key: PlaybackKey): Boolean {
+        if (catchup.onKey(overlays.value, key)) return true
         val command = PlaybackKeyPolicy.commandFor(overlays.value, key) ?: return false
         commands.execute(command)
         return true

@@ -1,5 +1,6 @@
 package com.johncorser.telly.features.playlist
 
+import com.johncorser.telly.features.playlist.db.ChannelCatchup
 import com.johncorser.telly.features.playlist.db.ChannelEntity
 import com.johncorser.telly.features.playlist.db.ChannelFlags
 import com.johncorser.telly.features.playlist.db.ChannelSource
@@ -45,6 +46,12 @@ object ChannelImporter {
                 flags =
                     previousFlags[identityOf(channel.tvgId, channel.streamUrl, channel.title)]
                         ?: ChannelFlags(),
+                catchup =
+                    ChannelCatchup(
+                        catchupType = channel.catchup,
+                        catchupSource = channel.catchupSource,
+                        catchupDays = channel.catchupDays,
+                    ),
             )
         }
     }

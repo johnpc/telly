@@ -88,6 +88,48 @@ Local SDK note: `local.properties` must contain
 
 ## Decisions log
 
+- **2026-09-15** Catch-up (ux-spec §2.10/§3.17; the reference sells it as
+  premium — telly ships it free per the charter precedent). **Parse +
+  persist:** `catchup`/`catchup-type`, `catchup-source`, `catchup-days`
+  captured off `#EXTINF` into `ChannelCatchup` embedded on `channels`
+  (schema v5, MIGRATION_4_5 — attributes re-import from the playlist each
+  refresh like the rest of ChannelSource). **URL builders**
+  (features/catchup, one tiny builder per community type): default =
+  template substitution ({utc}/{start}/{lutc}/{now}/{timestamp}/{offset}/
+  {duration} + `${x}` variants, epoch seconds), append = live URL +
+  substituted template, shift = `?utc={start}&lutc={now}` appended,
+  flussonic = last-segment `archive-{start}-{duration}` rewrite
+  (mono/video/mpegts forms), xc = `/timeshift/user/pass/{durMin}/
+  {yyyy-MM-dd:HH-mm}/{id}.ts`. A bare catchup-source implies "default";
+  missing catchup-days defaults to 7 (the EPG past-days default; the
+  reference default is not capturable). **Guide:** OK on a PAST cell of a
+  catch-up channel with a real programme inside the horizon plays the
+  archive directly (§3.17 "OK → plays archive"; other past cells keep the
+  premium dropdown — no Play row is the assertable difference), via a
+  one-shot `CatchupSession` hand-off (guide resolves URL + pushes
+  Route.Playback; the playback screen consumes it instead of tuning live).
+  Past-cell rendering is untouched (the spec's "dimmed cells" note is
+  about past territory generally, not a per-channel differentiator).
+  **Playback mode:** `CatchupPlayback` + `CatchupKeyPolicy` EXTEND
+  PlaybackKeyPolicy by pre-routing (consulted first, falls through
+  unchanged): RW/FF seek per SEEK_RWFF_CATCHUP over the transient
+  overlays, LEFT/RIGHT per SEEK_LEFT_RIGHT and DOWN/UP per SEEK_DOWN_UP at
+  bare playback only (the info overlay needs those keys for focus), and
+  the *_REWINDS_LIVE toggles jump from live into the airing programme's
+  archive at live edge − skip. Steps fixed 30 s fwd / 10 s back (no
+  SKIP_* setting exists yet). BACK returns where catch-up was entered
+  (guide entry → guide; rewind-live → live); any live tune (zap, panel,
+  recents) leaves the mode via PlaybackCommands.showZapInfo's onLiveTune
+  hook. Info overlay/transport show the archived programme's title/times
+  with a position/duration readout (CatchupInfo adaptation; LIVE badge
+  hidden; position sampled per-second by a UI ticker while the overlay is
+  visible — a logic-layer clock loop would spin runTest forever). No
+  history event on a catch-up tune (not a live watch). e2e: catch-up
+  fixture channel = News One (catchup="default", template onto the same
+  .ts — servers ignore query params) with deep-past "Past …" EPG on News
+  One + News One HD (generated BACKWARDS so now/next phases never shift),
+  so a −24 h day jump lands on real playable/non-playable past cells.
+  Verified locally (quality.sh); on-device acceptance legs pending.
 - **2026-09-15** Multiview (multiview-round captures + `multiview-spec.md`).
   **Captured facts, matched exactly:** the quick-bar Multiview slot opens
   `Route.Multiview` — a single centered half-size 16:9 pane on black

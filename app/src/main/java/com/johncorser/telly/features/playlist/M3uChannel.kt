@@ -8,6 +8,9 @@ data class M3uChannel(
     val tvgName: String? = null,
     val tvgLogo: String? = null,
     val groupTitle: String? = null,
+    val catchup: String? = null,
+    val catchupSource: String? = null,
+    val catchupDays: Int? = null,
 )
 
 /** A fully parsed M3U playlist: optional `url-tvg` EPG hint plus channels. */
@@ -25,4 +28,9 @@ internal fun M3uEntry.toChannel(streamUrl: String): M3uChannel =
         tvgName = attributes["tvg-name"],
         tvgLogo = attributes["tvg-logo"],
         groupTitle = attributes["group-title"],
+        // Community-standard catch-up attributes; "catchup-type" is the
+        // older spelling of "catchup" some providers still emit.
+        catchup = attributes["catchup"] ?: attributes["catchup-type"],
+        catchupSource = attributes["catchup-source"],
+        catchupDays = attributes["catchup-days"]?.trim()?.toIntOrNull(),
     )

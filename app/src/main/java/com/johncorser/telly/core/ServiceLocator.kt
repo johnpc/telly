@@ -41,6 +41,7 @@ object ServiceLocator {
                     TellyDatabase.MIGRATION_1_2,
                     TellyDatabase.MIGRATION_2_3,
                     TellyDatabase.MIGRATION_3_4,
+                    TellyDatabase.MIGRATION_4_5,
                 )
                 .build()
                 .also { database = it }

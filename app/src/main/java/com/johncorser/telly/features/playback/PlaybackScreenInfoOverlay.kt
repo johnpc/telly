@@ -28,7 +28,12 @@ internal fun PlaybackScreenInfoOverlay(
 ) {
     val info by viewModel.info.collectAsState()
     val recents by viewModel.recents.cards.collectAsState()
+    val catchupState by viewModel.catchup.state.collectAsState()
     var focusedRecent by remember { mutableStateOf<RecentCard?>(null) }
+    if (catchupState != null) {
+        // The visible overlay drives the catch-up position readout.
+        PlaybackScreenCatchupTicker(viewModel)
+    }
     val data = info ?: return
     PlaybackScreenOverlayScaffold(data.group, data.clockText) {
         PlaybackScreenInfoBlock(data, showBadges = true, showDescription = false)
@@ -42,7 +47,11 @@ internal fun PlaybackScreenInfoOverlay(
             thumb = true,
         )
         if (transport) {
-            PlaybackScreenTransportRow(data) { feature -> viewModel.showComingSoon(feature) }
+            PlaybackScreenTransportRow(
+                data = data,
+                onFeature = viewModel::showComingSoon,
+                onSeek = if (catchupState != null) viewModel.catchup::seekBy else null,
+            )
         }
         Spacer(Modifier.height(30.dp))
         Box(Modifier.fillMaxWidth()) {

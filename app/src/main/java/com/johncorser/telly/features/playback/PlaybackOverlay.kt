@@ -55,4 +55,17 @@ sealed interface PlaybackOverlay {
 }
 
 /** D-pad / media keys playback reacts to (mapped from KeyEvents in the UI). */
-enum class PlaybackKey { OK, LONG_OK, MENU, BACK, UP, DOWN, LEFT, RIGHT, CHANNEL_UP, CHANNEL_DOWN }
+enum class PlaybackKey {
+    OK,
+    LONG_OK,
+    MENU,
+    BACK,
+    UP,
+    DOWN,
+    LEFT,
+    RIGHT,
+    CHANNEL_UP,
+    CHANNEL_DOWN,
+    REWIND,
+    FAST_FORWARD,
+}

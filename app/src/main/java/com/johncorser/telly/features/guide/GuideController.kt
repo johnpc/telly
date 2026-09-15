@@ -1,5 +1,6 @@
 package com.johncorser.telly.features.guide
 
+import com.johncorser.telly.features.catchup.GuideCatchup
 import com.johncorser.telly.features.history.WatchHistory
 import com.johncorser.telly.features.panel.PanelViewModel
 import com.johncorser.telly.features.playback.ChannelActions
@@ -25,6 +26,8 @@ class GuideController(
     private val pastDays: () -> Int,
     scope: CoroutineScope,
     private val callbacks: GuideCallbacks,
+    /** OK on a playable past cell hands the archive to fullscreen playback. */
+    private val catchup: GuideCatchup = GuideCatchup(env.hooks.catchup.session, env.time.clock, callbacks.onFullscreen),
 ) {
     val zone = env.time.zone
 
@@ -119,6 +122,7 @@ class GuideController(
             is GuideAction.TunePreview -> tuner.tune(action.channel)
             GuideAction.GoFullscreen -> callbacks.onFullscreen()
             is GuideAction.OpenCellMenu -> menu.show(GuideLayer.CellMenu(action.cell))
+            is GuideAction.PlayCatchup -> catchup.play(action.channel, action.cell)
         }
     }
 }

@@ -55,7 +55,8 @@ object PlaybackKeyPolicy {
             PlaybackKey.CHANNEL_DOWN -> PlaybackCommand.Zap(-1)
             PlaybackKey.LONG_OK, PlaybackKey.MENU -> PlaybackCommand.OpenQuickBar
             PlaybackKey.BACK -> PlaybackCommand.ExitToGuide
-            PlaybackKey.LEFT, PlaybackKey.RIGHT -> null
+            // RW/FF only act through the catch-up context (CatchupKeyPolicy).
+            PlaybackKey.LEFT, PlaybackKey.RIGHT, PlaybackKey.REWIND, PlaybackKey.FAST_FORWARD -> null
         }
 
     private fun withinInfoOverlay(

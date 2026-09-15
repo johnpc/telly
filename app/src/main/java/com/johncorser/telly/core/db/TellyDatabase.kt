@@ -22,7 +22,9 @@ import com.johncorser.telly.features.search.db.SearchDao
         PlaylistEntity::class, ChannelEntity::class, ProgramEntity::class,
         WatchHistoryEntity::class, EpgSourceEntity::class,
     ],
-    version = 4,
+    // Catch-up columns claimed version 5 (renumber here + MIGRATION_4_5 +
+    // the ServiceLocator addMigrations line + app/schemas/…/5.json).
+    version = 5,
     exportSchema = true,
 )
 abstract class TellyDatabase : RoomDatabase() {
@@ -73,6 +75,16 @@ abstract class TellyDatabase : RoomDatabase() {
                         "CREATE UNIQUE INDEX IF NOT EXISTS `index_epg_sources_playlistUrl_url` " +
                             "ON `epg_sources` (`playlistUrl`, `url`)",
                     )
+                }
+            }
+
+        /** v5 adds the catch-up attribute columns on channels (catchup slice). */
+        val MIGRATION_4_5 =
+            object : Migration(4, 5) {
+                override fun migrate(db: SupportSQLiteDatabase) {
+                    db.execSQL("ALTER TABLE channels ADD COLUMN catchupType TEXT")
+                    db.execSQL("ALTER TABLE channels ADD COLUMN catchupSource TEXT")
+                    db.execSQL("ALTER TABLE channels ADD COLUMN catchupDays INTEGER")
                 }
             }
     }

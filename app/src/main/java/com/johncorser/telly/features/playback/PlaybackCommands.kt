@@ -1,7 +1,6 @@
 package com.johncorser.telly.features.playback
 
 import com.johncorser.telly.features.panel.PanelViewModel
-import kotlinx.coroutines.flow.MutableStateFlow
 
 /**
  * Executes [PlaybackCommand]s against the tuner and overlay state — the
@@ -12,9 +11,11 @@ class PlaybackCommands(
     private val tuner: TuneController,
     private val overlays: OverlayState,
     private val panel: PanelViewModel,
-    private val instant: MutableStateFlow<Long>,
-    private val clock: () -> Long,
+    /** Re-anchors the info-overlay instant at the injected clock's "now". */
+    private val refreshInstant: () -> Unit,
     private val exitToGuide: () -> Unit,
+    /** Every live tune leaves catch-up mode (zap keys, panel rows, recents). */
+    private val onLiveTune: () -> Unit = {},
 ) {
     fun execute(command: PlaybackCommand) {
         when (command) {
@@ -39,12 +40,13 @@ class PlaybackCommands(
 
     /** Zap keeps the old frame on screen; the compact overlay identifies the target. */
     fun showZapInfo() {
-        instant.value = clock()
+        onLiveTune()
+        refreshInstant()
         overlays.showAutoHiding(PlaybackOverlay.ZapInfo, PlaybackViewModel.ZAP_OVERLAY_TIMEOUT_MS)
     }
 
     private fun showInfo() {
-        instant.value = clock()
+        refreshInstant()
         overlays.showAutoHiding(PlaybackOverlay.Info, PlaybackViewModel.INFO_OVERLAY_TIMEOUT_MS)
     }
 

@@ -3,6 +3,9 @@ package com.johncorser.telly.core
 import android.content.Context
 import com.johncorser.telly.core.settings.ParentalControls
 import com.johncorser.telly.core.settings.TellySettings
+import com.johncorser.telly.features.catchup.CatchupDeps
+import com.johncorser.telly.features.catchup.CatchupSession
+import com.johncorser.telly.features.catchup.CatchupToggles
 import com.johncorser.telly.features.guide.GuideDeps
 import com.johncorser.telly.features.history.WatchHistory
 import com.johncorser.telly.features.multiview.MultiviewDeps
@@ -14,6 +17,9 @@ import com.johncorser.telly.features.search.SearchRepository
 import com.johncorser.telly.core.settings.SharedPrefsKeyValueStore as SettingsPrefsStore
 
 private const val SEARCH_PREFS_NAME = "telly-search"
+
+/** ONE catch-up hand-off slot: the guide fills it, playback consumes it. */
+private val catchupSession = CatchupSession()
 
 /** Playback slice bundle over [ServiceLocator]'s app-scoped singletons. */
 fun ServiceLocator.playbackDeps(context: Context): PlaybackDeps =
@@ -28,6 +34,11 @@ fun ServiceLocator.playbackDeps(context: Context): PlaybackDeps =
         engineFactory = { Media3PlayerEngine.create(context.applicationContext) },
         clock = clock,
         parental = ParentalControls(settingsRepository(context)),
+        catchup =
+            CatchupDeps(
+                session = catchupSession,
+                toggles = CatchupToggles { setting -> settingsRepository(context).get(setting) },
+            ),
     )
 
 /** Guide slice = the playback bundle + the settings the grid honors. */

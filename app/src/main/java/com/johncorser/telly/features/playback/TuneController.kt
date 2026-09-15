@@ -52,12 +52,21 @@ class TuneController(
         }
     }
 
-    fun tune(channel: ChannelEntity) {
+    /**
+     * Tunes [channel]. A non-null [catchupUrl] plays that already-aired
+     * programme stream instead of the live one: the channel is still
+     * current and remembered, but no watch-history event fires (catch-up
+     * is not a live watch).
+     */
+    fun tune(
+        channel: ChannelEntity,
+        catchupUrl: String? = null,
+    ) {
         mutableCurrent.value = channel
         suspended = false
-        engine.load(channel.source.streamUrl)
+        engine.load(catchupUrl ?: channel.source.streamUrl)
         store.putLong(LAST_CHANNEL_KEY, channel.id)
-        scope.launch { history.record(channel) }
+        if (catchupUrl == null) scope.launch { history.record(channel) }
     }
 
     private var suspended = false

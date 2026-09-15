@@ -40,4 +40,10 @@ interface PlayerEngine {
 
     /** Multiview audio ownership: only the focused pane's engine is unmuted. */
     fun setMuted(muted: Boolean)
+
+    /** Current playback position (catch-up transport readout). */
+    fun positionMs(): Long
+
+    /** Absolute seek within a finite (catch-up) stream. */
+    fun seekTo(positionMs: Long)
 }
