@@ -2,6 +2,7 @@ package com.johncorser.telly.features.settings
 
 import com.johncorser.telly.core.settings.InMemoryKeyValueStore
 import com.johncorser.telly.core.settings.SettingsRepository
+import com.johncorser.telly.features.epg.EpgSource
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Test
@@ -10,6 +11,7 @@ class SettingsRowsIndexTest {
     private val s = SettingsRepository(InMemoryKeyValueStore())
     private val item =
         PlaylistItem(url = "http://p/x.m3u", name = "Home", channelCount = 3, epgUrl = "http://e/epg.xml")
+    private val source = EpgSource(id = 5, playlistUrl = "http://p/x.m3u", url = "http://alt.example/epg.xml")
 
     @Test
     fun `rowsFor routes every section to a non-empty captured pane`() {
@@ -36,15 +38,28 @@ class SettingsRowsIndexTest {
 
     @Test
     fun `rowsFor renders the epg sources pane`() {
-        val rows = rowsFor(SettingsPane.EpgSources, s, listOf(item), "0.1.0")
+        val rows = rowsFor(SettingsPane.EpgSources, s, listOf(item), "0.1.0", listOf(source))
         assertTrue(rows.any { it.id == RowIds.EPG_SOURCE_PREFIX + "http://p/x.m3u" })
+        assertTrue(rows.any { it.id == RowIds.EPG_CUSTOM_SOURCE_PREFIX + "5" })
     }
 
     @Test
-    fun `paneTitle names sections, playlists and the epg sources pane`() {
+    fun `rowsFor renders a source detail pane and is empty once deleted`() {
+        val rows = rowsFor(SettingsPane.EpgSourceDetail(5), s, listOf(item), "0.1.0", listOf(source))
+        assertTrue(rows.any { it.id == RowIds.EPG_SOURCE_DELETE })
+        assertEquals(
+            emptyList<SettingsRow>(),
+            rowsFor(SettingsPane.EpgSourceDetail(5), s, listOf(item), "0.1.0"),
+        )
+    }
+
+    @Test
+    fun `paneTitle names sections, playlists and the epg sources panes`() {
         assertEquals("Remote control", paneTitle(SettingsPane.Section(SettingsSection.REMOTE_CONTROL), emptyList()))
         assertEquals("Home", paneTitle(SettingsPane.PlaylistDetail("http://p/x.m3u"), listOf(item)))
         assertEquals("http://gone", paneTitle(SettingsPane.PlaylistDetail("http://gone"), listOf(item)))
         assertEquals("EPG sources", paneTitle(SettingsPane.EpgSources, listOf(item)))
+        assertEquals("alt.example", paneTitle(SettingsPane.EpgSourceDetail(5), listOf(item), listOf(source)))
+        assertEquals("EPG source", paneTitle(SettingsPane.EpgSourceDetail(9), listOf(item), listOf(source)))
     }
 }

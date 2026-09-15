@@ -3,6 +3,7 @@ package com.johncorser.telly.features.settings
 import com.johncorser.telly.core.settings.InMemoryKeyValueStore
 import com.johncorser.telly.core.settings.SettingsRepository
 import com.johncorser.telly.core.settings.TellySettings
+import com.johncorser.telly.features.epg.EpgSource
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
@@ -138,15 +139,55 @@ class SettingsRowsTest {
 
     @Test
     fun `epg sources pane lists the url-tvg source with the footer note`() {
-        val rows = epgSourcesRows(listOf(item)).drop(2)
+        val rows = epgSourcesRows(listOf(item), emptyList()).drop(2)
         val source = rows[0] as SettingsRow.Value
         assertEquals("10.0.2.2 (default)", source.title)
         assertEquals("http://10.0.2.2:8090/epg.xml", source.summary)
         assertTrue(source.checkIcon)
-        assertTrue((rows[1] as SettingsRow.Action).locked)
+        // Reference free tier locks Add source; telly ships it by directive.
+        assertFalse((rows[1] as SettingsRow.Action).locked)
+        assertEquals("Add source", (rows[1] as SettingsRow.Action).title)
         val note = rows[2] as SettingsRow.Note
         assertEquals("EPG sources should be assigned in the playlist settings", note.text)
         assertFalse(note.accent)
+    }
+
+    @Test
+    fun `custom sources render after the default source, named by host`() {
+        val custom = EpgSource(id = 7, playlistUrl = item.url, url = "http://guide.example:8080/tv.xml")
+        val rows = epgSourcesRows(listOf(item), listOf(custom)).drop(2)
+        assertEquals("10.0.2.2 (default)", (rows[0] as SettingsRow.Value).title)
+        val customRow = rows[1] as SettingsRow.Value
+        assertEquals(RowIds.EPG_CUSTOM_SOURCE_PREFIX + "7", customRow.id)
+        assertEquals("guide.example", customRow.title)
+        assertEquals("http://guide.example:8080/tv.xml", customRow.summary)
+        assertTrue(customRow.checkIcon)
+        assertEquals("Add source", (rows[2] as SettingsRow.Action).title)
+    }
+
+    @Test
+    fun `a source detail pane offers url edit and delete`() {
+        val custom = EpgSource(id = 7, playlistUrl = item.url, url = "http://guide.example/tv.xml")
+        val rows = epgSourceDetailRows(custom).drop(2)
+        assertEquals(listOf("Source URL", "Delete source"), titles(rows))
+        assertEquals("http://guide.example/tv.xml", (rows[0] as SettingsRow.Value).summary)
+    }
+
+    @Test
+    fun `epg source count summary words counts like capture 20`() {
+        assertEquals("No sources", epgSourceCountSummary(0))
+        assertEquals("1 source", epgSourceCountSummary(1))
+        assertEquals("2 sources", epgSourceCountSummary(2))
+        assertEquals(
+            "2 sources",
+            (playlistDetailRows(s, item, customEpgSourceCount = 1)[5] as SettingsRow.Value).summary,
+        )
+    }
+
+    @Test
+    fun `epg source names fall back to the raw url`() {
+        assertEquals("guide.example", EpgSource(1, "p", "https://guide.example/x").name)
+        assertEquals("not a url", EpgSource(1, "p", "not a url").name)
     }
 
     @Test

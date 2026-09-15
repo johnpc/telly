@@ -47,6 +47,9 @@ class PlaybackDriver(
         world.select("Next")
         world.waitForText("Playlist is processed")
         world.select("Next")
+        // EPG step (capture 13): the url-tvg source is pre-filled; Done keeps it.
+        world.waitForText("EPG URL")
+        world.select("Done")
         assertPlaybackOn(1, "News One")
     }
 

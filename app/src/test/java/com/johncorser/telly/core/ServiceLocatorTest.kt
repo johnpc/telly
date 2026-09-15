@@ -67,6 +67,16 @@ class ServiceLocatorTest {
             val stored = repository.playlists.first().single()
             assertEquals("http://p/playlist.m3u", stored.sourceUrl)
 
+            // Custom EPG sources persist through the Room store and are
+            // fetched by the refresher after the auto-detected url-tvg.
+            server.enqueue(MockResponse().setBody(fixtureXml))
+            server.enqueue(MockResponse().setBody(fixtureXml))
+            ServiceLocator.epgSourceStore(context).add("http://p/playlist.m3u", server.url("/alt.xml").toString())
+            assertEquals(1, ServiceLocator.epgRefresher(context).refreshAllNow().size)
+            assertEquals(3, server.requestCount)
+            repeat(2) { server.takeRequest() }
+            assertEquals("/alt.xml", server.takeRequest().path)
+
             // epgRepository is buildable standalone against the same database.
             val nowNext =
                 ServiceLocator

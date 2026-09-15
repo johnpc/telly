@@ -75,6 +75,16 @@ private fun WizardScreenStep(
                 modifier = modifier,
             )
         WizardStep.PROCESSING -> WizardScreenProcessing(modifier)
+        WizardStep.EPG_URL ->
+            WizardScreenEpgStep(
+                epgUrl = state.epgUrl,
+                error = state.error,
+                onEpgUrlChange = viewModel::setEpgUrl,
+                onPastePlaylistUrl = viewModel::pastePlaylistUrl,
+                onDone = viewModel::finishEpg,
+                onBack = { if (!viewModel.back()) onExit() },
+                modifier = modifier,
+            )
         else ->
             WizardScreenNameStep(
                 name = state.name,

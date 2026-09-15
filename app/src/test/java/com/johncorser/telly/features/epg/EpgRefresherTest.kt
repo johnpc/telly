@@ -76,6 +76,91 @@ class EpgRefresherTest {
         }
 
     @Test
+    fun `custom sources are fetched after the auto-detected url-tvg`() =
+        runTest {
+            coEvery { playlistDao.all() } returns listOf(playlist(1, "http://e/1.xml"))
+            val refresher =
+                EpgRefresher(
+                    playlistDao = playlistDao,
+                    scheduler = RefreshScheduler(),
+                    clock = { nowMs },
+                    refresh = {
+                        refreshedUrls += it
+                        1
+                    },
+                    customSources = { playlistUrl ->
+                        assertEquals("http://p/1.m3u", playlistUrl)
+                        listOf("http://e/custom-a.xml", "http://e/custom-b.xml")
+                    },
+                )
+
+            assertEquals(listOf(1L), refresher.refreshDue())
+
+            // Auto first, then custom in added order: the per-channel replace
+            // semantics of EpgRepository.refresh make the LAST source win, so
+            // custom sources take precedence per channel.
+            assertEquals(
+                listOf("http://e/1.xml", "http://e/custom-a.xml", "http://e/custom-b.xml"),
+                refreshedUrls,
+            )
+        }
+
+    @Test
+    fun `a playlist without url-tvg still refreshes its custom sources`() =
+        runTest {
+            coEvery { playlistDao.all() } returns listOf(playlist(1, epgUrl = null))
+            val refresher =
+                EpgRefresher(
+                    playlistDao = playlistDao,
+                    scheduler = RefreshScheduler(),
+                    clock = { nowMs },
+                    refresh = {
+                        refreshedUrls += it
+                        1
+                    },
+                    customSources = { listOf("http://e/custom.xml") },
+                )
+
+            assertEquals(listOf(1L), refresher.refreshDue())
+            assertEquals(listOf("http://e/custom.xml"), refreshedUrls)
+            coVerify(exactly = 1) { playlistDao.markEpgUpdated(1, nowMs) }
+        }
+
+    @Test
+    fun `a failing custom source does not fail the playlist when another succeeds`() =
+        runTest {
+            coEvery { playlistDao.all() } returns listOf(playlist(1, "http://e/good.xml"))
+            val refresher =
+                EpgRefresher(
+                    playlistDao = playlistDao,
+                    scheduler = RefreshScheduler(),
+                    clock = { nowMs },
+                    refresh = { url -> if (url.contains("bad")) throw IOException("boom") else 1 },
+                    customSources = { listOf("http://e/bad.xml") },
+                )
+
+            assertEquals(listOf(1L), refresher.refreshDue())
+            coVerify(exactly = 1) { playlistDao.markEpgUpdated(1, nowMs) }
+        }
+
+    @Test
+    fun `a playlist is not stamped when every source fails`() =
+        runTest {
+            coEvery { playlistDao.all() } returns listOf(playlist(1, "http://e/bad.xml"))
+            val refresher =
+                EpgRefresher(
+                    playlistDao = playlistDao,
+                    scheduler = RefreshScheduler(),
+                    clock = { nowMs },
+                    refresh = { throw IOException("boom") },
+                    customSources = { listOf("http://e/bad2.xml") },
+                )
+
+            assertEquals(emptyList<Long>(), refresher.refreshDue())
+            coVerify(exactly = 0) { playlistDao.markEpgUpdated(any(), any()) }
+        }
+
+    @Test
     fun `no playlists means nothing to refresh`() =
         runTest {
             coEvery { playlistDao.all() } returns emptyList()
@@ -103,8 +188,11 @@ class EpgRefresherTest {
                     scheduler = RefreshScheduler(),
                     clock = { nowMs },
                     refresh = { 1 },
-                    keepPastMs = { EpgRefresher.daysToMs(2) },
-                    trim = { cutoffs += it },
+                    retention =
+                        EpgRetention(
+                            keepPastMs = { EpgRefresher.daysToMs(2) },
+                            trim = { cutoffs += it },
+                        ),
                 )
 
             refresher.refreshDue()

@@ -39,6 +39,11 @@ class CommonSteps(
         require(world.mapFixtureText(url).endsWith("/epg.xml")) { "unexpected fixture URL $url" }
     }
 
+    @Given("an alternative fixture EPG is served at {string}")
+    fun altEpgServed(url: String) {
+        require(world.mapFixtureText(url).endsWith("/epg-alt.xml")) { "unexpected fixture URL $url" }
+    }
+
     @Given("the fixture playlist and EPG are served from {string}")
     fun fixturesServed(base: String) {
         require(world.mapFixtureText(base).startsWith("http://")) { "unexpected fixture base $base" }

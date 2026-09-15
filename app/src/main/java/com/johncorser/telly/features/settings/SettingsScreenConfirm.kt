@@ -26,6 +26,28 @@ internal fun SettingsScreenConfirmDelete(
 }
 
 /**
+ * "Delete EPG source?" confirm: uncapturable (the reference locks source
+ * management behind premium), shaped after the captured delete-playlist
+ * GuidedStep above.
+ */
+@Composable
+internal fun SettingsScreenConfirmDeleteSource(
+    model: SettingsViewModel,
+    confirm: SettingsOverlay.ConfirmDeleteSource,
+) {
+    SettingsScreenGuidedStep(
+        iconRes = R.drawable.ic_settings_warning,
+        title = "Delete EPG source?",
+        bodyLines = listOf("Guide data from \"${confirm.name}\" will no longer be updated"),
+        actions =
+            listOf(
+                "Delete" to { model.confirmDeleteEpgSource() },
+                "Cancel" to { model.dismissOverlay() },
+            ),
+    )
+}
+
+/**
  * The Unlock Premium paywall, verbatim from capture 28. Shared with the
  * guide slice, whose future-cell dropdown rows are all premium-gated.
  */

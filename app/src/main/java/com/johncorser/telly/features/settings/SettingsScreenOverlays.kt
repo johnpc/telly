@@ -28,6 +28,7 @@ internal fun SettingsScreenOverlay(
         is SettingsOverlay.Picker -> SettingsScreenPicker(model, overlay)
         is SettingsOverlay.TextEdit -> SettingsScreenTextEdit(model, overlay)
         is SettingsOverlay.ConfirmDelete -> SettingsScreenConfirmDelete(model, overlay)
+        is SettingsOverlay.ConfirmDeleteSource -> SettingsScreenConfirmDeleteSource(model, overlay)
         SettingsOverlay.PinSetup -> SettingsScreenPinDialog(model)
         SettingsOverlay.Paywall -> SettingsScreenPaywall(onClose = { model.dismissOverlay() })
     }

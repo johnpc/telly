@@ -93,7 +93,7 @@ class AddPlaylistViewModelTest {
         }
 
     @Test
-    fun `confirming the processed step stores the playlist under the chosen name`() =
+    fun `confirming the processed step opens the epg step with url-tvg pre-filled`() =
         runTest {
             val vm = viewModel()
             vm.chooseType(PlaylistType.M3U)
@@ -104,6 +104,26 @@ class AddPlaylistViewModelTest {
             vm.setName("My IPTV")
             vm.chooseKind(PlaylistKind.VOD)
             vm.confirm()
+
+            assertEquals(WizardStep.EPG_URL, vm.state.value.step)
+            assertEquals("http://epg.example/g.xml", vm.state.value.epgUrl)
+            // Nothing is persisted until the EPG step's Done (capture 14).
+            assertTrue(repository.playlists.value.isEmpty())
+        }
+
+    @Test
+    fun `done on the epg step stores the playlist under the chosen name`() =
+        runTest {
+            val vm = viewModel()
+            vm.chooseType(PlaylistType.M3U)
+            vm.setUrl("http://example.com/playlist.m3u")
+            vm.submitUrl()
+            advanceUntilIdle()
+
+            vm.setName("My IPTV")
+            vm.chooseKind(PlaylistKind.VOD)
+            vm.confirm()
+            vm.finishEpg()
             advanceUntilIdle()
 
             assertEquals(WizardStep.DONE, vm.state.value.step)
@@ -112,6 +132,78 @@ class AddPlaylistViewModelTest {
             assertEquals("http://example.com/playlist.m3u", stored.sourceUrl)
             assertEquals("http://epg.example/g.xml", stored.playlist.epgUrl)
             assertEquals("My IPTV", stored.name)
+        }
+
+    @Test
+    fun `an edited epg url overrides the playlist url-tvg`() =
+        runTest {
+            val vm = viewModel()
+            vm.chooseType(PlaylistType.M3U)
+            vm.setUrl("http://example.com/playlist.m3u")
+            vm.submitUrl()
+            advanceUntilIdle()
+            vm.confirm()
+
+            vm.setEpgUrl("http://epg.example/other.xml")
+            vm.finishEpg()
+            advanceUntilIdle()
+
+            assertEquals("http://epg.example/other.xml", repository.playlists.value.single().playlist.epgUrl)
+        }
+
+    @Test
+    fun `a blank epg url skips the epg entirely`() =
+        runTest {
+            val vm = viewModel()
+            vm.chooseType(PlaylistType.M3U)
+            vm.setUrl("http://example.com/playlist.m3u")
+            vm.submitUrl()
+            advanceUntilIdle()
+            vm.confirm()
+
+            vm.setEpgUrl("   ")
+            vm.finishEpg()
+            advanceUntilIdle()
+
+            assertEquals(WizardStep.DONE, vm.state.value.step)
+            assertNull(repository.playlists.value.single().playlist.epgUrl)
+        }
+
+    @Test
+    fun `an invalid epg url keeps the step open with a validation error`() =
+        runTest {
+            val vm = viewModel()
+            vm.chooseType(PlaylistType.M3U)
+            vm.setUrl("http://example.com/playlist.m3u")
+            vm.submitUrl()
+            advanceUntilIdle()
+            vm.confirm()
+
+            vm.setEpgUrl("not-a-url")
+            vm.finishEpg()
+            advanceUntilIdle()
+
+            assertEquals(WizardStep.EPG_URL, vm.state.value.step)
+            assertEquals(WizardError.INVALID_URL, vm.state.value.error)
+            assertTrue(repository.playlists.value.isEmpty())
+
+            vm.setEpgUrl("http://epg.example/fixed.xml")
+            assertNull(vm.state.value.error)
+        }
+
+    @Test
+    fun `paste playlist url copies the playlist url into the epg draft`() =
+        runTest {
+            val vm = viewModel()
+            vm.chooseType(PlaylistType.M3U)
+            vm.setUrl("http://example.com/playlist.m3u")
+            vm.submitUrl()
+            advanceUntilIdle()
+            vm.confirm()
+
+            vm.pastePlaylistUrl()
+
+            assertEquals("http://example.com/playlist.m3u", vm.state.value.epgUrl)
         }
 
     @Test
@@ -125,6 +217,7 @@ class AddPlaylistViewModelTest {
 
             vm.setName("   ")
             vm.confirm()
+            vm.finishEpg()
             advanceUntilIdle()
 
             assertNull(repository.playlists.value.single().name)
@@ -170,6 +263,28 @@ class AddPlaylistViewModelTest {
         }
 
     @Test
+    fun `back from the epg step returns to processed keeping the parse`() =
+        runTest {
+            val vm = viewModel()
+            vm.chooseType(PlaylistType.M3U)
+            vm.setUrl("http://example.com/playlist.m3u")
+            vm.submitUrl()
+            advanceUntilIdle()
+            vm.confirm()
+            assertEquals(WizardStep.EPG_URL, vm.state.value.step)
+
+            assertTrue(vm.back())
+            assertEquals(WizardStep.PROCESSED, vm.state.value.step)
+
+            // The parse survives: forward again and finish normally.
+            vm.confirm()
+            vm.finishEpg()
+            advanceUntilIdle()
+            assertEquals(WizardStep.DONE, vm.state.value.step)
+            assertEquals(1, repository.playlists.value.size)
+        }
+
+    @Test
     fun `back from the processed step discards the parse and returns to url entry`() =
         runTest {
             val vm = viewModel()
@@ -182,8 +297,9 @@ class AddPlaylistViewModelTest {
             assertTrue(vm.back())
             assertEquals(WizardStep.URL_ENTRY, vm.state.value.step)
 
-            // The discarded parse can no longer be confirmed.
+            // The discarded parse can no longer be confirmed or finished.
             vm.confirm()
+            vm.finishEpg()
             advanceUntilIdle()
             assertTrue(repository.playlists.value.isEmpty())
         }

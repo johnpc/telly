@@ -25,6 +25,12 @@
     <string name="wizard_playlist_name">Playlist name</string>
     <string name="wizard_tv_playlist">TV playlist</string>
     <string name="wizard_vod_playlist">VOD playlist (no TV channels)</string>
+    <string name="wizard_epg_url">EPG URL</string>
+    <string name="wizard_epg_guidance">Enter EPG URL for the playlist. You can add or change it later in the settings. XMLTV format is only supported.</string>
+    <string name="wizard_paste_playlist_url">Paste playlist URL</string>
+    <string name="wizard_paste_playlist_hint">You can edit playlist URL if it has the similar format</string>
+    <string name="wizard_use_default_source">Use default source</string>
+    <string name="wizard_done">Done</string>
     <string name="wizard_error_invalid_url">Enter a valid http(s) URL</string>
     <string name="wizard_error_load_failed">Could not load the playlist. Check the URL and try again.</string>
 

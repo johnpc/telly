@@ -45,6 +45,11 @@ object RowIds {
     const val EPG_ADD_SOURCE = "epg.add_source"
     const val EPG_SOURCE_PREFIX = "epg_source:"
 
+    /** Custom source rows append the source's row id after the prefix. */
+    const val EPG_CUSTOM_SOURCE_PREFIX = "epg_custom_source:"
+    const val EPG_SOURCE_URL = "epg_source.url"
+    const val EPG_SOURCE_DELETE = "epg_source.delete"
+
     // Appearance.
     const val APPEARANCE_TV_GUIDE = "appearance.tv_guide"
     const val APPEARANCE_PLAYER = "appearance.player"

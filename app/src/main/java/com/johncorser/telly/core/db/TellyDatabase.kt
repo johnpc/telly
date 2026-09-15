@@ -4,6 +4,8 @@ import androidx.room.Database
 import androidx.room.RoomDatabase
 import androidx.room.migration.Migration
 import androidx.sqlite.db.SupportSQLiteDatabase
+import com.johncorser.telly.features.epg.db.EpgSourceDao
+import com.johncorser.telly.features.epg.db.EpgSourceEntity
 import com.johncorser.telly.features.epg.db.ProgramDao
 import com.johncorser.telly.features.epg.db.ProgramEntity
 import com.johncorser.telly.features.history.db.WatchHistoryDao
@@ -16,8 +18,11 @@ import com.johncorser.telly.features.search.db.SearchDao
 
 /** The single app database; schema JSON is exported to app/schemas. */
 @Database(
-    entities = [PlaylistEntity::class, ChannelEntity::class, ProgramEntity::class, WatchHistoryEntity::class],
-    version = 3,
+    entities = [
+        PlaylistEntity::class, ChannelEntity::class, ProgramEntity::class,
+        WatchHistoryEntity::class, EpgSourceEntity::class,
+    ],
+    version = 4,
     exportSchema = true,
 )
 abstract class TellyDatabase : RoomDatabase() {
@@ -26,6 +31,8 @@ abstract class TellyDatabase : RoomDatabase() {
     abstract fun channelDao(): ChannelDao
 
     abstract fun programDao(): ProgramDao
+
+    abstract fun epgSourceDao(): EpgSourceDao
 
     abstract fun searchDao(): SearchDao
 
@@ -48,6 +55,23 @@ abstract class TellyDatabase : RoomDatabase() {
                         "CREATE TABLE IF NOT EXISTS `watch_history` " +
                             "(`channelKey` TEXT NOT NULL, `watchedAtMs` INTEGER NOT NULL, " +
                             "PRIMARY KEY(`channelKey`))",
+                    )
+                }
+            }
+
+        /** v4 adds custom EPG sources (Settings -> EPG -> EPG sources). */
+        val MIGRATION_3_4 =
+            object : Migration(3, 4) {
+                override fun migrate(db: SupportSQLiteDatabase) {
+                    db.execSQL(
+                        "CREATE TABLE IF NOT EXISTS `epg_sources` " +
+                            "(`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, " +
+                            "`playlistUrl` TEXT NOT NULL, `url` TEXT NOT NULL, " +
+                            "`addedAtMs` INTEGER NOT NULL)",
+                    )
+                    db.execSQL(
+                        "CREATE UNIQUE INDEX IF NOT EXISTS `index_epg_sources_playlistUrl_url` " +
+                            "ON `epg_sources` (`playlistUrl`, `url`)",
                     )
                 }
             }

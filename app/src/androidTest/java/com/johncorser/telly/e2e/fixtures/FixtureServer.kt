@@ -27,9 +27,15 @@ object FixtureServer {
     var programmes: List<FixtureProgramme> = emptyList()
         private set
 
+    /** The custom-source EPG served at /epg-alt.xml (distinct titles). */
+    @Volatile
+    var altProgrammes: List<FixtureProgramme> = emptyList()
+        private set
+
     /** Re-anchors the EPG window (and lazily starts the server). */
     fun reset(anchorMs: Long = System.currentTimeMillis()) {
         programmes = FixturePlan.schedule(anchorMs)
+        altProgrammes = FixturePlan.altSchedule(anchorMs)
         if (server == null) {
             server =
                 MockWebServer().apply {
@@ -58,6 +64,7 @@ object FixtureServer {
             return when {
                 path == "/playlist.m3u" -> text(FixturePlan.m3u(baseUrl), "audio/x-mpegurl")
                 path == "/epg.xml" -> text(FixturePlan.xmltv(baseUrl, programmes), "application/xml")
+                path == "/epg-alt.xml" -> text(FixturePlan.xmltv(baseUrl, altProgrammes), "application/xml")
                 path.startsWith("/logos/") || path.startsWith("/streams/") -> asset(path)
                 else -> MockResponse().setResponseCode(HTTP_NOT_FOUND)
             }

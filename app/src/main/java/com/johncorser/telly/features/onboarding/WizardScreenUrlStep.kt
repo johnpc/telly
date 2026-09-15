@@ -4,7 +4,6 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.width
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.res.stringResource
 import com.johncorser.telly.R
 
@@ -22,26 +21,12 @@ fun WizardScreenUrlStep(
     val edit = rememberWizardScreenEditState { url.isNotBlank() }
     Row(modifier) {
         WizardScreenActionsPane(Modifier.weight(1f)) {
-            if (edit.editing) {
-                WizardScreenFieldEditor(
-                    label = stringResource(R.string.wizard_enter_url),
-                    value = url,
-                    onValueChange = onUrlChange,
-                    onCommit = edit::commit,
-                    modifier = Modifier.width(WizardScreenDims.actionWidth),
-                    uriInput = true,
-                )
-            } else {
-                WizardScreenActionRow(
-                    text = stringResource(R.string.wizard_enter_url),
-                    onClick = edit::open,
-                    modifier =
-                        Modifier
-                            .width(WizardScreenDims.actionWidth)
-                            .focusRequester(edit.rowFocus),
-                    secondaryText = url.ifBlank { null },
-                )
-            }
+            WizardScreenUrlField(
+                label = stringResource(R.string.wizard_enter_url),
+                value = url,
+                edit = edit,
+                onValueChange = onUrlChange,
+            )
             error?.let { WizardScreenUrlError(it) }
             WizardScreenClipboardRow(onUrlChange)
             WizardScreenActionRow(

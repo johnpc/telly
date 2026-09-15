@@ -2,6 +2,7 @@ package com.johncorser.telly.features.settings
 
 import com.johncorser.telly.core.settings.SettingsRepository
 import com.johncorser.telly.core.settings.TellySettings
+import com.johncorser.telly.features.epg.EpgSource
 
 /** EPG pane rows (catalogue 57). */
 fun epgRows(s: SettingsRepository): List<SettingsRow> =
@@ -37,9 +38,17 @@ fun epgRows(s: SettingsRepository): List<SettingsRow> =
             SettingsRow.Action(id = RowIds.EPG_UPDATE_NOW, title = "Update EPG"),
         )
 
-/** EPG sources pane (catalogue 58): one row per playlist url-tvg source. */
-fun epgSourcesRows(playlists: List<PlaylistItem>): List<SettingsRow> {
-    val sources =
+/**
+ * EPG sources pane (catalogue 58): one row per playlist url-tvg source,
+ * then the playlist's custom sources in added order. The reference free
+ * tier LOCKS "Add source"; telly ships it unlocked by product directive,
+ * following TiviMate's documented premium flow (ux-spec 3.10).
+ */
+fun epgSourcesRows(
+    playlists: List<PlaylistItem>,
+    sources: List<EpgSource>,
+): List<SettingsRow> {
+    val auto =
         playlists.filter { it.epgUrl != null }.map { item ->
             SettingsRow.Value(
                 id = RowIds.EPG_SOURCE_PREFIX + item.url,
@@ -48,9 +57,28 @@ fun epgSourcesRows(playlists: List<PlaylistItem>): List<SettingsRow> {
                 checkIcon = true,
             )
         }
-    return panePrelude() + sources +
+    val custom =
+        sources.map { source ->
+            SettingsRow.Value(
+                id = RowIds.EPG_CUSTOM_SOURCE_PREFIX + source.id,
+                title = source.name,
+                summary = source.url,
+                checkIcon = true,
+            )
+        }
+    return panePrelude() + auto + custom +
         listOf(
-            SettingsRow.Action(id = RowIds.EPG_ADD_SOURCE, title = "Add source", locked = true),
+            SettingsRow.Action(id = RowIds.EPG_ADD_SOURCE, title = "Add source"),
             SettingsRow.Note("EPG sources should be assigned in the playlist settings", accent = false),
         )
 }
+
+/** One custom source's pane: edit its URL or delete it (uncapturable —
+ * the reference locks per-source management behind premium; the shape
+ * follows the playlist-detail pane precedent). */
+fun epgSourceDetailRows(source: EpgSource): List<SettingsRow> =
+    panePrelude() +
+        listOf(
+            SettingsRow.Value(id = RowIds.EPG_SOURCE_URL, title = "Source URL", summary = source.url),
+            SettingsRow.Action(id = RowIds.EPG_SOURCE_DELETE, title = "Delete source"),
+        )

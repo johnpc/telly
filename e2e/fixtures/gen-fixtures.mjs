@@ -111,4 +111,35 @@ for (const c of channels) {
 xml += `</tv>\n`;
 writeFileSync(join(DIR, "epg.xml"), xml);
 
-console.log(`Wrote playlist.m3u (${channels.length} channels) and epg.xml (anchor=${new Date(anchor).toISOString()})`);
+// ---- epg-alt.xml: a second, custom-source EPG --------------------------------
+// Covers ONE channel epg.xml misses (sports-arena-1) plus ONE it also covers
+// (news-one-1) with distinct "Alt "-prefixed titles, so custom-source merge
+// and per-channel precedence are both observable. Fully deterministic (no
+// RNG) and mirrored 1:1 by the instrumentation FixturePlan.altSchedule.
+const ALT_IDS = new Set(["news-one-1.fixture", "sports-arena-1.fixture"]);
+let altXml = `<?xml version="1.0" encoding="UTF-8"?>\n<!DOCTYPE tv SYSTEM "xmltv.dtd">\n<tv generator-info-name="telly-fixtures-alt">\n`;
+for (const c of channels) {
+  if (!ALT_IDS.has(c.id)) continue;
+  altXml += `  <channel id="${esc(c.id)}">\n    <display-name>${esc(c.name)}</display-name>\n    <icon src="${esc(c.logo)}" />\n  </channel>\n`;
+}
+const ALT_DURATIONS = [30, 45, 60, 75, 90];
+for (const c of channels) {
+  if (!ALT_IDS.has(c.id)) continue;
+  let t = snapped;
+  let index = 0;
+  while (t < endWindow) {
+    const stop = t + ALT_DURATIONS[(c.num + index) % ALT_DURATIONS.length] * 60e3;
+    const title = `Alt ${c.titles[(c.num * 3 + index) % c.titles.length]}`;
+    altXml += `  <programme start="${fmt(t)}" stop="${fmt(stop)}" channel="${esc(c.id)}">\n`;
+    altXml += `    <title lang="en">${esc(title)}</title>\n`;
+    altXml += `    <sub-title lang="en">${esc(title)} Special</sub-title>\n`;
+    altXml += `    <desc lang="en">${esc(DESCS[(c.num + index) % DESCS.length])}</desc>\n`;
+    altXml += `  </programme>\n`;
+    t = stop;
+    index += 1;
+  }
+}
+altXml += `</tv>\n`;
+writeFileSync(join(DIR, "epg-alt.xml"), altXml);
+
+console.log(`Wrote playlist.m3u (${channels.length} channels), epg.xml and epg-alt.xml (anchor=${new Date(anchor).toISOString()})`);

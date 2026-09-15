@@ -1,7 +1,7 @@
 package com.johncorser.telly.features.onboarding
 
 /** Wizard pages, in forward order. */
-enum class WizardStep { TYPE_CHOOSER, URL_ENTRY, PROCESSING, PROCESSED, DONE }
+enum class WizardStep { TYPE_CHOOSER, URL_ENTRY, PROCESSING, PROCESSED, EPG_URL, DONE }
 
 /** Playlist source kinds offered by the type chooser. */
 enum class PlaylistType { M3U, XTREAM_CODES, STALKER_PORTAL }
@@ -22,6 +22,8 @@ data class WizardUiState(
     val liveCount: Int = 0,
     val movieCount: Int = 0,
     val groupCount: Int = 0,
+    /** EPG step draft (capture 13): pre-filled from the M3U's url-tvg. */
+    val epgUrl: String = "",
 ) {
     val channelCount: Int get() = liveCount + movieCount
 }

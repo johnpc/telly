@@ -2,6 +2,7 @@ package com.johncorser.telly.features.settings
 
 import com.johncorser.telly.core.settings.ParentalControls
 import com.johncorser.telly.core.settings.SettingsRepository
+import com.johncorser.telly.features.epg.EpgSourceStore
 import com.johncorser.telly.features.playlist.PlaylistRepository
 import kotlinx.coroutines.CoroutineScope
 
@@ -22,6 +23,7 @@ class SettingsGraph(
     val parental: ParentalControls,
     val actions: SettingsActions,
     val versionName: String,
+    val epgSources: EpgSourceStore,
 ) {
     fun viewModel(
         scope: CoroutineScope,

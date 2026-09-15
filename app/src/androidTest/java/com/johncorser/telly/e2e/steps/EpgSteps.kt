@@ -5,6 +5,7 @@ import com.johncorser.telly.core.db.TellyDatabase
 import com.johncorser.telly.e2e.PlaybackDriver
 import com.johncorser.telly.e2e.TellyWorld
 import com.johncorser.telly.e2e.fixtures.FixturePlan
+import com.johncorser.telly.e2e.fixtures.FixtureProgramme
 import com.johncorser.telly.e2e.fixtures.FixtureServer
 import io.cucumber.java.en.Given
 import io.cucumber.java.en.Then
@@ -37,23 +38,32 @@ class EpgSteps(
         source: String,
         channelName: String,
     ) {
-        require(source == "epg.xml") { "unexpected EPG source $source" }
-        val channel = FixturePlan.channelNamed(channelName)
-        val expected = FixtureServer.programmes.filter { it.channelTvgId == channel.tvgId }
-        val stored =
-            runBlocking {
-                database
-                    .programDao()
-                    .observeWindow(listOf(channel.tvgId), expected.first().startMs, expected.last().endMs)
-                    .first()
+        val fixture =
+            when (source) {
+                "epg.xml" -> FixtureServer.programmes
+                "epg-alt.xml" -> FixtureServer.altProgrammes
+                else -> error("unexpected EPG source $source")
             }
-        assertEquals(expected.size, stored.size)
-        expected.zip(stored).forEach { (want, got) ->
-            assertEquals(want.title, got.details.title)
-            assertEquals(want.startMs, got.startMs)
-            assertEquals(want.endMs, got.endMs)
+        val channel = FixturePlan.channelNamed(channelName)
+        val expected = fixture.filter { it.channelTvgId == channel.tvgId }
+        // Refreshes triggered from settings run asynchronously; await the
+        // stored schedule matching the served fixture instead of asserting
+        // one racy snapshot.
+        driver.awaitCondition("$channelName programmes match $source", timeoutMs = 60_000L) {
+            storedWindow(channel.tvgId, expected) == expected.map { Triple(it.title, it.startMs, it.endMs) }
         }
     }
+
+    private fun storedWindow(
+        tvgId: String,
+        expected: List<FixtureProgramme>,
+    ): List<Triple<String, Long, Long>> =
+        runBlocking {
+            database
+                .programDao()
+                .observeWindow(listOf(tvgId), expected.first().startMs, expected.last().endMs)
+                .first()
+        }.map { Triple(it.details.title, it.startMs, it.endMs) }
 
     @Then("the program for {string} airing now has a start time, an end time and a description")
     fun airingNowComplete(channelName: String) {
