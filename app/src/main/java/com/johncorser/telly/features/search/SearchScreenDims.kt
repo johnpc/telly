@@ -37,6 +37,13 @@ internal object SearchScreenDims {
     val headerTop = 32.dp
     val shelfTop = 14.dp
 
+    /**
+     * The Programs two-pane starts 8 dp lower than the Channels shelf:
+     * round7 §C1 measured telly's lanes ~16 px high inside the section
+     * (rows title y629 vs tm 668 with the headers 18 px apart).
+     */
+    val programsTop = 22.dp
+
     val cardWidth = 124.dp
     val cardGap = 8.dp
 

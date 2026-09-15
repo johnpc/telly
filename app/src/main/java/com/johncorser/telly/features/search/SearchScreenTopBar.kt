@@ -33,7 +33,7 @@ import com.johncorser.telly.features.search.SearchScreenDims as Dims
 @Composable
 internal fun SearchScreenTopBar(
     viewModel: SearchViewModel,
-    firstResult: FocusRequester?,
+    downTargets: List<FocusRequester>,
 ) {
     val query by viewModel.query.collectAsState()
     val orbFocus = rememberAutoFocus()
@@ -54,7 +54,7 @@ internal fun SearchScreenTopBar(
             contentDescription = voiceLabel,
         )
         Spacer(Modifier.width(Dims.barGap))
-        SearchScreenQueryField(query, viewModel, firstResult, Modifier.width(Dims.barWidth))
+        SearchScreenQueryField(query, viewModel, downTargets, Modifier.width(Dims.barWidth))
         Spacer(Modifier.weight(1f))
         TellyScreenIconCircle(
             icon = R.drawable.ic_menu_settings,

@@ -34,6 +34,9 @@ class SearchViewModel(
     /** The dropdown / paywall / coming-soon layer over the screen. */
     val overlays = SearchOverlays()
 
+    /** Last results-area node D-pad focus visited (round7 §C4 focus memory). */
+    val focusMemory = SearchFocusMemory()
+
     /** Feeds the right-side detail card (captures 50/51). */
     val focusedProgram: StateFlow<SearchProgramHit?> = mutableFocusedProgram.asStateFlow()
 
@@ -51,7 +54,13 @@ class SearchViewModel(
     val results: StateFlow<SearchResults> =
         mutableQuery
             .mapLatest { deps.repository.search(it, deps.clock(), deps.zone) }
-            .onEach { select(it.programs.firstOrNull()) }
+            .onEach {
+                // A new batch also forgets the DOWN-from-bar focus memory:
+                // what the reference does when the results change under it
+                // is uncaptured, so telly returns to the fresh landing.
+                focusMemory.clear()
+                select(it.programs.firstOrNull())
+            }
             .stateIn(scope, SharingStarted.Eagerly, SearchResults())
 
     fun onQueryChange(text: String) {

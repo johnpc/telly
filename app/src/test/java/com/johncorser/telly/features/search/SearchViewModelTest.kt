@@ -165,6 +165,31 @@ class SearchViewModelTest {
         }
 
     @Test
+    fun `a new result batch clears the DOWN-from-bar focus memory`() =
+        runTest {
+            val vm = buildVm()
+            vm.onQueryChange("news")
+
+            vm.focusMemory.onFocused(SearchFocusMemory.Node.ChannelCard(1L))
+            assertEquals(SearchFocusMemory.Node.ChannelCard(1L), vm.focusMemory.node.value)
+
+            vm.onQueryChange("newsroom")
+            assertNull(vm.focusMemory.node.value)
+        }
+
+    @Test
+    fun `re-typing the same query keeps the focus memory`() =
+        runTest {
+            val vm = buildVm()
+            vm.onQueryChange("news")
+            vm.focusMemory.onFocused(SearchFocusMemory.Node.ChannelCard(1L))
+
+            vm.onQueryChange("news")
+
+            assertEquals(SearchFocusMemory.Node.ChannelCard(1L), vm.focusMemory.node.value)
+        }
+
+    @Test
     fun `ok on a programme result opens the guide-cell dropdown`() =
         runTest {
             val vm = buildVm()

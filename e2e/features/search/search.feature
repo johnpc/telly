@@ -49,6 +49,17 @@ Feature: Search channels and programmes
     And I press dpad down
     Then the first channel card "News One" is focused
 
+  Scenario: Down from the query bar restores the last-visited channel card
+    When I focus the query bar
+    And I type "news"
+    And I press dpad down
+    And I press dpad right 2 times
+    Then "News One 2" has focus
+    When I focus the query bar
+    And I type "news"
+    And I press dpad down
+    Then "News One 2" has focus
+
   Scenario: Down from the query bar without channel matches lands on the first airing row
     When I focus the query bar
     And I type "newsroom"

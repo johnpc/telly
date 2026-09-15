@@ -37,9 +37,11 @@ fun SearchScreen(
     val viewModel = remember { SearchViewModel(deps, scope) }
     val results by viewModel.results.collectAsState()
     val overlay by viewModel.overlays.current.collectAsState()
-    // DOWN from the query bar lands on the FIRST result card, not the
+    // DOWN from the query bar lands on the last-visited node (round7 §C4
+    // focus memory) or, fresh, on the FIRST result card — never Compose's
     // geometrically nearest one (ref-round6 07-search-down-from-querybar).
     val firstResult = remember { FocusRequester() }
+    val restore = rememberSearchScreenRestore(viewModel)
     BackHandler(enabled = overlay != SearchOverlay.None) { viewModel.overlays.dismiss() }
     Box(
         Modifier
@@ -47,11 +49,11 @@ fun SearchScreen(
             .background(Color(TELLY_ONBOARDING_BACKGROUND)),
     ) {
         Column(Modifier.fillMaxSize()) {
-            SearchScreenTopBar(viewModel, firstResult = if (results.isEmpty) null else firstResult)
+            SearchScreenTopBar(viewModel, downTargets = restore.downTargets(firstResult.takeIf { !results.isEmpty }))
             if (results.isEmpty) {
                 SearchScreenHistory(viewModel)
             } else {
-                SearchScreenResults(results, viewModel, firstResult, onTuned)
+                SearchScreenResults(results, viewModel, firstResult, restore, onTuned)
             }
         }
         SearchScreenOverlay(overlay, viewModel)
@@ -64,6 +66,7 @@ private fun SearchScreenResults(
     results: SearchResults,
     viewModel: SearchViewModel,
     firstResult: FocusRequester,
+    restore: SearchScreenRestore,
     onTuned: () -> Unit,
 ) {
     val focused by viewModel.focusedProgram.collectAsState()
@@ -72,7 +75,7 @@ private fun SearchScreenResults(
         onTuned()
     }
     if (results.channels.isNotEmpty()) {
-        SearchScreenChannels(results.channels, firstFocus = firstResult) { hit -> onTune(hit.channel) }
+        SearchScreenChannels(results.channels, firstResult, restore, viewModel) { hit -> onTune(hit.channel) }
     }
     if (results.programs.isNotEmpty()) {
         Row {
@@ -81,6 +84,7 @@ private fun SearchScreenResults(
                     groups = results.programs,
                     viewModel = viewModel,
                     firstFocus = firstResult.takeIf { results.channels.isEmpty() },
+                    restore = restore,
                 )
             }
             Column(Modifier.align(Alignment.Top)) {
