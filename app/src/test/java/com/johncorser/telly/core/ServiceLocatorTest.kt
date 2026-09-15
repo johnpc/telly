@@ -2,6 +2,7 @@ package com.johncorser.telly.core
 
 import android.content.Context
 import androidx.test.core.app.ApplicationProvider
+import com.johncorser.telly.features.playlist.GroupFilteredChannelDao
 import com.johncorser.telly.features.playlist.M3uChannel
 import com.johncorser.telly.features.playlist.M3uPlaylist
 import kotlinx.coroutines.flow.first
@@ -94,7 +95,9 @@ class ServiceLocatorTest {
         assertEquals(7L, ServiceLocator.keyValueStore(context).getLong("lastChannelId"))
 
         val engine = deps.engineFactory()
-        assertSame(deps.sources.channelDao, ServiceLocator.database(context).channelDao())
+        // The playback channel feed is the Manage-groups-filtered wrapper
+        // over the shared Room DAO (see GroupFilteredChannelDao).
+        assertTrue(deps.sources.channelDao is GroupFilteredChannelDao)
         engine.release()
         assertTrue(deps.clock() > 0)
     }

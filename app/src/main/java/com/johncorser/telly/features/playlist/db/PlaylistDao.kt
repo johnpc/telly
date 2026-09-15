@@ -34,6 +34,23 @@ interface PlaylistDao {
         name: String,
     )
 
+    /** Re-keys the playlist in place (URL edit); the row id and channels survive. */
+    @Query("UPDATE playlists SET url = :newUrl WHERE url = :oldUrl")
+    suspend fun updateUrl(
+        oldUrl: String,
+        newUrl: String,
+    )
+
+    /**
+     * The URL of the playlist owning the channel at [streamUrl]. Blocking on
+     * purpose: the stream User-Agent resolver runs on a player loader thread.
+     */
+    @Query(
+        "SELECT url FROM playlists WHERE id = " +
+            "(SELECT playlistId FROM channels WHERE streamUrl = :streamUrl LIMIT 1)",
+    )
+    fun playlistUrlForStream(streamUrl: String): String?
+
     @Query("DELETE FROM playlists WHERE id = :id")
     suspend fun delete(id: Long)
 }

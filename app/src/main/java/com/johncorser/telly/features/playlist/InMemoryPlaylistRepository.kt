@@ -32,6 +32,18 @@ class InMemoryPlaylistRepository : PlaylistRepository {
         }
     }
 
+    override suspend fun changeUrl(
+        oldUrl: String,
+        newUrl: String,
+    ): Boolean {
+        val current = mutablePlaylists.value
+        if (current.any { it.sourceUrl == newUrl } || current.none { it.sourceUrl == oldUrl }) return false
+        mutablePlaylists.update { stored ->
+            stored.map { if (it.sourceUrl == oldUrl) it.copy(sourceUrl = newUrl) else it }
+        }
+        return true
+    }
+
     override suspend fun delete(sourceUrl: String) {
         mutablePlaylists.update { current -> current.filterNot { it.sourceUrl == sourceUrl } }
     }

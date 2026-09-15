@@ -5,6 +5,7 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.test.runTest
 import org.junit.After
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -167,5 +168,41 @@ class RoomPlaylistRepositoryTest {
             repository.add("http://p/playlist.m3u", playlist)
             repository.delete("http://p/unknown.m3u")
             assertEquals(1, repository.playlists.first().size)
+        }
+
+    @Test
+    fun `changeUrl re-keys the row in place, keeping name, channels and flags`() =
+        runTest {
+            repository.add("http://p/playlist.m3u", playlist, name = "Living room")
+            val channelDao = database.channelDao()
+            val before = database.playlistDao().all().single()
+            val favorite = channelDao.forPlaylist(before.id).first()
+            channelDao.update(favorite.copy(flags = favorite.flags.copy(favorite = true)))
+
+            assertTrue(repository.changeUrl("http://p/playlist.m3u", "http://p/moved.m3u"))
+
+            val row = database.playlistDao().all().single()
+            assertEquals(before.id, row.id)
+            assertEquals("http://p/moved.m3u", row.url)
+            assertEquals("Living room", row.name)
+            assertEquals(
+                listOf(true, false),
+                channelDao.forPlaylist(row.id).map { it.flags.favorite },
+            )
+        }
+
+    @Test
+    fun `changeUrl refuses a url owned by another playlist or an unknown source`() =
+        runTest {
+            repository.add("http://p/a.m3u", playlist)
+            repository.add("http://p/b.m3u", M3uPlaylist())
+
+            assertFalse(repository.changeUrl("http://p/a.m3u", "http://p/b.m3u"))
+            assertFalse(repository.changeUrl("http://p/unknown.m3u", "http://p/c.m3u"))
+
+            assertEquals(
+                listOf("http://p/a.m3u", "http://p/b.m3u"),
+                repository.playlists.first().map { it.sourceUrl },
+            )
         }
 }

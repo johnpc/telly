@@ -50,6 +50,12 @@ interface EpgSourceStore {
 
     /** Deletes the source [id] (settings: delete source). */
     suspend fun remove(id: Long)
+
+    /** Follows a playlist URL edit: re-keys its custom sources in place. */
+    suspend fun rekeyPlaylist(
+        oldUrl: String,
+        newUrl: String,
+    )
 }
 
 /** Room-backed store; timestamps come from the injected [clock]. */
@@ -76,6 +82,11 @@ class RoomEpgSourceStore(
     ) = dao.setUrl(id, url)
 
     override suspend fun remove(id: Long) = dao.delete(id)
+
+    override suspend fun rekeyPlaylist(
+        oldUrl: String,
+        newUrl: String,
+    ) = dao.rekeyPlaylist(oldUrl, newUrl)
 
     private fun EpgSourceEntity.toSource(): EpgSource = EpgSource(id = id, playlistUrl = playlistUrl, url = url)
 }

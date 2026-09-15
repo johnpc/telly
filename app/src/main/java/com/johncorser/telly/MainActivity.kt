@@ -10,11 +10,16 @@ import com.johncorser.telly.core.multiviewDeps
 import com.johncorser.telly.core.navigation.Navigator
 import com.johncorser.telly.core.navigation.Route
 import com.johncorser.telly.core.playbackDeps
+import com.johncorser.telly.core.playlistFetchUserAgentFor
+import com.johncorser.telly.core.playlistRefresher
 import com.johncorser.telly.core.searchDeps
 import com.johncorser.telly.core.settings.ParentalControls
 import com.johncorser.telly.core.settings.TellySettings
 import com.johncorser.telly.features.onboarding.StartRoute
+import com.johncorser.telly.features.playback.PlaybackTime
 import com.johncorser.telly.features.playlist.M3uFetcher
+import com.johncorser.telly.features.playlist.PlaylistUrlChanger
+import com.johncorser.telly.features.settings.PlaylistKeyMigration
 import com.johncorser.telly.features.settings.PlaylistUpdater
 import com.johncorser.telly.features.settings.SettingsActions
 import com.johncorser.telly.features.settings.SettingsBackupManager
@@ -24,13 +29,16 @@ import kotlinx.coroutines.launch
 /** Single-activity entry point; all UI is Compose for TV. */
 class MainActivity : ComponentActivity() {
     private val navigator = Navigator(start = Route.Boot)
-    private val fetcher = M3uFetcher()
+    private val fetcher by lazy {
+        M3uFetcher(userAgentFor = ServiceLocator.playlistFetchUserAgentFor(this))
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         val repository = ServiceLocator.playlistRepository(this)
         restoreStartRoute()
         keepEpgFresh()
+        keepPlaylistsFresh()
         setContent {
             RootScreen(
                 navigator = navigator,
@@ -58,6 +66,13 @@ class MainActivity : ComponentActivity() {
                     updater = PlaylistUpdater(fetcher::fetch, repository),
                     updateEpgNow = { ServiceLocator.epgRefresher(this).refreshAllNow() },
                     backup = SettingsBackupManager(settings, repository, filesDir),
+                    changePlaylistUrl =
+                        PlaylistUrlChanger(
+                            fetchPlaylist = fetcher::fetch,
+                            repository = repository,
+                            rekeySettings = { old, new -> PlaylistKeyMigration.apply(settings, old, new) },
+                            rekeyEpgSources = ServiceLocator.epgSourceStore(this)::rekeyPlaylist,
+                        )::change,
                 ),
             versionName = appVersionName(),
             epgSources = ServiceLocator.epgSourceStore(this),
@@ -74,6 +89,12 @@ class MainActivity : ComponentActivity() {
             val channelCount = ServiceLocator.database(this@MainActivity).channelDao().totalCount()
             navigator.replaceAll(StartRoute.forChannelCount(channelCount))
         }
+    }
+
+    /** Update playlists at launch (forced/due) and per minute while running. */
+    private fun keepPlaylistsFresh() {
+        val refresher = ServiceLocator.playlistRefresher(this, fetcher::fetch)
+        lifecycleScope.launch { refresher.run(PlaybackTime.minuteBoundaryTicks(ServiceLocator.clock)) }
     }
 
     /** Refresh due EPG sources on start and whenever the playlists change. */

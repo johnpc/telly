@@ -33,6 +33,16 @@ interface PlaylistRepository {
         name: String,
     )
 
+    /**
+     * Re-keys the playlist stored under [oldUrl] to [newUrl] in place, keeping
+     * its name and channels. False when [oldUrl] is unknown or [newUrl] is
+     * already taken by another playlist.
+     */
+    suspend fun changeUrl(
+        oldUrl: String,
+        newUrl: String,
+    ): Boolean
+
     /** Deletes the playlist stored under [sourceUrl] and its channels. */
     suspend fun delete(sourceUrl: String)
 }

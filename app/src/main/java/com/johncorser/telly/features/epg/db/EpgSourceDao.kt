@@ -27,4 +27,11 @@ interface EpgSourceDao {
 
     @Query("DELETE FROM epg_sources WHERE id = :id")
     suspend fun delete(id: Long)
+
+    /** Follows a playlist URL edit: re-keys its custom sources in place. */
+    @Query("UPDATE epg_sources SET playlistUrl = :newUrl WHERE playlistUrl = :oldUrl")
+    suspend fun rekeyPlaylist(
+        oldUrl: String,
+        newUrl: String,
+    )
 }

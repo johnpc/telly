@@ -60,7 +60,7 @@ class SettingsSteps(
     fun rowShows(
         title: String,
         value: String,
-    ) = world.waitFor(hasText(title) and hasText(value))
+    ) = world.waitFor(hasText(title) and hasText(world.mapFixtureText(value)))
 
     @When("I choose {string}")
     fun choose(option: String) = world.select(option)
@@ -80,6 +80,9 @@ class SettingsSteps(
         world.waitForText("Change PIN")
         spinPinWheels(pin)
     }
+
+    @When("I leave settings")
+    fun leaveSettingsStep() = leaveSettings()
 
     /** BACKs out of the settings shell to fullscreen playback. */
     private fun leaveSettings() {
@@ -136,7 +139,7 @@ class SettingsSteps(
                 false
             }
         }
-        world.waitForText(name)
+        world.waitForText(world.mapFixtureText(name))
     }
 
     @Then("the row {string} is locked")

@@ -31,6 +31,8 @@ class SettingsViewModel(
     internal val epgSources: EpgSourceStore = graph.epgSources
     internal val parental: ParentalControls = graph.parental
     internal val updater: PlaylistUpdater = graph.actions.updater
+    internal val changePlaylistUrl: suspend (oldUrl: String, newUrl: String) -> Boolean =
+        graph.actions.changePlaylistUrl
     internal val updateEpgNow: suspend () -> Unit = graph.actions.updateEpgNow
     internal val backup: SettingsBackupManager = graph.actions.backup
     private val versionName: String = graph.versionName
@@ -47,6 +49,7 @@ class SettingsViewModel(
                         name = it.name ?: it.sourceUrl,
                         channelCount = it.playlist.channels.size,
                         epgUrl = it.playlist.epgUrl,
+                        groups = it.playlist.channels.mapNotNull { channel -> channel.groupTitle }.distinct(),
                     )
                 }
             }.stateIn(scope, SharingStarted.Eagerly, emptyList())

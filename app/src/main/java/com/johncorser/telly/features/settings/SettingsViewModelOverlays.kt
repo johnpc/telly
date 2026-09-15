@@ -21,6 +21,8 @@ fun SettingsViewModel.submitText(value: String) {
         RowIds.UDP_PROXY -> settings.set(TellySettings.UDP_PROXY, value.trim())
         RowIds.EPG_ADD_SOURCE -> addEpgSource(value)
         RowIds.EPG_SOURCE_URL -> setEpgSourceUrl(value)
+        RowIds.PLAYLIST_USER_AGENT -> submitPlaylistUserAgent(value)
+        RowIds.PLAYLIST_URL -> submitPlaylistUrl(value)
     }
     dismissOverlay()
 }

@@ -32,6 +32,22 @@ class M3uFetcherTest {
         }
 
     @Test
+    fun `sends the resolved user-agent and none when unresolved`() =
+        runTest {
+            server.enqueue(MockResponse().setBody("#EXTM3U"))
+            server.enqueue(MockResponse().setBody("#EXTM3U"))
+            server.start()
+            val withAgent =
+                M3uFetcher(userAgentFor = { url -> "telly-agent".takeIf { url.contains("agent") } })
+
+            withAgent.fetch(server.url("/agent.m3u").toString())
+            withAgent.fetch(server.url("/plain.m3u").toString())
+
+            assertEquals("telly-agent", server.takeRequest().getHeader("User-Agent"))
+            assertTrue(server.takeRequest().getHeader("User-Agent").orEmpty().startsWith("okhttp"))
+        }
+
+    @Test
     fun `throws an io exception on http errors`() =
         runTest {
             server.enqueue(MockResponse().setResponseCode(404))

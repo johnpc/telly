@@ -48,6 +48,18 @@ class Media3PlayerEngineTest {
     }
 
     @Test
+    fun `load records the stream url so requests resolve its user-agent`() {
+        every { player.addListener(capture(listener)) } just Runs
+        every { player.setVideoFrameMetadataListener(capture(frameListener)) } just Runs
+        val userAgent = StreamUserAgent(resolve = { "agent-for:$it" })
+        val engine = Media3PlayerEngine(player, userAgent)
+
+        engine.load("http://s/1.m3u8")
+
+        assertEquals("agent-for:http://s/1.m3u8", userAgent.current())
+    }
+
+    @Test
     fun `ready playback exposes the stream's video details`() {
         val engine = engine()
         every { player.videoFormat } returns

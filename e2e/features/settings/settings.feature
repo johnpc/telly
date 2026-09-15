@@ -68,3 +68,60 @@ Feature: Settings
     Then the row "TV guide" is locked
     And the row "Language" is locked
     And the row "Color theme" is not locked
+
+  # telly has no premium tier: the reference locks the playlist URL, UA,
+  # groups and update rows behind Unlock Premium; telly ships them unlocked.
+  Scenario: The playlist detail premium rows are unlocked
+    When I open the "Playlists" section
+    And I activate the playlist "10.0.2.2"
+    Then the row "Playlist URL" is not locked
+    And the row "User-Agent" is not locked
+    And the row "Manage groups" is not locked
+    And the row "Update interval, hours" is not locked
+    And the row "Update on app start" is not locked
+
+  # The URL is the playlist's identity: editing it re-keys the stored row
+  # in place (channels and per-playlist settings survive) and re-fetches.
+  Scenario: Editing the playlist URL re-keys the playlist and keeps its channels
+    When I open the "Playlists" section
+    And I activate the playlist "10.0.2.2"
+    And I activate "Playlist URL"
+    And I type "http://10.0.2.2:8090/playlist.m3u?edited=1"
+    Then the "Playlist URL" row shows "http://10.0.2.2:8090/playlist.m3u?edited=1"
+    And the playlists section lists "10.0.2.2"
+    And I see "Channels: 30"
+
+  Scenario: A per-playlist User-Agent persists across a relaunch
+    When I open the "Playlists" section
+    And I activate the playlist "10.0.2.2"
+    Then the "User-Agent" row shows "Not set"
+    When I activate "User-Agent"
+    And I type "telly-e2e-agent"
+    Then the "User-Agent" row shows "telly-e2e-agent"
+    When I relaunch telly
+    And I open Settings
+    And I open the "Playlists" section
+    And I activate the playlist "10.0.2.2"
+    Then the "User-Agent" row shows "telly-e2e-agent"
+
+  Scenario: The playlist update options persist
+    When I open the "Playlists" section
+    And I activate the playlist "10.0.2.2"
+    Then the "Update interval, hours" row shows "None"
+    When I activate "Update interval, hours"
+    And I choose "8"
+    Then the "Update interval, hours" row shows "8"
+    When I activate "Update on app start"
+    Then the "Update on app start" toggle is on
+
+  Scenario: Disabling a group hides it from the guide's group list
+    When I open the "Playlists" section
+    And I activate the playlist "10.0.2.2"
+    And I activate "Manage groups"
+    And I activate "Music"
+    And I leave settings
+    And I open the channel panel
+    And I press dpad left
+    Then the groups column does not list "Music"
+    And the groups column lists "News" and "Movies"
+    And the channels column no longer lists "Music Box"

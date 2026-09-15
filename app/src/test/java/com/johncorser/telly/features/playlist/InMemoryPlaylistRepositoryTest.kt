@@ -2,6 +2,7 @@ package com.johncorser.telly.features.playlist
 
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNotEquals
 import org.junit.Assert.assertTrue
 import org.junit.Test
@@ -81,6 +82,30 @@ class InMemoryPlaylistRepositoryTest {
             repository.delete("http://a.example/a.m3u")
 
             assertTrue(repository.playlists.value.isEmpty())
+        }
+
+    @Test
+    fun `changeUrl re-keys the playlist and keeps its name`() =
+        runTest {
+            val repository = InMemoryPlaylistRepository()
+            repository.add("http://a.example/a.m3u", playlist, name = "Keep")
+
+            assertTrue(repository.changeUrl("http://a.example/a.m3u", "http://a.example/b.m3u"))
+
+            val stored = repository.playlists.value.single()
+            assertEquals("http://a.example/b.m3u", stored.sourceUrl)
+            assertEquals("Keep", stored.name)
+        }
+
+    @Test
+    fun `changeUrl refuses unknown sources and taken targets`() =
+        runTest {
+            val repository = InMemoryPlaylistRepository()
+            repository.add("http://a.example/a.m3u", playlist)
+            repository.add("http://b.example/b.m3u", M3uPlaylist())
+
+            assertFalse(repository.changeUrl("http://a.example/a.m3u", "http://b.example/b.m3u"))
+            assertFalse(repository.changeUrl("http://c.example/c.m3u", "http://d.example/d.m3u"))
         }
 
     @Test
