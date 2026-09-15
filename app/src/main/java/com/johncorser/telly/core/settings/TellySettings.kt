@@ -62,6 +62,10 @@ object TellySettings {
     val PARENTAL_REQUIRE_FOR_PLAYLISTS = boolSetting("parental_require_settings_playlists", false)
     val PARENTAL_LOCKED_GROUPS = stringSetSetting("parental_locked_groups")
 
+    // Reminders (premium in the reference; the popup lead follows the
+    // ux-spec's "shortly before the programme starts", default 5 min).
+    val REMINDER_LEAD_MINUTES = intSetting("reminders_lead_minutes", 5)
+
     // About (catalogue 53) — the only free toggle in the reference.
     val SEND_STATISTICS = boolSetting("about_send_statistics", true)
 }

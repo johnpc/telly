@@ -15,6 +15,9 @@ sealed interface SettingsPane {
     data class EpgSourceDetail(
         val sourceId: Long,
     ) : SettingsPane
+
+    /** Other -> Reminders: lead-time picker + the scheduled reminders. */
+    data object Reminders : SettingsPane
 }
 
 /** Modal state over the sheet stack. */
@@ -38,6 +41,11 @@ sealed interface SettingsOverlay {
     data class ConfirmDeleteSource(
         val sourceId: Long,
         val name: String,
+    ) : SettingsOverlay
+
+    data class ConfirmDeleteReminder(
+        val reminderId: Long,
+        val title: String,
     ) : SettingsOverlay
 
     data object PinSetup : SettingsOverlay

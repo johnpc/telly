@@ -21,6 +21,7 @@ internal fun SettingsViewModel.runAction(rowId: String) {
                 callbacks.onExportBackup(backup.exportJson())
             }
         RowIds.RESTORE_DATA -> callbacks.onImportBackup()
+        RowIds.OTHER_REMINDERS -> push(SettingsPane.Reminders)
         RowIds.PARENTAL_CHANGE_PIN -> showOverlay(SettingsOverlay.PinSetup)
         RowIds.ABOUT_PRIVACY_POLICY -> callbacks.onOpenPrivacyPolicy()
         else -> runPlaylistAction(rowId)

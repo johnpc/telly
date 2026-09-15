@@ -92,6 +92,11 @@ object RowIds {
     const val OTHER_RECORDING = "other.recording"
     const val OTHER_VOD = "other.vod"
 
+    // Reminders (Settings -> Other -> Reminders). Scheduled-reminder rows
+    // append the reminder's row id after the prefix.
+    const val REMINDERS_LEAD = "reminders.lead"
+    const val REMINDER_PREFIX = "reminder:"
+
     // About.
     const val ABOUT_STATISTICS = "about.statistics"
     const val ABOUT_PRIVACY_POLICY = "about.privacy_policy"

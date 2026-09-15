@@ -315,11 +315,22 @@ class GuideMenuControllerTest {
         runTest {
             val menu = build()
 
-            menu.onCellAction(GuideCellAction.REMIND)
-            assertEquals(GuideLayer.ComingSoon("Remind"), menu.layer.value)
+            menu.onCellAction(GuideCellAction.RECORD)
+            assertEquals(GuideLayer.ComingSoon("Record"), menu.layer.value)
 
             menu.close()
             assertEquals(GuideLayer.Grid, menu.layer.value)
+        }
+    }
+
+    @Test
+    fun `remind without the reminders seam still lands on coming-soon`() {
+        runTest {
+            val menu = build()
+
+            menu.onCellAction(GuideCellAction.REMIND)
+
+            assertEquals(GuideLayer.ComingSoon("Remind"), menu.layer.value)
         }
     }
 }

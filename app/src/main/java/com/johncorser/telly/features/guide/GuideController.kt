@@ -7,6 +7,7 @@ import com.johncorser.telly.features.playback.PlaybackEnv
 import com.johncorser.telly.features.playback.PlaybackLifecycle
 import com.johncorser.telly.features.playback.TuneController
 import com.johncorser.telly.features.playlist.db.ChannelEntity
+import com.johncorser.telly.features.reminders.GuideReminders
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -25,6 +26,7 @@ class GuideController(
     private val pastDays: () -> Int,
     scope: CoroutineScope,
     private val callbacks: GuideCallbacks,
+    reminders: GuideReminders? = null,
 ) {
     val zone = env.time.zone
 
@@ -75,6 +77,7 @@ class GuideController(
     val layer: StateFlow<GuideLayer> = menu.layer
 
     init {
+        menu.remind.reminders = reminders
         scope.launch { rows.collect { focusEngine.ensureFocus(it, now.value) } }
         // The guide is reached from playback (BACK / the TV-guide card), where
         // the last channel keeps playing in the preview window; cold starts

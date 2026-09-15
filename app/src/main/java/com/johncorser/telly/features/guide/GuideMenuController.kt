@@ -29,6 +29,9 @@ class GuideMenuController(
     private val mutable = MutableStateFlow<GuideLayer>(GuideLayer.Grid)
     val layer: StateFlow<GuideLayer> = mutable.asStateFlow()
 
+    /** The cell dropdown's live Remind row (reminders slice seam). */
+    val remind = GuideRemind(focusedRow) { mutable.value }
+
     /** Which sheet row BACK from a pushed screen re-focuses. */
     val sheetFocus = PlayerMenuFocus()
 
@@ -58,8 +61,14 @@ class GuideMenuController(
         show(GuideLayer.RowMenu)
     }
 
-    /** Every dropdown row is an unbuilt feature: coming-soon placeholder. */
-    fun onCellAction(action: GuideCellAction) = show(GuideLayer.ComingSoon(action.label))
+    /** Remind toggles a reminder; every other dropdown row is unbuilt. */
+    fun onCellAction(action: GuideCellAction) {
+        if (action == GuideCellAction.REMIND && remind.toggle()) {
+            reset()
+            return
+        }
+        show(GuideLayer.ComingSoon(action.label))
+    }
 
     /** All §41 pane rows are locked; any activation lands on coming-soon. */
     fun onChannelOption(rowId: String) = show(GuideLayer.ComingSoon(rowId, back = mutable.value))
