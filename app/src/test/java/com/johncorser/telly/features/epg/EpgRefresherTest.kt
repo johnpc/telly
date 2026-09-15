@@ -25,7 +25,7 @@ class EpgRefresherTest {
         playlistDao = playlistDao,
         scheduler = RefreshScheduler(),
         clock = { nowMs },
-        refresh = refresh,
+        fetch = EpgFetch(refresh),
     )
 
     private fun playlist(
@@ -84,10 +84,13 @@ class EpgRefresherTest {
                     playlistDao = playlistDao,
                     scheduler = RefreshScheduler(),
                     clock = { nowMs },
-                    refresh = {
-                        refreshedUrls += it
-                        1
-                    },
+                    fetch =
+                        EpgFetch(
+                            refresh = {
+                                refreshedUrls += it
+                                1
+                            },
+                        ),
                     customSources = { playlistUrl ->
                         assertEquals("http://p/1.m3u", playlistUrl)
                         listOf("http://e/custom-a.xml", "http://e/custom-b.xml")
@@ -114,10 +117,13 @@ class EpgRefresherTest {
                     playlistDao = playlistDao,
                     scheduler = RefreshScheduler(),
                     clock = { nowMs },
-                    refresh = {
-                        refreshedUrls += it
-                        1
-                    },
+                    fetch =
+                        EpgFetch(
+                            refresh = {
+                                refreshedUrls += it
+                                1
+                            },
+                        ),
                     customSources = { listOf("http://e/custom.xml") },
                 )
 
@@ -135,7 +141,7 @@ class EpgRefresherTest {
                     playlistDao = playlistDao,
                     scheduler = RefreshScheduler(),
                     clock = { nowMs },
-                    refresh = { url -> if (url.contains("bad")) throw IOException("boom") else 1 },
+                    fetch = EpgFetch(refresh = { url -> if (url.contains("bad")) throw IOException("boom") else 1 }),
                     customSources = { listOf("http://e/bad.xml") },
                 )
 
@@ -152,12 +158,57 @@ class EpgRefresherTest {
                     playlistDao = playlistDao,
                     scheduler = RefreshScheduler(),
                     clock = { nowMs },
-                    refresh = { throw IOException("boom") },
+                    fetch = EpgFetch(refresh = { throw IOException("boom") }),
                     customSources = { listOf("http://e/bad2.xml") },
                 )
 
             assertEquals(emptyList<Long>(), refresher.refreshDue())
             coVerify(exactly = 0) { playlistDao.markEpgUpdated(any(), any()) }
+        }
+
+    @Test
+    fun `a transient failure stays due and the next run stamps on success`() =
+        runTest {
+            coEvery { playlistDao.all() } returns listOf(playlist(1, "http://e/1.xml"))
+            var failNext = true
+            val refresher =
+                refresher {
+                    if (failNext) throw IOException("transient") else refreshedUrls += it
+                    1
+                }
+
+            // First run fails: no stamp, so epgLastUpdatedMs stays 0 and the
+            // scheduler keeps the source due for the next minute tick.
+            assertEquals(emptyList<Long>(), refresher.refreshDue())
+            coVerify(exactly = 0) { playlistDao.markEpgUpdated(any(), any()) }
+
+            failNext = false
+            assertEquals(listOf(1L), refresher.refreshDue())
+            assertEquals(listOf("http://e/1.xml"), refreshedUrls)
+            coVerify(exactly = 1) { playlistDao.markEpgUpdated(1, nowMs) }
+        }
+
+    @Test
+    fun `a failing source is reported through the warn seam`() =
+        runTest {
+            coEvery { playlistDao.all() } returns listOf(playlist(1, "http://e/bad.xml"))
+            val warnings = mutableListOf<Pair<String, Throwable>>()
+            val cause = IOException("boom")
+            val refresher =
+                EpgRefresher(
+                    playlistDao = playlistDao,
+                    scheduler = RefreshScheduler(),
+                    clock = { nowMs },
+                    fetch =
+                        EpgFetch(
+                            refresh = { throw cause },
+                            warn = { message, error -> warnings += message to error },
+                        ),
+                )
+
+            refresher.refreshDue()
+
+            assertEquals(listOf("EPG refresh failed for http://e/bad.xml" to cause), warnings)
         }
 
     @Test
@@ -187,7 +238,7 @@ class EpgRefresherTest {
                     playlistDao = playlistDao,
                     scheduler = RefreshScheduler(),
                     clock = { nowMs },
-                    refresh = { 1 },
+                    fetch = EpgFetch(refresh = { 1 }),
                     retention =
                         EpgRetention(
                             keepPastMs = { EpgRefresher.daysToMs(2) },

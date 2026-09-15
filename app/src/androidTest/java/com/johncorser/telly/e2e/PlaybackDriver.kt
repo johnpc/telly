@@ -91,17 +91,40 @@ class PlaybackDriver(
         }
         currentChannel = FixturePlan.channelNamed(name)
         val label = hasText(channelLabel(number, name), substring = true)
+        // The fullscreen player renders no error affordance (PlayerState.Error
+        // feeds multiview panes only), so a decoder-init death is observable
+        // here only as the overlay never appearing. Allow ONE bounded re-tune
+        // at half the timeout for transient emulator codec stalls; a second
+        // failure still times the step out.
+        var retuned = false
+        val retryAtMs = SystemClock.uptimeMillis() + LONG_TIMEOUT_MS / 2
         awaitCondition("info overlay identifies ${channelLabel(number, name)}", timeoutMs = LONG_TIMEOUT_MS) {
             if (world.nodeCount(label) > 0) {
                 true
             } else {
                 if (chromeMarkers().all { world.nodeCount(it) == 0 }) {
-                    world.pressKey(KeyEvent.KEYCODE_DPAD_CENTER)
+                    if (!retuned && SystemClock.uptimeMillis() >= retryAtMs) {
+                        retuned = true
+                        retuneOnce()
+                    } else {
+                        world.pressKey(KeyEvent.KEYCODE_DPAD_CENTER)
+                    }
                 }
                 false
             }
         }
         dismissChrome()
+    }
+
+    /**
+     * Zaps away and back to force a fresh decoder init after a transient
+     * emulator Codec2 stall. A no-op unless bare playback owns the keys, so
+     * it cannot mask a navigation failure (the step still times out).
+     */
+    private fun retuneOnce() {
+        world.pressKey(KeyEvent.KEYCODE_CHANNEL_UP)
+        SystemClock.sleep(SETTLE_MS)
+        world.pressKey(KeyEvent.KEYCODE_CHANNEL_DOWN)
     }
 
     fun channelLabel(

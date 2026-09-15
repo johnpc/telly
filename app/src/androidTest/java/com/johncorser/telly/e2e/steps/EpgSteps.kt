@@ -45,7 +45,10 @@ class EpgSteps(
                 else -> error("unexpected EPG source $source")
             }
         val channel = FixturePlan.channelNamed(channelName)
-        val expected = fixture.filter { it.channelTvgId == channel.tvgId }
+        // The catch-up deep-past merge APPENDS descending programmes to the
+        // fixture (FixturePlan.deepPastSchedule), so sort by start to keep
+        // first()/last() a valid observeWindow query span.
+        val expected = fixture.filter { it.channelTvgId == channel.tvgId }.sortedBy { it.startMs }
         // Refreshes triggered from settings run asynchronously; await the
         // stored schedule matching the served fixture instead of asserting
         // one racy snapshot.
