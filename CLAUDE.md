@@ -351,6 +351,28 @@ Local SDK note: `local.properties` must contain
   at 30 (`WatchHistory.CAP`; the reference cap is not capturable). Events
   are recorded in `TuneController.tune`, the same commit point as
   `lastChannelId`, so guide preview tunes count as watches too.
+  **CORRECTED (history-round2, 2026-09-15) — capture-48's "bare playback"
+  reading is WRONG for a history-rich install; evidence-only, rework is the
+  next slice (`docs/reference/sidebyside/history-round2/`):** with real
+  accumulated history the fullscreen info overlay shortcut row is
+  **TV guide · History · N recent-channel cards · Clear** (capture-48's
+  install had no recent/Clear cards). A **recent-channel card** = channel
+  LOGO + that channel's CURRENT programme title in accent blue (not
+  name/number); focusing one shows a bottom `air-time + programme title`
+  line. **OK on a recent-channel card → shared Unlock Premium** in free tier
+  (verified on a Music- AND a News-group card — universal, not a direct zap;
+  BACK → player, no zap). **OK on the History card → a DISTINCT full-screen
+  "History" list surface** — NOT bare playback, NOT the guide overlay, NOT
+  an "EPG schedule browser": a leanback VerticalGrid, title "History"
+  top-RIGHT + a clear-all trash icon, dimmed video behind, showing
+  "No history" this session (the standalone History log and the info-row
+  recent cards are separate sources; populated it would be a grid of channel
+  cards). **BACK from the History screen → fullscreen player.** The info-row
+  **Clear** card (trash + "Clear", rightmost) clears the recent-channel row
+  (not activated — read-only round). telly's current synthetic-History-
+  group-in-the-guide model does NOT match this; the rework (a distinct
+  History list surface + a recent-channel cards row in the info overlay) is
+  the next slice.
 - **2026-09-14** Sheet-close focus restore (round5 punch list): the grid focus
   engine's state already survived a plain sheet open/close (the round-5
   "returns to the now-cell" read happened because the originating cell WAS the

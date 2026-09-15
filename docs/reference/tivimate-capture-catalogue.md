@@ -164,6 +164,19 @@ but are inert.
 - Shortcut row of cards 150×110: **TV guide** (grid icon) then **History**
   (clock-with-arrow icon); LEFT/RIGHT moves focus and the row scrolls; a centered
   **down-chevron** at bottom (no further rows expand in free tier — DOWN is a no-op here).
+
+> **CORRECTED (history-round2, 2026-09-15)** — with REAL accumulated watch
+> history the shortcut row is longer than 33/34 showed (those installs had
+> no history). Full row, left→right: **TV guide** · **History** · **recent-
+> channel cards** (one per recently-watched channel, newest first: channel
+> **logo** + the channel's **current programme title** in accent blue —
+> NOT the channel name/number; focusing one adds a bottom `air-time +
+> programme title` line) · **Clear** (trash icon). Row is a GridView
+> [0,792][1920,1012]; TV guide tile 280×208 (first/focused), the rest
+> ~248×184. **OK on a recent-channel card → shared Unlock Premium** (free
+> tier; verified on both a Music- and a News-group card — universal, not a
+> zap; BACK → player, no channel change). See §48 for the History card and
+> the Clear card. Evidence: `sidebyside/history-round2/`.
 - BACK hides the overlay.
 
 ### Key map discovered during playback (free 5.2.0)
@@ -238,7 +251,30 @@ Right panel titled with the channel name ("News One"), all rows premium-locked:
 - OK on History card opens the same overlay (with History as source group when it
   exists). Long-BACK returns to the player.
 
+> **CORRECTED (history-round2):** the History card does NOT open this guide
+> overlay. See §48.
+
 ### 48 (`48-history-screen.png` + dump) — captured overlay state after History press.
+
+> **CORRECTED (history-round2, 2026-09-15) — SUPERSEDES the capture-48
+> reading AND the interim "EPG schedule browser" reading.** With real
+> accumulated history, **OK on the History card opens a DISTINCT full-screen
+> "History" list surface** — NOT bare playback (capture-48 was on a
+> history-empty install), NOT the guide overlay, NOT an EPG schedule
+> browser. It is a leanback VerticalGrid screen: title **"History"**
+> top-RIGHT (`TextView [1568,40][1744,116]`) + a **clear-all trash icon**
+> (`ImageView [1792,40][1872,120]`), dimmed live video behind. This session
+> it showed the empty state **"No history"** (`TextView [887,519]`) even
+> though the info-row recent-channel cards were populated — the standalone
+> History log and the recent quick-cards are different sources; when
+> populated the screen would show a grid of channel cards. **BACK →
+> fullscreen player.** The info-row **Clear** card (trash + "Clear",
+> rightmost) clears the recent-channel row — NOT activated (read-only round,
+> must not clear accumulated history), so its confirm behavior is
+> uncaptured. Method note: BACK from the info overlay lands on the
+> guide/channel-list panel, so reach the History card via long-BACK →
+> bare fullscreen → OK → RIGHT → OK in one burst (the overlay auto-hides
+> ~5 s and resets focus). Evidence: `sidebyside/history-round2/`.
 
 ---
 
