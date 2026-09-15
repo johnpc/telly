@@ -1,0 +1,51 @@
+<resources>
+    <string name="welcome_headline">telly no proporciona ninguna fuente de canales de TV</string>
+    <string name="welcome_subtitle">Para ver canales de TV, añade una lista de reproducción proporcionada por tu servicio IPTV</string>
+    <string name="welcome_add_playlist">Añadir lista</string>
+    <string name="welcome_settings">Ajustes</string>
+
+    <string name="settings_title">Ajustes</string>
+
+    <string name="wizard_playlist_type">Tipo de lista</string>
+    <string name="wizard_m3u_playlist">Lista M3U</string>
+    <string name="wizard_xtream_codes">Xtream Codes</string>
+    <string name="wizard_stalker_portal">Stalker Portal</string>
+    <string name="wizard_cancel">Cancelar</string>
+    <string name="wizard_enter_url">Introducir URL</string>
+    <string name="wizard_paste_from_clipboard">Pegar del portapapeles</string>
+    <string name="wizard_select_local_playlist">Seleccionar lista local</string>
+    <string name="wizard_next">Siguiente</string>
+    <string name="wizard_back">Atrás</string>
+    <string name="wizard_processing">Procesando la lista</string>
+    <string name="wizard_processed">La lista está procesada</string>
+    <string name="wizard_channels_count">Canales: %1$d</string>
+    <string name="wizard_movies_count">Películas: %1$d</string>
+    <string name="wizard_playlist_name">Nombre de la lista</string>
+    <string name="wizard_tv_playlist">Lista de TV</string>
+    <string name="wizard_vod_playlist">Lista VOD (sin canales de TV)</string>
+    <string name="wizard_epg_url">URL de EPG</string>
+    <string name="wizard_epg_guidance">Introduce la URL de EPG para la lista. Puedes añadirla o cambiarla más tarde en los ajustes. Solo se admite el formato XMLTV.</string>
+    <string name="wizard_paste_playlist_url">Pegar URL de la lista</string>
+    <string name="wizard_paste_playlist_hint">Puedes editar la URL de la lista si tiene un formato similar</string>
+    <string name="wizard_use_default_source">Usar fuente predeterminada</string>
+    <string name="wizard_done">Hecho</string>
+    <string name="wizard_error_invalid_url">Introduce una URL http(s) válida</string>
+    <string name="wizard_error_load_failed">No se pudo cargar la lista. Comprueba la URL e inténtalo de nuevo.</string>
+
+    <string name="playback_card_tv_guide">Guía de TV</string>
+    <string name="playback_card_history">Historial</string>
+    <string name="playback_card_multiview">Multivista</string>
+    <string name="playback_card_clear">Borrar</string>
+    <string name="playback_coming_soon">Próximamente en telly</string>
+
+    <string name="history_title">Historial</string>
+    <string name="history_empty">Sin historial</string>
+    <string name="history_clear_all">Borrar historial</string>
+
+    <string name="search_hint">Habla para buscar</string>
+    <string name="search_history">Historial de búsqueda</string>
+    <string name="search_no_history">Sin historial</string>
+    <string name="search_channels">Canales</string>
+    <string name="search_programs">Programas</string>
+    <string name="search_voice">Búsqueda por voz</string>
+</resources>

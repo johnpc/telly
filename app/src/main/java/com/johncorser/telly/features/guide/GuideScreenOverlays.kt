@@ -20,6 +20,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.johncorser.telly.features.panel.ChannelPanelScreenGroups
 import com.johncorser.telly.features.panel.GroupColumnMetrics
+import com.johncorser.telly.features.panel.LocalGroupVisibility
 
 /**
  * Nav rail + groups column slid in at the guide's left (capture 25), grid
@@ -52,7 +53,8 @@ internal fun GuideScreenGroups(
                 },
         ) {
             ChannelPanelScreenGroups(
-                groups = groups,
+                // Appearance -> Groups: hidden synthetic groups drop out.
+                groups = LocalGroupVisibility.current.filter(groups),
                 selected = selected,
                 onSelect = controller::selectGroup,
                 autoFocusSelected = true,

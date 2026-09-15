@@ -48,7 +48,7 @@ class SettingsPickersTest {
         assertEquals(TellySettings.CONFIRM_EXIT, SettingsToggles.byRowId[RowIds.CONFIRM_EXIT])
         assertEquals(TellySettings.SEND_STATISTICS, SettingsToggles.byRowId[RowIds.ABOUT_STATISTICS])
         assertEquals(TellySettings.SEEK_RWFF_CATCHUP, SettingsToggles.byRowId[RowIds.REMOTE_SEEK_RWFF])
-        assertEquals(21, SettingsToggles.byRowId.size)
+        assertEquals(26, SettingsToggles.byRowId.size)
     }
 
     @Test

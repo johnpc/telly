@@ -6,6 +6,7 @@ import com.johncorser.telly.core.settings.TellySettings
 import com.johncorser.telly.features.guide.GuideDeps
 import com.johncorser.telly.features.history.WatchHistory
 import com.johncorser.telly.features.multiview.MultiviewDeps
+import com.johncorser.telly.features.playback.PanelTimeouts
 import com.johncorser.telly.features.playback.PlaybackDeps
 import com.johncorser.telly.features.playback.PlaybackSources
 import com.johncorser.telly.features.player.Media3PlayerEngine
@@ -28,6 +29,9 @@ fun ServiceLocator.playbackDeps(context: Context): PlaybackDeps =
         engineFactory = { Media3PlayerEngine.create(context.applicationContext) },
         clock = clock,
         parental = ParentalControls(settingsRepository(context)),
+        panelTimeouts = {
+            PanelTimeouts.forSeconds(settingsRepository(context).get(TellySettings.PLAYER_PANEL_TIMEOUT_SEC))
+        },
     )
 
 /** Guide slice = the playback bundle + the settings the grid honors. */
@@ -35,6 +39,7 @@ fun ServiceLocator.guideDeps(context: Context): GuideDeps =
     GuideDeps(
         playback = playbackDeps(context),
         pastDays = { settingsRepository(context).get(TellySettings.EPG_PAST_DAYS_TO_KEEP) },
+        visibleRows = { settingsRepository(context).get(TellySettings.GUIDE_VISIBLE_CHANNELS) },
     )
 
 /**

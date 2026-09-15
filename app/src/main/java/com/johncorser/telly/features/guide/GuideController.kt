@@ -25,6 +25,8 @@ class GuideController(
     private val pastDays: () -> Int,
     scope: CoroutineScope,
     private val callbacks: GuideCallbacks,
+    /** Appearance -> TV guide -> Number of visible channels (7 = today). */
+    visibleRows: () -> Int = { GuideGeometry.VISIBLE_ROWS },
 ) {
     val zone = env.time.zone
 
@@ -38,7 +40,12 @@ class GuideController(
     /** Background stop + foreground re-seed/re-tune (round7 resume P2). */
     val lifecycle = PlaybackLifecycle(tuner, onForegrounded = ticker::reseed, recover = tuner::retune)
     private val selected = MutableStateFlow(PanelViewModel.ALL_CHANNELS)
-    private val focusEngine = GuideFocusEngine(originMs, pastFloorDp = { GuideWindowMath.scrollFloorDp(pastDays()) })
+    private val focusEngine =
+        GuideFocusEngine(
+            originMs,
+            pastFloorDp = { GuideWindowMath.scrollFloorDp(pastDays()) },
+            visibleRows = visibleRows,
+        )
     private val feed =
         GuideRowsFeed(
             GuideRowsSources(tuner.channels, selected.asStateFlow()),
@@ -69,7 +76,7 @@ class GuideController(
             focusedRow = ::focusedRow,
             info = { info.value },
             callbacks = callbacks,
-            focusMemory = GuideFocusMemory(focusEngine) { rows.value },
+            focusMemory = GuideFocusMemory(focusEngine, visibleRows) { rows.value },
         )
 
     val layer: StateFlow<GuideLayer> = menu.layer

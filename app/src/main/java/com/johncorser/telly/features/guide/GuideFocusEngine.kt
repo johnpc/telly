@@ -15,6 +15,8 @@ class GuideFocusEngine(
     private val originMs: Long,
     private val pastFloorDp: () -> Float,
     private val viewportDp: Float = GuideGeometry.TIME_VIEWPORT_DP,
+    /** Appearance -> TV guide -> Number of visible channels (7 = today). */
+    private val visibleRows: () -> Int = { GuideGeometry.VISIBLE_ROWS },
 ) {
     private val mutableFocus = MutableStateFlow<GuideFocus?>(null)
     private val mutableScroll = MutableStateFlow(0f)
@@ -86,7 +88,7 @@ class GuideFocusEngine(
         val cell = GuideFocusNav.cellAt(rows[rowIndex].cells, current.anchorMs) ?: return
         mutableFocus.value = GuideFocus(rowIndex, cell, current.anchorMs)
         mutableFirstRow.value =
-            GuideScrollPlanner.rowWindow(mutableFirstRow.value, rowIndex, GuideGeometry.VISIBLE_ROWS, rows.size)
+            GuideScrollPlanner.rowWindow(mutableFirstRow.value, rowIndex, visibleRows(), rows.size)
     }
 
     /**

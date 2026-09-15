@@ -57,6 +57,18 @@ object RowIds {
     const val APPEARANCE_FONT_SIZE = "appearance.font_size"
     const val APPEARANCE_COLOR_THEME = "appearance.color_theme"
 
+    // Appearance sub-panes.
+    const val APPEARANCE_GUIDE_VISIBLE_CHANNELS = "appearance.guide.visible_channels"
+    const val APPEARANCE_GUIDE_TRANSPARENCY = "appearance.guide.transparency"
+    const val APPEARANCE_GUIDE_CHANNEL_NUMBERS = "appearance.guide.channel_numbers"
+    const val APPEARANCE_PLAYER_TRANSPARENCY = "appearance.player.transparency"
+    const val APPEARANCE_PLAYER_TIMEOUT = "appearance.player.timeout"
+    const val APPEARANCE_PLAYER_SHOW_CLOCK = "appearance.player.show_clock"
+    const val APPEARANCE_GROUPS_ALL_CHANNELS = "appearance.groups.all_channels"
+    const val APPEARANCE_GROUPS_FAVORITES = "appearance.groups.favorites"
+    const val APPEARANCE_LOGOS_BACKGROUND = "appearance.logos.background"
+    const val APPEARANCE_LOGOS_ROUNDED = "appearance.logos.rounded"
+
     // Playback.
     const val PLAYBACK_BUFFER_SIZE = "playback.buffer_size"
     const val PLAYBACK_AUDIO_DECODER = "playback.audio_decoder"

@@ -39,12 +39,17 @@ internal fun GuideScreenMenuScrim(
     val rows by controller.rows.collectAsState()
     val firstRow by controller.firstVisibleRow.collectAsState()
     val holeActive = rememberScrimHoleActive(layer)
+    val rowHeightDp = LocalGuideStyle.current.rowHeightDp
     val bandTop =
-        if (holeActive) GuideDimExemption.bandTopDp(controller.menu.sheetChannelId, rows, firstRow) else null
+        if (holeActive) {
+            GuideDimExemption.bandTopDp(controller.menu.sheetChannelId, rows, firstRow, rowHeightDp)
+        } else {
+            null
+        }
     Box(
         Modifier
             .fillMaxSize()
-            .guideScrimRowHole(bandTop),
+            .guideScrimRowHole(bandTop, rowHeightDp),
     ) {
         PlaybackScreenMenuScrim(visible = layer == GuideLayer.RowMenu)
     }
@@ -66,7 +71,10 @@ private fun rememberScrimHoleActive(layer: GuideLayer): Boolean {
 }
 
 /** Clears the undimmed row band out of everything drawn inside. */
-private fun Modifier.guideScrimRowHole(bandTopDp: Float?): Modifier {
+private fun Modifier.guideScrimRowHole(
+    bandTopDp: Float?,
+    rowHeightDp: Float,
+): Modifier {
     if (bandTopDp == null) return this
     return graphicsLayer { compositingStrategy = CompositingStrategy.Offscreen }
         .drawWithContent {
@@ -74,7 +82,7 @@ private fun Modifier.guideScrimRowHole(bandTopDp: Float?): Modifier {
             drawRect(
                 color = Color.Black,
                 topLeft = Offset(0f, bandTopDp.dp.toPx()),
-                size = Size(size.width, GuideGeometry.ROW_HEIGHT_DP.dp.toPx()),
+                size = Size(size.width, rowHeightDp.dp.toPx()),
                 blendMode = BlendMode.Clear,
             )
         }

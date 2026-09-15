@@ -82,7 +82,7 @@ object SettingsPickers {
                 key = TellySettings.PARENTAL_RELOCK.key,
                 options = sameRaw(listOf("Always require", "Until app restart")),
             ),
-        )
+        ) + appearancePickerSpecs
 
     val byRowId: Map<String, PickerSpec> = all.associateBy { it.rowId }
 
@@ -97,7 +97,7 @@ object SettingsPickers {
             TellySettings.VIDEO_DECODER.key to TellySettings.VIDEO_DECODER.default,
             TellySettings.PARENTAL_PIN_INPUT_METHOD.key to TellySettings.PARENTAL_PIN_INPUT_METHOD.default,
             TellySettings.PARENTAL_RELOCK.key to TellySettings.PARENTAL_RELOCK.default,
-        )
+        ) + appearancePickerDefaults
 
     /** The raw value a picker should highlight given the store [snapshot]. */
     fun currentRaw(

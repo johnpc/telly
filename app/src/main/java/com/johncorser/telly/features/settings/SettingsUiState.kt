@@ -15,6 +15,14 @@ sealed interface SettingsPane {
     data class EpgSourceDetail(
         val sourceId: Long,
     ) : SettingsPane
+
+    data object AppearanceTvGuide : SettingsPane
+
+    data object AppearancePlayer : SettingsPane
+
+    data object AppearanceGroups : SettingsPane
+
+    data object AppearanceLogos : SettingsPane
 }
 
 /** Modal state over the sheet stack. */

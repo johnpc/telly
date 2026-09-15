@@ -1,5 +1,6 @@
 package com.johncorser.telly
 
+import android.content.Context
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -13,6 +14,7 @@ import com.johncorser.telly.core.playbackDeps
 import com.johncorser.telly.core.searchDeps
 import com.johncorser.telly.core.settings.ParentalControls
 import com.johncorser.telly.core.settings.TellySettings
+import com.johncorser.telly.core.settings.withAppLocale
 import com.johncorser.telly.features.onboarding.StartRoute
 import com.johncorser.telly.features.playlist.M3uFetcher
 import com.johncorser.telly.features.settings.PlaylistUpdater
@@ -25,6 +27,17 @@ import kotlinx.coroutines.launch
 class MainActivity : ComponentActivity() {
     private val navigator = Navigator(start = Route.Boot)
     private val fetcher = M3uFetcher()
+
+    /**
+     * Appearance -> Language: the activity's base context carries the
+     * picked locale (thin glue; the mapping lives in AppLanguage and the
+     * wrap in AppLocaleContext). Live changes re-resolve in composition
+     * via ProvideAppLocale — no appcompat per-app-locale API is available.
+     */
+    override fun attachBaseContext(newBase: Context) {
+        val language = ServiceLocator.settingsRepository(newBase).get(TellySettings.LANGUAGE)
+        super.attachBaseContext(newBase.withAppLocale(language))
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)

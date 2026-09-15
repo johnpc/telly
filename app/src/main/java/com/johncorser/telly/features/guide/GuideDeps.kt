@@ -10,6 +10,8 @@ import com.johncorser.telly.features.playback.PlaybackDeps
 class GuideDeps(
     val playback: PlaybackDeps,
     val pastDays: () -> Int,
+    /** Appearance -> TV guide -> Number of visible channels (7 = today). */
+    val visibleRows: () -> Int = { GuideGeometry.VISIBLE_ROWS },
 )
 
 /** Navigation the guide triggers: fullscreen playback, search, settings. */

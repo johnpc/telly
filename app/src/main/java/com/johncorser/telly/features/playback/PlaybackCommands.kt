@@ -1,7 +1,6 @@
 package com.johncorser.telly.features.playback
 
 import com.johncorser.telly.features.panel.PanelViewModel
-import kotlinx.coroutines.flow.MutableStateFlow
 
 /**
  * Executes [PlaybackCommand]s against the tuner and overlay state — the
@@ -12,19 +11,21 @@ class PlaybackCommands(
     private val tuner: TuneController,
     private val overlays: OverlayState,
     private val panel: PanelViewModel,
-    private val instant: MutableStateFlow<Long>,
-    private val clock: () -> Long,
+    /** Re-seeds the overlay's "now" instant from the injected clock. */
+    private val refreshInstant: () -> Unit,
     private val exitToGuide: () -> Unit,
+    /** Appearance -> Player -> Panels timeout, sec (default = today's constants). */
+    private val timeouts: () -> PanelTimeouts = { PanelTimeouts.DEFAULT },
 ) {
     fun execute(command: PlaybackCommand) {
         when (command) {
             PlaybackCommand.ShowInfo -> showInfo()
             PlaybackCommand.ShowTransport ->
-                overlays.showAutoHiding(PlaybackOverlay.InfoTransport, PlaybackViewModel.INFO_OVERLAY_TIMEOUT_MS)
+                overlays.showAutoHiding(PlaybackOverlay.InfoTransport, timeouts().infoMs)
             PlaybackCommand.ExitToGuide -> exitToGuide()
             is PlaybackCommand.Zap -> zap(command.delta)
             PlaybackCommand.OpenQuickBar ->
-                overlays.showAutoHiding(PlaybackOverlay.QuickBar, PlaybackViewModel.QUICK_BAR_TIMEOUT_MS)
+                overlays.showAutoHiding(PlaybackOverlay.QuickBar, timeouts().quickBarMs)
             PlaybackCommand.Dismiss -> overlays.set(PlaybackOverlay.None)
             PlaybackCommand.BackToPanel -> overlays.set(PlaybackOverlay.Panel)
             is PlaybackCommand.PopTo -> overlays.set(command.overlay)
@@ -39,13 +40,13 @@ class PlaybackCommands(
 
     /** Zap keeps the old frame on screen; the compact overlay identifies the target. */
     fun showZapInfo() {
-        instant.value = clock()
-        overlays.showAutoHiding(PlaybackOverlay.ZapInfo, PlaybackViewModel.ZAP_OVERLAY_TIMEOUT_MS)
+        refreshInstant()
+        overlays.showAutoHiding(PlaybackOverlay.ZapInfo, timeouts().zapMs)
     }
 
     private fun showInfo() {
-        instant.value = clock()
-        overlays.showAutoHiding(PlaybackOverlay.Info, PlaybackViewModel.INFO_OVERLAY_TIMEOUT_MS)
+        refreshInstant()
+        overlays.showAutoHiding(PlaybackOverlay.Info, timeouts().infoMs)
     }
 
     private fun zap(delta: Int) {

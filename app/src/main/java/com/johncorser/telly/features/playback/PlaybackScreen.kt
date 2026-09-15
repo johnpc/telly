@@ -50,7 +50,7 @@ fun PlaybackScreen(
                         epgRepository = deps.sources.epgRepository,
                         engine = engine,
                         store = deps.keyValueStore,
-                        time = PlaybackTime(deps.clock),
+                        time = PlaybackTime(deps.clock, panelTimeouts = deps.panelTimeouts),
                         hooks =
                             PlaybackHooks(
                                 panelLock = PanelLock(deps.parental),

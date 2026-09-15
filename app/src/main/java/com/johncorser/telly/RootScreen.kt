@@ -52,24 +52,26 @@ fun RootScreen(
                     surface = Color(TELLY_GUIDANCE_PANE),
                 ),
         ) {
-            Box(Modifier.fillMaxSize()) {
-                RootScreenRoutes(
-                    baseRoute,
-                    settingsOpen,
-                    navigator,
-                    repository,
-                    fetchPlaylist,
-                    playbackDeps,
-                    guideDeps,
-                    searchDeps,
-                    multiviewDeps,
-                )
-                if (settingsOpen) {
-                    SettingsScreenHost(
-                        graph = settingsGraph,
-                        onAddPlaylist = { navigator.push(Route.AddPlaylistWizard) },
-                        onClose = { navigator.pop() },
+            ProvideAppearanceSettings(settingsGraph.settings) {
+                Box(Modifier.fillMaxSize()) {
+                    RootScreenRoutes(
+                        baseRoute,
+                        settingsOpen,
+                        navigator,
+                        repository,
+                        fetchPlaylist,
+                        playbackDeps,
+                        guideDeps,
+                        searchDeps,
+                        multiviewDeps,
                     )
+                    if (settingsOpen) {
+                        SettingsScreenHost(
+                            graph = settingsGraph,
+                            onAddPlaylist = { navigator.push(Route.AddPlaylistWizard) },
+                            onClose = { navigator.pop() },
+                        )
+                    }
                 }
             }
         }

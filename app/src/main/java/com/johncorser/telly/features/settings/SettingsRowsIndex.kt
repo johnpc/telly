@@ -28,6 +28,10 @@ fun rowsFor(
                 .firstOrNull { it.id == pane.sourceId }
                 ?.let { epgSourceDetailRows(it) }
                 .orEmpty()
+        SettingsPane.AppearanceTvGuide -> appearanceTvGuideRows(settings)
+        SettingsPane.AppearancePlayer -> appearancePlayerRows(settings)
+        SettingsPane.AppearanceGroups -> appearanceGroupsRows(settings)
+        SettingsPane.AppearanceLogos -> appearanceLogosRows(settings)
     }
 
 private fun rootRows(): List<SettingsRow> =
@@ -66,4 +70,8 @@ fun paneTitle(
         SettingsPane.EpgSources -> "EPG sources"
         is SettingsPane.EpgSourceDetail ->
             epgSources.firstOrNull { it.id == pane.sourceId }?.name ?: "EPG source"
+        SettingsPane.AppearanceTvGuide -> "TV guide"
+        SettingsPane.AppearancePlayer -> "Player"
+        SettingsPane.AppearanceGroups -> "Groups"
+        SettingsPane.AppearanceLogos -> "Logos"
     }

@@ -1,0 +1,51 @@
+<resources>
+    <string name="welcome_headline">telly stellt keine Quellen für TV-Sender bereit</string>
+    <string name="welcome_subtitle">Um TV-Sender zu sehen, füge bitte eine Playlist deines IPTV-Anbieters hinzu</string>
+    <string name="welcome_add_playlist">Playlist hinzufügen</string>
+    <string name="welcome_settings">Einstellungen</string>
+
+    <string name="settings_title">Einstellungen</string>
+
+    <string name="wizard_playlist_type">Playlist-Typ</string>
+    <string name="wizard_m3u_playlist">M3U-Playlist</string>
+    <string name="wizard_xtream_codes">Xtream Codes</string>
+    <string name="wizard_stalker_portal">Stalker Portal</string>
+    <string name="wizard_cancel">Abbrechen</string>
+    <string name="wizard_enter_url">URL eingeben</string>
+    <string name="wizard_paste_from_clipboard">Aus Zwischenablage einfügen</string>
+    <string name="wizard_select_local_playlist">Lokale Playlist auswählen</string>
+    <string name="wizard_next">Weiter</string>
+    <string name="wizard_back">Zurück</string>
+    <string name="wizard_processing">Playlist wird verarbeitet</string>
+    <string name="wizard_processed">Playlist wurde verarbeitet</string>
+    <string name="wizard_channels_count">Sender: %1$d</string>
+    <string name="wizard_movies_count">Filme: %1$d</string>
+    <string name="wizard_playlist_name">Playlist-Name</string>
+    <string name="wizard_tv_playlist">TV-Playlist</string>
+    <string name="wizard_vod_playlist">VOD-Playlist (keine TV-Sender)</string>
+    <string name="wizard_epg_url">EPG-URL</string>
+    <string name="wizard_epg_guidance">Gib die EPG-URL für die Playlist ein. Du kannst sie später in den Einstellungen hinzufügen oder ändern. Es wird nur das XMLTV-Format unterstützt.</string>
+    <string name="wizard_paste_playlist_url">Playlist-URL einfügen</string>
+    <string name="wizard_paste_playlist_hint">Du kannst die Playlist-URL bearbeiten, wenn sie ein ähnliches Format hat</string>
+    <string name="wizard_use_default_source">Standardquelle verwenden</string>
+    <string name="wizard_done">Fertig</string>
+    <string name="wizard_error_invalid_url">Gib eine gültige http(s)-URL ein</string>
+    <string name="wizard_error_load_failed">Die Playlist konnte nicht geladen werden. Prüfe die URL und versuche es erneut.</string>
+
+    <string name="playback_card_tv_guide">TV-Guide</string>
+    <string name="playback_card_history">Verlauf</string>
+    <string name="playback_card_multiview">Multiview</string>
+    <string name="playback_card_clear">Leeren</string>
+    <string name="playback_coming_soon">Demnächst in telly</string>
+
+    <string name="history_title">Verlauf</string>
+    <string name="history_empty">Kein Verlauf</string>
+    <string name="history_clear_all">Verlauf löschen</string>
+
+    <string name="search_hint">Zum Suchen sprechen</string>
+    <string name="search_history">Suchverlauf</string>
+    <string name="search_no_history">Kein Verlauf</string>
+    <string name="search_channels">Sender</string>
+    <string name="search_programs">Sendungen</string>
+    <string name="search_voice">Sprachsuche</string>
+</resources>

@@ -33,6 +33,18 @@ object TellySettings {
     val CLOCK_FORMAT = stringSetting("appearance_clock_format", "12-hour")
     val SHOW_CHANNEL_NUMBERS = boolSetting("appearance_channel_numbers", true)
 
+    // Appearance sub-panes (ux-spec §3 Appearance: TV Guide / Player /
+    // Groups / Logos). Every default reproduces telly's current rendering.
+    val GUIDE_VISIBLE_CHANNELS = intSetting("appearance_guide_visible_channels", 7)
+    val GUIDE_TRANSPARENCY = stringSetting("appearance_guide_transparency", "Opaque")
+    val PLAYER_TRANSPARENCY = intSetting("appearance_player_transparency", 0)
+    val PLAYER_PANEL_TIMEOUT_SEC = intSetting("appearance_player_timeout_sec", 5)
+    val PLAYER_SHOW_CLOCK = boolSetting("appearance_player_show_clock", true)
+    val SHOW_ALL_CHANNELS_GROUP = boolSetting("appearance_group_all_channels", true)
+    val SHOW_FAVORITES_GROUP = boolSetting("appearance_group_favorites", true)
+    val LOGO_BACKGROUND = stringSetting("appearance_logo_background", "Default")
+    val LOGO_ROUNDED_CORNERS = boolSetting("appearance_logo_rounded", true)
+
     // Playback (catalogue 60–62). Resize mode is a store-only key.
     val BUFFER_SIZE = stringSetting("playback_buffer_size", "Small")
     val AUDIO_DECODER = stringSetting("playback_audio_decoder", "Hardware")

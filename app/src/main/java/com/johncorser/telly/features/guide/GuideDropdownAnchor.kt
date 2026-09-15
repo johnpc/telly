@@ -22,11 +22,12 @@ object GuideDropdownAnchor {
         firstVisibleRow: Int,
         originMs: Long,
         scrollXDp: Float,
+        rowHeightDp: Float = GuideGeometry.ROW_HEIGHT_DP,
     ): GuideAnchor {
         val cellX = GuideGeometry.xOf(focus.cell.startMs, originMs) - scrollXDp
         val maxCellX = GuideGeometry.TIME_VIEWPORT_DP - MENU_WIDTH_DP
         val xDp = GuideGeometry.CHANNEL_COLUMN_DP + cellX.coerceIn(0f, maxCellX)
-        val rowBottom = (focus.rowIndex - firstVisibleRow + 1) * GuideGeometry.ROW_HEIGHT_DP
+        val rowBottom = (focus.rowIndex - firstVisibleRow + 1) * rowHeightDp
         val yDp = rowBottom.coerceIn(0f, maxOf(GuideGeometry.GRID_HEIGHT_DP - MENU_HEIGHT_DP, 0f))
         return GuideAnchor(xDp = xDp, yDp = yDp)
     }

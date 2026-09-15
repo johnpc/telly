@@ -23,7 +23,7 @@ internal fun SettingsViewModel.runAction(rowId: String) {
         RowIds.RESTORE_DATA -> callbacks.onImportBackup()
         RowIds.PARENTAL_CHANGE_PIN -> showOverlay(SettingsOverlay.PinSetup)
         RowIds.ABOUT_PRIVACY_POLICY -> callbacks.onOpenPrivacyPolicy()
-        else -> runPlaylistAction(rowId)
+        else -> appearancePaneFor(rowId)?.let(::push) ?: runPlaylistAction(rowId)
     }
 }
 

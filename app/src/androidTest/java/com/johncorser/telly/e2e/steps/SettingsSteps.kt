@@ -6,6 +6,7 @@ import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.isEnabled
 import androidx.compose.ui.test.isFocused
 import androidx.compose.ui.test.isNotEnabled
+import androidx.compose.ui.test.isOff
 import androidx.compose.ui.test.isOn
 import com.johncorser.telly.core.ServiceLocator
 import com.johncorser.telly.core.settings.ParentalControls
@@ -16,6 +17,7 @@ import com.johncorser.telly.features.epg.RefreshScheduler
 import io.cucumber.java.en.Given
 import io.cucumber.java.en.Then
 import io.cucumber.java.en.When
+import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 
@@ -55,6 +57,9 @@ class SettingsSteps(
 
     @Then("the {string} toggle is on")
     fun toggleOn(title: String) = world.waitFor(hasText(title) and isOn())
+
+    @Then("the {string} toggle is off")
+    fun toggleOff(title: String) = world.waitFor(hasText(title) and isOff())
 
     @Then("the {string} row shows {string}")
     fun rowShows(
@@ -137,6 +142,15 @@ class SettingsSteps(
             }
         }
         world.waitForText(name)
+    }
+
+    @Then("the channel panel group list does not include {string}")
+    fun panelGroupsExclude(group: String) {
+        leaveSettings()
+        driver.openPanel()
+        world.pressKey(KeyEvent.KEYCODE_DPAD_LEFT)
+        world.waitForText("All channels")
+        assertEquals(0, world.nodeCount(hasText(group)))
     }
 
     @Then("the row {string} is locked")

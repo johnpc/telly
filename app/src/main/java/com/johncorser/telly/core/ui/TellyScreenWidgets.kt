@@ -19,7 +19,6 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.tv.material3.Text
 import coil.compose.AsyncImage
-import com.johncorser.telly.core.design.TELLY_LOGO_TILE
 import com.johncorser.telly.core.design.TELLY_PROGRESS_TRACK
 
 /**
@@ -63,7 +62,7 @@ fun TellyScreenProgressBar(
     }
 }
 
-/** Rounded channel-logo tile with an initials fallback under the image. */
+/** Channel-logo tile (corners + fill from Appearance -> Logos) with an initials fallback under the image. */
 @Composable
 fun TellyScreenLogoTile(
     logoUrl: String?,
@@ -72,11 +71,12 @@ fun TellyScreenLogoTile(
     modifier: Modifier = Modifier,
     width: Dp = size,
 ) {
+    val style = LocalLogoStyle.current
     Box(
         modifier
             .size(width = width, height = size)
-            .clip(RoundedCornerShape(4.dp))
-            .background(Color(TELLY_LOGO_TILE)),
+            .clip(RoundedCornerShape(style.cornerDp.dp))
+            .background(Color(style.background)),
         contentAlignment = Alignment.Center,
     ) {
         Text(text = initialsOf(name), color = Color.White, fontSize = (size.value / 3).sp)

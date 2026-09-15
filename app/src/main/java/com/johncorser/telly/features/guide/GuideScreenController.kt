@@ -37,6 +37,7 @@ internal fun rememberGuideController(
                 pastDays = deps.pastDays,
                 scope = scope,
                 callbacks = callbacks,
+                visibleRows = deps.visibleRows,
             )
         }
     DisposableEffect(Unit) {
