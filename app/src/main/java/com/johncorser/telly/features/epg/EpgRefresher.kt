@@ -7,8 +7,10 @@ import kotlinx.coroutines.CancellationException
  * Applies the [RefreshScheduler] policy: refreshes every configured EPG
  * source — the auto-detected `url-tvg` plus the playlist's custom sources —
  * of every playlist whose data is due, and stamps the playlists where at
- * least one source succeeded. Failures are swallowed per source so one bad
- * EPG source cannot starve the others. Merge rule (the reference free tier
+ * least one source succeeded. Failures are swallowed per source (but logged
+ * through [EpgFetch.warn]) so one bad EPG source cannot starve the others;
+ * a failed playlist is never stamped, so it stays due and retries on the
+ * next scheduled run. Merge rule (the reference free tier
  * cannot show one): sources are fetched auto-detected FIRST, then custom in
  * added order, and [EpgRepository.refresh] replaces a channel's whole
  * schedule per fetched document — so the last source covering a channel
@@ -19,7 +21,7 @@ class EpgRefresher(
     private val playlistDao: PlaylistDao,
     private val scheduler: RefreshScheduler,
     private val clock: () -> Long,
-    private val refresh: suspend (epgUrl: String) -> Int,
+    private val fetch: EpgFetch,
     private val retention: EpgRetention = EpgRetention(),
     private val customSources: suspend (playlistUrl: String) -> List<String> = { emptyList() },
 ) {
@@ -45,8 +47,11 @@ class EpgRefresher(
     }
 
     private suspend fun refreshSource(url: String): Boolean =
-        runCatching { refresh(url) }
-            .onFailure { if (it is CancellationException) throw it }
+        runCatching { fetch.refresh(url) }
+            .onFailure {
+                if (it is CancellationException) throw it
+                fetch.warn("EPG refresh failed for $url", it)
+            }
             .isSuccess
 
     companion object {
@@ -59,6 +64,13 @@ class EpgRefresher(
         fun daysToMs(days: Int): Long = days.coerceAtLeast(0) * DAY_MS
     }
 }
+
+/** The per-source fetch seam plus its failure diagnostics. */
+class EpgFetch(
+    val refresh: suspend (epgUrl: String) -> Int,
+    /** Failure log seam; ServiceLocator wires android.util.Log. */
+    val warn: (message: String, cause: Throwable) -> Unit = { _, _ -> },
+)
 
 /** The "Past days to keep EPG" horizon and the trim that enforces it. */
 class EpgRetention(

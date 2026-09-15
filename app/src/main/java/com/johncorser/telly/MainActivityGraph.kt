@@ -1,6 +1,7 @@
 package com.johncorser.telly
 
 import com.johncorser.telly.core.ServiceLocator
+import com.johncorser.telly.core.epgRefresher
 import com.johncorser.telly.core.searchHistoryStore
 import com.johncorser.telly.core.settings.ParentalControls
 import com.johncorser.telly.core.settings.TellySettings

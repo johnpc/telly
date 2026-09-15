@@ -9,11 +9,8 @@ import com.johncorser.telly.core.kv.SharedPrefsKeyValueStore
 import com.johncorser.telly.core.settings.SettingsRepository
 import com.johncorser.telly.core.settings.TellySettings
 import com.johncorser.telly.features.catchup.db.CatchupMigration
-import com.johncorser.telly.features.epg.EpgRefresher
 import com.johncorser.telly.features.epg.EpgRepository
-import com.johncorser.telly.features.epg.EpgRetention
 import com.johncorser.telly.features.epg.EpgSourceStore
-import com.johncorser.telly.features.epg.RefreshScheduler
 import com.johncorser.telly.features.epg.RoomEpgSourceStore
 import com.johncorser.telly.features.mylist.MyListStore
 import com.johncorser.telly.features.mylist.RoomMyListStore
@@ -83,29 +80,6 @@ object ServiceLocator {
                 settingsRepository(context).get(TellySettings.EPG_STORE_DESCRIPTIONS)
             },
         )
-
-    /** EPG refresh policy driven live by Settings -> EPG. */
-    fun epgRefresher(context: Context): EpgRefresher {
-        val repository = epgRepository(context)
-        val prefs = settingsRepository(context)
-        return EpgRefresher(
-            playlistDao = database(context).playlistDao(),
-            scheduler =
-                RefreshScheduler(
-                    intervalMs = {
-                        RefreshScheduler.hoursToMs(prefs.get(TellySettings.EPG_UPDATE_INTERVAL_HOURS))
-                    },
-                ),
-            clock = clock,
-            refresh = repository::refresh,
-            retention =
-                EpgRetention(
-                    keepPastMs = { EpgRefresher.daysToMs(prefs.get(TellySettings.EPG_PAST_DAYS_TO_KEEP)) },
-                    trim = repository::trimEndedBefore,
-                ),
-            customSources = { playlistUrl -> epgSourceStore(context).forPlaylist(playlistUrl).map { it.url } },
-        )
-    }
 
     fun keyValueStore(context: Context): KeyValueStore =
         SharedPrefsKeyValueStore(context.applicationContext.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE))

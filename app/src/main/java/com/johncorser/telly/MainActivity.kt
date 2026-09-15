@@ -13,7 +13,6 @@ import com.johncorser.telly.core.navigation.Navigator
 import com.johncorser.telly.core.navigation.Route
 import com.johncorser.telly.core.playbackDeps
 import com.johncorser.telly.core.playlistFetchUserAgentFor
-import com.johncorser.telly.core.playlistRefresher
 import com.johncorser.telly.core.searchDeps
 import com.johncorser.telly.core.settings.TellySettings
 import com.johncorser.telly.core.settings.withAppLocale
@@ -21,7 +20,6 @@ import com.johncorser.telly.core.vodDeps
 import com.johncorser.telly.features.onboarding.StartRoute
 import com.johncorser.telly.features.pip.PipActivityBridge
 import com.johncorser.telly.features.pip.PipState
-import com.johncorser.telly.features.playback.PlaybackTime
 import com.johncorser.telly.features.playlist.M3uFetcher
 import com.johncorser.telly.features.recording.recordingDeps
 import com.johncorser.telly.features.reminders.remindersHub
@@ -71,7 +69,7 @@ class MainActivity : ComponentActivity() {
         val hooks = playbackHooks(afr)
         restoreStartRoute()
         keepEpgFresh()
-        keepPlaylistsFresh()
+        keepPlaylistsFresh(fetcher)
         setContent {
             RootScreen(
                 navigator = navigator,
@@ -101,24 +99,6 @@ class MainActivity : ComponentActivity() {
         lifecycleScope.launch {
             val channelCount = ServiceLocator.database(this@MainActivity).channelDao().totalCount()
             navigator.replaceAll(StartRoute.forChannelCount(channelCount))
-        }
-    }
-
-    /** Update playlists at launch (forced/due) and per minute while running. */
-    private fun keepPlaylistsFresh() {
-        val refresher = ServiceLocator.playlistRefresher(this, fetcher::fetch)
-        lifecycleScope.launch { refresher.run(PlaybackTime.minuteBoundaryTicks(ServiceLocator.clock)) }
-    }
-
-    /** Refresh due EPG sources on start and whenever the playlists change. */
-    private fun keepEpgFresh() {
-        val refresher = ServiceLocator.epgRefresher(this)
-        val settings = ServiceLocator.settingsRepository(this)
-        lifecycleScope.launch {
-            if (settings.get(TellySettings.EPG_UPDATE_ON_APP_START)) refresher.refreshAllNow()
-            ServiceLocator.database(this@MainActivity).playlistDao().observeAll().collect {
-                refresher.refreshDue()
-            }
         }
     }
 }
