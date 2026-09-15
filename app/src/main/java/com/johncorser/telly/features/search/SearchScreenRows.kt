@@ -82,6 +82,7 @@ internal fun SearchScreenFocusRow(
     modifier: Modifier = Modifier,
     restingContainer: Color = Color.Transparent,
     dimWhenResting: Boolean = false,
+    restingOutline: Boolean = false,
     content: @Composable () -> Unit,
 ) {
     var focused by remember { mutableStateOf(false) }
@@ -90,6 +91,9 @@ internal fun SearchScreenFocusRow(
         modifier =
             modifier
                 .onFocusChanged { focused = it.isFocused }
+                // The outline sits before the alpha layer so it renders at
+                // its sampled on-screen color, not the 42% resting dim.
+                .then(if (restingOutline && !focused) Modifier.searchSelectedCardBorder() else Modifier)
                 .graphicsLayer { if (dimWhenResting) alpha = if (focused) 1f else Dims.RESTING_ALPHA },
         shape = FocusScreenDefaults.shape(),
         scale = FocusScreenDefaults.scale(),

@@ -13,8 +13,14 @@ object SearchQuery {
 
     fun normalize(raw: String): String = raw.trim().replace(WHITESPACE, " ")
 
-    /** Case-insensitive name/title substring pattern (SQLite LIKE semantics). */
-    fun nameLike(query: String): String = "%${escape(query)}%"
+    /**
+     * Case-insensitive WORD-PREFIX pattern: live 5.2.0 matches only from
+     * the start of a word, never mid-word (round7 probes — "xtra"/"room"
+     * find nothing while "o"/"spec"/"epis" hit "One"/"Special"/"Episode").
+     * The DAO compares against `' ' || column`, so the leading "% " anchors
+     * every word including the first.
+     */
+    fun nameLike(query: String): String = "% ${escape(query)}%"
 
     /** Channel-number prefix pattern; inert for non-numeric queries. */
     fun numberLike(query: String): String =

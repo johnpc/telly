@@ -11,15 +11,17 @@ class SearchQueryTest {
     }
 
     @Test
-    fun `nameLike wraps the query in wildcards`() {
-        assertEquals("%news%", SearchQuery.nameLike("news"))
+    fun `nameLike anchors the query to a word start`() {
+        // Paired with the DAO's `' ' || column`, "% news%" matches word
+        // starts only — live 5.2.0 never matches mid-word (round7 probes).
+        assertEquals("% news%", SearchQuery.nameLike("news"))
     }
 
     @Test
     fun `nameLike escapes LIKE wildcards so input never widens the match`() {
-        assertEquals("%100\\%%", SearchQuery.nameLike("100%"))
-        assertEquals("%a\\_b%", SearchQuery.nameLike("a_b"))
-        assertEquals("%c\\\\d%", SearchQuery.nameLike("c\\d"))
+        assertEquals("% 100\\%%", SearchQuery.nameLike("100%"))
+        assertEquals("% a\\_b%", SearchQuery.nameLike("a_b"))
+        assertEquals("% c\\\\d%", SearchQuery.nameLike("c\\d"))
     }
 
     @Test

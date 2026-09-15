@@ -91,6 +91,13 @@ class SearchViewModel(
      */
     fun onProgramChannelFocused(group: SearchProgramChannel) = select(group)
 
+    /**
+     * OK on a master-lane card opens the shared Unlock Premium screen —
+     * verified on-device in round 7 (live 5.2.0 free build); it does NOT
+     * tune the channel like the Channels-shelf cards do.
+     */
+    fun onProgramChannelResult() = overlays.show(SearchOverlay.Paywall)
+
     private fun select(group: SearchProgramChannel?) {
         mutableSelectedChannel.value = group
         mutableFocusedProgram.value = group?.airings?.firstOrNull()

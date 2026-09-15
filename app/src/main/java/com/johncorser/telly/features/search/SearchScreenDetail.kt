@@ -42,6 +42,10 @@ internal fun SearchScreenDetail(hit: SearchProgramHit) {
             text = hit.title,
             color = Color(TELLY_TEXT_PRIMARY),
             fontSize = 20.sp,
+            // Round7: the reference fits "Newsroom Live: Episode 8. S1 E8"
+            // on ONE line in the same 600 px text box — the theme's 0.5 sp
+            // tracking was what pushed telly's copy onto a second line.
+            letterSpacing = 0.sp,
             maxLines = 2,
             overflow = TextOverflow.Ellipsis,
         )

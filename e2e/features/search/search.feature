@@ -49,6 +49,18 @@ Feature: Search channels and programmes
     And I press dpad down
     Then the first channel card "News One" is focused
 
+  Scenario: Down from the query bar without channel matches lands on the first airing row
+    When I focus the query bar
+    And I type "newsroom"
+    And I press dpad down
+    Then the first airing row of the selected channel is focused
+
+  Scenario: OK on a Programs channel card opens the Unlock Premium screen
+    When I focus the query bar
+    And I type "newsroom"
+    And I press ok on the Programs channel card "News One"
+    Then I see the "Unlock Premium" screen
+
   Scenario: OK on a channel result tunes it
     When I focus the query bar
     And I type "news"

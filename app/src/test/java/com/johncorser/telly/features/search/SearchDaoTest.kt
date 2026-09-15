@@ -47,7 +47,7 @@ class SearchDaoTest {
     ) = ProgramEntity(channelTvgId = "one", startMs = startMs, endMs = endMs, details = ProgramDetails(title = title))
 
     @Test
-    fun `channel search matches name substrings case-insensitively in name order`() =
+    fun `channel search matches name word-prefixes case-insensitively in name order`() =
         runTest {
             seedChannels(
                 Triple(1, "World NEWS Now", false),
@@ -58,6 +58,21 @@ class SearchDaoTest {
             val hits = searchDao.channels(SearchQuery.nameLike("news"), SearchQuery.numberLike("news"))
 
             assertEquals(listOf("News One", "World NEWS Now"), hits.map { it.source.name })
+        }
+
+    @Test
+    fun `channel search never matches mid-word`() =
+        runTest {
+            // Round7 live probes: "xtra" finds nothing, "o" only reaches
+            // word starts ("One"), never the o inside "Zone" or "Sports".
+            seedChannels(
+                Triple(1, "News One Extra", false),
+                Triple(2, "Kids Zone", false),
+            )
+
+            assertEquals(0, searchDao.channels(SearchQuery.nameLike("xtra"), SearchQuery.numberLike("xtra")).size)
+            val wordStart = searchDao.channels(SearchQuery.nameLike("o"), SearchQuery.numberLike("o"))
+            assertEquals(listOf("News One Extra"), wordStart.map { it.source.name })
         }
 
     @Test
@@ -118,7 +133,22 @@ class SearchDaoTest {
         }
 
     @Test
-    fun `programme search is title substring upcoming first with a limit`() =
+    fun `programme search never matches mid-title-word`() =
+        runTest {
+            // Round7 live probes: "room" never reaches into "Newsroom" but
+            // "spec"/"epis" match later words ("… Special", "Episode …").
+            database.programDao().upsertAll(
+                listOf(
+                    program(100, 200, "Newsroom Live: Newsroom Special"),
+                ),
+            )
+
+            assertEquals(0, searchDao.programs(SearchQuery.nameLike("room"), atMs = 0, limit = 10).size)
+            assertEquals(1, searchDao.programs(SearchQuery.nameLike("spec"), atMs = 0, limit = 10).size)
+        }
+
+    @Test
+    fun `programme search is title word-prefix upcoming first with a limit`() =
         runTest {
             database.programDao().upsertAll(
                 listOf(

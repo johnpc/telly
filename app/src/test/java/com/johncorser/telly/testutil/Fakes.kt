@@ -124,7 +124,8 @@ class FakeSearchDao(
     ): List<ChannelEntity> =
         channelDao.channels.value
             .filter { !it.flags.hidden }
-            .filter { sqlLike(nameLike, it.source.name) || sqlLike(numberLike, it.number.toString()) }
+            // The real DAO matches `' ' || name` so patterns anchor to word starts.
+            .filter { sqlLike(nameLike, " " + it.source.name) || sqlLike(numberLike, it.number.toString()) }
             .sortedWith(compareBy(String.CASE_INSENSITIVE_ORDER) { it.source.name })
 
     override suspend fun programs(
@@ -133,7 +134,7 @@ class FakeSearchDao(
         limit: Int,
     ): List<ProgramEntity> =
         programDao.programs.value
-            .filter { it.endMs > atMs && sqlLike(titleLike, it.details.title) }
+            .filter { it.endMs > atMs && sqlLike(titleLike, " " + it.details.title) }
             .sortedWith(compareBy({ it.startMs }, { it.channelTvgId }))
             .take(limit)
 }

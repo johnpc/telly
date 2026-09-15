@@ -166,6 +166,15 @@ class SearchSteps(
     @Then("the first channel card {string} is focused")
     fun firstChannelCardFocused(name: String) = world.waitFor(hasText(name) and isFocused())
 
+    @Then("the first airing row of the selected channel is focused")
+    fun firstAiringRowFocused() {
+        val first = airingsOn(selectedChannel(airingsTitle), airingsTitle).first()
+        world.waitFor(hasText(first.displayTitle, substring = true) and isFocused())
+    }
+
+    @When("I press ok on the Programs channel card {string}")
+    fun okOnProgramsCard(name: String) = world.select(name)
+
     @When("I press ok on the channel card {string}")
     fun okOnChannelCard(name: String) = world.select(name)
 

@@ -1,7 +1,11 @@
 package com.johncorser.telly.features.search
 
+import androidx.compose.foundation.border
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
+import com.johncorser.telly.core.ui.FocusScreenDefaults
 
 /**
  * Search-screen geometry from the 1920x1080 uidumps 49/50 (2 px = 1 dp) and
@@ -62,9 +66,19 @@ internal object SearchScreenDims {
     val detailTop = 40.dp
     val detailPad = 16.dp
 
+    /**
+     * Selected-but-unfocused master card outline, sampled from round7
+     * tm-search-news (edge pixels (55,57,60) over the resting card).
+     */
+    val selectedCardBorder = Color(0xFF37393C)
+
     val barFill = Color(0xFFB8BCC0)
     val barHint = Color(0xFF75797D)
     val barText = Color(0xFF202124)
     val cardFill = Color(0xFF1B222B)
     val detailFill = Color(0xFF212830)
 }
+
+/** Grey outline on the selected-but-unfocused master card (round7 tm-search-news). */
+internal fun Modifier.searchSelectedCardBorder(): Modifier =
+    border(1.dp, SearchScreenDims.selectedCardBorder, RoundedCornerShape(FocusScreenDefaults.cornerRadius))

@@ -44,7 +44,7 @@ class SearchRepositoryTest {
         }
 
     @Test
-    fun `channels match by name substring in name order with airing programme`() =
+    fun `channels match by name word-prefix in name order with airing programme`() =
         runTest {
             val results = repository.search("news", now, zone)
 
@@ -63,7 +63,7 @@ class SearchRepositoryTest {
         }
 
     @Test
-    fun `programmes match by title substring per channel and skip ended ones`() =
+    fun `programmes match by title word-prefix per channel and skip ended ones`() =
         runTest {
             val results = repository.search("news", now, zone)
 

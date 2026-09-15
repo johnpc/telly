@@ -179,6 +179,17 @@ class SearchViewModelTest {
         }
 
     @Test
+    fun `ok on a master-lane card opens the shared paywall, not a tune`() =
+        runTest {
+            val vm = buildVm()
+            vm.onQueryChange("newsroom")
+
+            vm.onProgramChannelResult()
+
+            assertEquals(SearchOverlay.Paywall, vm.overlays.current.value)
+        }
+
+    @Test
     fun `dropdown actions and the gear open the shared paywall`() =
         runTest {
             val vm = buildVm()

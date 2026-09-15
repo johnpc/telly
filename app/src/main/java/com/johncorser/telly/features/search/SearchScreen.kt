@@ -81,7 +81,6 @@ private fun SearchScreenResults(
                     groups = results.programs,
                     viewModel = viewModel,
                     firstFocus = firstResult.takeIf { results.channels.isEmpty() },
-                    onTune = onTune,
                 )
             }
             Column(Modifier.align(Alignment.Top)) {

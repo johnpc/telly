@@ -12,9 +12,13 @@ import com.johncorser.telly.features.playlist.db.ChannelEntity
  */
 @Dao
 interface SearchDao {
-    /** Channels by name substring or number prefix, in name order (live 5.2.0, tm-02). */
+    /**
+     * Channels by name word-prefix (round7 live probes; the `' ' || name`
+     * anchors the pattern to word starts) or number prefix, in name order
+     * (live 5.2.0, tm-02).
+     */
     @Query(
-        "SELECT * FROM channels WHERE hidden = 0 AND (name LIKE :nameLike ESCAPE '\\' " +
+        "SELECT * FROM channels WHERE hidden = 0 AND ((' ' || name) LIKE :nameLike ESCAPE '\\' " +
             "OR CAST(number AS TEXT) LIKE :numberLike ESCAPE '\\') ORDER BY name COLLATE NOCASE, number",
     )
     suspend fun channels(
@@ -23,13 +27,15 @@ interface SearchDao {
     ): List<ChannelEntity>
 
     /**
-     * Programmes by title substring, still airing or upcoming, soonest
-     * first — the LIMIT keeps the query bounded (the reference cap is not
-     * capturable), so it caps the soonest airings overall; the builder then
-     * regroups them per channel for the master–detail Programs section.
+     * Programmes by title word-prefix (round7: "spec"/"epis" match
+     * "…Special"/"Episode…", "room" never reaches into "Newsroom"), still
+     * airing or upcoming, soonest first — the LIMIT keeps the query bounded
+     * (the reference cap is not capturable), so it caps the soonest airings
+     * overall; the builder then regroups them per channel for the
+     * master–detail Programs section.
      */
     @Query(
-        "SELECT * FROM programs WHERE endMs > :atMs AND title LIKE :titleLike ESCAPE '\\' " +
+        "SELECT * FROM programs WHERE endMs > :atMs AND (' ' || title) LIKE :titleLike ESCAPE '\\' " +
             "ORDER BY startMs, channelTvgId LIMIT :limit",
     )
     suspend fun programs(

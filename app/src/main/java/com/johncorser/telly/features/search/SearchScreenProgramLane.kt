@@ -9,44 +9,41 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.itemsIndexed
+import androidx.compose.foundation.lazy.items
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.focus.FocusRequester
-import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.sp
 import androidx.tv.material3.Text
 import com.johncorser.telly.core.ui.TellyScreenLogoTile
-import com.johncorser.telly.features.playlist.db.ChannelEntity
 import com.johncorser.telly.features.search.SearchScreenDims as Dims
 
 /**
  * The Programs master lane (ref-round6 §D / 08-programs-card-*): one
  * adjacent 120x103 dp card per matching channel — logo tile over the
  * channel name, no airing line, no progress. Focusing a card selects it in
- * the ViewModel, which swaps the airings pane beside it.
+ * the ViewModel, which swaps the airings pane beside it; the selected card
+ * keeps a grey outline while unfocused (round7 tm-search-news) and OK opens
+ * the shared Unlock Premium screen (round7 device check — not a tune).
  */
 @Composable
 internal fun SearchScreenProgramLane(
     groups: List<SearchProgramChannel>,
+    selected: SearchProgramChannel?,
     viewModel: SearchViewModel,
-    firstFocus: FocusRequester?,
-    onTune: (ChannelEntity) -> Unit,
 ) {
     LazyColumn(
         contentPadding = PaddingValues(bottom = Dims.edgePad),
         modifier = Modifier.width(Dims.rowCardWidth),
     ) {
-        itemsIndexed(groups, key = { _, group -> group.channel.id }) { index, group ->
+        items(groups, key = { group -> group.channel.id }) { group ->
             SearchScreenProgramChannelCard(
                 group = group,
+                selected = group.channel.id == selected?.channel?.id,
                 viewModel = viewModel,
-                onTune = onTune,
-                modifier = if (index == 0 && firstFocus != null) Modifier.focusRequester(firstFocus) else Modifier,
             )
         }
     }
@@ -55,20 +52,18 @@ internal fun SearchScreenProgramLane(
 @Composable
 private fun SearchScreenProgramChannelCard(
     group: SearchProgramChannel,
+    selected: Boolean,
     viewModel: SearchViewModel,
-    onTune: (ChannelEntity) -> Unit,
-    modifier: Modifier,
 ) {
     SearchScreenFocusRow(
-        // OK on a master card is uncaptured in round6; tuning matches the
-        // Channels-shelf card semantics until a device round says otherwise.
-        onClick = { onTune(group.channel) },
+        onClick = viewModel::onProgramChannelResult,
         modifier =
-            modifier
+            Modifier
                 .fillMaxWidth()
                 .height(Dims.masterCardHeight)
                 .onFocusChanged { if (it.isFocused) viewModel.onProgramChannelFocused(group) },
         dimWhenResting = true,
+        restingOutline = selected,
     ) {
         Column(
             Modifier

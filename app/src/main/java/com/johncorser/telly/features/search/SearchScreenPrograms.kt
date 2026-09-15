@@ -16,6 +16,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusProperties
+import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.style.TextOverflow
@@ -24,7 +25,6 @@ import androidx.compose.ui.unit.sp
 import androidx.tv.material3.Text
 import com.johncorser.telly.R
 import com.johncorser.telly.core.design.TELLY_CLOCK_BLUE
-import com.johncorser.telly.features.playlist.db.ChannelEntity
 import com.johncorser.telly.features.search.SearchScreenDims as Dims
 
 /**
@@ -40,14 +40,15 @@ internal fun SearchScreenPrograms(
     groups: List<SearchProgramChannel>,
     viewModel: SearchViewModel,
     firstFocus: FocusRequester?,
-    onTune: (ChannelEntity) -> Unit,
 ) {
     SearchScreenHeader(R.string.search_programs)
     val selected by viewModel.selectedChannel.collectAsState()
     Row(Modifier.padding(start = Dims.edgePad, top = Dims.shelfTop)) {
-        SearchScreenProgramLane(groups, viewModel, firstFocus, onTune)
+        SearchScreenProgramLane(groups, selected, viewModel)
         Spacer(Modifier.width(Dims.rowTextStart))
-        SearchScreenAiringsPane(selected?.airings.orEmpty(), viewModel)
+        // With no Channels shelf, DOWN from the query bar lands on the
+        // FIRST AIRING ROW, not the master card (round7 device check).
+        SearchScreenAiringsPane(selected?.airings.orEmpty(), viewModel, firstFocus)
     }
 }
 
@@ -56,13 +57,19 @@ internal fun SearchScreenPrograms(
 private fun SearchScreenAiringsPane(
     airings: List<SearchProgramHit>,
     viewModel: SearchViewModel,
+    firstFocus: FocusRequester?,
 ) {
     LazyColumn(
         contentPadding = PaddingValues(bottom = Dims.edgePad),
         modifier = Modifier.width(Dims.rowsWidth),
     ) {
         itemsIndexed(airings) { index, hit ->
-            SearchScreenProgramRow(hit, viewModel, isLast = index == airings.lastIndex)
+            SearchScreenProgramRow(
+                hit = hit,
+                viewModel = viewModel,
+                isLast = index == airings.lastIndex,
+                focus = firstFocus.takeIf { index == 0 },
+            )
         }
     }
 }
@@ -72,6 +79,7 @@ private fun SearchScreenProgramRow(
     hit: SearchProgramHit,
     viewModel: SearchViewModel,
     isLast: Boolean,
+    focus: FocusRequester?,
 ) {
     SearchScreenFocusRow(
         onClick = { viewModel.onProgramResult(hit) },
@@ -79,6 +87,7 @@ private fun SearchScreenProgramRow(
             Modifier
                 .fillMaxWidth()
                 .height(Dims.rowHeight)
+                .then(if (focus != null) Modifier.focusRequester(focus) else Modifier)
                 .onFocusChanged { if (it.isFocused) viewModel.onProgramFocused(hit) }
                 // DOWN stops dead at the selected channel's last airing
                 // (ref-round6 §D) instead of leaking into the master lane.
