@@ -64,6 +64,17 @@ object TellySettings {
     val SEEK_DOWN_UP = boolSetting("remote_seek_down_up", false)
     val DOWN_REWINDS_LIVE = boolSetting("remote_down_rewinds_live", false)
 
+    // Remote control key remaps (TV guide + Player sub-screens). Raw values
+    // are the picker labels; every default equals the device-verified key
+    // map (the keymap enums assert the same labels).
+    val REMOTE_PLAYER_OK = stringSetting("remote_player_ok", "Show info panel")
+    val REMOTE_PLAYER_UP_DOWN = stringSetting("remote_player_up_down", "Show info panel")
+    val REMOTE_PLAYER_LEFT_RIGHT = stringSetting("remote_player_left_right", "Nothing")
+    val REMOTE_PLAYER_LONG_OK = stringSetting("remote_player_long_ok", "Open quick menu")
+    val REMOTE_GUIDE_LEFT_RIGHT = stringSetting("remote_guide_left_right", "Move by programme")
+    val REMOTE_GUIDE_CHANNEL_UP_DOWN = stringSetting("remote_guide_channel_up_down", "Nothing")
+    val REMOTE_GUIDE_LONG_OK = stringSetting("remote_guide_long_ok", "Open channel menu")
+
     // Parental controls (catalogue 67/69). The PIN is stored salted+hashed.
     val PARENTAL_ENABLED = boolSetting("parental_enabled", false)
     val PARENTAL_PIN_HASH = stringSetting("parental_pin_hash", "")

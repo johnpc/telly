@@ -51,6 +51,21 @@ object GuideFocusNav {
             ?.let { cellAt(it.cells, nowMs) }
             ?.let { GuideFocus(rowIndex = 0, cell = it, anchorMs = nowMs) }
 
+    /** Re-resolves [current] against fresh [rows]: same start, else the anchor. */
+    fun resolve(
+        rows: List<GuideRow>,
+        nowMs: Long,
+        current: GuideFocus?,
+    ): GuideFocus? {
+        if (current == null) return initialFocus(rows, nowMs)
+        val rowIndex = current.rowIndex.coerceIn(0, rows.lastIndex)
+        val cells = rows[rowIndex].cells
+        val cell =
+            cells.firstOrNull { it.startMs == current.cell.startMs }
+                ?: cellAt(cells, current.anchorMs)
+        return cell?.let { GuideFocus(rowIndex, it, current.anchorMs) } ?: current
+    }
+
     private fun indexOf(
         cells: List<GuideCell>,
         focused: GuideCell,

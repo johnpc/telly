@@ -3,11 +3,11 @@ package com.johncorser.telly.features.settings
 import com.johncorser.telly.core.settings.SettingsRepository
 import com.johncorser.telly.core.settings.TellySettings
 
-/** Remote control pane rows (catalogue 64–65). */
+/** Remote control pane rows (catalogue 64–65); the sub-panes are live. */
 fun remoteControlRows(s: SettingsRepository): List<SettingsRow> =
     listOf(
-        SettingsRow.Value(id = RowIds.REMOTE_TV_GUIDE, title = "TV guide", locked = true),
-        SettingsRow.Value(id = RowIds.REMOTE_PLAYER, title = "Player", locked = true),
+        SettingsRow.Value(id = RowIds.REMOTE_TV_GUIDE, title = "TV guide"),
+        SettingsRow.Value(id = RowIds.REMOTE_PLAYER, title = "Player"),
         SettingsRow.Header("Seeking options"),
         SettingsRow.Toggle(
             id = RowIds.REMOTE_SEEK_RWFF,

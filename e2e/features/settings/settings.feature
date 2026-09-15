@@ -210,3 +210,38 @@ Feature: Settings
     And I open Settings
     And I open the "Appearance" section
     Then the "Font size" row shows "Large"
+
+  # The reference locks these two sub-screens behind premium; telly ships
+  # them by the no-premium-tier directive. Defaults render the
+  # device-verified key map.
+  Scenario: Remote control opens the TV guide and Player key sub-screens
+    When I open the "Remote control" section
+    Then the row "TV guide" is not locked
+    And the row "Player" is not locked
+    When I activate "Player"
+    Then the "OK button" row shows "Show info panel"
+    And the "Up/Down buttons" row shows "Show info panel"
+    And the "Left/Right buttons" row shows "Nothing"
+    And the "Long press OK" row shows "Open quick menu"
+
+  Scenario: A TV guide key remap persists across an app restart
+    When I open the "Remote control" section
+    And I activate "TV guide"
+    Then the "Left/Right buttons" row shows "Move by programme"
+    When I activate "Left/Right buttons"
+    And I choose "Move by page"
+    Then the "Left/Right buttons" row shows "Move by page"
+    When I relaunch telly
+    And I open Settings
+    And I open the "Remote control" section
+    And I activate "TV guide"
+    Then the "Left/Right buttons" row shows "Move by page"
+
+  Scenario: Remapping the OK button to the channels list takes effect at fullscreen playback
+    When I open the "Remote control" section
+    And I activate "Player"
+    And I activate "OK button"
+    And I choose "Open channels list"
+    And I leave settings for fullscreen playback
+    And I press ok
+    Then the channel list panel opens over the dimmed video

@@ -10,4 +10,6 @@ class GuideSeams(
     val myList: MyListStore = InMemoryMyListStore(),
     /** Appearance -> TV guide -> Number of visible channels (7 = today). */
     val visibleRows: () -> Int = { GuideGeometry.VISIBLE_ROWS },
+    /** Settings → Remote control → TV guide key remaps, read per key press. */
+    val keymap: () -> GuideKeymap = { GuideKeymap() },
 )

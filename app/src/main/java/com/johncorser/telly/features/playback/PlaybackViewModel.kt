@@ -105,12 +105,11 @@ class PlaybackViewModel(
     val lifecycle =
         PlaybackLifecycle(tuner, recover = exitToGuide, shouldStop = env.hooks.pip::allowsBackgroundStop)
 
+    private val playerKeymap = env.hooks.playerKeymap
+
     /** Routes a key through the catalogue's key-by-context map; true = consumed. */
-    fun onKey(key: PlaybackKey): Boolean {
-        val command = PlaybackKeyPolicy.commandFor(overlays.value, key) ?: return false
-        commands.execute(command)
-        return true
-    }
+    fun onKey(key: PlaybackKey): Boolean =
+        PlaybackKeyPolicy.commandFor(overlays.value, key, playerKeymap())?.also(commands::execute) != null
 
     /** OK on a panel row tunes it and shows the compact zap overlay (round3-ref 10). */
     fun tuneFromPanel(channel: ChannelEntity) {

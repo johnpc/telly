@@ -23,6 +23,8 @@ fun rowsFor(
         is SettingsPane.PlaylistGroups -> playlistGroupRowsFor(pane.url, settings, playlists)
         SettingsPane.EpgSources -> epgSourcesRows(playlists, feeds.epgSources)
         is SettingsPane.EpgSourceDetail -> epgSourceDetailRowsFor(pane.sourceId, feeds)
+        SettingsPane.RemoteTvGuide -> remoteTvGuideRows(settings)
+        SettingsPane.RemotePlayer -> remotePlayerRows(settings)
         SettingsPane.Reminders -> remindersRows(settings, feeds.reminders)
         SettingsPane.Vod -> vodSettingsRows(settings)
         else -> appearancePaneRows(pane, settings)
@@ -92,11 +94,19 @@ fun paneTitle(
         null -> "Settings"
         is SettingsPane.Section -> pane.section.title
         is SettingsPane.PlaylistDetail -> playlists.firstOrNull { it.url == pane.url }?.name ?: pane.url
-        is SettingsPane.PlaylistGroups -> "Manage groups"
-        SettingsPane.EpgSources -> "EPG sources"
         is SettingsPane.EpgSourceDetail ->
             epgSources.firstOrNull { it.id == pane.sourceId }?.name ?: "EPG source"
+        else -> fixedPaneTitle(pane) ?: appearancePaneTitle(pane)
+    }
+
+/** Panes whose header text is a constant (no feed lookup). */
+private fun fixedPaneTitle(pane: SettingsPane): String? =
+    when (pane) {
+        is SettingsPane.PlaylistGroups -> "Manage groups"
+        SettingsPane.EpgSources -> "EPG sources"
+        SettingsPane.RemoteTvGuide -> "TV guide"
+        SettingsPane.RemotePlayer -> "Player"
         SettingsPane.Reminders -> "Reminders"
         SettingsPane.Vod -> "VOD"
-        else -> appearancePaneTitle(pane)
+        else -> null
     }

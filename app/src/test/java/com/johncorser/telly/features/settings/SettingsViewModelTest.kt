@@ -131,6 +131,42 @@ class SettingsViewModelTest {
         }
 
     @Test
+    fun `the remote control rows push the key-remap sub-panes`() =
+        runTest {
+            val model = model()
+            model.activate(RowIds.SECTION_PREFIX + SettingsSection.REMOTE_CONTROL.name)
+
+            model.activate(RowIds.REMOTE_PLAYER)
+            assertEquals(SettingsPane.RemotePlayer, model.state.value.activePane)
+            assertTrue(model.rows.value.any { it.id == RowIds.REMOTE_PLAYER_OK })
+
+            assertTrue(model.back())
+            model.activate(RowIds.REMOTE_TV_GUIDE)
+            assertEquals(SettingsPane.RemoteTvGuide, model.state.value.activePane)
+            assertTrue(model.rows.value.any { it.id == RowIds.REMOTE_GUIDE_LEFT_RIGHT })
+        }
+
+    @Test
+    fun `a key-remap pick persists its raw label to the store`() =
+        runTest {
+            val model = model()
+            model.activate(RowIds.SECTION_PREFIX + SettingsSection.REMOTE_CONTROL.name)
+            model.activate(RowIds.REMOTE_PLAYER)
+
+            model.activate(RowIds.REMOTE_PLAYER_OK)
+            val picker = model.state.value.overlay as SettingsOverlay.Picker
+            assertEquals("Show info panel", picker.current)
+            model.choosePickerOption("Open channels list")
+
+            assertNull(model.state.value.overlay)
+            assertEquals("Open channels list", settings.get(TellySettings.REMOTE_PLAYER_OK))
+            assertEquals(
+                "Open channels list",
+                SettingsRepository(store).get(TellySettings.REMOTE_PLAYER_OK),
+            )
+        }
+
+    @Test
     fun `add playlist always routes into the wizard`() =
         runTest {
             // telly has no premium tier: the reference gated a second

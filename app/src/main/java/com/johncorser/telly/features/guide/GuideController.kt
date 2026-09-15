@@ -30,6 +30,9 @@ class GuideController(
 ) {
     val zone = env.time.zone
 
+    /** Settings → Remote control → TV guide key remaps, read per key press. */
+    private val keymap = seams.keymap
+
     /** Minute-ticked "now" (header clock, now-line); origin stays anchored. */
     private val ticker = GuideNow(env.time.clock, scope, env.time.minuteTicks)
     val now: StateFlow<Long> = ticker.now
@@ -82,6 +85,10 @@ class GuideController(
 
     val layer: StateFlow<GuideLayer> = menu.layer
 
+    /** Transition half of the state machine: commands over engine + layers. */
+    private val commands =
+        GuideCommands(focusEngine, menu, { rows.value }, pastDays, seams.visibleRows, ::activate)
+
     init {
         menu.remind.reminders = seams.reminders
         scope.launch { rows.collect { focusEngine.ensureFocus(it, now.value) } }
@@ -92,7 +99,8 @@ class GuideController(
     }
 
     /** Routes a key through the layer map; true = consumed. */
-    fun onKey(key: GuideKey): Boolean = GuideKeyPolicy.commandFor(layer.value, key)?.also(::execute) != null
+    fun onKey(key: GuideKey): Boolean =
+        GuideKeyPolicy.commandFor(layer.value, key, keymap())?.also(commands::execute) != null
 
     /** OK on a group filters the grid and renumbers from 1 (capture 74). */
     fun selectGroup(group: String) {
@@ -105,19 +113,6 @@ class GuideController(
     }
 
     fun close() = tuner.release()
-
-    private fun execute(command: GuideCommand) {
-        when (command) {
-            GuideCommand.FocusLeft -> if (!focusEngine.moveLeft(rows.value)) menu.show(GuideLayer.Groups)
-            GuideCommand.FocusRight -> focusEngine.moveRight(rows.value)
-            GuideCommand.FocusUp -> focusEngine.moveVertical(rows.value, -1)
-            GuideCommand.FocusDown -> focusEngine.moveVertical(rows.value, +1)
-            is GuideCommand.DayJump -> focusEngine.dayJump(command.days, pastDays())
-            GuideCommand.Activate -> activate()
-            GuideCommand.OpenRowMenu -> menu.openRowMenu()
-            GuideCommand.CloseLayer -> menu.close()
-        }
-    }
 
     private fun focusedRow(): GuideRow? = focus.value?.let { rows.value.getOrNull(it.rowIndex) }
 

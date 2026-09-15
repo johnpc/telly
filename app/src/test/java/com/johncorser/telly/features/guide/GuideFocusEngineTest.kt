@@ -151,6 +151,43 @@ class GuideFocusEngineTest {
     }
 
     @Test
+    fun `a page jump pans a whole viewport and shifts the anchor with it`() {
+        engine.ensureFocus(rows, nowMs)
+        val anchorBefore = engine.focus.value!!.anchorMs
+
+        assertTrue(engine.pageJump(rows, +1))
+
+        assertEquals(GuideGeometry.TIME_VIEWPORT_DP, engine.scrollX.value)
+        val expectedAnchor = anchorBefore + GuideGeometry.timeAt(GuideGeometry.TIME_VIEWPORT_DP, 0L)
+        assertEquals(expectedAnchor, engine.focus.value?.anchorMs)
+
+        assertTrue(engine.pageJump(rows, -1))
+        assertEquals(0f, engine.scrollX.value)
+        assertEquals(anchorBefore, engine.focus.value?.anchorMs)
+        assertEquals("A1", title(engine.focus.value))
+    }
+
+    @Test
+    fun `a page jump left at the live edge reports the edge for the groups column`() {
+        engine.ensureFocus(rows, nowMs)
+
+        assertFalse(engine.pageJump(rows, -1))
+        assertEquals(0f, engine.scrollX.value)
+    }
+
+    @Test
+    fun `page jumps land on the cell at the new anchor when it is materialized`() {
+        engine.ensureFocus(rows, nowMs)
+        val longRow =
+            listOf(row(1, listOf(rows[0].cells[0], cell(at(15, 45), at(20, 0), "A2 Marathon"))))
+        engine.ensureFocus(longRow, nowMs)
+
+        assertTrue(engine.pageJump(longRow, +1))
+
+        assertEquals("A2 Marathon", title(engine.focus.value))
+    }
+
+    @Test
     fun `reset clears focus and scroll for a group switch`() {
         engine.ensureFocus(rows, nowMs)
         engine.moveRight(rows)

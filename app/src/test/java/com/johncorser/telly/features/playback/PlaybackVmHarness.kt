@@ -50,6 +50,7 @@ open class PlaybackVmHarness {
         onEnterPip: () -> Unit = {},
         pip: PipState = PipState(),
         hooks: PlaybackHooks = PlaybackHooks(),
+        playerKeymap: () -> PlayerKeymap = { PlayerKeymap() },
     ): PlaybackViewModel =
         PlaybackViewModel(
             env =
@@ -63,6 +64,7 @@ open class PlaybackVmHarness {
                         hooks.copy(
                             onEnterPip = onEnterPip,
                             pip = pip,
+                            playerKeymap = playerKeymap,
                             myList =
                                 MyListHooks(
                                     onOpenManageFavorites = { manageOpens += 1 },

@@ -83,7 +83,7 @@ internal fun backOf(layer: GuideLayer): GuideLayer =
     }
 
 /** D-pad keys the guide reacts to (mapped from KeyEvents in the UI). */
-enum class GuideKey { OK, LONG_OK, MENU, BACK, UP, DOWN, LEFT, RIGHT, LONG_LEFT, LONG_RIGHT }
+enum class GuideKey { OK, LONG_OK, MENU, BACK, UP, DOWN, LEFT, RIGHT, LONG_LEFT, LONG_RIGHT, CHANNEL_UP, CHANNEL_DOWN }
 
 /**
  * The five rows of the future-cell dropdown, verbatim from capture 27.

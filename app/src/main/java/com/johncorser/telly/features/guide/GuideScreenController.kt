@@ -36,7 +36,13 @@ internal fun rememberGuideController(
                 pastDays = deps.pastDays,
                 scope = scope,
                 callbacks = callbacks,
-                seams = GuideSeams(reminders = deps.reminders, myList = deps.myList, visibleRows = deps.visibleRows),
+                seams =
+                    GuideSeams(
+                        reminders = deps.reminders,
+                        myList = deps.myList,
+                        visibleRows = deps.visibleRows,
+                        keymap = deps.keymap,
+                    ),
             )
         }
     DisposableEffect(Unit) {

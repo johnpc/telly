@@ -92,6 +92,15 @@ object RowIds {
     const val REMOTE_SEEK_DOWN_UP = "remote.seek_down_up"
     const val REMOTE_DOWN_LIVE = "remote.down_live"
 
+    // Remote control sub-panes (TV guide + Player key remaps).
+    const val REMOTE_GUIDE_LEFT_RIGHT = "remote.guide.left_right"
+    const val REMOTE_GUIDE_CHANNEL_UP_DOWN = "remote.guide.channel_up_down"
+    const val REMOTE_GUIDE_LONG_OK = "remote.guide.long_ok"
+    const val REMOTE_PLAYER_OK = "remote.player.ok"
+    const val REMOTE_PLAYER_UP_DOWN = "remote.player.up_down"
+    const val REMOTE_PLAYER_LEFT_RIGHT = "remote.player.left_right"
+    const val REMOTE_PLAYER_LONG_OK = "remote.player.long_ok"
+
     // Parental controls.
     const val PARENTAL_MASTER = "parental.master"
     const val PARENTAL_CHANGE_PIN = "parental.change_pin"

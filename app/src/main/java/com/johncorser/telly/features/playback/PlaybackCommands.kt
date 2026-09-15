@@ -26,6 +26,7 @@ class PlaybackCommands(
             is PlaybackCommand.Zap -> zap(command.delta)
             PlaybackCommand.OpenQuickBar ->
                 overlays.showAutoHiding(PlaybackOverlay.QuickBar, timeouts().quickBarMs)
+            PlaybackCommand.OpenPanel -> openPanel()
             PlaybackCommand.Dismiss -> overlays.set(PlaybackOverlay.None)
             PlaybackCommand.BackToPanel -> overlays.set(PlaybackOverlay.Panel)
             is PlaybackCommand.PopTo -> overlays.set(command.overlay)

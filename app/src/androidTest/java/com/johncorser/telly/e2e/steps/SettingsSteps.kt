@@ -89,6 +89,12 @@ class SettingsSteps(
     @When("I leave settings")
     fun leaveSettingsStep() = leaveSettings()
 
+    @When("I leave settings for fullscreen playback")
+    fun leaveSettingsForPlayback() {
+        leaveSettings()
+        driver.dismissChrome()
+    }
+
     /** BACKs out of the settings shell to fullscreen playback. */
     private fun leaveSettings() {
         driver.awaitCondition("left the settings shell") {

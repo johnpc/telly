@@ -16,6 +16,16 @@ sealed interface GuideCommand {
         val days: Int,
     ) : GuideCommand
 
+    /** LEFT/RIGHT in the "Move by page" remap: pan a whole viewport. */
+    data class PageJump(
+        val direction: Int,
+    ) : GuideCommand
+
+    /** CH+/CH− in the "Page the channel list" remap: a screenful of rows. */
+    data class PageRows(
+        val direction: Int,
+    ) : GuideCommand
+
     data object OpenRowMenu : GuideCommand
 
     data object CloseLayer : GuideCommand
@@ -40,24 +50,51 @@ object GuideKeyPolicy {
     fun commandFor(
         layer: GuideLayer,
         key: GuideKey,
+        keymap: GuideKeymap = GuideKeymap(),
     ): GuideCommand? =
         when (layer) {
-            GuideLayer.Grid -> onGrid(key)
+            GuideLayer.Grid -> onGrid(key, keymap)
             GuideLayer.Groups -> closeOn(key, GuideKey.BACK, GuideKey.RIGHT)
             else -> closeOn(key, GuideKey.BACK)
         }
 
-    private fun onGrid(key: GuideKey): GuideCommand? =
+    private fun onGrid(
+        key: GuideKey,
+        keymap: GuideKeymap,
+    ): GuideCommand? =
         when (key) {
-            GuideKey.LEFT -> GuideCommand.FocusLeft
-            GuideKey.RIGHT -> GuideCommand.FocusRight
+            GuideKey.LEFT -> horizontal(keymap.leftRight, GuideCommand.FocusLeft, -1)
+            GuideKey.RIGHT -> horizontal(keymap.leftRight, GuideCommand.FocusRight, +1)
             GuideKey.UP -> GuideCommand.FocusUp
             GuideKey.DOWN -> GuideCommand.FocusDown
             GuideKey.OK -> GuideCommand.Activate
-            GuideKey.LONG_OK, GuideKey.MENU -> GuideCommand.OpenRowMenu
+            GuideKey.LONG_OK -> longOk(keymap.longOk)
+            GuideKey.MENU -> GuideCommand.OpenRowMenu
             GuideKey.LONG_LEFT -> GuideCommand.DayJump(-DAY)
             GuideKey.LONG_RIGHT -> GuideCommand.DayJump(DAY)
+            GuideKey.CHANNEL_UP -> channelKeys(keymap.channelUpDown, up = true)
+            GuideKey.CHANNEL_DOWN -> channelKeys(keymap.channelUpDown, up = false)
             GuideKey.BACK -> null
+        }
+
+    private fun horizontal(
+        action: GuideLeftRightAction,
+        focusMove: GuideCommand,
+        direction: Int,
+    ): GuideCommand = if (action == GuideLeftRightAction.BY_PAGE) GuideCommand.PageJump(direction) else focusMove
+
+    private fun longOk(action: GuideLongOkAction): GuideCommand =
+        if (action == GuideLongOkAction.PLAY_CHANNEL) GuideCommand.Activate else GuideCommand.OpenRowMenu
+
+    /** CH+ pages up the list / jumps a day forward; CH− mirrors it. */
+    private fun channelKeys(
+        action: GuideChannelKeysAction,
+        up: Boolean,
+    ): GuideCommand? =
+        when (action) {
+            GuideChannelKeysAction.NOTHING -> null
+            GuideChannelKeysAction.PAGE_CHANNELS -> GuideCommand.PageRows(if (up) -1 else +1)
+            GuideChannelKeysAction.MOVE_BY_DAY -> GuideCommand.DayJump(if (up) DAY else -DAY)
         }
 
     private fun closeOn(

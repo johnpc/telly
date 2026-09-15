@@ -89,12 +89,12 @@ object SettingsPickers {
                 key = TellySettings.PARENTAL_RELOCK.key,
                 options = sameRaw(listOf("Always require", "Until app restart")),
             ),
-        ) + appearancePickerSpecs
+        ) + appearancePickerSpecs + RemoteKeymapPickers.specs
 
     val byRowId: Map<String, PickerSpec> = (all + playbackExtrasPickerSpecs()).associateBy { it.rowId }
 
     private val defaultRawByKey: Map<String, String> =
-        playbackExtrasDefaultRaws() + appearancePickerDefaults +
+        playbackExtrasDefaultRaws() + appearancePickerDefaults + RemoteKeymapPickers.defaults +
             listOf(
                 TellySettings.PLAYLISTS_SORTING, TellySettings.EPG_UPDATE_INTERVAL_HOURS,
                 TellySettings.EPG_PAST_DAYS_TO_KEEP, TellySettings.REMINDER_LEAD_MINUTES,

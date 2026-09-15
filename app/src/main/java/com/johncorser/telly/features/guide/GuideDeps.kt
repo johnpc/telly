@@ -16,6 +16,8 @@ class GuideDeps(
     val reminders: GuideReminders? = null,
     /** Appearance -> TV guide -> Number of visible channels (7 = today). */
     val visibleRows: () -> Int = { GuideGeometry.VISIBLE_ROWS },
+    /** Settings → Remote control → TV guide key remaps, read per key press. */
+    val keymap: () -> GuideKeymap = { GuideKeymap() },
 ) {
     /** Saved My-list programmes; the guide shares the playback store. */
     val myList: MyListStore get() = playback.myList

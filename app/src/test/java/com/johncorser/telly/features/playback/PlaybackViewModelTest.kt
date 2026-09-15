@@ -101,6 +101,28 @@ class PlaybackViewModelTest : PlaybackVmHarness() {
         }
 
     @Test
+    fun `a remapped ok opens the channel panel focused on the tuned channel`() =
+        runTest {
+            val vm = buildVm(playerKeymap = { PlayerKeymap(ok = PlayerOkAction.CHANNELS_LIST) })
+
+            assertTrue(vm.onKey(PlaybackKey.OK))
+
+            assertEquals(PlaybackOverlay.Panel, vm.overlay.value)
+        }
+
+    @Test
+    fun `a remapped down zaps backward with the zap overlay`() =
+        runTest {
+            val vm = buildVm(playerKeymap = { PlayerKeymap(upDown = PlayerUpDownAction.SWITCH_CHANNELS) })
+            assertEquals(1L, vm.current.value?.id)
+
+            assertTrue(vm.onKey(PlaybackKey.DOWN))
+
+            assertEquals(3L, vm.current.value?.id)
+            assertEquals(PlaybackOverlay.ZapInfo, vm.overlay.value)
+        }
+
+    @Test
     fun `up opens the info overlay and a second up expands the transport row`() =
         runTest {
             val vm = buildVm()

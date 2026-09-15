@@ -32,6 +32,8 @@ internal fun mapGuideKey(
         Key.DirectionRight -> detectors.right.route(down, repeat)
         Key.DirectionUp -> GuideKey.UP.takeIf { down }
         Key.DirectionDown -> GuideKey.DOWN.takeIf { down }
+        Key.ChannelUp -> GuideKey.CHANNEL_UP.takeIf { down }
+        Key.ChannelDown -> GuideKey.CHANNEL_DOWN.takeIf { down }
         Key.Menu -> GuideKey.MENU.takeIf { down }
         else -> null
     }

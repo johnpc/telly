@@ -58,6 +58,20 @@ class SettingsRowsIndexTest {
     }
 
     @Test
+    fun `rowsFor renders the remote control key sub-panes`() {
+        val guide = rowsFor(SettingsPane.RemoteTvGuide, s, listOf(item), "0.1.0")
+        assertTrue(guide.any { it.id == RowIds.REMOTE_GUIDE_LONG_OK })
+        val player = rowsFor(SettingsPane.RemotePlayer, s, listOf(item), "0.1.0")
+        assertTrue(player.any { it.id == RowIds.REMOTE_PLAYER_OK })
+    }
+
+    @Test
+    fun `paneTitle names the remote control key sub-panes`() {
+        assertEquals("TV guide", paneTitle(SettingsPane.RemoteTvGuide, emptyList()))
+        assertEquals("Player", paneTitle(SettingsPane.RemotePlayer, emptyList()))
+    }
+
+    @Test
     fun `paneTitle names sections, playlists and the epg sources panes`() {
         assertEquals("Remote control", paneTitle(SettingsPane.Section(SettingsSection.REMOTE_CONTROL), emptyList()))
         assertEquals("Home", paneTitle(SettingsPane.PlaylistDetail("http://p/x.m3u"), listOf(item)))

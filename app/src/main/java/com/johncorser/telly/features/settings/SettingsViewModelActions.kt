@@ -7,8 +7,12 @@ import com.johncorser.telly.core.settings.TellySettings
  * picker. Split from SettingsViewModel to keep files small (CLAUDE.md gate).
  */
 internal fun SettingsViewModel.runAction(rowId: String) {
+    val pane = pushedPaneFor(rowId)
+    if (pane != null) {
+        push(pane)
+        return
+    }
     when (rowId) {
-        RowIds.EPG_SOURCES, RowIds.PLAYLIST_EPG_SOURCES -> push(SettingsPane.EpgSources)
         RowIds.EPG_UPDATE_NOW -> launch { updateEpgNow() }
         RowIds.EPG_ADD_SOURCE -> showOverlay(SettingsOverlay.TextEdit(rowId, title = "EPG URL", value = ""))
         RowIds.EPG_SOURCE_URL -> editEpgSourceUrlOverlay()
@@ -36,6 +40,15 @@ private fun SettingsViewModel.runGeneralAction(rowId: String) {
         else -> appearancePaneFor(rowId)?.let(::push) ?: runPlaylistAction(rowId)
     }
 }
+
+/** Rows that simply push a deeper sub-pane over the current sheet. */
+private fun pushedPaneFor(rowId: String): SettingsPane? =
+    when (rowId) {
+        RowIds.EPG_SOURCES, RowIds.PLAYLIST_EPG_SOURCES -> SettingsPane.EpgSources
+        RowIds.REMOTE_TV_GUIDE -> SettingsPane.RemoteTvGuide
+        RowIds.REMOTE_PLAYER -> SettingsPane.RemotePlayer
+        else -> null
+    }
 
 /** Playlist-list and per-playlist actions. */
 private fun SettingsViewModel.runPlaylistAction(rowId: String) {

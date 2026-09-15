@@ -31,20 +31,7 @@ class GuideFocusEngine(
         rows: List<GuideRow>,
         nowMs: Long,
     ) {
-        mutableFocus.value = if (rows.isEmpty()) null else resolveFocus(rows, nowMs)
-    }
-
-    private fun resolveFocus(
-        rows: List<GuideRow>,
-        nowMs: Long,
-    ): GuideFocus? {
-        val current = mutableFocus.value ?: return GuideFocusNav.initialFocus(rows, nowMs)
-        val rowIndex = current.rowIndex.coerceIn(0, rows.lastIndex)
-        val cells = rows[rowIndex].cells
-        val cell =
-            cells.firstOrNull { it.startMs == current.cell.startMs }
-                ?: GuideFocusNav.cellAt(cells, current.anchorMs)
-        return cell?.let { GuideFocus(rowIndex, it, current.anchorMs) } ?: current
+        mutableFocus.value = if (rows.isEmpty()) null else GuideFocusNav.resolve(rows, nowMs, mutableFocus.value)
     }
 
     fun reset() = apply(GuideFocusState(focus = null, scrollX = 0f, firstRow = 0))
@@ -108,6 +95,26 @@ class GuideFocusEngine(
         mutableFocus.value = current.copy(anchorMs = targetMs)
         val alignedScroll = GuideGeometry.xOf(GuideWindowMath.quantizeDown(targetMs, originMs), originMs)
         mutableScroll.value = alignedScroll.coerceIn(floorDp, GuideWindowMath.scrollCeilDp())
+    }
+
+    /**
+     * LEFT/RIGHT in the "Move by page" remap: pan a whole viewport, keeping
+     * the anchor's relative position. Clamped exactly like plain moves, so
+     * false = already at the edge (left edge → the groups column).
+     */
+    fun pageJump(
+        rows: List<GuideRow>,
+        direction: Int,
+    ): Boolean {
+        val current = mutableFocus.value ?: return false
+        val from = mutableScroll.value
+        val target = clampScroll(from + direction * viewportDp)
+        if (target == from) return false
+        mutableScroll.value = target
+        val anchorMs = current.anchorMs + GuideGeometry.timeAt(target, 0L) - GuideGeometry.timeAt(from, 0L)
+        val cell = GuideFocusNav.cellAt(rows.getOrNull(current.rowIndex)?.cells.orEmpty(), anchorMs)
+        mutableFocus.value = current.copy(cell = cell ?: current.cell, anchorMs = anchorMs)
+        return true
     }
 
     private fun moveHorizontal(

@@ -24,4 +24,6 @@ data class PlaybackHooks(
     val myList: MyListHooks = MyListHooks(),
     /** MainActivity's platform glue: AFR + the external player. */
     val platform: PlayerPlatformHooks = PlayerPlatformHooks(),
+    /** Settings → Remote control → Player key remaps, read per key press. */
+    val playerKeymap: () -> PlayerKeymap = { PlayerKeymap() },
 )

@@ -8,7 +8,8 @@ class PlaybackKeyPolicyTest {
     private fun at(
         overlay: PlaybackOverlay,
         key: PlaybackKey,
-    ): PlaybackCommand? = PlaybackKeyPolicy.commandFor(overlay, key)
+        keymap: PlayerKeymap = PlayerKeymap(),
+    ): PlaybackCommand? = PlaybackKeyPolicy.commandFor(overlay, key, keymap)
 
     @Test
     fun `bare playback follows the device-verified key map`() {
@@ -99,5 +100,67 @@ class PlaybackKeyPolicyTest {
         // A locked pane row opens the coming-soon placeholder over the pane.
         val comingSoonOverPane = PlaybackOverlay.ComingSoon("Channel options", back = pane)
         assertEquals(PlaybackCommand.PopTo(pane), at(comingSoonOverPane, PlaybackKey.BACK))
+    }
+
+    @Test
+    fun `ok remaps to the channels list or to nothing at bare playback`() {
+        val panel = PlayerKeymap(ok = PlayerOkAction.CHANNELS_LIST)
+        assertEquals(PlaybackCommand.OpenPanel, at(PlaybackOverlay.None, PlaybackKey.OK, panel))
+        assertNull(at(PlaybackOverlay.None, PlaybackKey.OK, PlayerKeymap(ok = PlayerOkAction.NOTHING)))
+        // The remap never leaks into other keys or into the info overlay.
+        assertEquals(PlaybackCommand.ShowInfo, at(PlaybackOverlay.None, PlaybackKey.DOWN, panel))
+        assertNull(at(PlaybackOverlay.Info, PlaybackKey.OK, panel))
+    }
+
+    @Test
+    fun `up and down remap to zapping or to nothing at bare playback`() {
+        val zap = PlayerKeymap(upDown = PlayerUpDownAction.SWITCH_CHANNELS)
+        assertEquals(PlaybackCommand.Zap(+1), at(PlaybackOverlay.None, PlaybackKey.UP, zap))
+        assertEquals(PlaybackCommand.Zap(-1), at(PlaybackOverlay.None, PlaybackKey.DOWN, zap))
+        val off = PlayerKeymap(upDown = PlayerUpDownAction.NOTHING)
+        assertNull(at(PlaybackOverlay.None, PlaybackKey.UP, off))
+        assertNull(at(PlaybackOverlay.None, PlaybackKey.DOWN, off))
+        assertEquals(PlaybackCommand.ShowInfo, at(PlaybackOverlay.None, PlaybackKey.OK, off))
+    }
+
+    @Test
+    fun `left and right remap to zapping at bare playback`() {
+        val zap = PlayerKeymap(leftRight = PlayerLeftRightAction.SWITCH_CHANNELS)
+        assertEquals(PlaybackCommand.Zap(-1), at(PlaybackOverlay.None, PlaybackKey.LEFT, zap))
+        assertEquals(PlaybackCommand.Zap(+1), at(PlaybackOverlay.None, PlaybackKey.RIGHT, zap))
+        // Inside the info overlay LEFT/RIGHT keep moving the real focus.
+        assertNull(at(PlaybackOverlay.Info, PlaybackKey.LEFT, zap))
+    }
+
+    @Test
+    fun `long ok remaps to the channels list while menu keeps the quick-bar`() {
+        val panel = PlayerKeymap(longOk = PlayerLongOkAction.CHANNELS_LIST)
+        assertEquals(PlaybackCommand.OpenPanel, at(PlaybackOverlay.None, PlaybackKey.LONG_OK, panel))
+        assertEquals(PlaybackCommand.OpenQuickBar, at(PlaybackOverlay.None, PlaybackKey.MENU, panel))
+        assertEquals(PlaybackCommand.OpenPanel, at(PlaybackOverlay.ZapInfo, PlaybackKey.LONG_OK, panel))
+    }
+
+    @Test
+    fun `remapped zap keys keep zapping through the transient zap overlay`() {
+        val zap =
+            PlayerKeymap(
+                upDown = PlayerUpDownAction.SWITCH_CHANNELS,
+                leftRight = PlayerLeftRightAction.SWITCH_CHANNELS,
+            )
+        assertEquals(PlaybackCommand.Zap(+1), at(PlaybackOverlay.ZapInfo, PlaybackKey.UP, zap))
+        assertEquals(PlaybackCommand.Zap(-1), at(PlaybackOverlay.ZapInfo, PlaybackKey.DOWN, zap))
+        assertEquals(PlaybackCommand.Zap(-1), at(PlaybackOverlay.ZapInfo, PlaybackKey.LEFT, zap))
+        assertEquals(PlaybackCommand.Zap(+1), at(PlaybackOverlay.ZapInfo, PlaybackKey.RIGHT, zap))
+        // OK still promotes to the info overlay; a panel remap opens the panel.
+        assertEquals(PlaybackCommand.ShowInfo, at(PlaybackOverlay.ZapInfo, PlaybackKey.OK, zap))
+        assertEquals(
+            PlaybackCommand.OpenPanel,
+            at(PlaybackOverlay.ZapInfo, PlaybackKey.OK, PlayerKeymap(ok = PlayerOkAction.CHANNELS_LIST)),
+        )
+        // Keys mapped to nothing still promote the zap overlay like today.
+        assertEquals(
+            PlaybackCommand.ShowInfo,
+            at(PlaybackOverlay.ZapInfo, PlaybackKey.UP, PlayerKeymap(upDown = PlayerUpDownAction.NOTHING)),
+        )
     }
 }
