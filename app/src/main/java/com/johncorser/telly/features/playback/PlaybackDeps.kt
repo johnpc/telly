@@ -50,4 +50,6 @@ class PlaybackDeps(
     val engineFactory: () -> Media3PlayerEngine,
     val clock: () -> Long,
     val parental: ParentalControls? = null,
+    /** Settings → Remote control → Player key remaps, read per key press. */
+    val playerKeymap: () -> PlayerKeymap = { PlayerKeymap() },
 )

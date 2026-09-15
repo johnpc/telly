@@ -226,14 +226,50 @@ class SettingsRowsTest {
     }
 
     @Test
-    fun `remote control has both locked sub-screens and the six seek toggles`() {
+    fun `remote control has both live sub-screens and the six seek toggles`() {
         val rows = remoteControlRows(s)
         assertEquals(9, rows.size)
+        // The reference locks the sub-screens behind premium; telly ships
+        // them by the no-premium-tier directive.
+        assertFalse((rows[0] as SettingsRow.Value).locked)
+        assertFalse((rows[1] as SettingsRow.Value).locked)
         assertEquals("Seeking options", (rows[2] as SettingsRow.Header).text)
         val toggles = rows.filterIsInstance<SettingsRow.Toggle>()
         assertEquals(6, toggles.size)
         assertTrue(toggles[0].checked)
         toggles.drop(1).forEach { assertFalse(it.checked) }
+    }
+
+    @Test
+    fun `the tv guide key sub-pane renders the current-map defaults`() {
+        val rows = remoteTvGuideRows(s)
+        assertEquals(listOf("Left/Right buttons", "Channel up/down buttons", "Long press OK"), titles(rows))
+        assertEquals(
+            listOf("Move by programme", "Nothing", "Open channel menu"),
+            rows.map { (it as SettingsRow.Value).summary },
+        )
+        rows.forEach { assertFalse((it as SettingsRow.Value).locked) }
+    }
+
+    @Test
+    fun `the player key sub-pane renders the current-map defaults`() {
+        val rows = remotePlayerRows(s)
+        assertEquals(listOf("OK button", "Up/Down buttons", "Left/Right buttons", "Long press OK"), titles(rows))
+        assertEquals(
+            listOf("Show info panel", "Show info panel", "Nothing", "Open quick menu"),
+            rows.map { (it as SettingsRow.Value).summary },
+        )
+    }
+
+    @Test
+    fun `the key sub-pane summaries reflect a changed setting`() {
+        s.set(TellySettings.REMOTE_PLAYER_OK, "Open channels list")
+        s.set(TellySettings.REMOTE_GUIDE_LEFT_RIGHT, "Move by page")
+
+        val player = remotePlayerRows(s).first { it.id == RowIds.REMOTE_PLAYER_OK } as SettingsRow.Value
+        assertEquals("Open channels list", player.summary)
+        val guide = remoteTvGuideRows(s).first { it.id == RowIds.REMOTE_GUIDE_LEFT_RIGHT } as SettingsRow.Value
+        assertEquals("Move by page", guide.summary)
     }
 
     @Test

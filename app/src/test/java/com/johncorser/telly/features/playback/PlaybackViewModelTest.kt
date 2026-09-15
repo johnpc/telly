@@ -46,6 +46,7 @@ class PlaybackViewModelTest {
         clock: () -> Long = { now },
         onOpenSettings: () -> Unit = {},
         onOpenMultiview: () -> Unit = {},
+        playerKeymap: () -> PlayerKeymap = { PlayerKeymap() },
     ): PlaybackViewModel =
         PlaybackViewModel(
             env =
@@ -55,7 +56,12 @@ class PlaybackViewModelTest {
                     engine = engine,
                     store = store,
                     time = PlaybackTime(clock, TimeZone.getTimeZone("UTC")),
-                    hooks = PlaybackHooks(onOpenSettings = onOpenSettings, onOpenMultiview = onOpenMultiview),
+                    hooks =
+                        PlaybackHooks(
+                            onOpenSettings = onOpenSettings,
+                            onOpenMultiview = onOpenMultiview,
+                            playerKeymap = playerKeymap,
+                        ),
                 ),
             history = WatchHistory(historyDao, clock),
             scope = CoroutineScope(SupervisorJob() + UnconfinedTestDispatcher(testScheduler)),
@@ -149,6 +155,28 @@ class PlaybackViewModelTest {
             assertEquals(PlaybackOverlay.Info, vm.overlay.value)
             advanceTimeBy(2)
             assertEquals(PlaybackOverlay.None, vm.overlay.value)
+        }
+
+    @Test
+    fun `a remapped ok opens the channel panel focused on the tuned channel`() =
+        runTest {
+            val vm = buildVm(playerKeymap = { PlayerKeymap(ok = PlayerOkAction.CHANNELS_LIST) })
+
+            assertTrue(vm.onKey(PlaybackKey.OK))
+
+            assertEquals(PlaybackOverlay.Panel, vm.overlay.value)
+        }
+
+    @Test
+    fun `a remapped down zaps backward with the zap overlay`() =
+        runTest {
+            val vm = buildVm(playerKeymap = { PlayerKeymap(upDown = PlayerUpDownAction.SWITCH_CHANNELS) })
+            assertEquals(1L, vm.current.value?.id)
+
+            assertTrue(vm.onKey(PlaybackKey.DOWN))
+
+            assertEquals(3L, vm.current.value?.id)
+            assertEquals(PlaybackOverlay.ZapInfo, vm.overlay.value)
         }
 
     @Test

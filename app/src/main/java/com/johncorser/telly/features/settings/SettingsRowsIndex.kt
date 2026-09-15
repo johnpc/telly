@@ -23,6 +23,8 @@ fun rowsFor(
                 ?.let { item -> playlistDetailRows(settings, item, epgSources.count { it.playlistUrl == item.url }) }
                 .orEmpty()
         SettingsPane.EpgSources -> epgSourcesRows(playlists, epgSources)
+        SettingsPane.RemoteTvGuide -> remoteTvGuideRows(settings)
+        SettingsPane.RemotePlayer -> remotePlayerRows(settings)
         is SettingsPane.EpgSourceDetail ->
             epgSources
                 .firstOrNull { it.id == pane.sourceId }
@@ -64,6 +66,8 @@ fun paneTitle(
         is SettingsPane.Section -> pane.section.title
         is SettingsPane.PlaylistDetail -> playlists.firstOrNull { it.url == pane.url }?.name ?: pane.url
         SettingsPane.EpgSources -> "EPG sources"
+        SettingsPane.RemoteTvGuide -> "TV guide"
+        SettingsPane.RemotePlayer -> "Player"
         is SettingsPane.EpgSourceDetail ->
             epgSources.firstOrNull { it.id == pane.sourceId }?.name ?: "EPG source"
     }

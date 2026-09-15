@@ -62,6 +62,7 @@ class GuideControllerTest {
     private var fullscreens = 0
     private var pastDays = 7
     private var clockNow = nowMs
+    private var keymap = GuideKeymap()
     private val ticks = MutableSharedFlow<Unit>()
     private val historyDao = FakeWatchHistoryDao()
 
@@ -84,6 +85,7 @@ class GuideControllerTest {
                     onOpenSearch = {},
                     onOpenSettings = {},
                 ),
+            keymap = { keymap },
         )
 
     private fun focusedTitle(controller: GuideController): String? =
@@ -378,6 +380,78 @@ class GuideControllerTest {
 
             assertEquals(48 * 160f, controller.scrollX.value)
             assertFalse(controller.focus.value!!.cell.hasInfo)
+        }
+    }
+
+    @Test
+    fun `channel keys are unconsumed until a remap gives them a meaning`() {
+        runTest {
+            val controller = buildController()
+
+            assertFalse(controller.onKey(GuideKey.CHANNEL_UP))
+            assertFalse(controller.onKey(GuideKey.CHANNEL_DOWN))
+        }
+    }
+
+    @Test
+    fun `remapped channel keys page the channel list a screenful at a time`() {
+        runTest {
+            keymap = GuideKeymap(channelUpDown = GuideChannelKeysAction.PAGE_CHANNELS)
+            val controller = buildController()
+
+            assertTrue(controller.onKey(GuideKey.CHANNEL_DOWN))
+            // Four fixture rows: a 7-row page clamps to the last row.
+            assertEquals(3, controller.focus.value?.rowIndex)
+
+            assertTrue(controller.onKey(GuideKey.CHANNEL_UP))
+            assertEquals(0, controller.focus.value?.rowIndex)
+        }
+    }
+
+    @Test
+    fun `remapped channel keys jump a day like the held horizontal keys`() {
+        runTest {
+            keymap = GuideKeymap(channelUpDown = GuideChannelKeysAction.MOVE_BY_DAY)
+            val controller = buildController()
+
+            assertTrue(controller.onKey(GuideKey.CHANNEL_UP))
+            assertEquals(48 * 160f, controller.scrollX.value)
+
+            assertTrue(controller.onKey(GuideKey.CHANNEL_DOWN))
+            assertEquals(0f, controller.scrollX.value)
+        }
+    }
+
+    @Test
+    fun `remapped left and right pan a whole page and the edge still opens groups`() {
+        runTest {
+            keymap = GuideKeymap(leftRight = GuideLeftRightAction.BY_PAGE)
+            val controller = buildController()
+
+            assertTrue(controller.onKey(GuideKey.RIGHT))
+            assertEquals(GuideGeometry.TIME_VIEWPORT_DP, controller.scrollX.value)
+
+            assertTrue(controller.onKey(GuideKey.LEFT))
+            assertEquals(0f, controller.scrollX.value)
+
+            assertTrue(controller.onKey(GuideKey.LEFT))
+            assertEquals(GuideLayer.Groups, controller.layer.value)
+        }
+    }
+
+    @Test
+    fun `remapped long ok plays the channel while menu keeps the sheet`() {
+        runTest {
+            keymap = GuideKeymap(longOk = GuideLongOkAction.PLAY_CHANNEL)
+            val controller = buildController()
+
+            assertTrue(controller.onKey(GuideKey.LONG_OK))
+            // Stage-one activation tunes the focused channel's preview.
+            assertEquals(1L, controller.preview.value?.id)
+            assertEquals(GuideLayer.Grid, controller.layer.value)
+
+            assertTrue(controller.onKey(GuideKey.MENU))
+            assertEquals(GuideLayer.RowMenu, controller.layer.value)
         }
     }
 

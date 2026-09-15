@@ -10,6 +10,8 @@ import com.johncorser.telly.features.playback.PlaybackDeps
 class GuideDeps(
     val playback: PlaybackDeps,
     val pastDays: () -> Int,
+    /** Settings → Remote control → TV guide key remaps, read per key press. */
+    val keymap: () -> GuideKeymap = { GuideKeymap() },
 )
 
 /** Navigation the guide triggers: fullscreen playback, search, settings. */

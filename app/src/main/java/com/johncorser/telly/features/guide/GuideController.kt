@@ -25,6 +25,8 @@ class GuideController(
     private val pastDays: () -> Int,
     scope: CoroutineScope,
     private val callbacks: GuideCallbacks,
+    /** Settings → Remote control → TV guide key remaps, read per key press. */
+    private val keymap: () -> GuideKeymap = { GuideKeymap() },
 ) {
     val zone = env.time.zone
 
@@ -83,7 +85,7 @@ class GuideController(
     }
 
     /** Routes a key through the layer map; true = consumed. */
-    fun onKey(key: GuideKey): Boolean = GuideKeyPolicy.commandFor(layer.value, key)?.also(::execute) != null
+    fun onKey(key: GuideKey): Boolean = GuideKeyPolicy.commandFor(layer.value, key, keymap())?.also(::execute) != null
 
     /** OK on a group filters the grid and renumbers from 1 (capture 74). */
     fun selectGroup(group: String) {
@@ -104,10 +106,18 @@ class GuideController(
             GuideCommand.FocusUp -> focusEngine.moveVertical(rows.value, -1)
             GuideCommand.FocusDown -> focusEngine.moveVertical(rows.value, +1)
             is GuideCommand.DayJump -> focusEngine.dayJump(command.days, pastDays())
+            is GuideCommand.PageJump -> pageJump(command.direction)
+            is GuideCommand.PageRows ->
+                focusEngine.moveVertical(rows.value, command.direction * GuideGeometry.VISIBLE_ROWS)
             GuideCommand.Activate -> activate()
             GuideCommand.OpenRowMenu -> menu.openRowMenu()
             GuideCommand.CloseLayer -> menu.close()
         }
+    }
+
+    /** Page-left at the live edge opens the groups column like a plain LEFT. */
+    private fun pageJump(direction: Int) {
+        if (!focusEngine.pageJump(rows.value, direction) && direction < 0) menu.show(GuideLayer.Groups)
     }
 
     private fun focusedRow(): GuideRow? = focus.value?.let { rows.value.getOrNull(it.rowIndex) }

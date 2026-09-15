@@ -10,7 +10,8 @@ class GuideKeyPolicyTest {
     private fun at(
         layer: GuideLayer,
         key: GuideKey,
-    ): GuideCommand? = GuideKeyPolicy.commandFor(layer, key)
+        keymap: GuideKeymap = GuideKeymap(),
+    ): GuideCommand? = GuideKeyPolicy.commandFor(layer, key, keymap)
 
     @Test
     fun `the grid maps the d-pad to focus moves and ok to activation`() {
@@ -44,6 +45,40 @@ class GuideKeyPolicyTest {
     fun `long-ok and menu open the row context sheet from the grid`() {
         assertEquals(GuideCommand.OpenRowMenu, at(GuideLayer.Grid, GuideKey.LONG_OK))
         assertEquals(GuideCommand.OpenRowMenu, at(GuideLayer.Grid, GuideKey.MENU))
+    }
+
+    @Test
+    fun `channel keys are unconsumed by default like the current grid`() {
+        assertNull(at(GuideLayer.Grid, GuideKey.CHANNEL_UP))
+        assertNull(at(GuideLayer.Grid, GuideKey.CHANNEL_DOWN))
+        assertNull(at(GuideLayer.Groups, GuideKey.CHANNEL_UP))
+    }
+
+    @Test
+    fun `left and right remap to page moves on the grid only`() {
+        val paged = GuideKeymap(leftRight = GuideLeftRightAction.BY_PAGE)
+        assertEquals(GuideCommand.PageJump(-1), at(GuideLayer.Grid, GuideKey.LEFT, paged))
+        assertEquals(GuideCommand.PageJump(+1), at(GuideLayer.Grid, GuideKey.RIGHT, paged))
+        // Held keys keep the day jump; overlaid layers keep their close keys.
+        assertEquals(GuideCommand.DayJump(-1), at(GuideLayer.Grid, GuideKey.LONG_LEFT, paged))
+        assertEquals(GuideCommand.CloseLayer, at(GuideLayer.Groups, GuideKey.RIGHT, paged))
+    }
+
+    @Test
+    fun `channel keys remap to paging the list or jumping a day`() {
+        val paged = GuideKeymap(channelUpDown = GuideChannelKeysAction.PAGE_CHANNELS)
+        assertEquals(GuideCommand.PageRows(-1), at(GuideLayer.Grid, GuideKey.CHANNEL_UP, paged))
+        assertEquals(GuideCommand.PageRows(+1), at(GuideLayer.Grid, GuideKey.CHANNEL_DOWN, paged))
+        val daily = GuideKeymap(channelUpDown = GuideChannelKeysAction.MOVE_BY_DAY)
+        assertEquals(GuideCommand.DayJump(+1), at(GuideLayer.Grid, GuideKey.CHANNEL_UP, daily))
+        assertEquals(GuideCommand.DayJump(-1), at(GuideLayer.Grid, GuideKey.CHANNEL_DOWN, daily))
+    }
+
+    @Test
+    fun `long ok remaps to playing the channel while menu keeps the sheet`() {
+        val play = GuideKeymap(longOk = GuideLongOkAction.PLAY_CHANNEL)
+        assertEquals(GuideCommand.Activate, at(GuideLayer.Grid, GuideKey.LONG_OK, play))
+        assertEquals(GuideCommand.OpenRowMenu, at(GuideLayer.Grid, GuideKey.MENU, play))
     }
 
     @Test

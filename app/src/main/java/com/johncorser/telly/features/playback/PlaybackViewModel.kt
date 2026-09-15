@@ -18,6 +18,8 @@ class PlaybackHooks(
     val panelLock: PanelLock = PanelLock(),
     val onOpenSettings: () -> Unit = {},
     val onOpenMultiview: () -> Unit = {},
+    /** Settings → Remote control → Player key remaps, read per key press. */
+    val playerKeymap: () -> PlayerKeymap = { PlayerKeymap() },
 )
 
 /** Everything [PlaybackViewModel] needs injected, bundled for readability. */
@@ -98,12 +100,11 @@ class PlaybackViewModel(
     /** Resume after a background stop leaves fullscreen for the guide, like the reference (round7 P2). */
     val lifecycle = PlaybackLifecycle(tuner, recover = onExitToGuide)
 
+    private val playerKeymap = env.hooks.playerKeymap
+
     /** Routes a key through the catalogue's key-by-context map; true = consumed. */
-    fun onKey(key: PlaybackKey): Boolean {
-        val command = PlaybackKeyPolicy.commandFor(overlays.value, key) ?: return false
-        commands.execute(command)
-        return true
-    }
+    fun onKey(key: PlaybackKey): Boolean =
+        PlaybackKeyPolicy.commandFor(overlays.value, key, playerKeymap())?.also(commands::execute) != null
 
     /** OK on a panel row tunes it and shows the compact zap overlay (round3-ref 10). */
     fun tuneFromPanel(channel: ChannelEntity) {

@@ -22,6 +22,9 @@ sealed interface PlaybackCommand {
     data class PopTo(
         val overlay: PlaybackOverlay,
     ) : PlaybackCommand
+
+    /** Open the channel panel (the "Open channels list" key remap). */
+    data object OpenPanel : PlaybackCommand
 }
 
 /**
@@ -32,30 +35,41 @@ sealed interface PlaybackCommand {
  * catalogue flags its no-zap observation as an emulator artifact). BACK at
  * bare playback returns to the TV guide (device-verified BACK chain:
  * playback → guide → app exit).
+ *
+ * The Remote control → Player settings remap the bare-playback keys through
+ * [PlayerKeymap]; its defaults reproduce this map exactly.
  */
 object PlaybackKeyPolicy {
     fun commandFor(
         overlay: PlaybackOverlay,
         key: PlaybackKey,
+        keymap: PlayerKeymap = PlayerKeymap(),
     ): PlaybackCommand? =
         when (overlay) {
-            PlaybackOverlay.None -> atBarePlayback(key)
+            PlaybackOverlay.None -> atBarePlayback(key, keymap)
             PlaybackOverlay.Info -> withinInfoOverlay(key, onUp = PlaybackCommand.ShowTransport)
             PlaybackOverlay.InfoTransport -> withinInfoOverlay(key, onUp = null)
-            PlaybackOverlay.ZapInfo -> withinZapOverlay(key)
+            PlaybackOverlay.ZapInfo -> withinZapOverlay(key, keymap)
             is PlaybackOverlay.ChannelMenu -> dismissalOnly(key, PlaybackCommand.BackToPanel)
             is PlaybackOverlay.Pushed -> dismissalOnly(key, PlaybackCommand.PopTo(overlay.back))
             else -> dismissalOnly(key, PlaybackCommand.Dismiss)
         }
 
-    private fun atBarePlayback(key: PlaybackKey): PlaybackCommand? =
+    private fun atBarePlayback(
+        key: PlaybackKey,
+        keymap: PlayerKeymap,
+    ): PlaybackCommand? =
         when (key) {
-            PlaybackKey.OK, PlaybackKey.DOWN, PlaybackKey.UP -> PlaybackCommand.ShowInfo
+            PlaybackKey.OK -> keymap.ok.command
+            PlaybackKey.UP -> keymap.upDown.command(+1)
+            PlaybackKey.DOWN -> keymap.upDown.command(-1)
+            PlaybackKey.LEFT -> keymap.leftRight.command(-1)
+            PlaybackKey.RIGHT -> keymap.leftRight.command(+1)
             PlaybackKey.CHANNEL_UP -> PlaybackCommand.Zap(+1)
             PlaybackKey.CHANNEL_DOWN -> PlaybackCommand.Zap(-1)
-            PlaybackKey.LONG_OK, PlaybackKey.MENU -> PlaybackCommand.OpenQuickBar
+            PlaybackKey.LONG_OK -> keymap.longOk.command
+            PlaybackKey.MENU -> PlaybackCommand.OpenQuickBar
             PlaybackKey.BACK -> PlaybackCommand.ExitToGuide
-            PlaybackKey.LEFT, PlaybackKey.RIGHT -> null
         }
 
     private fun withinInfoOverlay(
@@ -71,10 +85,22 @@ object PlaybackKeyPolicy {
             else -> null
         }
 
-    /** Any info key promotes the zap overlay to the full info overlay. */
-    private fun withinZapOverlay(key: PlaybackKey): PlaybackCommand? =
+    /**
+     * Any info key promotes the zap overlay to the full info overlay; a key
+     * remapped to zap/panel keeps its bare-playback meaning so repeated
+     * presses keep switching through the transient overlay.
+     */
+    private fun withinZapOverlay(
+        key: PlaybackKey,
+        keymap: PlayerKeymap,
+    ): PlaybackCommand? =
         when (key) {
-            PlaybackKey.OK, PlaybackKey.DOWN, PlaybackKey.UP -> PlaybackCommand.ShowInfo
+            PlaybackKey.OK -> keymap.ok.command ?: PlaybackCommand.ShowInfo
+            PlaybackKey.UP -> keymap.upDown.command(+1) ?: PlaybackCommand.ShowInfo
+            PlaybackKey.DOWN -> keymap.upDown.command(-1) ?: PlaybackCommand.ShowInfo
+            PlaybackKey.LEFT -> keymap.leftRight.command(-1)
+            PlaybackKey.RIGHT -> keymap.leftRight.command(+1)
+            PlaybackKey.LONG_OK -> keymap.longOk.command
             else -> withinInfoOverlay(key, onUp = null)
         }
 

@@ -15,6 +15,12 @@ sealed interface SettingsPane {
     data class EpgSourceDetail(
         val sourceId: Long,
     ) : SettingsPane
+
+    /** Remote control → TV guide key-remap sub-pane. */
+    data object RemoteTvGuide : SettingsPane
+
+    /** Remote control → Player key-remap sub-pane. */
+    data object RemotePlayer : SettingsPane
 }
 
 /** Modal state over the sheet stack. */
