@@ -93,5 +93,20 @@ class GuideFocusMemoryTest {
         memory.restore()
 
         assertNull(engine.focus.value)
+        assertNull(memory.savedChannelId)
+    }
+
+    @Test
+    fun `the saved sheet channel survives the restore for the scrim exemption`() {
+        engine.ensureFocus(rows, nowMs)
+        engine.moveVertical(rows, +1)
+        memory.save()
+
+        assertEquals(2L, memory.savedChannelId)
+        memory.restore()
+
+        // The positional snapshot is consumed, the identity is not: the
+        // scrim's undimmed-row hole must outlive the sheet's close fade.
+        assertEquals(2L, memory.savedChannelId)
     }
 }
