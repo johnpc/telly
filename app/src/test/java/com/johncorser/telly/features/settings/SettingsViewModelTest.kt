@@ -8,6 +8,9 @@ import com.johncorser.telly.features.epg.InMemoryEpgSourceStore
 import com.johncorser.telly.features.playlist.InMemoryPlaylistRepository
 import com.johncorser.telly.features.playlist.M3uChannel
 import com.johncorser.telly.features.playlist.M3uPlaylist
+import com.johncorser.telly.features.search.SearchHistory
+import com.johncorser.telly.testutil.FakeChannelDao
+import com.johncorser.telly.testutil.testChannel
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.TestScope
@@ -38,11 +41,21 @@ class SettingsViewModelTest {
         http://s/1.ts
         """.trimIndent()
 
+    private val channelDao = FakeChannelDao()
+    private val historyStore = InMemoryKeyValueStore()
+    private val searchHistory = SearchHistory(historyStore)
+
     private fun graph(): SettingsGraph =
         SettingsGraph(
             settings = settings,
             playlists = playlists,
             parental = ParentalControls(settings),
+            stores =
+                SettingsStores(
+                    epgSources = epgSourceStore,
+                    blocked = BlockedChannels(channelDao),
+                    searchHistory = searchHistory,
+                ),
             actions =
                 SettingsActions(
                     updater =
@@ -57,7 +70,6 @@ class SettingsViewModelTest {
                     backup = SettingsBackupManager(settings, playlists),
                 ),
             versionName = "0.1.0",
-            epgSources = epgSourceStore,
         )
 
     private fun TestScope.model(): SettingsViewModel =
@@ -464,6 +476,80 @@ class SettingsViewModelTest {
             model.confirmDelete()
             assertEquals(0, settings.get(TellySettings.EPG_UPDATE_INTERVAL_HOURS))
             assertNull(model.state.value.overlay)
+        }
+
+    @Test
+    fun `blocked channels row pushes straight through while no pin exists`() =
+        runTest {
+            val model = model()
+            model.selectSection(SettingsSection.PARENTAL_CONTROLS)
+            model.activate(RowIds.PARENTAL_BLOCKED_CHANNELS)
+            assertEquals(SettingsPane.BlockedChannels, model.state.value.activePane)
+        }
+
+    @Test
+    fun `blocked channels pane entry is pin-gated once and wrong pins keep prompting`() =
+        runTest {
+            val base = testChannel(7, 1, "Sports Arena")
+            channelDao.channels.value = listOf(base.copy(flags = base.flags.copy(blocked = true)))
+            val model = model()
+            model.activate(RowIds.PARENTAL_MASTER)
+            model.submitPin("2468")
+
+            model.activate(RowIds.PARENTAL_BLOCKED_CHANNELS)
+            assertEquals(SettingsOverlay.PinVerify, model.state.value.overlay)
+
+            model.submitVerifyPin("1111")
+            assertEquals(SettingsOverlay.PinVerify, model.state.value.overlay)
+
+            model.submitVerifyPin("2468")
+            assertNull(model.state.value.overlay)
+            assertEquals(SettingsPane.BlockedChannels, model.state.value.activePane)
+            assertTrue(model.rows.value.any { it.id == BlockRowIds.CHANNEL_PREFIX + "7" })
+
+            // OK on the listed channel unblocks it without another prompt.
+            model.activate(BlockRowIds.CHANNEL_PREFIX + "7")
+            assertFalse(channelDao.channels.value.single().flags.blocked)
+        }
+
+    @Test
+    fun `unblock ignores unknown or malformed row ids`() =
+        runTest {
+            val model = model()
+            model.activate(BlockRowIds.CHANNEL_PREFIX + "notanid")
+            model.activate(BlockRowIds.CHANNEL_PREFIX + "99")
+            assertNull(model.state.value.overlay)
+        }
+
+    @Test
+    fun `other search pane offers the toggle and the confirmed clear`() =
+        runTest {
+            searchHistory.record("news")
+            val model = model()
+            model.selectSection(SettingsSection.OTHER)
+            model.activate(RowIds.OTHER_SEARCH)
+            assertEquals(SettingsPane.OtherSearch, model.state.value.activePane)
+            assertEquals("Search", paneTitle(model.state.value.activePane, model.playlistItems.value))
+
+            model.activate(BlockRowIds.SEARCH_SAVE_HISTORY)
+            assertFalse(settings.get(TellySettings.SEARCH_SAVE_HISTORY))
+
+            model.activate(BlockRowIds.SEARCH_CLEAR_HISTORY)
+            assertEquals(SettingsOverlay.ConfirmClearHistory, model.state.value.overlay)
+            model.confirmClearHistory()
+            assertNull(model.state.value.overlay)
+            assertTrue(searchHistory.list().isEmpty())
+        }
+
+    @Test
+    fun `clear history handlers ignore calls without the confirm open`() =
+        runTest {
+            searchHistory.record("news")
+            val model = model()
+            model.confirmClearHistory()
+            model.submitVerifyPin("2468")
+            assertEquals(listOf("news"), searchHistory.list())
+            assertNull(model.state.value.activePane)
         }
 
     @Test

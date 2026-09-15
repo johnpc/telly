@@ -21,7 +21,7 @@ class SearchViewModel(
     private val deps: SearchDeps,
     scope: CoroutineScope,
 ) {
-    private val searchHistory = SearchHistory(deps.historyStore)
+    private val searchHistory = SearchHistory(deps.historyStore, deps.saveHistory)
 
     private val mutableQuery = MutableStateFlow("")
     private val mutableHistory = MutableStateFlow(searchHistory.list())

@@ -7,6 +7,7 @@ import androidx.compose.ui.res.stringResource
 import com.johncorser.telly.R
 import com.johncorser.telly.core.ui.OnboardingScreenMessage
 import com.johncorser.telly.features.mylist.MyListKeys
+import com.johncorser.telly.features.panel.ChannelPanelScreenPin
 import com.johncorser.telly.features.playback.PlaybackScreenMenu
 import com.johncorser.telly.features.playback.PlayerMenu
 import com.johncorser.telly.features.recording.RecordingScreenForm
@@ -37,6 +38,7 @@ internal fun GuideScreenRowMenu(
         onItem = controller.menu::onMenuItem,
         restore = controller.menu.sheetFocus.restore,
         inMyList = MyListKeys.saved(myListKeys, row.channel, focus?.cell?.program?.startMs),
+        blocked = row.channel.flags.blocked,
     )
 }
 
@@ -66,6 +68,8 @@ internal fun GuideScreenRowMenuLayers(
                 onDismiss = { controller.menu.close() },
             )
         is GuideLayer.CustomRecording -> controller.recordingMenu?.let { RecordingScreenForm(it) }
+        is GuideLayer.BlockPin ->
+            ChannelPanelScreenPin(onSubmit = controller.menu::submitBlockPin, title = layer.mode.title)
         else -> Unit
     }
 }

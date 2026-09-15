@@ -5,6 +5,7 @@ import com.johncorser.telly.core.settings.SettingsRepository
 import com.johncorser.telly.features.epg.EpgSource
 import com.johncorser.telly.features.epg.EpgSourceStore
 import com.johncorser.telly.features.playlist.PlaylistRepository
+import com.johncorser.telly.features.playlist.db.ChannelEntity
 import com.johncorser.telly.features.reminders.ReminderListItem
 import com.johncorser.telly.features.reminders.ReminderSettingsFeed
 import com.johncorser.telly.features.reminders.confirmDeleteReminderOverlay
@@ -32,8 +33,10 @@ class SettingsViewModel(
 ) {
     internal val settings: SettingsRepository = graph.settings
     internal val playlistRepository: PlaylistRepository = graph.playlists
-    internal val epgSources: EpgSourceStore = graph.epgSources
+    internal val epgSources: EpgSourceStore = graph.stores.epgSources
     internal val parental: ParentalControls = graph.parental
+    internal val blocked: BlockedChannels? = graph.stores.blocked
+    internal val searchHistory = graph.stores.searchHistory
     internal val updater: PlaylistUpdater = graph.actions.updater
     internal val changePlaylistUrl: suspend (oldUrl: String, newUrl: String) -> Boolean =
         graph.actions.changePlaylistUrl
@@ -72,11 +75,21 @@ class SettingsViewModel(
     val reminderItems: StateFlow<List<ReminderListItem>> =
         (reminders?.items ?: flowOf(emptyList())).stateIn(scope, SharingStarted.Eagerly, emptyList())
 
+    /** Blocked channels (Parental controls -> Blocked channels). */
+    val blockedItems: StateFlow<List<ChannelEntity>> =
+        (blocked?.channels ?: flowOf(emptyList())).stateIn(scope, SharingStarted.Eagerly, emptyList())
+
     /** The active sheet's rows (root section list when nothing is pushed). */
     val rows: StateFlow<List<SettingsRow>> =
-        combine(mutableState, playlistItems, epgSourceItems, reminderItems, rowTicks()) { state, pls, s, r, _ ->
-            activeRows(state.activePane, pls, SettingsFeeds(s, r))
+        combine(mutableState, playlistItems, feedItems(), rowTicks()) { state, pls, feeds, _ ->
+            activeRows(state.activePane, pls, feeds)
         }.stateIn(scope, SharingStarted.Eagerly, emptyList())
+
+    /** The deeper panes' live lists, joined for the rows combine above. */
+    private fun feedItems() =
+        combine(epgSourceItems, reminderItems, blockedItems) { sources, reminders, blockedChannels ->
+            SettingsFeeds(sources, reminders, blockedChannels)
+        }
 
     /** OK on a section row pushes its sheet over the root list. */
     fun selectSection(section: SettingsSection) {
@@ -104,6 +117,7 @@ class SettingsViewModel(
                     push(SettingsPane.EpgSourceDetail(it))
                 }
             rowId.startsWith(RowIds.REMINDER_PREFIX) -> confirmDeleteReminderOverlay(rowId)
+            rowId.startsWith(BlockRowIds.CHANNEL_PREFIX) -> unblockChannel(rowId)
             else -> runAction(rowId)
         }
     }

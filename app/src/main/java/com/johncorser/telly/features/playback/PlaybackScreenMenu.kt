@@ -45,6 +45,7 @@ internal fun PlaybackScreenMenu(
     onItem: (PlayerMenuItem) -> Unit,
     restore: PlayerMenuItem? = null,
     inMyList: Boolean = false,
+    blocked: Boolean = false,
 ) {
     val target = restore ?: sections.first().items.first()
     val listState = rememberLazyListState()
@@ -72,7 +73,7 @@ internal fun PlaybackScreenMenu(
                     }
                     items(section.items) { menuItem ->
                         TellyScreenMenuRow(
-                            label = menuItem.labelFor(favorite, inMyList),
+                            label = menuItem.labelFor(favorite, inMyList, blocked),
                             onClick = { onItem(menuItem) },
                             modifier = Modifier.padding(horizontal = 8.dp),
                             icon = menuIcon(menuItem),

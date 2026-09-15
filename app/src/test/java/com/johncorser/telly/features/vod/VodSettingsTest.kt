@@ -15,6 +15,7 @@ import com.johncorser.telly.features.settings.SettingsGraph
 import com.johncorser.telly.features.settings.SettingsOverlay
 import com.johncorser.telly.features.settings.SettingsPane
 import com.johncorser.telly.features.settings.SettingsRow
+import com.johncorser.telly.features.settings.SettingsStores
 import com.johncorser.telly.features.settings.SettingsViewModel
 import com.johncorser.telly.features.settings.paneTitle
 import kotlinx.coroutines.CoroutineScope
@@ -48,7 +49,7 @@ class VodSettingsTest {
                     clearVodPositions = { cleared++ },
                 ),
             versionName = "0.1.0",
-            epgSources = InMemoryEpgSourceStore(),
+            stores = SettingsStores(epgSources = InMemoryEpgSourceStore()),
         )
     }
 

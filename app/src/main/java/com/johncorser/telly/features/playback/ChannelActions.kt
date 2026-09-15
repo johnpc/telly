@@ -26,6 +26,11 @@ class ChannelActions(
         update(channel.copy(flags = channel.flags.copy(hidden = true)))
     }
 
+    /** Block/unblock; blocked channels stay listed but PIN-gate tuning. */
+    fun toggleBlocked(channel: ChannelEntity) {
+        update(channel.copy(flags = channel.flags.copy(blocked = !channel.flags.blocked)))
+    }
+
     private fun update(channel: ChannelEntity) {
         scope.launch { channelDao.update(channel) }
     }

@@ -109,6 +109,7 @@ object RowIds {
     const val PARENTAL_CHANNELS_ONLY = "parental.channels_only"
     const val PARENTAL_REQUIRE_SETTINGS = "parental.require_settings"
     const val PARENTAL_REQUIRE_PLAYLISTS = "parental.require_playlists"
+    const val PARENTAL_BLOCKED_CHANNELS = "parental.blocked_channels"
 
     // Other.
     const val OTHER_SEARCH = "other.search"

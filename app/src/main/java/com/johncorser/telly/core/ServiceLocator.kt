@@ -19,6 +19,7 @@ import com.johncorser.telly.features.mylist.RoomMyListStore
 import com.johncorser.telly.features.mylist.db.MyListMigration
 import com.johncorser.telly.features.playlist.PlaylistRepository
 import com.johncorser.telly.features.playlist.RoomPlaylistRepository
+import com.johncorser.telly.features.playlist.db.BlockedMigration
 import com.johncorser.telly.features.recording.db.RecordingMigration
 import com.johncorser.telly.features.reminders.db.ReminderMigration
 import com.johncorser.telly.features.vod.db.VodMigrations
@@ -51,6 +52,7 @@ object ServiceLocator {
                     MyListMigration.MIGRATION_5_6,
                     VodMigrations.MIGRATION_6_7,
                     RecordingMigration.MIGRATION_7_8,
+                    BlockedMigration.MIGRATION_8_9,
                 )
                 .build()
                 .also { database = it }

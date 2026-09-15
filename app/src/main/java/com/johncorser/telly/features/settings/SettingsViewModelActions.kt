@@ -38,7 +38,7 @@ private fun SettingsViewModel.runGeneralAction(rowId: String) {
         RowIds.OTHER_REMINDERS -> push(SettingsPane.Reminders)
         RowIds.PARENTAL_CHANGE_PIN -> showOverlay(SettingsOverlay.PinSetup)
         RowIds.ABOUT_PRIVACY_POLICY -> callbacks.onOpenPrivacyPolicy()
-        else -> appearancePaneFor(rowId)?.let(::push) ?: runPlaylistAction(rowId)
+        else -> appearancePaneFor(rowId)?.let(::push) ?: runBlockedOrSearchAction(rowId)
     }
 }
 
@@ -49,11 +49,12 @@ private fun pushedPaneFor(rowId: String): SettingsPane? =
         RowIds.REMOTE_TV_GUIDE -> SettingsPane.RemoteTvGuide
         RowIds.REMOTE_PLAYER -> SettingsPane.RemotePlayer
         RowIds.OTHER_RECORDING -> SettingsPane.Recording
+        RowIds.OTHER_SEARCH -> SettingsPane.OtherSearch
         else -> null
     }
 
 /** Playlist-list, per-playlist and recording-pane actions. */
-private fun SettingsViewModel.runPlaylistAction(rowId: String) {
+internal fun SettingsViewModel.runPlaylistAction(rowId: String) {
     when (rowId) {
         RowIds.ADD_PLAYLIST -> addPlaylist()
         RowIds.UPDATE_ALL_PLAYLISTS -> launch { updater.updateAll(playlistItems.value.map { it.url }) }

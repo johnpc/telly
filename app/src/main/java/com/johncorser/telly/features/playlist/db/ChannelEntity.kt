@@ -22,6 +22,8 @@ data class ChannelFlags(
     val hidden: Boolean = false,
     /** Manage-Favorites position; ties keep the base zap order (v5). */
     @ColumnInfo(defaultValue = "0") val favoriteOrder: Int = 0,
+    /** PIN-gated to tune (ux-spec: blocked channels stay listed with a lock, v9). */
+    @ColumnInfo(defaultValue = "0") val blocked: Boolean = false,
 )
 
 /**

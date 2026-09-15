@@ -128,6 +128,15 @@ Feature: TV guide
     Then the programme grid is focused again
     And the focused cell is on channel 1 at roughly the same time
 
+  Scenario: The rail's live-TV icon is a focus stop whose OK returns to the guide
+    When I press dpad left
+    Then the groups column lists "Favorites", "All channels", "News", "Sports", "Movies", "Kids", "Music"
+    When I press dpad left
+    And I press dpad up
+    Then the "Live TV" rail icon has focus
+    When I press ok
+    Then focus returns to the groups column
+
   Scenario: BACK at the guide root exits the app without confirmation
     When I press back
     Then telly exits to the launcher

@@ -34,15 +34,18 @@ enum class PlayerMenuItem(
 
     /**
      * "Add to Favorites" flips once the channel is already a favorite;
-     * "Add to My list" flips once the focused programme is saved.
+     * "Add to My list" flips once the focused programme is saved;
+     * "Block channel" flips on an already-blocked channel.
      */
     fun labelFor(
         favorite: Boolean,
         inMyList: Boolean = false,
+        blocked: Boolean = false,
     ): String =
         when {
             this == ADD_TO_FAVORITES && favorite -> "Remove from Favorites"
             this == ADD_TO_MY_LIST && inMyList -> MyListKeys.REMOVE_LABEL
+            this == BLOCK_CHANNEL && blocked -> "Unblock channel"
             else -> label
         }
 }

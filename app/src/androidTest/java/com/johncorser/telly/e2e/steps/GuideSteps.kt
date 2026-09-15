@@ -1,9 +1,11 @@
 package com.johncorser.telly.e2e.steps
 
 import android.view.KeyEvent
+import androidx.compose.ui.test.hasAnyDescendant
 import androidx.compose.ui.test.hasContentDescription
 import androidx.compose.ui.test.hasTestTag
 import androidx.compose.ui.test.hasText
+import androidx.compose.ui.test.isFocused
 import androidx.compose.ui.test.isNotEnabled
 import androidx.compose.ui.test.isRoot
 import com.johncorser.telly.e2e.PlaybackDriver
@@ -237,6 +239,20 @@ class GuideSteps(
 
     @Then("the groups column is dismissed")
     fun groupsDismissed() = world.waitForGone(hasText("Favorites"))
+
+    @Then("the {string} rail icon has focus")
+    fun railIconFocused(description: String) {
+        // The icon's semantics don't merge into the Surface, so match the
+        // focused button by its (unmerged) content description child.
+        world.waitFor(hasAnyDescendant(hasContentDescription(description)) and isFocused(), unmerged = true)
+    }
+
+    @Then("focus returns to the groups column")
+    fun groupsColumnFocused() {
+        driver.awaitCondition("a groups-column row focused") {
+            listOf("Favorites", "All channels").any { world.nodeCount(hasText(it) and isFocused()) > 0 }
+        }
+    }
 
     @Then("telly exits to the launcher")
     fun appExits() {

@@ -14,6 +14,7 @@ import com.johncorser.telly.features.settings.SettingsCallbacks
 import com.johncorser.telly.features.settings.SettingsGraph
 import com.johncorser.telly.features.settings.SettingsOverlay
 import com.johncorser.telly.features.settings.SettingsPane
+import com.johncorser.telly.features.settings.SettingsStores
 import com.johncorser.telly.features.settings.SettingsViewModel
 import com.johncorser.telly.features.settings.choosePickerOption
 import com.johncorser.telly.testutil.testChannel
@@ -56,7 +57,7 @@ class ReminderSettingsActionsTest {
                     backup = SettingsBackupManager(settings, playlists),
                 ),
             versionName = "0.1.0",
-            epgSources = InMemoryEpgSourceStore(),
+            stores = SettingsStores(epgSources = InMemoryEpgSourceStore()),
         ).apply { reminders = feed }
 
     private fun TestScope.model(): SettingsViewModel =

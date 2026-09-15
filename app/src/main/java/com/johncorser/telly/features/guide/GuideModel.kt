@@ -1,6 +1,7 @@
 package com.johncorser.telly.features.guide
 
 import com.johncorser.telly.features.epg.db.ProgramEntity
+import com.johncorser.telly.features.playback.BlockPinMode
 import com.johncorser.telly.features.playlist.db.ChannelEntity
 
 /**
@@ -79,6 +80,12 @@ sealed interface GuideLayer {
     data class CustomRecording(
         val back: GuideLayer = Grid,
     ) : GuideLayer
+
+    /** The sheet's Block/Unblock PIN dialog; BACK cancels back to the sheet. */
+    data class BlockPin(
+        val channel: ChannelEntity,
+        val mode: BlockPinMode,
+    ) : GuideLayer
 }
 
 /** The sheet's Program-description layer from the focused programme. */
@@ -101,6 +108,7 @@ internal fun backOf(layer: GuideLayer): GuideLayer =
         is GuideLayer.Description -> layer.back
         is GuideLayer.RecordingStop -> layer.back
         is GuideLayer.CustomRecording -> layer.back
+        is GuideLayer.BlockPin -> GuideLayer.RowMenu
         else -> GuideLayer.Grid
     }
 

@@ -41,6 +41,7 @@ internal fun PlaybackScreenMenuLayers(
                     onDismiss = { viewModel.onKey(PlaybackKey.BACK) },
                 )
             is PlaybackOverlay.CustomRecording -> viewModel.recordingMenu?.let { RecordingScreenForm(it) }
+            is PlaybackOverlay.BlockPin -> PlaybackScreenBlockPinDialog(viewModel, active)
             else -> Unit
         }
     }
@@ -68,5 +69,6 @@ private fun PlaybackScreenChannelMenu(
         onItem = viewModel.menu::onMenuItem,
         restore = viewModel.menu.sheetFocus.restore,
         inMyList = channel != null && viewModel.menu.myList?.savedFor(channel, myListKeys) == true,
+        blocked = channel?.flags?.blocked == true,
     )
 }

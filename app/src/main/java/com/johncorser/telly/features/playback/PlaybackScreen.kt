@@ -72,6 +72,7 @@ fun PlaybackScreen(
                                         store = deps.myList,
                                     ),
                                 onOpenRecordings = onOpenRecordings,
+                                parental = deps.parental,
                             ),
                     ),
                 history = deps.sources.history,
@@ -89,6 +90,7 @@ fun PlaybackScreen(
     }
     val overlay by viewModel.overlay.collectAsState()
     val inPip by pip.inPip.collectAsState()
+    val blockPrompt by viewModel.blockPrompt.channel.collectAsState()
     val previewDetector = remember { HoldKeyDetector(PlaybackKey.OK, PlaybackKey.LONG_OK) }
     // Background/resume: stop the stream on STOP, re-tune on the START
     // after it — the reference re-tunes on resume (round7 resume P2).
@@ -102,11 +104,6 @@ fun PlaybackScreen(
     ) {
         PlayerScreenSurface(engine, Modifier.fillMaxSize())
         // In the tiny PIP window every piece of chrome hides: clean video only.
-        if (!inPip) {
-            if (overlay == PlaybackOverlay.None || overlay == PlaybackOverlay.ZapInfo) {
-                PlaybackScreenKeyAnchor(onKey = viewModel::onKey)
-            }
-            PlaybackScreenOverlays(viewModel, overlay)
-        }
+        if (!inPip) PlaybackScreenChrome(viewModel, overlay, blockPromptOpen = blockPrompt != null)
     }
 }

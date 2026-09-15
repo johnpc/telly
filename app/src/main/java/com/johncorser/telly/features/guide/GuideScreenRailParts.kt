@@ -15,6 +15,7 @@ import androidx.tv.material3.Icon
 import androidx.tv.material3.LocalContentColor
 import androidx.tv.material3.Surface
 import androidx.tv.material3.Text
+import com.johncorser.telly.core.design.TELLY_TEXT_PRIMARY
 import com.johncorser.telly.core.ui.FocusScreenDefaults
 import com.johncorser.telly.core.ui.LocalAccentColor
 
@@ -34,12 +35,13 @@ internal fun GuideScreenRailLogo(modifier: Modifier = Modifier) {
     )
 }
 
-/** A focusable rail icon (search / bookmark / Movies / DVR / gear), pill on focus. */
+/** A focusable rail icon (search / live-TV / bookmark / Movies / DVR / gear), pill on focus. */
 @Composable
 internal fun GuideScreenRailButton(
     icon: Int,
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
+    restingTint: Color = Color(TELLY_TEXT_PRIMARY),
     contentDescription: String? = null,
 ) {
     Surface(
@@ -47,7 +49,7 @@ internal fun GuideScreenRailButton(
         modifier = modifier,
         shape = FocusScreenDefaults.shape(),
         scale = FocusScreenDefaults.scale(),
-        colors = FocusScreenDefaults.colors(restingContainer = Color.Transparent),
+        colors = FocusScreenDefaults.colors(restingContainer = Color.Transparent, restingContent = restingTint),
     ) {
         GuideScreenRailIcon(icon, Color.Unspecified, Modifier.padding(8.dp), contentDescription)
     }

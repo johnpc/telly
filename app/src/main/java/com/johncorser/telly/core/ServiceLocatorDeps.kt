@@ -7,6 +7,7 @@ import com.johncorser.telly.features.guide.GuideDeps
 import com.johncorser.telly.features.guide.GuideKeymap
 import com.johncorser.telly.features.history.WatchHistory
 import com.johncorser.telly.features.multiview.MultiviewDeps
+import com.johncorser.telly.features.playback.BlockSession
 import com.johncorser.telly.features.playback.PanelTimeouts
 import com.johncorser.telly.features.playback.PlaybackDeps
 import com.johncorser.telly.features.playback.PlaybackHooks
@@ -17,6 +18,9 @@ import com.johncorser.telly.features.player.Media3PlayerEngine
 import com.johncorser.telly.features.recording.recordingCenter
 import com.johncorser.telly.features.reminders.remindersHub
 import com.johncorser.telly.features.vod.VodDeps
+
+/** One block-unlock session per process ("Until app restart" relock). */
+private val sharedBlockSession = BlockSession()
 
 /** Playback slice bundle over [ServiceLocator]'s app-scoped singletons. */
 fun ServiceLocator.playbackDeps(
@@ -47,6 +51,8 @@ fun ServiceLocator.playbackDeps(
             hooks.copy(
                 playerKeymap = { PlayerKeymap.from(settingsRepository(context)) },
                 recording = recordingCenter(context),
+                parental = ParentalControls(settingsRepository(context)),
+                blockSession = sharedBlockSession,
             ),
     )
 

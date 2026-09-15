@@ -63,4 +63,22 @@ class SearchHistoryTest {
 
         assertEquals(listOf("news"), SearchHistory(store).list())
     }
+
+    @Test
+    fun `nothing records while the save toggle is off`() {
+        var save = false
+        val gated = SearchHistory(store, saveEnabled = { save })
+
+        gated.record("news")
+        assertTrue(gated.list().isEmpty())
+
+        // Existing entries stay listed and clearable; only recording stops.
+        save = true
+        gated.record("sports")
+        save = false
+        gated.record("movies")
+        assertEquals(listOf("sports"), gated.list())
+        gated.clear()
+        assertTrue(gated.list().isEmpty())
+    }
 }

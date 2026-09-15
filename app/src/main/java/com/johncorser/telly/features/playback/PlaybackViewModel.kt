@@ -42,7 +42,7 @@ class PlaybackViewModel(
 
     val panel = PanelViewModel(env.channelDao, env.epgRepository, clock, scope, env.time.zone, env.hooks.panelLock)
 
-    private val tuner = TuneController(env.engine, env.store, scope, env.channelDao, history, hooks.platform.external)
+    private val tuner = gatedTuner(env, history, scope, external = hooks.platform.external)
     private val overlays = OverlayState(scope)
     private val instant = MutableStateFlow(clock())
 
@@ -52,7 +52,7 @@ class PlaybackViewModel(
     /** Executes context-menu rows; also resolves the channel they act on. */
     val menu =
         PlaybackMenuHandler(
-            actions = ChannelActions(env.channelDao, scope, myList = panelMyListHost(myList, panel, env.hooks)),
+            actions = SheetActions.over(env, scope, myList = panelMyListHost(myList, panel, env.hooks)),
             overlays = overlays,
             tuner = tuner,
             hooks = hooks.copy(onOpenSearch = openSearch),
@@ -65,6 +65,9 @@ class PlaybackViewModel(
         env.hooks.recording?.let { center ->
             RecordingMenu(center, scope, clock) { prompt -> menu.onRecordingPrompt(prompt) }
         }
+
+    /** The blocked-channel tune gate (any path); see [panelBlockPrompt]. */
+    val blockPrompt = panelBlockPrompt(tuner, overlays, panel) { commands.showZapInfo() }
 
     private val video = env.engine.video
 
@@ -122,7 +125,9 @@ class PlaybackViewModel(
     /** OK on a panel row tunes it and shows the compact zap overlay (round3-ref 10). */
     fun tuneFromPanel(channel: ChannelEntity) {
         tuner.tune(channel)
-        commands.showZapInfo()
+        // A blocked channel prompts for the PIN instead; the overlay follows
+        // a verified PIN (blockPrompt.submit), never a cancelled one.
+        if (blockPrompt.channel.value == null) commands.showZapInfo()
     }
 
     fun showChannelMenu(channel: ChannelEntity) = menu.openChannelMenu(channel.id)

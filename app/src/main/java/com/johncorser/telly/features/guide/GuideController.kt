@@ -5,7 +5,8 @@ import com.johncorser.telly.features.mylist.MyListMenu
 import com.johncorser.telly.features.panel.PanelViewModel
 import com.johncorser.telly.features.playback.PlaybackEnv
 import com.johncorser.telly.features.playback.PlaybackLifecycle
-import com.johncorser.telly.features.playback.TuneController
+import com.johncorser.telly.features.playback.TuneBlockPrompt
+import com.johncorser.telly.features.playback.gatedTuner
 import com.johncorser.telly.features.playlist.db.ChannelEntity
 import com.johncorser.telly.features.recording.RecordingMenu
 import kotlinx.coroutines.CoroutineScope
@@ -38,8 +39,10 @@ class GuideController(
     val now: StateFlow<Long> = ticker.now
     val originMs = GuideGeometry.halfHourFloor(now.value, zone)
 
-    private val tuner =
-        TuneController(env.engine, env.store, scope, env.channelDao, history, external = callbacks.external)
+    private val tuner = gatedTuner(env, history, scope, external = callbacks.external)
+
+    /** The blocked-channel tune gate's prompt (guide OK / preview restore). */
+    val blockPrompt = TuneBlockPrompt(tuner)
 
     /** Background stop + foreground re-seed/re-tune (round7 resume P2). */
     val lifecycle = PlaybackLifecycle(tuner, onForegrounded = ticker::reseed, recover = tuner::retune)
@@ -71,16 +74,12 @@ class GuideController(
     /** My-list toggle state: the dropdown/sheet labels flip on its keys. */
     val myList = MyListMenu(seams.myList, env.time.clock, scope)
 
+    private val sheetMyList = guideMyListHost(myList, focus, { selected.value }, callbacks)
+
     /** Layers + the long-OK row context sheet (catalogue §3 38-42). */
     val menu =
         GuideMenuController(
-            channelActions =
-                guideSheetChannelActions(
-                    env.channelDao,
-                    scope,
-                    guideMyListHost(myList, focus, { selected.value }, callbacks),
-                    tuner::zapAwayFrom,
-                ),
+            channelActions = guideSheetActions(env, scope, sheetMyList, tuner::zapAwayFrom),
             focusedRow = ::focusedRow,
             info = { info.value },
             callbacks = callbacks,

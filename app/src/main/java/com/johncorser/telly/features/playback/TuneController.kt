@@ -15,6 +15,13 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 
+/** The tune-time policies: the external-player handoff + the blocked-PIN gate. */
+data class TunePolicies(
+    val external: ExternalPlayer = ExternalPlayer.OFF,
+    /** Owns the PIN prompt for blocked channels ([TuneBlockPrompt] drives it). */
+    val gate: BlockGate = BlockGate(),
+)
+
 /**
  * Owns which channel is tuned: restores the last-watched channel on start,
  * pushes streams into the [PlayerEngine], persists the last channel id plus
@@ -26,8 +33,13 @@ class TuneController(
     private val scope: CoroutineScope,
     channelDao: ChannelDao,
     private val history: WatchHistory,
-    private val external: ExternalPlayer = ExternalPlayer.OFF,
+    private val policies: TunePolicies = TunePolicies(),
 ) {
+    /** The blocked-channel gate; [TuneBlockPrompt] drives its PIN prompt. */
+    val gate: BlockGate get() = policies.gate
+
+    private val external: ExternalPlayer get() = policies.external
+
     /** All visible channels in TiviMate "All channels" order. */
     val channels: StateFlow<List<ChannelEntity>> =
         channelDao.observeVisible().stateIn(scope, SharingStarted.Eagerly, emptyList())
@@ -55,16 +67,19 @@ class TuneController(
     }
 
     /**
-     * Tunes [channel]. While "Use external player" is On, a user-initiated
-     * tune opens the stream in the external app instead of the internal
-     * engine (ux-spec §3.18); with no handler installed it falls back to
-     * internal playback. Restore paths (cold start, guide resume) pass
+     * Tunes [channel], or opens the [gate]'s PIN prompt when it is blocked
+     * (the gate fires FIRST — a blocked channel never reaches the external
+     * app either). While "Use external player" is On, a user-initiated tune
+     * opens the stream in the external app instead of the internal engine
+     * (ux-spec §3.18); with no handler installed it falls back to internal
+     * playback. Restore paths (cold start, guide resume) pass
      * [allowExternal] = false so app start never bounces to another app.
      */
     fun tune(
         channel: ChannelEntity,
         allowExternal: Boolean = true,
     ) {
+        if (gate.intercept(channel)) return
         mutableCurrent.value = channel
         suspended = false
         store.putLong(LAST_CHANNEL_KEY, channel.id)
@@ -95,11 +110,11 @@ class TuneController(
         mutableCurrent.value?.let { engine.load(it.source.streamUrl) }
     }
 
-    /** Tunes the channel [delta] steps away (wraps); false when impossible. */
+    /** Tunes the channel [delta] steps away (wraps); false when impossible or PIN-gated. */
     fun zap(delta: Int): Boolean {
         val next = ChannelZapper.neighbour(channels.value, mutableCurrent.value, delta) ?: return false
         tune(next)
-        return true
+        return mutableCurrent.value?.id == next.id
     }
 
     fun byId(channelId: Long): ChannelEntity? = channels.value.firstOrNull { it.id == channelId }

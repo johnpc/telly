@@ -30,6 +30,12 @@ sealed interface SettingsPane {
     /** Other -> Recording (recording slice): storage + delete-all. */
     data object Recording : SettingsPane
 
+    /** Other -> Search: the save-history toggle + clear action. */
+    data object OtherSearch : SettingsPane
+
+    /** Parental controls -> Blocked channels (entry PIN-gated once). */
+    data object BlockedChannels : SettingsPane
+
     data object AppearanceTvGuide : SettingsPane
 
     data object AppearancePlayer : SettingsPane
@@ -80,6 +86,12 @@ sealed interface SettingsOverlay {
     data object ConfirmDeleteRecordings : SettingsOverlay
 
     data object PinSetup : SettingsOverlay
+
+    /** Entering the blocked-channels pane confirms the parental PIN once. */
+    data object PinVerify : SettingsOverlay
+
+    /** GuidedStep confirm for Other -> Search -> Clear search history. */
+    data object ConfirmClearHistory : SettingsOverlay
 }
 
 /**

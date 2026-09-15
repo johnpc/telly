@@ -1,7 +1,6 @@
 package com.johncorser.telly.features.settings
 
 import com.johncorser.telly.core.settings.SettingsRepository
-import com.johncorser.telly.features.epg.EpgSource
 import com.johncorser.telly.features.reminders.remindersRows
 import com.johncorser.telly.features.vod.vodSettingsRows
 
@@ -25,11 +24,23 @@ fun rowsFor(
         is SettingsPane.PlaylistGroups -> playlistGroupRowsFor(pane.url, settings, playlists)
         SettingsPane.EpgSources -> epgSourcesRows(playlists, feeds.epgSources)
         is SettingsPane.EpgSourceDetail -> epgSourceDetailRowsFor(pane.sourceId, feeds)
+        else -> leafPaneRows(pane, settings, feeds)
+    }
+
+/** The leaf sub-panes: fixed row builders over the settings map + feeds. */
+private fun leafPaneRows(
+    pane: SettingsPane,
+    settings: SettingsRepository,
+    feeds: SettingsFeeds,
+): List<SettingsRow> =
+    when (pane) {
         SettingsPane.RemoteTvGuide -> remoteTvGuideRows(settings)
         SettingsPane.RemotePlayer -> remotePlayerRows(settings)
         SettingsPane.Reminders -> remindersRows(settings, feeds.reminders)
         SettingsPane.Vod -> vodSettingsRows(settings)
         SettingsPane.Recording -> emptyList()
+        SettingsPane.OtherSearch -> otherSearchRows(settings)
+        SettingsPane.BlockedChannels -> blockedChannelRows(feeds.blockedChannels)
         else -> appearancePaneRows(pane, settings)
     }
 
@@ -85,32 +96,4 @@ private fun sectionRows(
         SettingsSection.PARENTAL_CONTROLS -> parentalRows(settings)
         SettingsSection.OTHER -> otherRows()
         SettingsSection.ABOUT -> aboutRows(settings, versionName)
-    }
-
-/** The sheet's header title for [pane] (root sheet = "Settings"). */
-fun paneTitle(
-    pane: SettingsPane?,
-    playlists: List<PlaylistItem>,
-    epgSources: List<EpgSource> = emptyList(),
-): String =
-    when (pane) {
-        null -> "Settings"
-        is SettingsPane.Section -> pane.section.title
-        is SettingsPane.PlaylistDetail -> playlists.firstOrNull { it.url == pane.url }?.name ?: pane.url
-        is SettingsPane.EpgSourceDetail ->
-            epgSources.firstOrNull { it.id == pane.sourceId }?.name ?: "EPG source"
-        else -> fixedPaneTitle(pane) ?: appearancePaneTitle(pane)
-    }
-
-/** Panes whose header text is a constant (no feed lookup). */
-private fun fixedPaneTitle(pane: SettingsPane): String? =
-    when (pane) {
-        is SettingsPane.PlaylistGroups -> "Manage groups"
-        SettingsPane.EpgSources -> "EPG sources"
-        SettingsPane.RemoteTvGuide -> "TV guide"
-        SettingsPane.RemotePlayer -> "Player"
-        SettingsPane.Reminders -> "Reminders"
-        SettingsPane.Vod -> "VOD"
-        SettingsPane.Recording -> "Recording"
-        else -> null
     }

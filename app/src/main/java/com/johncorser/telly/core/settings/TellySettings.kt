@@ -93,6 +93,9 @@ object TellySettings {
     // Other -> VOD (telly's unlocked pane; the reference sells VOD as premium).
     val VOD_REMEMBER_POSITION = boolSetting("vod_remember_position", true)
 
+    // Other -> Search. Off = committed queries are no longer recorded.
+    val SEARCH_SAVE_HISTORY = boolSetting("search_save_history", true)
+
     // About (catalogue 53) — the only free toggle in the reference.
     val SEND_STATISTICS = boolSetting("about_send_statistics", true)
 }

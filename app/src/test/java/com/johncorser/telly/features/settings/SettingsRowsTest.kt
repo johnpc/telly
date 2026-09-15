@@ -4,6 +4,7 @@ import com.johncorser.telly.core.settings.InMemoryKeyValueStore
 import com.johncorser.telly.core.settings.SettingsRepository
 import com.johncorser.telly.core.settings.TellySettings
 import com.johncorser.telly.features.epg.EpgSource
+import com.johncorser.telly.testutil.testChannel
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
@@ -339,6 +340,7 @@ class SettingsRowsTest {
                 "PIN input method",
                 "Don't require PIN after unlocking",
                 "Don't require for channels only",
+                "Blocked channels",
                 "Require PIN for",
                 "Settings",
                 "Settings | Playlists",
@@ -350,16 +352,37 @@ class SettingsRowsTest {
     }
 
     @Test
-    fun `other pane keeps Reminders Recording and VOD live with Search locked and about matches capture 53`() {
+    fun `other pane has all four sub-panes live and about matches capture 53`() {
         val other = otherRows()
         assertEquals(listOf("Search", "Reminders", "Recording", "VOD"), titles(other))
-        // Reminders, Recording and VOD shipped as telly slices; Search stays locked.
-        assertEquals(listOf(true, false, false, false), other.map { (it as SettingsRow.Value).locked })
+        // Search, Reminders, Recording and VOD all shipped as telly slices.
+        assertEquals(listOf(false, false, false, false), other.map { (it as SettingsRow.Value).locked })
 
         val about = aboutRows(s, "0.1.0")
         assertEquals(listOf("Send anonymous statistics to improve the app", "Privacy policy", "Version"), titles(about))
         assertTrue((about[0] as SettingsRow.Toggle).checked)
         assertEquals("0.1.0", (about[2] as SettingsRow.Value).summary)
+    }
+
+    @Test
+    fun `other search pane has the default-on save toggle and the clear action`() {
+        val rows = otherSearchRows(s)
+        assertEquals(listOf("Save search history", "Clear search history"), titles(rows))
+        assertTrue((rows[0] as SettingsRow.Toggle).checked)
+
+        s.set(TellySettings.SEARCH_SAVE_HISTORY, false)
+        assertFalse((otherSearchRows(s)[0] as SettingsRow.Toggle).checked)
+    }
+
+    @Test
+    fun `blocked channels pane lists one unblock row per channel or the empty note`() {
+        val empty = blockedChannelRows(emptyList())
+        assertEquals("No blocked channels", (empty.single() as SettingsRow.Note).text)
+
+        val rows = blockedChannelRows(listOf(testChannel(7, 1, "Sports Arena")))
+        val row = rows.single() as SettingsRow.Value
+        assertEquals(BlockRowIds.CHANNEL_PREFIX + "7", row.id)
+        assertEquals("Sports Arena", row.title)
     }
 
     @Test

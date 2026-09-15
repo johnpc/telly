@@ -17,6 +17,7 @@ import androidx.compose.ui.graphics.Color
 import com.johncorser.telly.core.design.TELLY_ONBOARDING_BACKGROUND
 import com.johncorser.telly.core.ui.ScreenLifecycleStartStop
 import com.johncorser.telly.core.ui.TellyScreenKeyAnchor
+import com.johncorser.telly.features.playback.PlaybackScreenBlockGate
 import com.johncorser.telly.features.playback.PlaybackScreenMenuSurfaceSwitch
 import com.johncorser.telly.features.playback.PlayerMenuSurface
 
@@ -56,6 +57,7 @@ fun GuideScreen(
     val controller = rememberGuideController(deps, engine, callbacks)
     val detectors = remember { GuideScreenKeyDetectors() }
     val layer by controller.layer.collectAsState()
+    val blockPrompt by controller.blockPrompt.channel.collectAsState()
     // Background/resume: stop the preview stream on STOP, re-seed the clock
     // and re-tune on the START after it (round7 resume P2).
     ScreenLifecycleStartStop(onStart = controller.lifecycle::onForeground, onStop = controller.lifecycle::onBackground)
@@ -79,7 +81,7 @@ fun GuideScreen(
                     GuideScreenHeader(controller)
                     GuideScreenGrid(controller, dimFocus = layer == GuideLayer.Groups, Modifier.weight(1f))
                 }
-                if (layer == GuideLayer.Grid) {
+                if (layer == GuideLayer.Grid && blockPrompt == null) {
                     TellyScreenKeyAnchor { event -> mapGuideKey(event, detectors)?.let(controller::onKey) ?: false }
                 }
                 GuideScreenCellMenu(controller, layer)
@@ -96,6 +98,13 @@ fun GuideScreen(
             GuideScreenRowMenu(controller, menuLayer)
             GuideScreenRowMenuLayers(controller, menuLayer)
         }
+        // Tuning a blocked channel (grid OK / preview restore) gates on the PIN.
+        if (blockPrompt != null) {
+            PlaybackScreenBlockGate(
+                onSubmit = controller.blockPrompt::submit,
+                onDismiss = controller.blockPrompt::dismiss,
+            )
+        }
     }
 }
 
@@ -103,7 +112,7 @@ private fun guideMenuSurface(layer: GuideLayer): PlayerMenuSurface =
     when (layer) {
         GuideLayer.RowMenu -> PlayerMenuSurface.SHEET
         is GuideLayer.ChannelOptions -> PlayerMenuSurface.CHANNEL_OPTIONS
-        is GuideLayer.Description, is GuideLayer.ComingSoon -> PlayerMenuSurface.PUSHED
+        is GuideLayer.Description, is GuideLayer.ComingSoon, is GuideLayer.BlockPin -> PlayerMenuSurface.PUSHED
         is GuideLayer.RecordingStop, is GuideLayer.CustomRecording -> PlayerMenuSurface.PUSHED
         else -> PlayerMenuSurface.NONE
     }

@@ -16,9 +16,9 @@ import com.johncorser.telly.features.recording.RecordingPrompt
  * §A) — and every unbuilt row keeps the coming-soon placeholder.
  */
 class PlaybackMenuHandler(
-    private val actions: ChannelActions,
-    private val overlays: OverlayState,
-    private val tuner: TuneController,
+    internal val actions: SheetActions,
+    internal val overlays: OverlayState,
+    internal val tuner: TuneController,
     private val hooks: PlaybackHooks = PlaybackHooks(),
     private val rowOf: (Long) -> PanelRow? = { null },
     private val recording: () -> RecordingMenu? = { null },
@@ -58,17 +58,13 @@ class PlaybackMenuHandler(
                 hooks.platform.external.open(channel.source.streamUrl)
                 overlays.set(next)
             }
+            PlayerMenuRoute.TOGGLE_BLOCK ->
+                push { back -> PlaybackOverlay.BlockPin(channel, actions.blocker.mode(), back) }
             PlayerMenuRoute.DESCRIPTION -> push { back -> description(rowOf(channel.id), back) }
             PlayerMenuRoute.CHANNEL_OPTIONS ->
                 overlays.set(PlaybackOverlay.ChannelOptions(channel.source.name, back = afterAction(overlays.value)))
-            PlayerMenuRoute.MY_LIST_TOGGLE -> {
-                // Saves/removes the row's airing programme, sheet dismissed.
-                val next = afterAction(overlays.value)
-                actions.myList?.toggleFor(channel)
-                overlays.set(next)
-            }
-            PlayerMenuRoute.MANAGE_FAVORITES, PlayerMenuRoute.REORDER_CHANNELS ->
-                openScreen { actions.myList?.run(route, channel) }
+            PlayerMenuRoute.MY_LIST_TOGGLE, PlayerMenuRoute.MANAGE_FAVORITES, PlayerMenuRoute.REORDER_CHANNELS ->
+                runMyList(route, channel)
             PlayerMenuRoute.RECORD -> record { it.onRecord(channel) }
             PlayerMenuRoute.CUSTOM_RECORDING -> record { it.onCustomRecording(channel) }
             PlayerMenuRoute.COMING_SOON -> push { back -> PlaybackOverlay.ComingSoon(item.label, back) }
@@ -97,38 +93,17 @@ class PlaybackMenuHandler(
     fun onChannelOption(rowId: String) = push { back -> PlaybackOverlay.ComingSoon(rowId, back) }
 
     /** Pushed screens remember the overlay behind them; BACK pops to it. */
-    private fun push(next: (back: PlaybackOverlay) -> PlaybackOverlay) = overlays.set(next(overlays.value))
+    internal fun push(next: (back: PlaybackOverlay) -> PlaybackOverlay) = overlays.set(next(overlays.value))
 
     /**
      * Search and the settings sheet open over bare playback (no stale
      * panel/menu chrome behind the scrim).
      */
-    private fun openScreen(open: () -> Unit) {
+    internal fun openScreen(open: () -> Unit) {
         overlays.set(PlaybackOverlay.None)
         open()
     }
-
-    private fun toggleFavorite(channel: ChannelEntity) {
-        val next = afterAction(overlays.value)
-        actions.toggleFavorite(channel)
-        overlays.set(next)
-    }
-
-    private fun hide(channel: ChannelEntity) {
-        val next = afterAction(overlays.value)
-        tuner.zapAwayFrom(channel)
-        actions.hide(channel)
-        overlays.set(next)
-    }
 }
-
-/**
- * Where a row that dismisses the sheet lands: the panel behind the channel
- * menu, bare playback otherwise. Channel options shares this — the pane
- * replaces the sheet, so its BACK target is the panel too.
- */
-private fun afterAction(current: PlaybackOverlay): PlaybackOverlay =
-    if (current is PlaybackOverlay.ChannelMenu) PlaybackOverlay.Panel else PlaybackOverlay.None
 
 /** The sheet row's airing programme: title + synopsis (dump 40). */
 private fun description(

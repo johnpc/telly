@@ -47,4 +47,16 @@ class ParentalControls(
 
     /** True when opening Settings must be gated behind the PIN. */
     fun isSettingsLocked(): Boolean = isEnabled && settings.get(TellySettings.PARENTAL_REQUIRE_FOR_SETTINGS)
+
+    /**
+     * True when every gated surface must re-prompt after an unlock — the
+     * captured default. "Don't require PIN after unlocking" set to
+     * [RELOCK_UNTIL_RESTART] keeps one successful unlock for the session.
+     */
+    fun relocksAfterUnlock(): Boolean = settings.get(TellySettings.PARENTAL_RELOCK) != RELOCK_UNTIL_RESTART
+
+    companion object {
+        /** The relock picker option that keeps an unlock until app restart. */
+        const val RELOCK_UNTIL_RESTART = "Until app restart"
+    }
 }

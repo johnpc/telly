@@ -59,7 +59,7 @@ class SettingsViewModelPlaylistExtrasTest {
                         )::change,
                 ),
             versionName = "0.1.0",
-            epgSources = epgSourceStore,
+            stores = SettingsStores(epgSources = epgSourceStore),
         )
 
     private suspend fun TestScope.openDetail(): SettingsViewModel {

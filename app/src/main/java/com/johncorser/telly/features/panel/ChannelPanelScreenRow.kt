@@ -11,6 +11,7 @@ import androidx.compose.ui.unit.sp
 import androidx.tv.material3.LocalContentColor
 import androidx.tv.material3.Text
 import com.johncorser.telly.core.ui.LocalAccentColor
+import com.johncorser.telly.core.ui.TellyScreenBlockedLock
 import com.johncorser.telly.core.ui.TellyScreenChannelRow
 import com.johncorser.telly.core.ui.TellyScreenLogoTile
 import com.johncorser.telly.core.ui.TellyScreenProgressBar
@@ -54,6 +55,9 @@ internal fun ChannelPanelScreenRow(
             maxLines = 1,
             overflow = TextOverflow.Ellipsis,
         )
+        if (row.channel.flags.blocked) {
+            TellyScreenBlockedLock()
+        }
         if (playing) {
             Text(text = "▶", color = LocalAccentColor.current, fontSize = 11.sp)
         }

@@ -14,6 +14,9 @@ enum class PlayerMenuRoute {
     /** Zaps away from the watched channel first, hides, then returns. */
     HIDE_CHANNEL,
 
+    /** Opens the PIN dialog (confirm or first-time setup) then flips blocked. */
+    TOGGLE_BLOCK,
+
     /** Shows the focused programme's title + synopsis. */
     DESCRIPTION,
 
@@ -49,20 +52,22 @@ enum class PlayerMenuRoute {
  * sheets can never drift.
  */
 object PlayerMenuRouting {
-    fun routeOf(item: PlayerMenuItem): PlayerMenuRoute =
-        when (item) {
-            PlayerMenuItem.SEARCH -> PlayerMenuRoute.SEARCH
-            PlayerMenuItem.SETTINGS -> PlayerMenuRoute.SETTINGS
-            PlayerMenuItem.ADD_TO_FAVORITES -> PlayerMenuRoute.TOGGLE_FAVORITE
-            PlayerMenuItem.HIDE_CHANNEL -> PlayerMenuRoute.HIDE_CHANNEL
-            PlayerMenuItem.OPEN_IN_EXTERNAL_PLAYER -> PlayerMenuRoute.EXTERNAL_PLAYER
-            PlayerMenuItem.PROGRAM_DESCRIPTION -> PlayerMenuRoute.DESCRIPTION
-            PlayerMenuItem.CHANNEL_OPTIONS -> PlayerMenuRoute.CHANNEL_OPTIONS
-            PlayerMenuItem.ADD_TO_MY_LIST -> PlayerMenuRoute.MY_LIST_TOGGLE
-            PlayerMenuItem.MANAGE_FAVORITES -> PlayerMenuRoute.MANAGE_FAVORITES
-            PlayerMenuItem.REORDER_CHANNELS -> PlayerMenuRoute.REORDER_CHANNELS
-            PlayerMenuItem.RECORD -> PlayerMenuRoute.RECORD
-            PlayerMenuItem.CUSTOM_RECORDING -> PlayerMenuRoute.CUSTOM_RECORDING
-            else -> PlayerMenuRoute.COMING_SOON
-        }
+    private val routes: Map<PlayerMenuItem, PlayerMenuRoute> =
+        mapOf(
+            PlayerMenuItem.SEARCH to PlayerMenuRoute.SEARCH,
+            PlayerMenuItem.SETTINGS to PlayerMenuRoute.SETTINGS,
+            PlayerMenuItem.ADD_TO_FAVORITES to PlayerMenuRoute.TOGGLE_FAVORITE,
+            PlayerMenuItem.HIDE_CHANNEL to PlayerMenuRoute.HIDE_CHANNEL,
+            PlayerMenuItem.OPEN_IN_EXTERNAL_PLAYER to PlayerMenuRoute.EXTERNAL_PLAYER,
+            PlayerMenuItem.BLOCK_CHANNEL to PlayerMenuRoute.TOGGLE_BLOCK,
+            PlayerMenuItem.PROGRAM_DESCRIPTION to PlayerMenuRoute.DESCRIPTION,
+            PlayerMenuItem.CHANNEL_OPTIONS to PlayerMenuRoute.CHANNEL_OPTIONS,
+            PlayerMenuItem.ADD_TO_MY_LIST to PlayerMenuRoute.MY_LIST_TOGGLE,
+            PlayerMenuItem.MANAGE_FAVORITES to PlayerMenuRoute.MANAGE_FAVORITES,
+            PlayerMenuItem.REORDER_CHANNELS to PlayerMenuRoute.REORDER_CHANNELS,
+            PlayerMenuItem.RECORD to PlayerMenuRoute.RECORD,
+            PlayerMenuItem.CUSTOM_RECORDING to PlayerMenuRoute.CUSTOM_RECORDING,
+        )
+
+    fun routeOf(item: PlayerMenuItem): PlayerMenuRoute = routes[item] ?: PlayerMenuRoute.COMING_SOON
 }

@@ -20,7 +20,7 @@ import kotlinx.coroutines.flow.asStateFlow
  * slice ships.
  */
 class GuideMenuController(
-    private val channelActions: GuideSheetChannelActions,
+    internal val channelActions: GuideSheetChannelActions,
     private val focusedRow: () -> GuideRow?,
     private val info: () -> GuideInfoData?,
     private val callbacks: GuideCallbacks,
@@ -120,6 +120,7 @@ class GuideMenuController(
                 callbacks.external.open(row.channel.source.streamUrl)
                 reset()
             }
+            PlayerMenuRoute.TOGGLE_BLOCK -> show(GuideLayer.BlockPin(row.channel, channelActions.blocker.mode()))
             PlayerMenuRoute.DESCRIPTION -> show(descriptionLayer(info()))
             PlayerMenuRoute.CHANNEL_OPTIONS -> show(GuideLayer.ChannelOptions(row.channel.source.name))
             // My-list rows act (or push their route) and land on the grid,

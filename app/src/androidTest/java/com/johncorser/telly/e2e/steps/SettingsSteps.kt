@@ -1,10 +1,8 @@
 package com.johncorser.telly.e2e.steps
 
 import android.view.KeyEvent
-import androidx.compose.ui.test.hasTestTag
 import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.isEnabled
-import androidx.compose.ui.test.isFocused
 import androidx.compose.ui.test.isNotEnabled
 import androidx.compose.ui.test.isOff
 import androidx.compose.ui.test.isOn
@@ -83,7 +81,7 @@ class SettingsSteps(
     @When("I set the PIN to {string}")
     fun setPin(pin: String) {
         world.waitForText("Change PIN")
-        spinPinWheels(pin)
+        driver.spinPinWheels(pin)
     }
 
     @When("I leave settings")
@@ -125,7 +123,7 @@ class SettingsSteps(
 
     @Then("entering the PIN {string} unlocks it")
     fun enterPinUnlocks(pin: String) {
-        spinPinWheels(pin)
+        driver.spinPinWheels(pin)
         world.waitForGone(hasText("Enter PIN"))
         world.waitForText("Movie House")
     }
@@ -167,18 +165,6 @@ class SettingsSteps(
 
     @Then("the row {string} is not locked")
     fun rowNotLocked(title: String) = world.waitFor(hasText(title) and isEnabled())
-
-    /** Drives the four digit wheels: UP spins the digit, RIGHT advances. */
-    private fun spinPinWheels(pin: String) {
-        world.waitFor(hasTestTag("pin-wheel") and isFocused())
-        pin.forEachIndexed { index, digit ->
-            world.pressKey(KeyEvent.KEYCODE_DPAD_UP, times = digit.digitToInt())
-            if (index < pin.length - 1) {
-                world.pressKey(KeyEvent.KEYCODE_DPAD_RIGHT)
-            }
-        }
-        world.pressKey(KeyEvent.KEYCODE_DPAD_CENTER)
-    }
 
     private fun refreshDue(staleByHours: Int): Boolean {
         val settings = ServiceLocator.settingsRepository(world.targetContext)
