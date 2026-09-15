@@ -16,7 +16,7 @@ data class PickerOption(
     val raw: String,
 )
 
-private fun sameRaw(labels: List<String>) = labels.map { PickerOption(it, it) }
+internal fun sameRaw(labels: List<String>) = labels.map { PickerOption(it, it) }
 
 /**
  * Row id -> picker. Captured defaults are in TellySettings; option lists of
@@ -84,20 +84,23 @@ object SettingsPickers {
             ),
         )
 
-    val byRowId: Map<String, PickerSpec> = all.associateBy { it.rowId }
+    val byRowId: Map<String, PickerSpec> = (all + playbackExtrasPickerSpecs()).associateBy { it.rowId }
+
+    private val intervalDefault = TellySettings.EPG_UPDATE_INTERVAL_HOURS.default.toString()
 
     private val defaultRawByKey: Map<String, String> =
-        mapOf(
-            TellySettings.PLAYLISTS_SORTING.key to TellySettings.PLAYLISTS_SORTING.default,
-            TellySettings.EPG_UPDATE_INTERVAL_HOURS.key to TellySettings.EPG_UPDATE_INTERVAL_HOURS.default.toString(),
-            TellySettings.EPG_PAST_DAYS_TO_KEEP.key to TellySettings.EPG_PAST_DAYS_TO_KEEP.default.toString(),
-            TellySettings.ACCENT_COLOR.key to TellySettings.ACCENT_COLOR.default,
-            TellySettings.BUFFER_SIZE.key to TellySettings.BUFFER_SIZE.default,
-            TellySettings.AUDIO_DECODER.key to TellySettings.AUDIO_DECODER.default,
-            TellySettings.VIDEO_DECODER.key to TellySettings.VIDEO_DECODER.default,
-            TellySettings.PARENTAL_PIN_INPUT_METHOD.key to TellySettings.PARENTAL_PIN_INPUT_METHOD.default,
-            TellySettings.PARENTAL_RELOCK.key to TellySettings.PARENTAL_RELOCK.default,
-        )
+        playbackExtrasDefaultRaws() +
+            mapOf(
+                TellySettings.PLAYLISTS_SORTING.key to TellySettings.PLAYLISTS_SORTING.default,
+                TellySettings.EPG_UPDATE_INTERVAL_HOURS.key to intervalDefault,
+                TellySettings.EPG_PAST_DAYS_TO_KEEP.key to TellySettings.EPG_PAST_DAYS_TO_KEEP.default.toString(),
+                TellySettings.ACCENT_COLOR.key to TellySettings.ACCENT_COLOR.default,
+                TellySettings.BUFFER_SIZE.key to TellySettings.BUFFER_SIZE.default,
+                TellySettings.AUDIO_DECODER.key to TellySettings.AUDIO_DECODER.default,
+                TellySettings.VIDEO_DECODER.key to TellySettings.VIDEO_DECODER.default,
+                TellySettings.PARENTAL_PIN_INPUT_METHOD.key to TellySettings.PARENTAL_PIN_INPUT_METHOD.default,
+                TellySettings.PARENTAL_RELOCK.key to TellySettings.PARENTAL_RELOCK.default,
+            )
 
     /** The raw value a picker should highlight given the store [snapshot]. */
     fun currentRaw(

@@ -3,6 +3,7 @@ package com.johncorser.telly.features.playback
 import com.johncorser.telly.core.kv.KeyValueStore
 import com.johncorser.telly.features.history.WatchHistory
 import com.johncorser.telly.features.player.PlayerEngine
+import com.johncorser.telly.features.player.external.ExternalPlayer
 import com.johncorser.telly.features.playlist.db.ChannelDao
 import com.johncorser.telly.features.playlist.db.ChannelEntity
 import kotlinx.coroutines.CoroutineScope
@@ -25,6 +26,7 @@ class TuneController(
     private val scope: CoroutineScope,
     channelDao: ChannelDao,
     private val history: WatchHistory,
+    private val external: ExternalPlayer = ExternalPlayer.OFF,
 ) {
     /** All visible channels in TiviMate "All channels" order. */
     val channels: StateFlow<List<ChannelEntity>> =
@@ -38,7 +40,7 @@ class TuneController(
         scope.launch {
             val list = channels.first { it.isNotEmpty() }
             if (mutableCurrent.value == null) {
-                ChannelZapper.restore(list, store.getLong(LAST_CHANNEL_KEY))?.let(::tune)
+                ChannelZapper.restore(list, store.getLong(LAST_CHANNEL_KEY))?.let { tune(it, allowExternal = false) }
             }
         }
     }
@@ -48,16 +50,28 @@ class TuneController(
         scope.launch {
             val list = channels.first { it.isNotEmpty() }
             val storedId = store.getLong(LAST_CHANNEL_KEY) ?: return@launch
-            list.firstOrNull { it.id == storedId }?.let(::tune)
+            list.firstOrNull { it.id == storedId }?.let { tune(it, allowExternal = false) }
         }
     }
 
-    fun tune(channel: ChannelEntity) {
+    /**
+     * Tunes [channel]. While "Use external player" is On, a user-initiated
+     * tune opens the stream in the external app instead of the internal
+     * engine (ux-spec §3.18); with no handler installed it falls back to
+     * internal playback. Restore paths (cold start, guide resume) pass
+     * [allowExternal] = false so app start never bounces to another app.
+     */
+    fun tune(
+        channel: ChannelEntity,
+        allowExternal: Boolean = true,
+    ) {
         mutableCurrent.value = channel
         suspended = false
-        engine.load(channel.source.streamUrl)
         store.putLong(LAST_CHANNEL_KEY, channel.id)
         scope.launch { history.record(channel) }
+        if (!(allowExternal && external.maybeLaunch(channel.source.streamUrl))) {
+            engine.load(channel.source.streamUrl)
+        }
     }
 
     private var suspended = false

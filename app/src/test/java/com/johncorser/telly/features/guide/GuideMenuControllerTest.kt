@@ -2,6 +2,7 @@ package com.johncorser.telly.features.guide
 
 import com.johncorser.telly.features.playback.ChannelActions
 import com.johncorser.telly.features.playback.PlayerMenuItem
+import com.johncorser.telly.features.player.external.ExternalPlayer
 import com.johncorser.telly.testutil.FakeChannelDao
 import com.johncorser.telly.testutil.testChannel
 import io.mockk.mockk
@@ -22,6 +23,7 @@ import org.junit.Test
 class GuideMenuControllerTest {
     private val dao = FakeChannelDao(listOf(testChannel(1, 1, "News One")))
     private val zapped = mutableListOf<Long>()
+    private val externalOpens = mutableListOf<String>()
     private var searches = 0
     private var settingsOpens = 0
     private var row: GuideRow? = GuideRow(dao.channels.value.first(), 1, emptyList())
@@ -47,6 +49,11 @@ class GuideMenuControllerTest {
                     onFullscreen = {},
                     onOpenSearch = { searches += 1 },
                     onOpenSettings = { settingsOpens += 1 },
+                    external =
+                        ExternalPlayer(enabledForTuning = { false }, launch = { url ->
+                            externalOpens += url
+                            true
+                        }),
                 ),
             focusMemory = focusMemory,
         )
@@ -142,6 +149,18 @@ class GuideMenuControllerTest {
     }
 
     @Test
+    fun `open in external player fires the chooser and returns to the grid`() {
+        runTest {
+            val menu = buildOpenSheet()
+
+            menu.onMenuItem(PlayerMenuItem.OPEN_IN_EXTERNAL_PLAYER)
+
+            assertEquals(listOf("http://s/1.ts"), externalOpens)
+            assertEquals(GuideLayer.Grid, menu.layer.value)
+        }
+    }
+
+    @Test
     fun `program description renders the info pane's title and text`() {
         runTest {
             val menu = buildOpenSheet()
@@ -172,7 +191,6 @@ class GuideMenuControllerTest {
             // branded coming-soon placeholder that backs to the sheet.
             val unbuilt =
                 listOf(
-                    PlayerMenuItem.OPEN_IN_EXTERNAL_PLAYER,
                     PlayerMenuItem.RECORD,
                     PlayerMenuItem.CUSTOM_RECORDING,
                     PlayerMenuItem.ADD_TO_MY_LIST,

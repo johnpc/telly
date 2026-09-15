@@ -50,4 +50,6 @@ class PlaybackDeps(
     val engineFactory: () -> Media3PlayerEngine,
     val clock: () -> Long,
     val parental: ParentalControls? = null,
+    /** MainActivity's platform hooks (AFR + external player); screens copy nav lambdas in. */
+    val hooks: PlaybackHooks = PlaybackHooks(),
 )

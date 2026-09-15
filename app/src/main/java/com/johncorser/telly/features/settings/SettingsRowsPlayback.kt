@@ -4,9 +4,9 @@ import com.johncorser.telly.core.settings.SettingsRepository
 import com.johncorser.telly.core.settings.TellySettings
 
 /**
- * Playback pane rows (catalogue 60–62). Buffer size and the decoder picks
- * are live (the player slice reads them); AFR, external player and Skip
- * steps have no telly behavior yet and stay locked like the reference.
+ * Playback pane rows (catalogue 60–62). Buffer size, the decoder picks,
+ * AFR, external player and Skip steps are all live pickers — telly has no
+ * premium tier, so the reference's locked premium rows ship unlocked.
  */
 fun playbackRows(s: SettingsRepository): List<SettingsRow> =
     listOf(
@@ -29,7 +29,6 @@ fun playbackRows(s: SettingsRepository): List<SettingsRow> =
             id = RowIds.PLAYBACK_AFR,
             title = "Auto frame rate (AFR)",
             summary = s.get(TellySettings.AUTO_FRAME_RATE),
-            locked = true,
         ),
         SettingsRow.Toggle(
             id = RowIds.PLAYBACK_SURROUND,
@@ -45,7 +44,10 @@ fun playbackRows(s: SettingsRepository): List<SettingsRow> =
             id = RowIds.PLAYBACK_EXTERNAL_PLAYER,
             title = "Use external player",
             summary = s.get(TellySettings.USE_EXTERNAL_PLAYER),
-            locked = true,
         ),
-        SettingsRow.Value(id = RowIds.PLAYBACK_SKIP_STEPS, title = "Skip steps", locked = true),
+        SettingsRow.Value(
+            id = RowIds.PLAYBACK_SKIP_STEPS,
+            title = "Skip steps",
+            summary = s.get(TellySettings.SKIP_STEPS),
+        ),
     )

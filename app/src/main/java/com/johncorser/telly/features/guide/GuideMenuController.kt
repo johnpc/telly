@@ -75,6 +75,11 @@ class GuideMenuController(
             PlayerMenuRoute.SETTINGS -> callbacks.onOpenSettings()
             PlayerMenuRoute.TOGGLE_FAVORITE -> toggleFavorite(row.channel)
             PlayerMenuRoute.HIDE_CHANNEL -> hide(row.channel)
+            // The row fires the chooser regardless of the tune-time setting.
+            PlayerMenuRoute.EXTERNAL_PLAYER -> {
+                callbacks.external.open(row.channel.source.streamUrl)
+                reset()
+            }
             PlayerMenuRoute.DESCRIPTION -> show(description())
             PlayerMenuRoute.CHANNEL_OPTIONS -> show(GuideLayer.ChannelOptions(row.channel.source.name))
             PlayerMenuRoute.COMING_SOON -> show(GuideLayer.ComingSoon(item.label, back = GuideLayer.RowMenu))

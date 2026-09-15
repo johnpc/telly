@@ -16,7 +16,7 @@ class PlaybackMenuHandler(
     private val actions: ChannelActions,
     private val overlays: OverlayState,
     private val tuner: TuneController,
-    private val openSettings: () -> Unit = {},
+    private val hooks: PlaybackHooks = PlaybackHooks(),
     private val openSearch: () -> Unit = {},
     private val rowOf: (Long) -> PanelRow? = { null },
 ) {
@@ -46,9 +46,15 @@ class PlaybackMenuHandler(
         sheetFocus.onActivated(item)
         when (PlayerMenuRouting.routeOf(item)) {
             PlayerMenuRoute.SEARCH -> openScreen(openSearch)
-            PlayerMenuRoute.SETTINGS -> openScreen(openSettings)
+            PlayerMenuRoute.SETTINGS -> openScreen(hooks.onOpenSettings)
             PlayerMenuRoute.TOGGLE_FAVORITE -> toggleFavorite(channel)
             PlayerMenuRoute.HIDE_CHANNEL -> hide(channel)
+            // The row fires the chooser regardless of the tune-time setting.
+            PlayerMenuRoute.EXTERNAL_PLAYER -> {
+                val next = afterAction()
+                hooks.external.open(channel.source.streamUrl)
+                overlays.set(next)
+            }
             PlayerMenuRoute.DESCRIPTION -> push { back -> description(channel, back) }
             PlayerMenuRoute.CHANNEL_OPTIONS ->
                 overlays.set(PlaybackOverlay.ChannelOptions(channel.source.name, back = afterAction()))

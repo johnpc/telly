@@ -37,7 +37,8 @@ fun GuideScreen(
     settingsOpen: Boolean = false,
 ) {
     val engine = remember { deps.playback.engineFactory() }
-    val callbacks = remember { GuideCallbacks(onFullscreen, onOpenSearch, onOpenSettings) }
+    val callbacks =
+        remember { GuideCallbacks(onFullscreen, onOpenSearch, onOpenSettings, deps.playback.hooks.external) }
     val controller = rememberGuideController(deps, engine, callbacks)
     val detectors = remember { GuideScreenKeyDetectors() }
     val layer by controller.layer.collectAsState()

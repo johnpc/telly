@@ -17,6 +17,9 @@ enum class PlayerMenuRoute {
     /** Shows the focused programme's title + synopsis. */
     DESCRIPTION,
 
+    /** Fires the external-player chooser with the channel's stream URL. */
+    EXTERNAL_PLAYER,
+
     /** Pushes the §41 "Channel options" pane, every row locked. */
     CHANNEL_OPTIONS,
 
@@ -37,6 +40,7 @@ object PlayerMenuRouting {
             PlayerMenuItem.SETTINGS -> PlayerMenuRoute.SETTINGS
             PlayerMenuItem.ADD_TO_FAVORITES -> PlayerMenuRoute.TOGGLE_FAVORITE
             PlayerMenuItem.HIDE_CHANNEL -> PlayerMenuRoute.HIDE_CHANNEL
+            PlayerMenuItem.OPEN_IN_EXTERNAL_PLAYER -> PlayerMenuRoute.EXTERNAL_PLAYER
             PlayerMenuItem.PROGRAM_DESCRIPTION -> PlayerMenuRoute.DESCRIPTION
             PlayerMenuItem.CHANNEL_OPTIONS -> PlayerMenuRoute.CHANNEL_OPTIONS
             else -> PlayerMenuRoute.COMING_SOON

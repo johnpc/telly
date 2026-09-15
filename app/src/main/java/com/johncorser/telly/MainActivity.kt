@@ -25,10 +25,12 @@ import kotlinx.coroutines.launch
 class MainActivity : ComponentActivity() {
     private val navigator = Navigator(start = Route.Boot)
     private val fetcher = M3uFetcher()
+    private val afr by lazy { afrController() }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         val repository = ServiceLocator.playlistRepository(this)
+        val hooks = playbackHooks(afr)
         restoreStartRoute()
         keepEpgFresh()
         setContent {
@@ -36,13 +38,19 @@ class MainActivity : ComponentActivity() {
                 navigator = navigator,
                 repository = repository,
                 fetchPlaylist = fetcher::fetch,
-                playbackDeps = ServiceLocator.playbackDeps(this),
-                guideDeps = ServiceLocator.guideDeps(this),
+                playbackDeps = ServiceLocator.playbackDeps(this, hooks),
+                guideDeps = ServiceLocator.guideDeps(this, hooks),
                 settingsGraph = settingsGraph(),
                 searchDeps = ServiceLocator.searchDeps(this),
                 multiviewDeps = ServiceLocator.multiviewDeps(this),
             )
         }
+    }
+
+    /** Backgrounding is an AFR restore point (the restore-on-stop variant). */
+    override fun onStop() {
+        afr.onPlaybackStopped()
+        super.onStop()
     }
 
     /** Assembles the settings slice over the shared composition root. */

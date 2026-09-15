@@ -52,7 +52,7 @@ fun PlaybackScreen(
                         store = deps.keyValueStore,
                         time = PlaybackTime(deps.clock),
                         hooks =
-                            PlaybackHooks(
+                            deps.hooks.copy(
                                 panelLock = PanelLock(deps.parental),
                                 onOpenSettings = onOpenSettings,
                                 onOpenMultiview = onOpenMultiview,

@@ -68,3 +68,30 @@ Feature: Settings
     Then the row "TV guide" is locked
     And the row "Language" is locked
     And the row "Color theme" is not locked
+
+  # Playback extras (AFR / external player / skip steps): the reference
+  # locks these premium rows; telly has no premium tier and ships them as
+  # live pickers whose picks persist across the sheet closing and a restart.
+  Scenario: The playback extras rows are unlocked and their picks persist
+    When I open the "Playback" section
+    Then the row "Auto frame rate (AFR)" is not locked
+    And the row "Use external player" is not locked
+    And the row "Skip steps" is not locked
+    And the "Auto frame rate (AFR)" row shows "Off"
+    And the "Use external player" row shows "Off"
+    And the "Skip steps" row shows "10s / 30s / 1m / 5m"
+    When I activate "Auto frame rate (AFR)"
+    And I choose "On (also switch refresh rate on stop)"
+    Then the "Auto frame rate (AFR)" row shows "On (also switch refresh rate on stop)"
+    When I activate "Use external player"
+    And I choose "On"
+    Then the "Use external player" row shows "On"
+    When I activate "Skip steps"
+    And I choose "30s / 1m / 5m / 10m"
+    Then the "Skip steps" row shows "30s / 1m / 5m / 10m"
+    When I relaunch telly
+    And I open Settings
+    And I open the "Playback" section
+    Then the "Auto frame rate (AFR)" row shows "On (also switch refresh rate on stop)"
+    And the "Use external player" row shows "On"
+    And the "Skip steps" row shows "30s / 1m / 5m / 10m"

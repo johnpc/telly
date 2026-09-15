@@ -2,6 +2,7 @@ package com.johncorser.telly.features.playback
 
 import com.johncorser.telly.features.history.WatchHistory
 import com.johncorser.telly.features.player.VideoDetails
+import com.johncorser.telly.features.player.external.ExternalPlayer
 import com.johncorser.telly.testutil.FakeChannelDao
 import com.johncorser.telly.testutil.FakeKeyValueStore
 import com.johncorser.telly.testutil.FakePlayerEngine
@@ -44,8 +45,7 @@ class PlaybackViewModelTest {
 
     private fun TestScope.buildVm(
         clock: () -> Long = { now },
-        onOpenSettings: () -> Unit = {},
-        onOpenMultiview: () -> Unit = {},
+        hooks: PlaybackHooks = PlaybackHooks(),
     ): PlaybackViewModel =
         PlaybackViewModel(
             env =
@@ -55,7 +55,7 @@ class PlaybackViewModelTest {
                     engine = engine,
                     store = store,
                     time = PlaybackTime(clock, TimeZone.getTimeZone("UTC")),
-                    hooks = PlaybackHooks(onOpenSettings = onOpenSettings, onOpenMultiview = onOpenMultiview),
+                    hooks = hooks,
                 ),
             history = WatchHistory(historyDao, clock),
             scope = CoroutineScope(SupervisorJob() + UnconfinedTestDispatcher(testScheduler)),
@@ -67,7 +67,7 @@ class PlaybackViewModelTest {
     fun `the settings menu row opens the settings shell`() =
         runTest {
             var opened = false
-            val vm = buildVm(onOpenSettings = { opened = true })
+            val vm = buildVm(hooks = PlaybackHooks(onOpenSettings = { opened = true }))
 
             vm.menu.onMenuItem(PlayerMenuItem.SETTINGS)
 
@@ -290,7 +290,7 @@ class PlaybackViewModelTest {
     fun `the quick-bar's multiview slot opens the multiview route`() =
         runTest {
             var opened = 0
-            val vm = buildVm(onOpenMultiview = { opened += 1 })
+            val vm = buildVm(hooks = PlaybackHooks(onOpenMultiview = { opened += 1 }))
             vm.onKey(PlaybackKey.MENU)
 
             vm.onQuickBarItem(QuickBarAction.MULTIVIEW)
@@ -576,6 +576,90 @@ class PlaybackViewModelTest {
                 mapOf("tvg-1" to 1_000_000L, "tvg-2" to 1_000_003L, "tvg-3" to 1_000_002L),
                 historyDao.events.value,
             )
+        }
+
+    @Test
+    fun `the sheet's external player row fires the chooser and returns to the panel`() =
+        runTest {
+            val opened = mutableListOf<String>()
+            val vm =
+                buildVm(
+                    hooks =
+                        PlaybackHooks(
+                            external =
+                                ExternalPlayer(enabledForTuning = { false }, launch = { url ->
+                                    opened += url
+                                    true
+                                }),
+                        ),
+                )
+            vm.openPanel()
+            vm.showChannelMenu(channels[1])
+
+            vm.menu.onMenuItem(PlayerMenuItem.OPEN_IN_EXTERNAL_PLAYER)
+
+            // The explicit row fires even while "Use external player" is Off.
+            assertEquals(listOf("http://s/2.ts"), opened)
+            assertEquals(PlaybackOverlay.Panel, vm.overlay.value)
+        }
+
+    @Test
+    fun `with use external player on tunes launch externally instead of the engine`() =
+        runTest {
+            val opened = mutableListOf<String>()
+            val vm =
+                buildVm(
+                    hooks =
+                        PlaybackHooks(
+                            external =
+                                ExternalPlayer(enabledForTuning = { true }, launch = { url ->
+                                    opened += url
+                                    true
+                                }),
+                        ),
+                )
+            // The cold-start restore stays internal — no chooser on app open.
+            assertEquals(listOf("http://s/1.ts"), engine.loaded)
+            assertTrue(opened.isEmpty())
+
+            vm.onKey(PlaybackKey.CHANNEL_UP)
+
+            assertEquals(listOf("http://s/2.ts"), opened)
+            assertEquals(listOf("http://s/1.ts"), engine.loaded)
+            assertEquals(2L, vm.current.value?.id)
+            assertEquals(2L, store.getLong(TuneController.LAST_CHANNEL_KEY))
+        }
+
+    @Test
+    fun `a failed external launch falls back to the internal engine`() =
+        runTest {
+            val vm =
+                buildVm(
+                    hooks = PlaybackHooks(external = ExternalPlayer(enabledForTuning = { true }, launch = { false })),
+                )
+
+            vm.onKey(PlaybackKey.CHANNEL_UP)
+
+            assertEquals(listOf("http://s/1.ts", "http://s/2.ts"), engine.loaded)
+            assertEquals(2L, vm.current.value?.id)
+        }
+
+    @Test
+    fun `the engine's frame rate feeds the AFR hook and close signals the restore`() =
+        runTest {
+            val rates = mutableListOf<Float>()
+            var stops = 0
+            val vm = buildVm(hooks = PlaybackHooks(onFrameRateChanged = rates::add, onPlaybackStopped = { stops += 1 }))
+
+            engine.video.value = VideoDetails(1920, 1080, 0f, 2)
+            engine.video.value = VideoDetails(1920, 1080, 25f, 2)
+            engine.video.value = VideoDetails(1920, 1080, 50f, 2)
+
+            // Unknown (0) rates never reach the hook.
+            assertEquals(listOf(25f, 50f), rates)
+
+            vm.close()
+            assertEquals(1, stops)
         }
 
     @Test
