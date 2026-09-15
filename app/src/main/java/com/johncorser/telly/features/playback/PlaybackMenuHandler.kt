@@ -1,5 +1,6 @@
 package com.johncorser.telly.features.playback
 
+import com.johncorser.telly.features.mylist.MyListMenuHost
 import com.johncorser.telly.features.panel.PanelRow
 import com.johncorser.telly.features.playlist.db.ChannelEntity
 
@@ -44,7 +45,7 @@ class PlaybackMenuHandler(
     fun onMenuItem(item: PlayerMenuItem) {
         val channel = menuChannel() ?: return
         sheetFocus.onActivated(item)
-        when (PlayerMenuRouting.routeOf(item)) {
+        when (val route = PlayerMenuRouting.routeOf(item)) {
             PlayerMenuRoute.SEARCH -> openScreen(openSearch)
             PlayerMenuRoute.SETTINGS -> openScreen(openSettings)
             PlayerMenuRoute.TOGGLE_FAVORITE -> toggleFavorite(channel)
@@ -52,9 +53,20 @@ class PlaybackMenuHandler(
             PlayerMenuRoute.DESCRIPTION -> push { back -> description(channel, back) }
             PlayerMenuRoute.CHANNEL_OPTIONS ->
                 overlays.set(PlaybackOverlay.ChannelOptions(channel.source.name, back = afterAction()))
+            PlayerMenuRoute.MY_LIST_TOGGLE -> {
+                // Saves/removes the row's airing programme, sheet dismissed.
+                val next = afterAction()
+                actions.myList?.toggleFor(channel)
+                overlays.set(next)
+            }
+            PlayerMenuRoute.MANAGE_FAVORITES, PlayerMenuRoute.REORDER_CHANNELS ->
+                openScreen { actions.myList?.run(route, channel) }
             PlayerMenuRoute.COMING_SOON -> push { back -> PlaybackOverlay.ComingSoon(item.label, back) }
         }
     }
+
+    /** The host's My-list context; the sheet UI reads label state off it. */
+    val myList: MyListMenuHost? get() = actions.myList
 
     /** All §41 pane rows are locked; any activation lands on coming-soon. */
     fun onChannelOption(rowId: String) = push { back -> PlaybackOverlay.ComingSoon(rowId, back) }

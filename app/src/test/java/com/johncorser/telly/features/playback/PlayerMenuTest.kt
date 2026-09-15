@@ -46,6 +46,13 @@ class PlayerMenuTest {
     }
 
     @Test
+    fun `the my-list row flips its label once the programme is saved`() {
+        assertEquals("Add to My list", PlayerMenuItem.ADD_TO_MY_LIST.labelFor(favorite = false))
+        assertEquals("Remove from My list", PlayerMenuItem.ADD_TO_MY_LIST.labelFor(favorite = false, inMyList = true))
+        assertEquals("Hide channel", PlayerMenuItem.HIDE_CHANNEL.labelFor(favorite = false, inMyList = true))
+    }
+
+    @Test
     fun `flat indexes count section headers as lazy rows`() {
         val sections = PlayerMenu.sections("Business Hour", "News One")
 

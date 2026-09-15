@@ -1,14 +1,20 @@
 package com.johncorser.telly.features.guide
 
+import com.johncorser.telly.features.mylist.InMemoryMyListStore
+import com.johncorser.telly.features.mylist.MyListMenu
+import com.johncorser.telly.features.mylist.MyListMenuHost
+import com.johncorser.telly.features.mylist.MyListProgramme
 import com.johncorser.telly.features.playback.ChannelActions
 import com.johncorser.telly.features.playback.PlayerMenuItem
 import com.johncorser.telly.testutil.FakeChannelDao
 import com.johncorser.telly.testutil.testChannel
+import com.johncorser.telly.testutil.testProgram
 import io.mockk.mockk
 import io.mockk.verify
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import kotlinx.coroutines.test.runTest
@@ -36,9 +42,24 @@ class GuideMenuControllerTest {
             favorite = false,
         )
 
-    private fun TestScope.build(focusMemory: GuideFocusMemory? = null): GuideMenuController =
-        GuideMenuController(
-            actions = ChannelActions(dao, CoroutineScope(SupervisorJob() + UnconfinedTestDispatcher(testScheduler))),
+    private val myListStore = InMemoryMyListStore()
+    private var manageOpens = 0
+    private val reorderGroups = mutableListOf<String>()
+    private var programme: MyListProgramme? =
+        MyListProgramme(title = "Business Hour. S1 E7", startMs = 1_000L, endMs = 2_000L, description = "All-new.")
+
+    private fun TestScope.build(focusMemory: GuideFocusMemory? = null): GuideMenuController {
+        val scope = CoroutineScope(SupervisorJob() + UnconfinedTestDispatcher(testScheduler))
+        val host =
+            MyListMenuHost(
+                menu = MyListMenu(myListStore, { 42L }, scope),
+                programmeFor = { _ -> programme },
+                group = { "News" },
+                openManageFavorites = { manageOpens += 1 },
+                openReorderChannels = { reorderGroups += it },
+            )
+        return GuideMenuController(
+            actions = ChannelActions(dao, scope, myList = host),
             zapAway = { zapped += it.id },
             focusedRow = { row },
             info = { infoData },
@@ -50,6 +71,7 @@ class GuideMenuControllerTest {
                 ),
             focusMemory = focusMemory,
         )
+    }
 
     private fun TestScope.buildOpenSheet(): GuideMenuController = build().apply { openRowMenu() }
 
@@ -167,18 +189,16 @@ class GuideMenuControllerTest {
     @Test
     fun `every unbuilt row lands on coming-soon and back pops to the sheet`() {
         runTest {
-            // The formerly-premium reference rows and the uncaptured rows
-            // now share one fate: telly has no paywall, so both open the
-            // branded coming-soon placeholder that backs to the sheet.
+            // The remaining formerly-premium reference rows and the
+            // uncaptured rows share one fate: telly has no paywall, so both
+            // open the branded coming-soon placeholder backing to the sheet
+            // (the My-list/favorites-management rows are real now).
             val unbuilt =
                 listOf(
                     PlayerMenuItem.OPEN_IN_EXTERNAL_PLAYER,
                     PlayerMenuItem.RECORD,
                     PlayerMenuItem.CUSTOM_RECORDING,
-                    PlayerMenuItem.ADD_TO_MY_LIST,
                     PlayerMenuItem.BLOCK_CHANNEL,
-                    PlayerMenuItem.MANAGE_FAVORITES,
-                    PlayerMenuItem.REORDER_CHANNELS,
                     PlayerMenuItem.ASSIGN_EPG,
                     PlayerMenuItem.MANAGE_BLOCKING,
                     PlayerMenuItem.MANAGE_VISIBILITY,
@@ -331,6 +351,82 @@ class GuideMenuControllerTest {
             menu.onCellAction(GuideCellAction.REMIND)
 
             assertEquals(GuideLayer.ComingSoon("Remind"), menu.layer.value)
+        }
+    }
+
+    @Test
+    fun `add to my list on the sheet saves the focused programme and returns to the grid`() {
+        runTest {
+            val menu = buildOpenSheet()
+
+            menu.onMenuItem(PlayerMenuItem.ADD_TO_MY_LIST)
+
+            assertEquals(listOf(1_000L), myListStore.entries.first().map { it.startMs })
+            assertEquals(GuideLayer.Grid, menu.layer.value)
+        }
+    }
+
+    @Test
+    fun `selecting add to my list again removes the saved programme`() {
+        runTest {
+            val menu = buildOpenSheet()
+            menu.onMenuItem(PlayerMenuItem.ADD_TO_MY_LIST)
+
+            menu.openRowMenu()
+            menu.onMenuItem(PlayerMenuItem.ADD_TO_MY_LIST)
+
+            assertEquals(emptyList<Any>(), myListStore.entries.first())
+        }
+    }
+
+    @Test
+    fun `the cell dropdown's add to my list toggles the cell programme`() {
+        runTest {
+            val menu = build()
+            val program = testProgram("tvg-1", 5_000L, 6_000L, "Late Show")
+            menu.show(GuideLayer.CellMenu(GuideCell(5_000L, 6_000L, program)))
+
+            menu.onCellAction(GuideCellAction.ADD_TO_MY_LIST)
+
+            assertEquals(listOf(5_000L), myListStore.entries.first().map { it.startMs })
+            assertEquals(GuideLayer.Grid, menu.layer.value)
+        }
+    }
+
+    @Test
+    fun `add to my list on a no-information filler cell falls back to coming-soon`() {
+        runTest {
+            val menu = build()
+            menu.show(GuideLayer.CellMenu(GuideCell(5_000L, 6_000L, program = null)))
+
+            menu.onCellAction(GuideCellAction.ADD_TO_MY_LIST)
+
+            assertEquals(emptyList<Any>(), myListStore.entries.first())
+            assertEquals(GuideLayer.ComingSoon("Add to My list"), menu.layer.value)
+        }
+    }
+
+    @Test
+    fun `manage favorites closes the sheet and opens the management screen`() {
+        runTest {
+            val menu = buildOpenSheet()
+
+            menu.onMenuItem(PlayerMenuItem.MANAGE_FAVORITES)
+
+            assertEquals(1, manageOpens)
+            assertEquals(GuideLayer.Grid, menu.layer.value)
+        }
+    }
+
+    @Test
+    fun `reorder channels opens the reorder screen on the current group`() {
+        runTest {
+            val menu = buildOpenSheet()
+
+            menu.onMenuItem(PlayerMenuItem.REORDER_CHANNELS)
+
+            assertEquals(listOf("News"), reorderGroups)
+            assertEquals(GuideLayer.Grid, menu.layer.value)
         }
     }
 }

@@ -50,4 +50,11 @@
     <string name="search_channels">Channels</string>
     <string name="search_programs">Programs</string>
     <string name="search_voice">Voice search</string>
+
+    <string name="mylist_title">My list</string>
+    <string name="mylist_empty">No programs</string>
+    <string name="mylist_remove_hint">Press and hold OK to remove</string>
+    <string name="manage_favorites_title">Manage Favorites</string>
+    <string name="reorder_channels_title">Reorder channels</string>
+    <string name="channel_edit_move_hint">Press LEFT/RIGHT to move the focused channel</string>
 </resources>

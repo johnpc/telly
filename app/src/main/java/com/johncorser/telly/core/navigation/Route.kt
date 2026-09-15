@@ -31,4 +31,15 @@ sealed interface Route {
      * (history-round2 §3): pushed over playback, BACK pops to the player.
      */
     data object History : Route
+
+    /** Saved programmes behind the guide rail's bookmark icon (mylist). */
+    data object MyList : Route
+
+    /** The context sheet's "Manage Favorites" screen (mylist slice). */
+    data object ManageFavorites : Route
+
+    /** The context sheet's "Reorder channels" screen, on the sheet's group. */
+    data class ReorderChannels(
+        val group: String,
+    ) : Route
 }

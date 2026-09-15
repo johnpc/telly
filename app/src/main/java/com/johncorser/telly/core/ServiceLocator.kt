@@ -14,6 +14,9 @@ import com.johncorser.telly.features.epg.EpgRetention
 import com.johncorser.telly.features.epg.EpgSourceStore
 import com.johncorser.telly.features.epg.RefreshScheduler
 import com.johncorser.telly.features.epg.RoomEpgSourceStore
+import com.johncorser.telly.features.mylist.MyListStore
+import com.johncorser.telly.features.mylist.RoomMyListStore
+import com.johncorser.telly.features.mylist.db.MyListMigration
 import com.johncorser.telly.features.playlist.PlaylistRepository
 import com.johncorser.telly.features.playlist.RoomPlaylistRepository
 import com.johncorser.telly.features.reminders.db.ReminderMigration
@@ -43,6 +46,7 @@ object ServiceLocator {
                     TellyDatabase.MIGRATION_2_3,
                     TellyDatabase.MIGRATION_3_4,
                     ReminderMigration.MIGRATION_4_5,
+                    MyListMigration.MIGRATION_5_6,
                 )
                 .build()
                 .also { database = it }
@@ -60,6 +64,8 @@ object ServiceLocator {
     fun playlistRepository(context: Context): PlaylistRepository = RoomPlaylistRepository(database(context), clock)
 
     fun epgSourceStore(context: Context): EpgSourceStore = RoomEpgSourceStore(database(context).epgSourceDao(), clock)
+
+    fun myListStore(context: Context): MyListStore = RoomMyListStore(database(context).myListDao())
 
     fun epgRepository(context: Context): EpgRepository =
         EpgRepository(

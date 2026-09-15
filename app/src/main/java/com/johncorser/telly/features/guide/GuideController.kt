@@ -1,13 +1,13 @@
 package com.johncorser.telly.features.guide
 
 import com.johncorser.telly.features.history.WatchHistory
+import com.johncorser.telly.features.mylist.MyListMenu
 import com.johncorser.telly.features.panel.PanelViewModel
 import com.johncorser.telly.features.playback.ChannelActions
 import com.johncorser.telly.features.playback.PlaybackEnv
 import com.johncorser.telly.features.playback.PlaybackLifecycle
 import com.johncorser.telly.features.playback.TuneController
 import com.johncorser.telly.features.playlist.db.ChannelEntity
-import com.johncorser.telly.features.reminders.GuideReminders
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -26,7 +26,7 @@ class GuideController(
     private val pastDays: () -> Int,
     scope: CoroutineScope,
     private val callbacks: GuideCallbacks,
-    reminders: GuideReminders? = null,
+    seams: GuideSeams = GuideSeams(),
 ) {
     val zone = env.time.zone
 
@@ -63,10 +63,14 @@ class GuideController(
 
     val info: StateFlow<GuideInfoData?> = GuideInfoBuilder.feed(rows, focusEngine.focus, now, zone, scope)
 
+    /** My-list toggle state: the dropdown/sheet labels flip on its keys. */
+    val myList = MyListMenu(seams.myList, env.time.clock, scope)
+
     /** Layers + the long-OK row context sheet (catalogue §3 38-42). */
     val menu =
         GuideMenuController(
-            actions = ChannelActions(env.channelDao, scope),
+            actions =
+                ChannelActions(env.channelDao, scope, guideMyListHost(myList, focus, { selected.value }, callbacks)),
             zapAway = tuner::zapAwayFrom,
             focusedRow = ::focusedRow,
             info = { info.value },
@@ -77,7 +81,7 @@ class GuideController(
     val layer: StateFlow<GuideLayer> = menu.layer
 
     init {
-        menu.remind.reminders = reminders
+        menu.remind.reminders = seams.reminders
         scope.launch { rows.collect { focusEngine.ensureFocus(it, now.value) } }
         // The guide is reached from playback (BACK / the TV-guide card), where
         // the last channel keeps playing in the preview window; cold starts

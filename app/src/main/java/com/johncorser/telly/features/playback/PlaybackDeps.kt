@@ -4,6 +4,8 @@ import com.johncorser.telly.core.kv.KeyValueStore
 import com.johncorser.telly.core.settings.ParentalControls
 import com.johncorser.telly.features.epg.EpgRepository
 import com.johncorser.telly.features.history.WatchHistory
+import com.johncorser.telly.features.mylist.InMemoryMyListStore
+import com.johncorser.telly.features.mylist.MyListStore
 import com.johncorser.telly.features.player.Media3PlayerEngine
 import com.johncorser.telly.features.playlist.db.ChannelDao
 import kotlinx.coroutines.delay
@@ -50,4 +52,6 @@ class PlaybackDeps(
     val engineFactory: () -> Media3PlayerEngine,
     val clock: () -> Long,
     val parental: ParentalControls? = null,
+    /** Saved My-list programmes (Room on device, in-memory in tests). */
+    val myList: MyListStore = InMemoryMyListStore(),
 )

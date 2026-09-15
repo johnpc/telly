@@ -2,6 +2,7 @@ package com.johncorser.telly.features.panel
 
 import com.johncorser.telly.features.epg.NowNext
 import com.johncorser.telly.features.epg.ProgramTitle
+import com.johncorser.telly.features.mylist.ChannelReorder
 import com.johncorser.telly.features.playback.ProgramTimes
 import com.johncorser.telly.features.playlist.db.ChannelEntity
 import java.util.TimeZone
@@ -19,7 +20,9 @@ object PanelRows {
     ): List<ChannelEntity> =
         when (group) {
             PanelViewModel.ALL_CHANNELS -> list
-            PanelViewModel.FAVORITES -> list.filter { it.flags.favorite }
+            // Favorites honor the Manage-Favorites order (stable sort:
+            // untouched favorites keep the base zap order).
+            PanelViewModel.FAVORITES -> ChannelReorder.favorites(list)
             else -> list.filter { it.source.groupTitle == group }
         }
 
@@ -38,6 +41,8 @@ object PanelRows {
                 displayNumber = if (group == PanelViewModel.ALL_CHANNELS) channel.number else index + 1,
                 nowTitle = now?.details?.let(ProgramTitle::of),
                 nowRange = now?.let { ProgramTimes.range(it.startMs, it.endMs, zone) },
+                nowStartMs = now?.startMs,
+                nowEndMs = now?.endMs,
                 remaining = now?.let { "${ProgramTimes.remainingMinutes(it.endMs, atMs)} min" },
                 description = now?.details?.description,
                 nextTitle = nowNext.next?.details?.let(ProgramTitle::of),

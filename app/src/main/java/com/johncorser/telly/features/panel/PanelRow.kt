@@ -13,6 +13,9 @@ data class PanelRow(
     val displayNumber: Int,
     val nowTitle: String?,
     val nowRange: String?,
+    /** Raw airing span, for actions that persist the programme (My list). */
+    val nowStartMs: Long? = null,
+    val nowEndMs: Long? = null,
     val remaining: String?,
     val description: String?,
     val nextTitle: String?,

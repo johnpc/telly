@@ -1,12 +1,6 @@
 package com.johncorser.telly
 
-import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
-import com.johncorser.telly.core.design.TELLY_ONBOARDING_BACKGROUND
 import com.johncorser.telly.core.navigation.Navigator
 import com.johncorser.telly.core.navigation.Route
 import com.johncorser.telly.core.ui.ScreenCrossfade
@@ -15,8 +9,6 @@ import com.johncorser.telly.features.guide.GuideScreen
 import com.johncorser.telly.features.history.HistoryScreen
 import com.johncorser.telly.features.multiview.MultiviewDeps
 import com.johncorser.telly.features.multiview.MultiviewScreen
-import com.johncorser.telly.features.onboarding.WelcomeScreen
-import com.johncorser.telly.features.onboarding.WizardScreen
 import com.johncorser.telly.features.playback.PlaybackDeps
 import com.johncorser.telly.features.playback.PlaybackScreen
 import com.johncorser.telly.features.playlist.PlaylistRepository
@@ -39,19 +31,8 @@ internal fun RootScreenRoutes(
 ) {
     ScreenCrossfade(baseRoute) { target ->
         when (target) {
-            Route.Boot, Route.Settings -> BootScreen()
-            Route.Welcome ->
-                WelcomeScreen(
-                    onAddPlaylist = { navigator.push(Route.AddPlaylistWizard) },
-                    onOpenSettings = { navigator.push(Route.Settings) },
-                )
-            Route.AddPlaylistWizard ->
-                WizardScreen(
-                    repository = repository,
-                    fetchPlaylist = fetchPlaylist,
-                    onExit = { navigator.pop() },
-                    onComplete = { navigator.replaceAll(Route.Playback) },
-                )
+            Route.Boot, Route.Settings, Route.Welcome, Route.AddPlaylistWizard ->
+                RootScreenOnboardingRoutes(target, navigator, repository, fetchPlaylist)
             // BACK/TV-guide card leave playback for the guide as its
             // new root: BACK at guide root then exits the app with no
             // confirmation, the device-verified free-tier BACK chain. The
@@ -66,6 +47,8 @@ internal fun RootScreenRoutes(
                     onOpenSettings = { navigator.push(Route.Settings) },
                     onOpenMultiview = { navigator.push(Route.Multiview) },
                     onEnterPip = onEnterPip,
+                    onOpenManageFavorites = { navigator.push(Route.ManageFavorites) },
+                    onOpenReorderChannels = { group -> navigator.push(Route.ReorderChannels(group)) },
                 )
             // BACK at the pane grid exits to fullscreen playback of the
             // focused pane's channel (multiview-spec: exit chain).
@@ -77,6 +60,9 @@ internal fun RootScreenRoutes(
                     onOpenSearch = { navigator.push(Route.Search) },
                     onOpenSettings = { navigator.push(Route.Settings) },
                     settingsOpen = settingsOpen,
+                    onOpenMyList = { navigator.push(Route.MyList) },
+                    onOpenManageFavorites = { navigator.push(Route.ManageFavorites) },
+                    onOpenReorderChannels = { group -> navigator.push(Route.ReorderChannels(group)) },
                 )
             // Tuning from search adopts the guide-root BACK chain: the
             // guide becomes the stack root with fullscreen playback above.
@@ -96,16 +82,8 @@ internal fun RootScreenRoutes(
                     deps = playbackDeps,
                     onTuned = { navigator.pop() },
                 )
+            Route.MyList, Route.ManageFavorites, is Route.ReorderChannels ->
+                RootScreenMyListRoutes(target, navigator, playbackDeps)
         }
     }
-}
-
-/** TiviMate-style boot skeleton: nothing but the app background (round3 P0 3). */
-@Composable
-private fun BootScreen() {
-    Box(
-        Modifier
-            .fillMaxSize()
-            .background(Color(TELLY_ONBOARDING_BACKGROUND)),
-    )
 }

@@ -20,6 +20,15 @@ enum class PlayerMenuRoute {
     /** Pushes the §41 "Channel options" pane, every row locked. */
     CHANNEL_OPTIONS,
 
+    /** Saves/removes the focused programme; the row label flips (mylist). */
+    MY_LIST_TOGGLE,
+
+    /** Opens the Manage Favorites screen (Route.ManageFavorites). */
+    MANAGE_FAVORITES,
+
+    /** Opens the reorder screen on the sheet's group (Route.ReorderChannels). */
+    REORDER_CHANNELS,
+
     /** Unbuilt row: the branded coming-soon placeholder. */
     COMING_SOON,
 }
@@ -39,6 +48,9 @@ object PlayerMenuRouting {
             PlayerMenuItem.HIDE_CHANNEL -> PlayerMenuRoute.HIDE_CHANNEL
             PlayerMenuItem.PROGRAM_DESCRIPTION -> PlayerMenuRoute.DESCRIPTION
             PlayerMenuItem.CHANNEL_OPTIONS -> PlayerMenuRoute.CHANNEL_OPTIONS
+            PlayerMenuItem.ADD_TO_MY_LIST -> PlayerMenuRoute.MY_LIST_TOGGLE
+            PlayerMenuItem.MANAGE_FAVORITES -> PlayerMenuRoute.MANAGE_FAVORITES
+            PlayerMenuItem.REORDER_CHANNELS -> PlayerMenuRoute.REORDER_CHANNELS
             else -> PlayerMenuRoute.COMING_SOON
         }
 }

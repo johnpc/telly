@@ -14,6 +14,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.key.onPreviewKeyEvent
 import com.johncorser.telly.core.input.HoldKeyDetector
 import com.johncorser.telly.core.ui.ScreenLifecycleStartStop
+import com.johncorser.telly.features.mylist.MyListHooks
 import com.johncorser.telly.features.panel.PanelLock
 import com.johncorser.telly.features.pip.PipState
 import com.johncorser.telly.features.player.PlayerScreenSurface
@@ -37,6 +38,8 @@ fun PlaybackScreen(
     onOpenMultiview: () -> Unit = {},
     onEnterPip: () -> Unit = {},
     pip: PipState = PipState.shared,
+    onOpenManageFavorites: () -> Unit = {},
+    onOpenReorderChannels: (String) -> Unit = {},
 ) {
     // A dedicated main-thread scope instead of rememberCoroutineScope(): the
     // ViewModel drives ExoPlayer (main-thread-affine) and wall-clock overlay
@@ -61,6 +64,12 @@ fun PlaybackScreen(
                                 onOpenMultiview = onOpenMultiview,
                                 onEnterPip = onEnterPip,
                                 pip = pip,
+                                myList =
+                                    MyListHooks(
+                                        onOpenManageFavorites = onOpenManageFavorites,
+                                        onOpenReorderChannels = onOpenReorderChannels,
+                                        store = deps.myList,
+                                    ),
                             ),
                     ),
                 history = deps.sources.history,

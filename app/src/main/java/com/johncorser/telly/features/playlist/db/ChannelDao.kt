@@ -20,7 +20,7 @@ interface ChannelDao {
 
     @Query(
         "SELECT * FROM channels WHERE playlistId = :playlistId AND groupTitle = :groupTitle " +
-            "AND hidden = 0 ORDER BY number",
+            "AND hidden = 0 ORDER BY sortIndex, number",
     )
     fun observeByGroup(
         playlistId: Long,
@@ -34,8 +34,12 @@ interface ChannelDao {
     )
     fun observeGroups(playlistId: Long): Flow<List<ChannelGroupCount>>
 
-    /** All visible channels across playlists in "All channels" zap order. */
-    @Query("SELECT * FROM channels WHERE hidden = 0 ORDER BY number")
+    /**
+     * All visible channels across playlists in "All channels" zap order:
+     * the per-channel sort index ("Reorder channels" swaps neighbours'),
+     * which starts as the import order; `number` breaks cross-playlist ties.
+     */
+    @Query("SELECT * FROM channels WHERE hidden = 0 ORDER BY sortIndex, number")
     fun observeVisible(): Flow<List<ChannelEntity>>
 
     @Query("SELECT COUNT(*) FROM channels")

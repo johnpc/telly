@@ -1,6 +1,8 @@
 package com.johncorser.telly.features.playback
 
 import com.johncorser.telly.features.history.WatchHistory
+import com.johncorser.telly.features.mylist.InMemoryMyListStore
+import com.johncorser.telly.features.mylist.MyListHooks
 import com.johncorser.telly.features.pip.PipState
 import com.johncorser.telly.features.player.VideoDetails
 import com.johncorser.telly.testutil.FakeChannelDao
@@ -14,6 +16,7 @@ import com.johncorser.telly.testutil.testProgram
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import kotlinx.coroutines.test.advanceTimeBy
@@ -42,6 +45,9 @@ class PlaybackViewModelTest {
     private var exitedToGuide = 0
     private var openedHistory = 0
     private var now = 1_000_000L
+    private val myListStore = InMemoryMyListStore()
+    private var manageOpens = 0
+    private val reorderGroups = mutableListOf<String>()
 
     private fun TestScope.buildVm(
         clock: () -> Long = { now },
@@ -64,6 +70,12 @@ class PlaybackViewModelTest {
                             onOpenMultiview = onOpenMultiview,
                             onEnterPip = onEnterPip,
                             pip = pip,
+                            myList =
+                                MyListHooks(
+                                    onOpenManageFavorites = { manageOpens += 1 },
+                                    onOpenReorderChannels = { reorderGroups += it },
+                                    store = myListStore,
+                                ),
                         ),
                 ),
             history = WatchHistory(historyDao, clock),
@@ -643,5 +655,65 @@ class PlaybackViewModelTest {
             assertEquals("Description of Business Hour", info.description)
             assertEquals("16:40", info.elapsed)
             assertEquals("33:20", info.duration)
+        }
+
+    @Test
+    fun `the my-list row of a channel menu toggles the airing programme and returns to the panel`() =
+        runTest {
+            programs.programs.value = listOf(testProgram("tvg-1", 900_000L, 1_100_000L, "Business Hour"))
+            val vm = buildVm()
+            vm.openPanel()
+            vm.showChannelMenu(channels[0])
+            assertFalse(vm.menu.myList?.savedFor(channels[0], vm.myList.keys.value) == true)
+
+            vm.menu.onMenuItem(PlayerMenuItem.ADD_TO_MY_LIST)
+
+            assertEquals(listOf(900_000L), myListStore.entries.first().map { it.startMs })
+            assertTrue(vm.menu.myList?.savedFor(channels[0], vm.myList.keys.value) == true)
+            assertEquals(PlaybackOverlay.Panel, vm.overlay.value)
+
+            vm.showChannelMenu(channels[0])
+            vm.menu.onMenuItem(PlayerMenuItem.ADD_TO_MY_LIST)
+            assertEquals(emptyList<Any>(), myListStore.entries.first())
+        }
+
+    @Test
+    fun `the my-list row without EPG leaves the store alone but still dismisses the sheet`() =
+        runTest {
+            val vm = buildVm()
+            vm.openPanel()
+            vm.showChannelMenu(channels[0])
+
+            vm.menu.onMenuItem(PlayerMenuItem.ADD_TO_MY_LIST)
+
+            assertEquals(emptyList<Any>(), myListStore.entries.first())
+            assertEquals(PlaybackOverlay.Panel, vm.overlay.value)
+        }
+
+    @Test
+    fun `manage favorites opens its screen over bare playback`() =
+        runTest {
+            val vm = buildVm()
+            vm.openPanel()
+            vm.showChannelMenu(channels[0])
+
+            vm.menu.onMenuItem(PlayerMenuItem.MANAGE_FAVORITES)
+
+            assertEquals(1, manageOpens)
+            assertEquals(PlaybackOverlay.None, vm.overlay.value)
+        }
+
+    @Test
+    fun `reorder channels opens its screen on the panel's selected group`() =
+        runTest {
+            val vm = buildVm()
+            vm.panel.selectGroup("News")
+            vm.openPanel()
+            vm.showChannelMenu(channels[0])
+
+            vm.menu.onMenuItem(PlayerMenuItem.REORDER_CHANNELS)
+
+            assertEquals(listOf("News"), reorderGroups)
+            assertEquals(PlaybackOverlay.None, vm.overlay.value)
         }
 }

@@ -96,6 +96,27 @@ class ChannelDaoTest {
         }
 
     @Test
+    fun `observeVisible and by-group honor reordered sort indices`() =
+        runTest {
+            val playlistId = seed()
+            val ordered = channelDao.observeVisible().first()
+            val (first, second) = ordered[0] to ordered[1]
+
+            // "Reorder channels" swaps the neighbours' sort indices.
+            channelDao.update(first.copy(sortIndex = second.sortIndex))
+            channelDao.update(second.copy(sortIndex = first.sortIndex))
+
+            assertEquals(
+                listOf("Sports Arena", "News One", "Loose Channel"),
+                channelDao.observeVisible().first().map { it.source.name },
+            )
+            assertEquals(
+                listOf("Sports Arena"),
+                channelDao.observeByGroup(playlistId, "Sports").first().map { it.source.name },
+            )
+        }
+
+    @Test
     fun `updating a row persists user flags`() =
         runTest {
             val playlistId = seed()
