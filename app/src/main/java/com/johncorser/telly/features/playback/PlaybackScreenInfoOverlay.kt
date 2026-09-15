@@ -72,6 +72,8 @@ internal fun PlaybackScreenInfoOverlay(
             )
             PlaybackScreenCardsFooter(recentCardLine(focusedRecent))
         }
-        Spacer(Modifier.height(19.dp))
+        // 29 dp lifts the shortcut row's label center the ~13 dp round8 :73-75
+        // read it low (the 150×110 tile itself contributes 3.5 dp of the lift).
+        Spacer(Modifier.height(29.dp))
     }
 }

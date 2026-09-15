@@ -88,6 +88,50 @@ Local SDK note: `local.properties` must contain
 
 ## Decisions log
 
+- **2026-09-15** v0.2.0 (versionCode 2): the feature-complete milestone after
+  29 v0.1.0 releases; README rewritten to the shipped feature surface.
+- **2026-09-15** De-premium milestone: the decorative premium tier is deleted —
+  no Unlock Premium screen, no padlocked/dimmed rows anywhere; everything telly
+  builds ships free (Search and Multiview became directly reachable).
+- **2026-09-15** Picture-in-picture: quick-bar PIP slot enters system PIP, and
+  General → "PIP on Home" (default off) also enters it from `onUserLeaveHint`;
+  `MainActivityHooks` owns the platform glue, logic stays JVM-tested.
+- **2026-09-15** Reminders: the guide dropdown's Remind row schedules into a Room
+  `reminders` table (v5); `ReminderEngine` (injected-clock ticker) fires an in-app
+  popup at air time and Settings → Other → Reminders lists/cancels them.
+- **2026-09-15** My List + favorites management: rail bookmark icon →
+  `Route.MyList` (saved programmes, my_list table, schema v6 + favoriteOrder);
+  the context sheet's Manage Favorites and Reorder channels screens are live.
+- **2026-09-15** Playback extras: AFR (`AUTO_FRAME_RATE`, Display.Mode switch),
+  "Use external player" (Off/Always via ACTION_VIEW hand-off; catch-up/DVR stay
+  internal) and configurable `SKIP_STEPS` presets feeding every seek surface.
+- **2026-09-15** Playlist extras: per-playlist detail pane gains URL edit
+  (re-keys the Room row in place, VOD survives), per-playlist User-Agent
+  (ResolvingDataSource injects it per request), auto-update and manage groups
+  (GroupFilteredChannelDao feeds playback/guide/multiview/search).
+- **2026-09-15** VOD: `VodClassifier` partitions movie-style playlist entries
+  into vod_items (v7), the rail's Movies icon opens the browser, playback is a
+  seekable route with resume (`VodResumePolicy` + vod_positions); Settings →
+  Other → VOD clears positions.
+- **2026-09-15** Appearance settings are real: TV Guide (visible-channels
+  density, transparency), Player (panel transparency/timeout/clock via
+  `LocalPanelStyle`), Groups and Logos sub-panes plus language and font size —
+  all persisted `TellySettings` driving live UI tokens.
+- **2026-09-15** Remote control keymaps: Settings → Remote control hosts player
+  + TV guide sub-screens; `PlayerKeymap`/`GuideKeymap` remap D-pad and media
+  keys ahead of the default key policies.
+- **2026-09-15** Recording/DVR: `RecordingEngine` byte-copies raw TS/progressive
+  HTTP streams (HLS is honestly unsupported — `RecordingSupport.HLS_MESSAGE`
+  explains instead of writing a broken file) under a foreground
+  `RecordingService`; the in-app `RecordingScheduler` has no alarm-manager
+  wakeups (scheduled captures start only while telly runs — the settings pane
+  says so), and the quick-bar/rail DVR icon opens the recordings library.
+- **2026-09-15** Block channel: the context sheet's Block channel row flags the
+  channel (v9); every tune path — including lastChannelId restores — passes the
+  parental PIN gate first. Multiview pane tunes stay deliberately ungated.
+- **2026-09-15** Quick-bar track pickers: the Video/Audio/CC slots open real
+  track-selection pickers off the engine's track groups and the Latency slot is
+  an audio-sync stepper; all nine quick-bar slots are now live.
 - **2026-09-15** Catch-up (ux-spec §2.10/§3.17; the reference sells it as
   premium — telly ships it free per the charter precedent). **Parse +
   persist:** `catchup`/`catchup-type`, `catchup-source`, `catchup-days`

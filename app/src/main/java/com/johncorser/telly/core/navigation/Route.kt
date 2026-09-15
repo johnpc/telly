@@ -8,7 +8,7 @@ sealed interface Route {
     /** First-run landing screen ("telly doesn't provide any sources..."). */
     data object Welcome : Route
 
-    /** Placeholder settings screen; real settings arrive in a later slice. */
+    /** The two-pane settings sheet, rendered over the current base route. */
     data object Settings : Route
 
     /** The add-playlist wizard (type chooser -> URL -> processing -> name). */

@@ -30,9 +30,13 @@ internal fun PlaybackScreenCards(
     LaunchedEffect(recents.isEmpty()) {
         if (recents.isEmpty()) runCatching { firstFocus.requestFocus() }
     }
+    // Round8 :73-78 geometry: 27 dp start keeps the first card's x-center at
+    // the verified 204 px once the tile widens to 150 dp, and the 1 dp
+    // underlap applies the "pitch ~3 dp wider than the reference" correction
+    // (invisible between the identical resting fills).
     LazyRow(
-        contentPadding = PaddingValues(start = 32.dp),
-        horizontalArrangement = Arrangement.spacedBy(2.dp),
+        contentPadding = PaddingValues(start = 27.dp),
+        horizontalArrangement = Arrangement.spacedBy((-1).dp),
     ) {
         item {
             PlaybackScreenCard(

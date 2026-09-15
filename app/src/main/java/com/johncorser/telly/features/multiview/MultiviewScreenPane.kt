@@ -14,7 +14,6 @@ import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
@@ -56,7 +55,8 @@ internal fun MultiviewScreenPane(
                 .onFocusChanged { if (it.isFocused) onFocused() }
                 .testTag("multiview-pane")
                 .semantics { contentDescription = "Screen ${pane.id}: ${pane.channel.source.name}, $audioState" },
-        shape = ClickableSurfaceDefaults.shape(RectangleShape),
+        // Slightly rounded pane corners, same radius as the pane menu (round8 P3).
+        shape = FocusScreenDefaults.shape(),
         scale = FocusScreenDefaults.scale(),
         border =
             ClickableSurfaceDefaults.border(

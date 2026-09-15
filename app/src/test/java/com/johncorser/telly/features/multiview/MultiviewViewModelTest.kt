@@ -93,6 +93,22 @@ class MultiviewViewModelTest {
         }
 
     @Test
+    fun `the add rows leave the menu at the four-pane cap`() =
+        runTest {
+            val vm = startedVm()
+            listOf(channels[0], channels[2], channels[3]).forEach { channel ->
+                vm.onMenuAction(MultiviewMenuAction.ADD_SCREEN)
+                vm.onPick(channel)
+            }
+
+            assertEquals(MultiviewGrid.MAX_PANES, vm.panes.panes.value.size)
+            assertEquals(
+                listOf("Change channel", "Remove screen"),
+                vm.menuRows().map { it.label },
+            )
+        }
+
+    @Test
     fun `add screen and search and add both open the picker in add mode`() =
         runTest {
             val vm = startedVm()

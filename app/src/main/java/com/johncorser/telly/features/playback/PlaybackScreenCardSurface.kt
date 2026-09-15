@@ -22,7 +22,8 @@ import com.johncorser.telly.core.design.TELLY_OVERLAY_CARD_FOCUSED
 import com.johncorser.telly.core.ui.FocusScreenDefaults
 
 /**
- * One 140×103 shortcut-row tile. Focused = lighter dark-grey fill with
+ * One 150×110 shortcut-row tile (the catalogue's capture-34 reading,
+ * adopted per round8 :77-78). Focused = lighter dark-grey fill with
  * WHITE content, not the app-wide white pill (round3 item 8: #252A2D
  * focused / #181E20 resting).
  */
@@ -34,7 +35,7 @@ internal fun PlaybackScreenCardSurface(
 ) {
     Surface(
         onClick = onClick,
-        modifier = modifier.size(width = 140.dp, height = 103.dp),
+        modifier = modifier.size(width = 150.dp, height = 110.dp),
         shape = FocusScreenDefaults.shape(),
         scale = FocusScreenDefaults.scale(),
         colors =
