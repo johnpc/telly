@@ -170,6 +170,7 @@ fun sqlLike(
 class FakePlayerEngine : PlayerEngine {
     override val state = MutableStateFlow<PlayerState>(PlayerState.Idle)
     override val video = MutableStateFlow<VideoDetails?>(null)
+    override val paused = MutableStateFlow(false)
     override val tracks = FakeTrackFacade()
     val loaded = mutableListOf<String>()
     var stops = 0
@@ -180,11 +181,13 @@ class FakePlayerEngine : PlayerEngine {
     override fun load(streamUrl: String) {
         loaded += streamUrl
         state.value = PlayerState.Buffering
+        paused.value = false
     }
 
     override fun stop() {
         stops += 1
         state.value = PlayerState.Idle
+        paused.value = false
     }
 
     override fun release() {
@@ -193,6 +196,14 @@ class FakePlayerEngine : PlayerEngine {
 
     override fun setMuted(muted: Boolean) {
         mutedState = muted
+    }
+
+    override fun pause() {
+        paused.value = true
+    }
+
+    override fun resume() {
+        paused.value = false
     }
 
     var position = 0L

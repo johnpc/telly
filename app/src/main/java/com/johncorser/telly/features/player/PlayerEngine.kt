@@ -11,6 +11,9 @@ sealed interface PlayerState {
 
     data object Playing : PlayerState
 
+    /** A finite stream (archive / VOD / capture) reached its end. */
+    data object Ended : PlayerState
+
     data class Error(
         val message: String,
     ) : PlayerState
@@ -33,6 +36,9 @@ interface PlayerEngine {
     val state: StateFlow<PlayerState>
     val video: StateFlow<VideoDetails?>
 
+    /** True while playback is user-paused; [load] and [stop] reset it. */
+    val paused: StateFlow<Boolean>
+
     fun load(streamUrl: String)
 
     fun stop()
@@ -41,6 +47,12 @@ interface PlayerEngine {
 
     /** Multiview audio ownership: only the focused pane's engine is unmuted. */
     fun setMuted(muted: Boolean)
+
+    /** User pause (catch-up transport ⏸); a no-op while already paused. */
+    fun pause()
+
+    /** Resumes a [pause]d stream. */
+    fun resume()
 
     /** Current playback position (catch-up transport readout). */
     fun positionMs(): Long

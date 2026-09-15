@@ -6,6 +6,9 @@ sealed interface PlaybackCommand {
 
     data object ShowTransport : PlaybackCommand
 
+    /** Catch-up pause: the transport overlay stays pinned (no auto-hide). */
+    data object PinTransport : PlaybackCommand
+
     data object ExitToGuide : PlaybackCommand
 
     data class Zap(

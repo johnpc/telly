@@ -24,6 +24,35 @@ Feature: Catch-up playback of already-aired programmes
     When I return from catch-up playback
     Then the TV guide opens with the programme grid
 
+  Scenario: Pause pins the transport and resume releases it
+    When I long-press dpad left
+    Then the guide shows yesterday's programme on channel 1
+    When I press ok
+    Then catch-up playback starts for yesterday's programme on channel 1
+    When I activate the catch-up transport "Pause" button
+    Then catch-up playback is paused with the transport pinned
+    When I activate the catch-up transport "Resume" button
+    Then the seek transport shows the position readout
+
+  Scenario: Previous and next hop between neighbouring archived programmes
+    When I long-press dpad left
+    Then the guide shows yesterday's programme on channel 1
+    When I press ok
+    Then catch-up playback starts for yesterday's programme on channel 1
+    When I activate the catch-up transport "Previous programme" button
+    Then catch-up playback shows the programme before yesterday's on channel 1
+    When I activate the catch-up transport "Next programme" button
+    Then catch-up playback starts for yesterday's programme on channel 1
+
+  Scenario: A finished archive returns to live playback of the same channel
+    When I long-press dpad left
+    Then the guide shows yesterday's programme on channel 1
+    When I press ok
+    Then catch-up playback starts for yesterday's programme on channel 1
+    When I press fast-forward
+    And I press fast-forward
+    Then the archive ends and live playback of channel 1 resumes
+
   Scenario: A past programme on a channel without catch-up only offers the premium dropdown
     When I long-press dpad left
     And I press dpad down

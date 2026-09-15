@@ -1,5 +1,6 @@
 package com.johncorser.telly.features.vod
 
+import androidx.media3.common.Player
 import androidx.media3.exoplayer.ExoPlayer
 import com.johncorser.telly.features.player.Media3PlayerEngine
 import com.johncorser.telly.features.vod.db.VodItemEntity
@@ -160,6 +161,25 @@ class VodPlaybackViewModelTest {
             advanceTimeBy(10_100)
 
             assertEquals(9_500L, positions.rows.value.single().positionMs)
+            scope.cancel()
+        }
+
+    @Test
+    fun `media end clears the position as finished and exits the route`() =
+        runTest {
+            items.items.value = listOf(item)
+            positions.upsert(VodPositionEntity("k", positionMs = 12_000, durationMs = 30_000, updatedAtMs = 1))
+            every { player.currentPosition } returns 30_000L
+            every { player.duration } returns 30_000L
+            val scope = scope()
+            val model = model(scope)
+            model.start()
+            model.startOver()
+
+            engine.onPlaybackStateChanged(Player.STATE_ENDED)
+
+            assertTrue(positions.rows.value.isEmpty())
+            assertEquals(1, exits)
             scope.cancel()
         }
 

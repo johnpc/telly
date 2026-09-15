@@ -29,6 +29,8 @@ class PlaybackCommands(
             PlaybackCommand.ShowInfo -> showInfo()
             PlaybackCommand.ShowTransport ->
                 overlays.showAutoHiding(PlaybackOverlay.InfoTransport, seams.timeouts().infoMs)
+            // Paused catch-up: sticky transport (the VOD pin-while-paused idiom).
+            PlaybackCommand.PinTransport -> overlays.set(PlaybackOverlay.InfoTransport)
             PlaybackCommand.ExitToGuide -> seams.exitToGuide()
             is PlaybackCommand.Zap -> zap(command.delta)
             PlaybackCommand.OpenQuickBar ->

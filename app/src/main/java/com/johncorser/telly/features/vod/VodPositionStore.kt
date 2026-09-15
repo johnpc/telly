@@ -15,6 +15,12 @@ class VodPositionStore(
 ) {
     suspend fun read(itemKey: String): VodPositionEntity? = if (remember()) dao.byKey(itemKey) else null
 
+    /** Media end: position == duration counts as finished, clearing the row. */
+    suspend fun finish(
+        itemKey: String,
+        durationMs: Long,
+    ) = save(itemKey, durationMs, durationMs)
+
     suspend fun save(
         itemKey: String,
         positionMs: Long,

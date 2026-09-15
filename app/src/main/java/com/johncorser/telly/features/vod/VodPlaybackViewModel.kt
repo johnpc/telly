@@ -1,6 +1,7 @@
 package com.johncorser.telly.features.vod
 
 import com.johncorser.telly.features.player.Media3PlayerEngine
+import com.johncorser.telly.features.player.PlayerState
 import com.johncorser.telly.features.vod.db.VodItemEntity
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.delay
@@ -61,12 +62,9 @@ class VodPlaybackViewModel(
 
     /** BACK: persist the position (playing only), then pop the route. */
     fun exit() {
-        if (mutableStage.value == VodStage.Playing) {
-            scope.launch {
-                persist()
-                leave()
-            }
-        } else {
+        if (mutableStage.value != VodStage.Playing) return leave()
+        scope.launch {
+            persist()
             leave()
         }
     }
@@ -82,7 +80,7 @@ class VodPlaybackViewModel(
         watch()
     }
 
-    /** One sampling loop + one persistence loop for the screen's lifetime. */
+    /** Sampling + persistence loops and the media-end watcher. */
     private fun watch() {
         if (watching) return
         watching = true
@@ -96,6 +94,15 @@ class VodPlaybackViewModel(
             while (true) {
                 delay(PERSIST_MS)
                 persist()
+            }
+        }
+        // Media end: the position row clears as finished and the route exits.
+        scope.launch {
+            engine.state.collect { state ->
+                if (state == PlayerState.Ended) {
+                    store.finish(itemKey, controls.durationMs())
+                    leave()
+                }
             }
         }
     }

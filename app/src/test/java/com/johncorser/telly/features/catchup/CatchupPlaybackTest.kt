@@ -7,6 +7,7 @@ import com.johncorser.telly.features.playback.PlaybackKey
 import com.johncorser.telly.features.playback.PlaybackOverlay
 import com.johncorser.telly.features.playback.PlaybackTime
 import com.johncorser.telly.features.playback.TuneController
+import com.johncorser.telly.features.player.PlayerState
 import com.johncorser.telly.testutil.FakeChannelDao
 import com.johncorser.telly.testutil.FakeKeyValueStore
 import com.johncorser.telly.testutil.FakePlayerEngine
@@ -43,6 +44,7 @@ class CatchupPlaybackTest {
         FakeProgramDao(listOf(testProgram("tvg-1", now - hourMs, now + hourMs, "Airing Now")))
     private val session = CatchupSession()
     private var transports = 0
+    private var pins = 0
     private var exits = 0
 
     private val request =
@@ -66,7 +68,7 @@ class CatchupPlaybackTest {
                 hooks = PlaybackHooks(catchup = CatchupDeps(session = session, toggles = toggles)),
             )
         val tuner = TuneController(engine, store, scope, dao, WatchHistory(FakeWatchHistoryDao()) { now })
-        val playback = CatchupPlayback(env, tuner, { transports += 1 }, scope) { exits += 1 }
+        val playback = CatchupPlayback(env, tuner, { transports += 1 }, { pins += 1 }, scope) { exits += 1 }
         return playback to tuner
     }
 
@@ -146,7 +148,7 @@ class CatchupPlaybackTest {
             val (catchup, _) = build()
             catchup.resumePending()
 
-            assertTrue(catchup.onKey(PlaybackOverlay.None, PlaybackKey.BACK))
+            assertTrue(catchup.keys.onKey(PlaybackOverlay.None, PlaybackKey.BACK))
 
             assertNull(catchup.state.value)
             assertEquals(1, exits)
@@ -159,7 +161,7 @@ class CatchupPlaybackTest {
             val (catchup, tuner) = build(toggles)
             tuner.tune(catchupChannel)
 
-            assertTrue(catchup.onKey(PlaybackOverlay.None, PlaybackKey.REWIND))
+            assertTrue(catchup.keys.onKey(PlaybackOverlay.None, PlaybackKey.REWIND))
 
             val state = catchup.state.value
             assertTrue(state?.fromLive == true)
@@ -174,9 +176,9 @@ class CatchupPlaybackTest {
             val toggles = CatchupToggles { setting -> setting.key == "remote_rw_rewinds_live" || setting.default }
             val (catchup, tuner) = build(toggles)
             tuner.tune(catchupChannel)
-            catchup.onKey(PlaybackOverlay.None, PlaybackKey.REWIND)
+            catchup.keys.onKey(PlaybackOverlay.None, PlaybackKey.REWIND)
 
-            assertTrue(catchup.onKey(PlaybackOverlay.None, PlaybackKey.BACK))
+            assertTrue(catchup.keys.onKey(PlaybackOverlay.None, PlaybackKey.BACK))
 
             assertNull(catchup.state.value)
             assertEquals(0, exits)
@@ -189,7 +191,7 @@ class CatchupPlaybackTest {
             val (catchup, tuner) = build()
             tuner.tune(plainChannel)
 
-            assertFalse(catchup.onKey(PlaybackOverlay.None, PlaybackKey.REWIND))
+            assertFalse(catchup.keys.onKey(PlaybackOverlay.None, PlaybackKey.REWIND))
         }
 
     @Test
@@ -202,5 +204,77 @@ class CatchupPlaybackTest {
             catchup.onLiveTune()
 
             assertNull(catchup.state.value)
+        }
+
+    @Test
+    fun `pause pins the transport and resume re-arms its auto-hide`() =
+        runTest {
+            session.set(request)
+            val (catchup, _) = build()
+            catchup.resumePending()
+            val shownAtEntry = transports
+
+            catchup.pause.toggle()
+            assertTrue(catchup.pause.paused.value)
+            assertEquals(1, pins)
+            assertEquals(shownAtEntry, transports)
+
+            catchup.pause.toggle()
+            assertFalse(catchup.pause.paused.value)
+            assertEquals(1, pins)
+            assertEquals(shownAtEntry + 1, transports)
+        }
+
+    @Test
+    fun `pause is inert during live playback`() =
+        runTest {
+            val (catchup, tuner) = build()
+            tuner.tune(catchupChannel)
+
+            catchup.pause.toggle()
+
+            assertFalse(catchup.pause.paused.value)
+            assertEquals(0, pins)
+        }
+
+    @Test
+    fun `a finished archive returns to live playback of the same channel`() =
+        runTest {
+            session.set(request)
+            val (catchup, tuner) = build()
+            catchup.resumePending()
+
+            engine.state.value = PlayerState.Ended
+
+            assertNull(catchup.state.value)
+            assertEquals(catchupChannel.source.streamUrl, engine.loaded.last())
+            assertEquals(catchupChannel.id, tuner.current.value?.id)
+            assertEquals(0, exits)
+        }
+
+    @Test
+    fun `a finished live stream is ignored (no catch-up mode)`() =
+        runTest {
+            val (catchup, tuner) = build()
+            tuner.tune(catchupChannel)
+            val loadsBefore = engine.loaded.size
+
+            engine.state.value = PlayerState.Ended
+
+            assertNull(catchup.state.value)
+            assertEquals(loadsBefore, engine.loaded.size)
+        }
+
+    @Test
+    fun `a paused archive resumes cleanly when a hop retunes`() =
+        runTest {
+            session.set(request)
+            val (catchup, _) = build()
+            catchup.resumePending()
+            catchup.pause.toggle()
+
+            engine.state.value = PlayerState.Ended
+
+            assertFalse(catchup.pause.paused.value)
         }
 }

@@ -122,10 +122,10 @@ class Media3PlayerEngineTest {
     }
 
     @Test
-    fun `errors surface their code name and other states are ignored`() {
+    fun `errors surface their code name and idle states are ignored`() {
         val engine = engine()
 
-        listener.captured.onPlaybackStateChanged(Player.STATE_ENDED)
+        listener.captured.onPlaybackStateChanged(Player.STATE_IDLE)
         assertEquals(PlayerState.Idle, engine.state.value)
 
         listener.captured.onPlayerError(
@@ -133,6 +133,45 @@ class Media3PlayerEngineTest {
         )
         val state = engine.state.value
         assertEquals(PlayerState.Error("ERROR_CODE_IO_UNSPECIFIED"), state)
+    }
+
+    @Test
+    fun `a finished stream reports Ended`() {
+        val engine = engine()
+
+        listener.captured.onPlaybackStateChanged(Player.STATE_ENDED)
+
+        assertEquals(PlayerState.Ended, engine.state.value)
+    }
+
+    @Test
+    fun `pause and resume drive the player and the paused signal`() {
+        val engine = engine()
+        assertEquals(false, engine.paused.value)
+
+        engine.pause()
+        assertEquals(true, engine.paused.value)
+
+        engine.resume()
+        assertEquals(false, engine.paused.value)
+
+        verify {
+            player.pause()
+            player.play()
+        }
+    }
+
+    @Test
+    fun `load and stop reset the paused signal`() {
+        val engine = engine()
+
+        engine.pause()
+        engine.load("http://s/1.ts")
+        assertEquals(false, engine.paused.value)
+
+        engine.pause()
+        engine.stop()
+        assertEquals(false, engine.paused.value)
     }
 
     @Test
