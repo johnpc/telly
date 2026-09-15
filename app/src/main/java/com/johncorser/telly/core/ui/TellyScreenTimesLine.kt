@@ -8,6 +8,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.tv.material3.Text
@@ -19,6 +20,9 @@ import com.johncorser.telly.core.design.TELLY_TEXT_MUTED
  * by the info overlay and the panel's detail card; [trailing] appends the
  * context-specific tail (channel number + badges, or the group name). The
  * 40x3 dp mini dash fills light grey, not accent blue (round3 item 9).
+ * Overlay/panel/guide keep the default 15 sp; the search airing rows pass
+ * tm's smaller size (round7 P3 — telly's line measured 256 px vs tm's
+ * 209 px for the same 16-char string).
  */
 @Composable
 fun TellyScreenTimesLine(
@@ -26,6 +30,7 @@ fun TellyScreenTimesLine(
     permille: Int,
     remaining: String?,
     modifier: Modifier = Modifier,
+    fontSize: TextUnit = 15.sp,
     trailing: @Composable RowScope.() -> Unit = {},
 ) {
     Row(
@@ -33,14 +38,14 @@ fun TellyScreenTimesLine(
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(10.dp),
     ) {
-        range?.let { Text(text = it, color = Color(TELLY_TEXT_MUTED), fontSize = 15.sp) }
+        range?.let { Text(text = it, color = Color(TELLY_TEXT_MUTED), fontSize = fontSize) }
         TellyScreenProgressBar(
             permille = permille,
             modifier = Modifier.width(40.dp),
             fill = Color(TELLY_DASH_FILL),
             thickness = 3.dp,
         )
-        remaining?.let { Text(text = it, color = Color(TELLY_TEXT_MUTED), fontSize = 15.sp) }
+        remaining?.let { Text(text = it, color = Color(TELLY_TEXT_MUTED), fontSize = fontSize) }
         trailing()
     }
 }

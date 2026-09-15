@@ -34,6 +34,9 @@ class GuideMenuController(
     /** Which sheet row BACK from a pushed screen re-focuses. */
     val sheetFocus = PlayerMenuFocus()
 
+    /** The channel the sheet scrim dims AROUND (round7 P2 row exemption). */
+    val sheetChannelId: Long? get() = focusMemory?.savedChannelId
+
     /** Closing back to the grid re-asserts the saved grid focus first. */
     fun show(next: GuideLayer) {
         if (next == GuideLayer.Grid) focusMemory?.restore()

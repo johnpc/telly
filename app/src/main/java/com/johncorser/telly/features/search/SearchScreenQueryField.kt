@@ -40,7 +40,7 @@ import com.johncorser.telly.features.search.SearchScreenDims as Dims
 internal fun SearchScreenQueryField(
     query: String,
     viewModel: SearchViewModel,
-    firstResult: FocusRequester?,
+    downTargets: List<FocusRequester>,
     modifier: Modifier,
 ) {
     Box(
@@ -69,7 +69,7 @@ internal fun SearchScreenQueryField(
             modifier =
                 Modifier.fillMaxWidth().onPreviewKeyEvent { event ->
                     if (event.type == KeyEventType.KeyDown && event.key == Key.DirectionDown) {
-                        moveDownFromBar(firstResult, focusManager)
+                        moveDownFromBar(downTargets, focusManager)
                     } else {
                         false
                     }
@@ -79,20 +79,23 @@ internal fun SearchScreenQueryField(
 }
 
 /**
- * DOWN with results up lands on the FIRST channel card, not Compose's
- * geometrically nearest candidate (ref-round6 07-search-down-from-querybar);
- * the history landing keeps the plain spatial move.
+ * DOWN with results up restores the last-visited node while it is still
+ * composed (round7 §C4 focus memory), else lands on the FIRST channel
+ * card / airing row (ref-round6 07, round7 C4) — never Compose's
+ * geometrically nearest candidate; the history landing (no targets)
+ * keeps the plain spatial move.
  */
 private fun moveDownFromBar(
-    firstResult: FocusRequester?,
+    targets: List<FocusRequester>,
     focusManager: FocusManager,
 ): Boolean {
-    if (firstResult == null) return focusManager.moveFocus(FocusDirection.Down)
-    return try {
-        firstResult.requestFocus()
-        true
-    } catch (ignored: IllegalStateException) {
-        // The first card scrolled out of composition; fall back to spatial.
-        focusManager.moveFocus(FocusDirection.Down)
+    targets.forEach { target ->
+        try {
+            target.requestFocus()
+            return true
+        } catch (ignored: IllegalStateException) {
+            // The node left composition; fall through to the next target.
+        }
     }
+    return focusManager.moveFocus(FocusDirection.Down)
 }

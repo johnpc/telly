@@ -18,15 +18,12 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.PlatformTextStyle
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.style.LineHeightStyle
-import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.tv.material3.Surface
 import androidx.tv.material3.Text
-import com.johncorser.telly.core.design.TELLY_TEXT_MUTED
 import com.johncorser.telly.core.design.TELLY_TEXT_PRIMARY
 import com.johncorser.telly.core.ui.FocusScreenDefaults
-import com.johncorser.telly.core.ui.TellyScreenTimesLine
 import com.johncorser.telly.features.search.SearchScreenDims as Dims
 
 /**
@@ -55,19 +52,6 @@ internal fun SearchScreenHeader(
             ),
         modifier = modifier,
     )
-}
-
-/** Air-time line: "12:45 — 01:45 AM ▬▬ 50 min" while airing (live tm-03), bare times otherwise. */
-@Composable
-internal fun SearchScreenAirTime(
-    hit: SearchProgramHit,
-    fontSize: TextUnit = 14.sp,
-) {
-    if (hit.remaining == null) {
-        Text(text = hit.timeText, color = Color(TELLY_TEXT_MUTED), fontSize = fontSize, maxLines = 1)
-    } else {
-        TellyScreenTimesLine(range = hit.timeText, permille = hit.progressPermille, remaining = hit.remaining)
-    }
 }
 
 /**

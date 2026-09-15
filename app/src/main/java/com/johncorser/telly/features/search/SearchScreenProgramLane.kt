@@ -34,6 +34,7 @@ internal fun SearchScreenProgramLane(
     groups: List<SearchProgramChannel>,
     selected: SearchProgramChannel?,
     viewModel: SearchViewModel,
+    restore: SearchScreenRestore,
 ) {
     LazyColumn(
         contentPadding = PaddingValues(bottom = Dims.edgePad),
@@ -44,6 +45,7 @@ internal fun SearchScreenProgramLane(
                 group = group,
                 selected = group.channel.id == selected?.channel?.id,
                 viewModel = viewModel,
+                restore = restore,
             )
         }
     }
@@ -54,6 +56,7 @@ private fun SearchScreenProgramChannelCard(
     group: SearchProgramChannel,
     selected: Boolean,
     viewModel: SearchViewModel,
+    restore: SearchScreenRestore,
 ) {
     SearchScreenFocusRow(
         onClick = viewModel::onProgramChannelResult,
@@ -61,7 +64,11 @@ private fun SearchScreenProgramChannelCard(
             Modifier
                 .fillMaxWidth()
                 .height(Dims.masterCardHeight)
-                .onFocusChanged { if (it.isFocused) viewModel.onProgramChannelFocused(group) },
+                .searchResultsNode(
+                    memory = viewModel.focusMemory,
+                    restore = restore,
+                    node = SearchFocusMemory.Node.MasterCard(group.channel.id),
+                ).onFocusChanged { if (it.isFocused) viewModel.onProgramChannelFocused(group) },
         dimWhenResting = true,
         restingOutline = selected,
     ) {

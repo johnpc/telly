@@ -40,15 +40,16 @@ internal fun SearchScreenPrograms(
     groups: List<SearchProgramChannel>,
     viewModel: SearchViewModel,
     firstFocus: FocusRequester?,
+    restore: SearchScreenRestore,
 ) {
     SearchScreenHeader(R.string.search_programs)
     val selected by viewModel.selectedChannel.collectAsState()
-    Row(Modifier.padding(start = Dims.edgePad, top = Dims.shelfTop)) {
-        SearchScreenProgramLane(groups, selected, viewModel)
+    Row(Modifier.padding(start = Dims.edgePad, top = Dims.programsTop)) {
+        SearchScreenProgramLane(groups, selected, viewModel, restore)
         Spacer(Modifier.width(Dims.rowTextStart))
         // With no Channels shelf, DOWN from the query bar lands on the
         // FIRST AIRING ROW, not the master card (round7 device check).
-        SearchScreenAiringsPane(selected?.airings.orEmpty(), viewModel, firstFocus)
+        SearchScreenAiringsPane(selected?.airings.orEmpty(), viewModel, firstFocus, restore)
     }
 }
 
@@ -58,6 +59,7 @@ private fun SearchScreenAiringsPane(
     airings: List<SearchProgramHit>,
     viewModel: SearchViewModel,
     firstFocus: FocusRequester?,
+    restore: SearchScreenRestore,
 ) {
     LazyColumn(
         contentPadding = PaddingValues(bottom = Dims.edgePad),
@@ -69,6 +71,7 @@ private fun SearchScreenAiringsPane(
                 viewModel = viewModel,
                 isLast = index == airings.lastIndex,
                 focus = firstFocus.takeIf { index == 0 },
+                restore = restore,
             )
         }
     }
@@ -80,6 +83,7 @@ private fun SearchScreenProgramRow(
     viewModel: SearchViewModel,
     isLast: Boolean,
     focus: FocusRequester?,
+    restore: SearchScreenRestore,
 ) {
     SearchScreenFocusRow(
         onClick = { viewModel.onProgramResult(hit) },
@@ -88,7 +92,11 @@ private fun SearchScreenProgramRow(
                 .fillMaxWidth()
                 .height(Dims.rowHeight)
                 .then(if (focus != null) Modifier.focusRequester(focus) else Modifier)
-                .onFocusChanged { if (it.isFocused) viewModel.onProgramFocused(hit) }
+                .searchResultsNode(
+                    memory = viewModel.focusMemory,
+                    restore = restore,
+                    node = SearchFocusMemory.Node.AiringRow(hit.channel.id, hit.program.startMs),
+                ).onFocusChanged { if (it.isFocused) viewModel.onProgramFocused(hit) }
                 // DOWN stops dead at the selected channel's last airing
                 // (ref-round6 §D) instead of leaking into the master lane.
                 .focusProperties { if (isLast) down = FocusRequester.Cancel },

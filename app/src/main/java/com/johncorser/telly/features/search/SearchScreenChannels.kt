@@ -34,6 +34,8 @@ import com.johncorser.telly.features.search.SearchScreenDims as Dims
 internal fun SearchScreenChannels(
     hits: List<SearchChannelHit>,
     firstFocus: FocusRequester?,
+    restore: SearchScreenRestore,
+    viewModel: SearchViewModel,
     onTune: (SearchChannelHit) -> Unit,
 ) {
     SearchScreenHeader(R.string.search_channels)
@@ -46,8 +48,16 @@ internal fun SearchScreenChannels(
             SearchScreenChannelCard(
                 hit = hit,
                 onClick = { onTune(hit) },
-                // DOWN from the query bar targets the first card (round6 07).
-                modifier = if (index == 0 && firstFocus != null) Modifier.focusRequester(firstFocus) else Modifier,
+                // DOWN from the query bar targets the first card fresh
+                // (round6 07) or the last-visited one (round7 §C4).
+                modifier =
+                    Modifier
+                        .then(if (index == 0 && firstFocus != null) Modifier.focusRequester(firstFocus) else Modifier)
+                        .searchResultsNode(
+                            memory = viewModel.focusMemory,
+                            restore = restore,
+                            node = SearchFocusMemory.Node.ChannelCard(hit.channel.id),
+                        ),
             )
         }
     }

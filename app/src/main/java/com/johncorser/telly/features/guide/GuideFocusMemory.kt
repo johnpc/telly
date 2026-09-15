@@ -28,11 +28,20 @@ class GuideFocusMemory(
     private val rows: () -> List<GuideRow>,
 ) {
     private var snapshot: GuideFocusSnapshot? = null
+    private var lastChannelId: Long? = null
+
+    /**
+     * The channel the sheet was last opened on. Unlike the positional
+     * snapshot it survives the restore, so the scrim's undimmed-row hole
+     * (round7 P2) can outlive the sheet through the scrim's fade-out.
+     */
+    val savedChannelId: Long? get() = lastChannelId
 
     /** Snapshots the focused channel, cell and scroll as the sheet opens. */
     fun save() {
         val focus = engine.focus.value
         val channel = focus?.let { rows().getOrNull(it.rowIndex)?.channel }
+        lastChannelId = channel?.id
         snapshot =
             channel?.let {
                 GuideFocusSnapshot(it.id, GuideFocusState(focus, engine.scrollX.value, engine.firstVisibleRow.value))

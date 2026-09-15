@@ -55,6 +55,30 @@ class GuideMenuControllerTest {
     private fun TestScope.buildOpenSheet(): GuideMenuController = build().apply { openRowMenu() }
 
     @Test
+    fun `opening the sheet records the origin channel for the scrim exemption`() {
+        runTest {
+            val engine = GuideFocusEngine(GuideTestData.originMs, pastFloorDp = { 0f })
+            val cells = listOf(GuideTestData.cell(GuideTestData.at(14, 30), GuideTestData.at(15, 30)))
+            val focused = row!!.copy(cells = cells)
+            row = focused
+            engine.ensureFocus(listOf(focused), GuideTestData.nowMs)
+            val menu = build(focusMemory = GuideFocusMemory(engine) { listOf(focused) })
+            assertNull(menu.sheetChannelId)
+
+            menu.openRowMenu()
+
+            assertEquals(1L, menu.sheetChannelId)
+        }
+    }
+
+    @Test
+    fun `without focus memory there is no sheet origin channel`() {
+        runTest {
+            assertNull(buildOpenSheet().sheetChannelId)
+        }
+    }
+
+    @Test
     fun `the sheet only opens while a row is focused`() {
         runTest {
             val menu = build()
