@@ -15,6 +15,7 @@ timings). Fixed items landed on main in this round; the rest are logged here.
 | 6 | DOWN from the query bar with no channel matches | landed on master card 1 | lands on the **first airing row** like live 5.2.0 (`round7/` §C4); e2e scenario added |
 | 7 | Detail-card title wrapped to 2 lines | theme 0.5 sp tracking | `letterSpacing = 0.sp` — same string now fits one line like the reference |
 | 8 | tv-guide acceptance step crash (steps layer) | "at roughly the same time" with no prior anchor threw in `FixtureServer.nowProgramme` | `GuideSteps.anchorOrNow()` defaults to now on first use |
+| 9 | Stale guide clock + black preview after a long background (was P2 below) | guide "now" sampled once at controller build, never re-seeded; nothing stopped/re-tuned the player around STOP/START, so the backgrounded process froze with a paused stale stream and resumed black at the old clock | reference-verified resume semantics (`resume-fix/`): stream stops on ON_STOP (TiviMate abandons focus + codecs instantly), guide clock ticks per minute (`GuideNow`) and re-seeds on the START after a stop, guide re-tunes its preview, fullscreen leaves for the guide exactly like TiviMate's resume (90 s + 11 min probes, no zap overlay) |
 
 ## P2 — logged
 
@@ -30,10 +31,8 @@ timings). Fixed items landed on main in this round; the rest are logged here.
   backdrop dims everything EXCEPT the long-OK row (screencap: row-5 pixels identical
   rest vs sheet-open, all other rows ×0.40). telly's fullscreen scrim dims the whole
   grid uniformly. Needs a per-row dim (or scrim cut-out) in the grid layer.
-- **Stale guide clock + black preview after a long background.** After ~10+ min
-  backgrounded (task-switched to TiviMate), telly's guide header clock read 6:28 PM at
-  ~6:40 and the preview window stayed black until process restart; fresh cold start
-  is fine. Likely the guide's "now" ticker and the preview engine don't resume.
+- ~~**Stale guide clock + black preview after a long background.**~~ **FIXED**
+  (row 9 above; evidence + reference resume observations in `round7/resume-fix/`).
 
 ## P3 — logged (geometry nits, "news" side-by-side, `round7/06-*`)
 

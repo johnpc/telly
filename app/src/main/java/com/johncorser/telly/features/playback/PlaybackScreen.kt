@@ -13,6 +13,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.key.onPreviewKeyEvent
 import com.johncorser.telly.core.input.HoldKeyDetector
+import com.johncorser.telly.core.ui.ScreenLifecycleStartStop
 import com.johncorser.telly.features.panel.PanelLock
 import com.johncorser.telly.features.player.PlayerScreenSurface
 import kotlinx.coroutines.CoroutineScope
@@ -70,6 +71,9 @@ fun PlaybackScreen(
     }
     val overlay by viewModel.overlay.collectAsState()
     val previewDetector = remember { HoldKeyDetector(PlaybackKey.OK, PlaybackKey.LONG_OK) }
+    // Background/resume: stop the stream on STOP, re-tune on the START
+    // after it — the reference re-tunes on resume (round7 resume P2).
+    ScreenLifecycleStartStop(onStart = viewModel.lifecycle::onForeground, onStop = viewModel.lifecycle::onBackground)
     BackHandler { viewModel.onKey(PlaybackKey.BACK) }
     Box(
         Modifier

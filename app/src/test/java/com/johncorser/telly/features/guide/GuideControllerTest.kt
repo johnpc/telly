@@ -23,6 +23,7 @@ import com.johncorser.telly.testutil.testProgram
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import kotlinx.coroutines.test.runTest
@@ -62,6 +63,8 @@ class GuideControllerTest {
         )
     private var fullscreens = 0
     private var pastDays = 7
+    private var clockNow = nowMs
+    private val ticks = MutableSharedFlow<Unit>()
     private val historyDao = FakeWatchHistoryDao()
 
     private fun TestScope.buildController(initialGroup: String = PanelViewModel.ALL_CHANNELS): GuideController =
@@ -72,9 +75,9 @@ class GuideControllerTest {
                     epgRepository = testEpgRepository(programs),
                     engine = engine,
                     store = store,
-                    time = PlaybackTime({ nowMs }, utc),
+                    time = PlaybackTime({ clockNow }, utc, ticks),
                 ),
-            history = WatchHistory(historyDao) { nowMs },
+            history = WatchHistory(historyDao) { clockNow },
             pastDays = { pastDays },
             scope = CoroutineScope(SupervisorJob() + UnconfinedTestDispatcher(testScheduler)),
             callbacks =
@@ -111,7 +114,7 @@ class GuideControllerTest {
             assertTrue(controller.rows.value.last().cells.none { it.hasInfo })
             assertEquals(0, controller.focus.value?.rowIndex)
             assertEquals("Business Hour", focusedTitle(controller))
-            assertEquals("Sun, Sep 13, 2:38 PM", controller.clockText)
+            assertEquals(nowMs, controller.now.value)
         }
     }
 
@@ -440,6 +443,49 @@ class GuideControllerTest {
             val controller = buildController(initialGroup = HistoryGroup.NAME)
 
             assertEquals(listOf("News One HD"), controller.rows.value.map { it.channel.source.name })
+        }
+    }
+
+    @Test
+    fun `background stops the preview and foreground re-seeds the clock and re-tunes`() {
+        runTest {
+            store.putLong(TuneController.LAST_CHANNEL_KEY, 1L)
+            val controller = buildController()
+            assertEquals(listOf("http://s/1.ts"), engine.loaded)
+
+            controller.lifecycle.onBackground()
+            assertEquals(1, engine.stops)
+
+            clockNow = at(14, 52)
+            controller.lifecycle.onForeground()
+
+            assertEquals(at(14, 52), controller.now.value)
+            assertEquals(listOf("http://s/1.ts", "http://s/1.ts"), engine.loaded)
+        }
+    }
+
+    @Test
+    fun `foreground without a preceding stop does not re-tune`() {
+        runTest {
+            store.putLong(TuneController.LAST_CHANNEL_KEY, 1L)
+            val controller = buildController()
+
+            controller.lifecycle.onForeground()
+
+            assertEquals(listOf("http://s/1.ts"), engine.loaded)
+        }
+    }
+
+    @Test
+    fun `the header clock re-samples the injected clock on every tick`() {
+        runTest {
+            val controller = buildController()
+            assertEquals(nowMs, controller.now.value)
+
+            clockNow = at(14, 39)
+            ticks.emit(Unit)
+
+            assertEquals(at(14, 39), controller.now.value)
         }
     }
 

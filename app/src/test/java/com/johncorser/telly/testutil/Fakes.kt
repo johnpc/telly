@@ -168,6 +168,7 @@ class FakePlayerEngine : PlayerEngine {
     override val state = MutableStateFlow<PlayerState>(PlayerState.Idle)
     override val video = MutableStateFlow<VideoDetails?>(null)
     val loaded = mutableListOf<String>()
+    var stops = 0
     var released = false
 
     override fun load(streamUrl: String) {
@@ -176,6 +177,7 @@ class FakePlayerEngine : PlayerEngine {
     }
 
     override fun stop() {
+        stops += 1
         state.value = PlayerState.Idle
     }
 

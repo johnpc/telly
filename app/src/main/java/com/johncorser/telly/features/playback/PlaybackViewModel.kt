@@ -12,18 +12,11 @@ import com.johncorser.telly.features.playlist.db.ChannelEntity
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
-import java.util.TimeZone
 
 /** Cross-slice hooks the playback surface plugs into (nav + parental). */
 class PlaybackHooks(
     val panelLock: PanelLock = PanelLock(),
     val onOpenSettings: () -> Unit = {},
-)
-
-/** The injected wall clock + zone (no wall-clock reads in logic). */
-class PlaybackTime(
-    val clock: () -> Long,
-    val zone: TimeZone = TimeZone.getDefault(),
 )
 
 /** Everything [PlaybackViewModel] needs injected, bundled for readability. */
@@ -82,6 +75,9 @@ class PlaybackViewModel(
     }
 
     private val commands = PlaybackCommands(tuner, overlays, panel, instant, clock, onExitToGuide)
+
+    /** Resume after a background stop leaves fullscreen for the guide, like the reference (round7 P2). */
+    val lifecycle = PlaybackLifecycle(tuner, recover = onExitToGuide)
 
     /** Routes a key through the catalogue's key-by-context map; true = consumed. */
     fun onKey(key: PlaybackKey): Boolean {

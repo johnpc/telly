@@ -35,6 +35,7 @@ internal fun GuideScreenGrid(
     val scrollX by controller.scrollX.collectAsState()
     val firstRow by controller.firstVisibleRow.collectAsState()
     val preview by controller.preview.collectAsState()
+    val now by controller.now.collectAsState()
     val listState = rememberLazyListState()
     LaunchedEffect(firstRow) { listState.animateScrollToItem(firstRow) }
     Box(modifier) {
@@ -47,11 +48,11 @@ internal fun GuideScreenGrid(
                     dimFocus = dimFocus,
                     scrollXDp = scrollX,
                     originMs = controller.originMs,
-                    nowMs = controller.nowMs,
+                    nowMs = now,
                 )
             }
         }
-        GuideScreenNowLine(controller, scrollX)
+        GuideScreenNowLine(controller, scrollX, now)
     }
 }
 
@@ -59,10 +60,11 @@ internal fun GuideScreenGrid(
 private fun GuideScreenNowLine(
     controller: GuideController,
     scrollX: Float,
+    nowMs: Long,
 ) {
     val offset =
         GuideTimeline.nowLineOffset(
-            controller.nowMs,
+            nowMs,
             controller.originMs,
             scrollX,
             GuideGeometry.TIME_VIEWPORT_DP,

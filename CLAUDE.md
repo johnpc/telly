@@ -382,3 +382,28 @@ Local SDK note: `local.properties` must contain
   one-line layout. Two-pane geometry verified within a few px (P3 nits
   logged). Acceptance legs after fixes: search 12/12, tv-guide 16/16
   (one steps-layer anchor fix), channel-panel 13/13.
+- **2026-09-14** Background/resume lifecycle (round7 resume P2, evidence
+  `docs/reference/sidebyside/round7/resume-fix/`). Live TiviMate, warm-resumed
+  (same pid) after 90 s AND 11 min backgrounded: it abandons audio focus and
+  releases its codecs the INSTANT it is backgrounded (logcat), and every
+  resume lands on the TV GUIDE — even from fullscreen playback — with the
+  header clock re-anchored and no zap overlay or spinner; its guide clock
+  also ticks per minute while open. telly's root causes were "now" sampled
+  once per GuideController build (never re-seeded; the cached-app freezer
+  froze the process, so the composition survived with a 20-min-old clock)
+  and no player lifecycle at all (the stream kept pulling in background
+  until audio-focus loss, then sat paused/stale → black surface on resume).
+  Pattern now: screens owning the tuner mount `core/ui`
+  `ScreenLifecycleStartStop` (DisposableEffect + LifecycleEventObserver;
+  ON_START only counts after a real ON_STOP since observer registration
+  replays states) driving a `PlaybackLifecycle` (features/playback):
+  ON_STOP → `TuneController.suspendPlayback()` (engine.stop),
+  ON_START-after-stop → `onForegrounded` re-seed then `recover` — the guide
+  recovers by re-tuning its preview (`TuneController.retune`; telly's guide
+  auto-tunes by charter while TiviMate's free-build preview stays untuned
+  until OK), fullscreen recovers by `exitToGuide` exactly like the
+  reference. Guide "now" is a `GuideNow` minute ticker (injected clock +
+  delays on the injected scope, re-seeded on foreground) feeding the header
+  clock, now-line, info pane and activation — the earlier "sampled once per
+  open" reading is superseded; `originMs` stays anchored at build time. No
+  wall-clock reads anywhere new.

@@ -15,6 +15,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import com.johncorser.telly.core.design.TELLY_ONBOARDING_BACKGROUND
+import com.johncorser.telly.core.ui.ScreenLifecycleStartStop
 import com.johncorser.telly.core.ui.TellyScreenKeyAnchor
 import com.johncorser.telly.features.playback.PlaybackScreenMenuScrim
 import com.johncorser.telly.features.playback.PlaybackScreenMenuSurfaceSwitch
@@ -42,6 +43,9 @@ fun GuideScreen(
     val controller = rememberGuideController(deps, engine, callbacks, historySource)
     val detectors = remember { GuideScreenKeyDetectors() }
     val layer by controller.layer.collectAsState()
+    // Background/resume: stop the preview stream on STOP, re-seed the clock
+    // and re-tune on the START after it (round7 resume P2).
+    ScreenLifecycleStartStop(onStart = controller.lifecycle::onForeground, onStop = controller.lifecycle::onBackground)
     BackHandler(enabled = layer != GuideLayer.Grid && !settingsOpen) { controller.onKey(GuideKey.BACK) }
     // Returning from the settings sheet lands back on the grid, whose key
     // anchor re-grabs focus when it recomposes.

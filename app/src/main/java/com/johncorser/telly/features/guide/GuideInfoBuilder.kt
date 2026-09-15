@@ -2,6 +2,12 @@ package com.johncorser.telly.features.guide
 
 import com.johncorser.telly.features.epg.ProgramTitle
 import com.johncorser.telly.features.playback.ProgramTimes
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.stateIn
 import java.util.TimeZone
 
 /** Everything the guide's top-right info pane renders (uidump 24). */
@@ -18,6 +24,17 @@ data class GuideInfoData(
 object GuideInfoBuilder {
     /** TiviMate's placeholder for EPG-less cells and channels. */
     const val NO_INFORMATION = "No information"
+
+    /** Live pane state: follows focus, rows and the minute-ticked "now". */
+    fun feed(
+        rows: Flow<List<GuideRow>>,
+        focus: Flow<GuideFocus?>,
+        now: Flow<Long>,
+        zone: TimeZone,
+        scope: CoroutineScope,
+    ): StateFlow<GuideInfoData?> =
+        combine(rows, focus, now) { list, focused, at -> buildFor(list, focused, at, zone) }
+            .stateIn(scope, SharingStarted.Eagerly, null)
 
     /** The pane for the focused cell of [rows]; null with nothing focused. */
     fun buildFor(

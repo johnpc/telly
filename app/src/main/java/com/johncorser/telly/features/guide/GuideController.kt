@@ -4,23 +4,20 @@ import com.johncorser.telly.features.history.WatchHistory
 import com.johncorser.telly.features.panel.PanelViewModel
 import com.johncorser.telly.features.playback.ChannelActions
 import com.johncorser.telly.features.playback.PlaybackEnv
-import com.johncorser.telly.features.playback.ProgramTimes
+import com.johncorser.telly.features.playback.PlaybackLifecycle
 import com.johncorser.telly.features.playback.TuneController
 import com.johncorser.telly.features.playlist.db.ChannelEntity
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.combine
-import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 
 /**
  * The TV-guide screen's state machine: grid rows over the visible window,
  * focus/scroll, the active layer, and the preview tuner. A plain class —
- * everything injected, unit-tested on the JVM. "Now" is sampled once per
- * open (like the panel); no wall-clock reads in logic.
+ * everything injected, unit-tested on the JVM. "Now" ticks per minute and
+ * re-seeds on foreground resume ([GuideNow]); no wall-clock reads in logic.
  */
 class GuideController(
     env: PlaybackEnv,
@@ -31,13 +28,16 @@ class GuideController(
     initialGroup: String = PanelViewModel.ALL_CHANNELS,
 ) {
     val zone = env.time.zone
-    val nowMs = env.time.clock()
-    val originMs = GuideGeometry.halfHourFloor(nowMs, zone)
 
-    /** "Sun, Sep 13, 2:44 PM" in blue at the header's left (uidump 24). */
-    val clockText: String = ProgramTimes.clock(nowMs, zone)
+    /** Minute-ticked "now" (header clock, now-line); origin stays anchored. */
+    private val ticker = GuideNow(env.time.clock, scope, env.time.minuteTicks)
+    val now: StateFlow<Long> = ticker.now
+    val originMs = GuideGeometry.halfHourFloor(now.value, zone)
 
     private val tuner = TuneController(env.engine, env.store, scope, env.channelDao, history)
+
+    /** Background stop + foreground re-seed/re-tune (round7 resume P2). */
+    val lifecycle = PlaybackLifecycle(tuner, onForegrounded = ticker::reseed, recover = tuner::retune)
     private val selected = MutableStateFlow(initialGroup)
     private val focusEngine = GuideFocusEngine(originMs, pastFloorDp = { GuideWindowMath.scrollFloorDp(pastDays()) })
     private val feed =
@@ -61,9 +61,7 @@ class GuideController(
 
     val hint: StateFlow<Boolean> = GuideHint(env.store).startIn(scope)
 
-    val info: StateFlow<GuideInfoData?> =
-        combine(rows, focusEngine.focus) { list, focused -> GuideInfoBuilder.buildFor(list, focused, nowMs, zone) }
-            .stateIn(scope, SharingStarted.Eagerly, null)
+    val info: StateFlow<GuideInfoData?> = GuideInfoBuilder.feed(rows, focusEngine.focus, now, zone, scope)
 
     /** Layers + the long-OK row context sheet (catalogue §3 38-42). */
     val menu =
@@ -79,7 +77,7 @@ class GuideController(
     val layer: StateFlow<GuideLayer> = menu.layer
 
     init {
-        scope.launch { rows.collect { focusEngine.ensureFocus(it, nowMs) } }
+        scope.launch { rows.collect { focusEngine.ensureFocus(it, now.value) } }
         // The guide is reached from playback (BACK / the TV-guide card), where
         // the last channel keeps playing in the preview window; cold starts
         // land on fullscreen playback instead, so nothing double-tunes.
@@ -94,7 +92,7 @@ class GuideController(
         if (group != selected.value) {
             focusEngine.reset()
             selected.value = group
-            focusEngine.ensureFocus(rows.value, nowMs)
+            focusEngine.ensureFocus(rows.value, now.value)
         }
         menu.reset()
     }
@@ -119,7 +117,7 @@ class GuideController(
     private fun activate() {
         val focused = focus.value ?: return
         val row = focusedRow() ?: return
-        when (val action = GuideActivation.activate(row, focused.cell, nowMs, tuner.current.value?.id)) {
+        when (val action = GuideActivation.activate(row, focused.cell, now.value, tuner.current.value?.id)) {
             is GuideAction.TunePreview -> tuner.tune(action.channel)
             GuideAction.GoFullscreen -> callbacks.onFullscreen()
             is GuideAction.OpenCellMenu -> menu.show(GuideLayer.CellMenu(action.cell))

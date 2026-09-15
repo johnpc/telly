@@ -54,19 +54,39 @@ class TuneController(
 
     fun tune(channel: ChannelEntity) {
         mutableCurrent.value = channel
+        suspended = false
         engine.load(channel.source.streamUrl)
         store.putLong(LAST_CHANNEL_KEY, channel.id)
         scope.launch { history.record(channel) }
     }
 
+    private var suspended = false
+
+    /** Activity STOP: stop the stream like the reference does in background. */
+    fun suspendPlayback() {
+        if (mutableCurrent.value == null) return
+        engine.stop()
+        suspended = true
+    }
+
+    /** True exactly once after a background stop; the caller recovers. */
+    fun consumeSuspension(): Boolean {
+        val was = suspended
+        suspended = false
+        return was
+    }
+
+    /** Re-loads the current channel's stream after a background stop. */
+    fun retune() {
+        mutableCurrent.value?.let { engine.load(it.source.streamUrl) }
+    }
+
     /** Tunes the channel [delta] steps away (wraps); false when impossible. */
     fun zap(delta: Int): Boolean {
-        val next = neighbour(delta) ?: return false
+        val next = ChannelZapper.neighbour(channels.value, mutableCurrent.value, delta) ?: return false
         tune(next)
         return true
     }
-
-    fun neighbour(offset: Int): ChannelEntity? = ChannelZapper.neighbour(channels.value, mutableCurrent.value, offset)
 
     fun byId(channelId: Long): ChannelEntity? = channels.value.firstOrNull { it.id == channelId }
 

@@ -97,6 +97,47 @@ class PlaybackViewModelTest {
         }
 
     @Test
+    fun `background stops the stream and resume leaves fullscreen for the guide`() =
+        runTest {
+            val vm = buildVm()
+            assertEquals(listOf("http://s/1.ts"), engine.loaded)
+
+            vm.lifecycle.onBackground()
+            assertEquals(1, engine.stops)
+
+            vm.lifecycle.onForeground()
+
+            assertEquals(1, exitedToGuide)
+            assertEquals(listOf("http://s/1.ts"), engine.loaded)
+        }
+
+    @Test
+    fun `foreground without a preceding stop keeps the running stream untouched`() =
+        runTest {
+            val vm = buildVm()
+
+            vm.lifecycle.onForeground()
+
+            assertEquals(listOf("http://s/1.ts"), engine.loaded)
+            assertEquals(0, engine.stops)
+            assertEquals(0, exitedToGuide)
+        }
+
+    @Test
+    fun `a background stop before any tune is a no-op`() =
+        runTest {
+            dao.channels.value = emptyList()
+            val vm = buildVm()
+
+            vm.lifecycle.onBackground()
+            vm.lifecycle.onForeground()
+
+            assertEquals(0, engine.stops)
+            assertEquals(0, exitedToGuide)
+            assertTrue(engine.loaded.isEmpty())
+        }
+
+    @Test
     fun `ok opens the info overlay which auto-hides after the timeout`() =
         runTest {
             val vm = buildVm()
