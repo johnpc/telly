@@ -12,6 +12,7 @@ import com.johncorser.telly.core.navigation.Route
 import com.johncorser.telly.core.ui.ScreenCrossfade
 import com.johncorser.telly.features.guide.GuideDeps
 import com.johncorser.telly.features.guide.GuideScreen
+import com.johncorser.telly.features.history.HistoryScreen
 import com.johncorser.telly.features.onboarding.WelcomeScreen
 import com.johncorser.telly.features.onboarding.WizardScreen
 import com.johncorser.telly.features.playback.PlaybackDeps
@@ -49,23 +50,24 @@ internal fun RootScreenRoutes(
                 )
             // BACK/TV-guide card leave playback for the guide as its
             // new root: BACK at guide root then exits the app with no
-            // confirmation, the device-verified free-tier BACK chain.
+            // confirmation, the device-verified free-tier BACK chain. The
+            // History card pushes the History screen so BACK pops straight
+            // back to the fullscreen player (history-round2 §3).
             Route.Playback ->
                 PlaybackScreen(
                     deps = playbackDeps,
-                    onExitToGuide = { navigator.replaceAll(Route.Guide()) },
-                    onExitToHistory = { navigator.replaceAll(Route.Guide(historySource = true)) },
+                    onExitToGuide = { navigator.replaceAll(Route.Guide) },
+                    onOpenHistory = { navigator.push(Route.History) },
                     onOpenSearch = { navigator.push(Route.Search) },
                     onOpenSettings = { navigator.push(Route.Settings) },
                 )
-            is Route.Guide ->
+            Route.Guide ->
                 GuideScreen(
                     deps = guideDeps,
                     onFullscreen = { navigator.push(Route.Playback) },
                     onOpenSearch = { navigator.push(Route.Search) },
                     onOpenSettings = { navigator.push(Route.Settings) },
                     settingsOpen = settingsOpen,
-                    historySource = target.historySource,
                 )
             // Tuning from search adopts the guide-root BACK chain: the
             // guide becomes the stack root with fullscreen playback above.
@@ -73,9 +75,16 @@ internal fun RootScreenRoutes(
                 SearchScreen(
                     deps = searchDeps,
                     onTuned = {
-                        navigator.replaceAll(Route.Guide())
+                        navigator.replaceAll(Route.Guide)
                         navigator.push(Route.Playback)
                     },
+                )
+            // A History row tunes by persisting lastChannelId (the search
+            // precedent); popping recomposes playback, which restores it.
+            Route.History ->
+                HistoryScreen(
+                    deps = playbackDeps,
+                    onTuned = { navigator.pop() },
                 )
         }
     }

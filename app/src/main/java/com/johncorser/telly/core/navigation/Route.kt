@@ -17,15 +17,15 @@ sealed interface Route {
     /** Fullscreen playback of the last-watched channel; the app's main screen. */
     data object Playback : Route
 
-    /**
-     * The TV guide: preview window + info pane over the programme grid.
-     * [historySource] opens it on the synthetic History source group
-     * (the info overlay's History card, capture 47 note).
-     */
-    data class Guide(
-        val historySource: Boolean = false,
-    ) : Route
+    /** The TV guide: preview window + info pane over the programme grid. */
+    data object Guide : Route
 
     /** TiviMate-style search screen (catalogue §4, captures 49-51). */
     data object Search : Route
+
+    /**
+     * The full-screen History list behind the info overlay's History card
+     * (history-round2 §3): pushed over playback, BACK pops to the player.
+     */
+    data object History : Route
 }

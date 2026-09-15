@@ -88,6 +88,50 @@ Local SDK note: `local.properties` must contain
 
 ## Decisions log
 
+- **2026-09-15** History rework to the corrected ground truth
+  (`docs/reference/sidebyside/history-round2/` + catalogue §3; SUPERSEDES the
+  2026-09-14 History-card bullet's implementation half — the old
+  `Route.Guide(historySource)` + synthetic History source group model is
+  DEAD and removed: `HistoryGroup`, the guide's history keys plumbing and
+  the `initialGroup`/`historySource` parameters are deleted, `Route.Guide`
+  is a plain object again). New model:
+  **(1) Info overlay shortcut row** = TV guide · History · one
+  **recent-channel card** per recently watched channel (newest first,
+  EXCLUDING the tuned channel) · **Clear** (rightmost, only while recent
+  cards exist). A recent card = channel LOGO over that channel's CURRENT
+  programme title in accent blue (never name/number); focusing one swaps
+  the bottom chevron for its `air-time + title` line (uidumps 02/04/05,
+  2 px = 1 dp; row = LazyRow so a long history scrolls). Feed =
+  `RecentRowFeed` (channels × watch_history events × current × instant →
+  nowNext), actions = `PlaybackRecents` on the ViewModel.
+  **(2) OK on a recent card TUNES it** (zap overlay, same path as a panel
+  row) — deliberate deviation per the charter precedent (cf. favorites/
+  add-source): the free reference opens Unlock Premium (history-round2 §2)
+  and telly has no premium tier.
+  **(3) OK on the History card pushes `Route.History`** — a distinct
+  full-screen "History" list (title + clear-all trash top-RIGHT per uidump
+  12, "No history" empty state) and **BACK pops to the fullscreen player**.
+  The reference's POPULATED list is not capturable (its standalone log was
+  empty that session), so rows follow telly's 39 dp channel-row idiom:
+  logo, name, the programme airing at the watch time (EPG lookup at
+  `watchedAtMs`), and the watch-time clock text; OK on a row tunes it via
+  the search precedent (persist `lastChannelId`, pop, playback restores) —
+  logged interpretation, on-device look TBD. The screen sits on the flat
+  app background, not over dimmed live video (single engine per route —
+  the Search-route deviation). Clear-all acts IMMEDIATELY, no GuidedStep
+  confirm: neither trash was activated in the read-only round, so no
+  confirm is evidenced.
+  **(4) ONE data source, documented simplification:** the reference keeps
+  the recent-cards row and the standalone History log as SEPARATE sources
+  (README note); telly feeds both from the existing `watch_history` table
+  (recent row = newest-first minus current; History screen = the full
+  capped list), so the info-row Clear card and the screen's clear-all both
+  empty that one table. Recording in `TuneController.tune` is untouched
+  (CAP 30 — the reference cap remains uncapturable). Gherkin: the
+  watch-and-zap History scenarios rewritten to this model (recent cards,
+  tune deviation, Clear, History screen list/order/relaunch/clear-all,
+  BACK → player). Verified locally (quality.sh); on-device legs pending.
+
 - **2026-09-15** Explicit EPG source configuration (final-sweep P2-1). The
   corpus PROVES both halves: the wizard HAS an EPG step (capture 13 +
   uidump 13 — title "EPG URL", guidance "Enter EPG URL for the playlist.

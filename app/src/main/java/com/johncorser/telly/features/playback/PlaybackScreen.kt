@@ -30,7 +30,7 @@ import kotlinx.coroutines.cancel
 fun PlaybackScreen(
     deps: PlaybackDeps,
     onExitToGuide: () -> Unit = {},
-    onExitToHistory: () -> Unit = {},
+    onOpenHistory: () -> Unit = {},
     onOpenSearch: () -> Unit = {},
     onOpenSettings: () -> Unit = {},
 ) {
@@ -59,7 +59,7 @@ fun PlaybackScreen(
                 history = deps.sources.history,
                 scope = scope,
                 onExitToGuide = onExitToGuide,
-                onExitToHistory = onExitToHistory,
+                onOpenHistory = onOpenHistory,
                 openSearch = onOpenSearch,
             )
         }

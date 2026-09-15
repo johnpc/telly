@@ -40,7 +40,7 @@ class PlaybackViewModel(
     history: WatchHistory,
     scope: CoroutineScope,
     onExitToGuide: () -> Unit = {},
-    onExitToHistory: () -> Unit = {},
+    onOpenHistory: () -> Unit = {},
     private val openSearch: () -> Unit = {},
 ) {
     private val clock = env.time.clock
@@ -75,6 +75,16 @@ class PlaybackViewModel(
     }
 
     private val commands = PlaybackCommands(tuner, overlays, panel, instant, clock, onExitToGuide)
+
+    /** The info-row recent-channel cards + Clear (history-round2 §1). */
+    val recents =
+        PlaybackRecents(
+            feed = recentRowFeed(env, tuner, history, instant, scope),
+            history = history,
+            scope = scope,
+            tuneAndZap = { card -> tuneFromPanel(card.channel) },
+            keepAlive = overlays::keepAlive,
+        )
 
     /** Resume after a background stop leaves fullscreen for the guide, like the reference (round7 P2). */
     val lifecycle = PlaybackLifecycle(tuner, recover = onExitToGuide)
@@ -115,8 +125,8 @@ class PlaybackViewModel(
     /** BACK at bare playback + the overlay's TV-guide card both leave here. */
     val exitToGuide: () -> Unit = onExitToGuide
 
-    /** The overlay's History card: the guide with History as source group. */
-    val exitToHistory: () -> Unit = onExitToHistory
+    /** The overlay's History card pushes the History screen (history-round2 §3). */
+    val openHistory: () -> Unit = onOpenHistory
 
     /** The quick-bar's Channels list opens the panel at the tuned row. */
     fun openPanel() = commands.openPanel()

@@ -22,13 +22,16 @@ class WatchHistoryDaoTest {
     }
 
     @Test
-    fun `keys come back newest-first and re-watching dedupes to the most recent`() =
+    fun `events come back newest-first and re-watching dedupes to the most recent`() =
         runTest {
             dao.upsert(WatchHistoryEntity("news-one", 1_000L))
             dao.upsert(WatchHistoryEntity("sports-arena", 2_000L))
             dao.upsert(WatchHistoryEntity("news-one", 3_000L))
 
-            assertEquals(listOf("news-one", "sports-arena"), dao.observeKeys().first())
+            assertEquals(
+                listOf(WatchHistoryEntity("news-one", 3_000L), WatchHistoryEntity("sports-arena", 2_000L)),
+                dao.observeEvents().first(),
+            )
         }
 
     @Test
@@ -38,6 +41,19 @@ class WatchHistoryDaoTest {
 
             dao.trimTo(3)
 
-            assertEquals(listOf("channel-5", "channel-4", "channel-3"), dao.observeKeys().first())
+            assertEquals(
+                listOf("channel-5", "channel-4", "channel-3"),
+                dao.observeEvents().first().map { it.channelKey },
+            )
+        }
+
+    @Test
+    fun `clear empties the table`() =
+        runTest {
+            dao.upsert(WatchHistoryEntity("news-one", 1_000L))
+
+            dao.clear()
+
+            assertEquals(emptyList<WatchHistoryEntity>(), dao.observeEvents().first())
         }
 }

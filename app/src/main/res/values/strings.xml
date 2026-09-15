@@ -36,7 +36,12 @@
 
     <string name="playback_card_tv_guide">TV guide</string>
     <string name="playback_card_history">History</string>
+    <string name="playback_card_clear">Clear</string>
     <string name="playback_coming_soon">Coming soon to telly</string>
+
+    <string name="history_title">History</string>
+    <string name="history_empty">No history</string>
+    <string name="history_clear_all">Clear history</string>
 
     <string name="search_hint">Speak to search</string>
     <string name="search_history">Search history</string>

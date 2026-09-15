@@ -3,9 +3,7 @@ package com.johncorser.telly.features.guide
 import com.johncorser.telly.features.guide.GuideTestData.at
 import com.johncorser.telly.features.guide.GuideTestData.nowMs
 import com.johncorser.telly.features.guide.GuideTestData.utc
-import com.johncorser.telly.features.history.HistoryGroup
 import com.johncorser.telly.features.history.WatchHistory
-import com.johncorser.telly.features.history.db.WatchHistoryEntity
 import com.johncorser.telly.features.panel.PanelViewModel
 import com.johncorser.telly.features.playback.PlaybackEnv
 import com.johncorser.telly.features.playback.PlaybackTime
@@ -67,7 +65,7 @@ class GuideControllerTest {
     private val ticks = MutableSharedFlow<Unit>()
     private val historyDao = FakeWatchHistoryDao()
 
-    private fun TestScope.buildController(initialGroup: String = PanelViewModel.ALL_CHANNELS): GuideController =
+    private fun TestScope.buildController(): GuideController =
         GuideController(
             env =
                 PlaybackEnv(
@@ -86,13 +84,7 @@ class GuideControllerTest {
                     onOpenSearch = {},
                     onOpenSettings = {},
                 ),
-            initialGroup = initialGroup,
         )
-
-    private suspend fun watched(
-        tvgId: String,
-        atMs: Long,
-    ) = historyDao.upsert(WatchHistoryEntity(tvgId, atMs))
 
     private fun focusedTitle(controller: GuideController): String? =
         controller.focus.value
@@ -399,50 +391,18 @@ class GuideControllerTest {
     }
 
     @Test
-    fun `the history source group opens selected with newest-first rows renumbered from one`() {
+    fun `the groups column never lists a history group`() {
         runTest {
-            watched("tvg-1", at(14, 0))
-            watched("tvg-3", at(14, 20))
-
-            val controller = buildController(initialGroup = HistoryGroup.NAME)
-
-            assertEquals(HistoryGroup.NAME, controller.selectedGroup.value)
-            assertEquals(listOf("Sports Arena", "News One"), controller.rows.value.map { it.channel.source.name })
-            assertEquals(listOf(1, 2), controller.rows.value.map { it.displayNumber })
-            assertEquals("Boxing Classics", focusedTitle(controller))
-        }
-    }
-
-    @Test
-    fun `history leads the groups column only while it is the source group`() {
-        runTest {
-            watched("tvg-1", at(14, 0))
-            val controller = buildController(initialGroup = HistoryGroup.NAME)
-
-            assertEquals(
-                listOf("History", "Favorites", "All channels", "News", "Sports", "Music"),
-                controller.groups.value,
-            )
-
-            controller.selectGroup("Sports")
+            val controller = buildController()
 
             assertEquals(
                 listOf("Favorites", "All channels", "News", "Sports", "Music"),
                 controller.groups.value,
             )
+
+            controller.selectGroup("Sports")
+
             assertEquals(listOf(1), controller.rows.value.map { it.displayNumber })
-        }
-    }
-
-    @Test
-    fun `history keys without a matching channel drop from the rows`() {
-        runTest {
-            watched("tvg-gone", at(14, 30))
-            watched("tvg-2", at(14, 0))
-
-            val controller = buildController(initialGroup = HistoryGroup.NAME)
-
-            assertEquals(listOf("News One HD"), controller.rows.value.map { it.channel.source.name })
         }
     }
 
