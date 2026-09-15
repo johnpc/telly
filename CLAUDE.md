@@ -382,3 +382,27 @@ Local SDK note: `local.properties` must contain
   one-line layout. Two-pane geometry verified within a few px (P3 nits
   logged). Acceptance legs after fixes: search 12/12, tv-guide 16/16
   (one steps-layer anchor fix), channel-panel 13/13.
+- **2026-09-14** Round-7 P2/P3 follow-ups (JVM-verified, on-device pending):
+  **(1) Search DOWN focus memory** — `SearchFocusMemory` (ViewModel state)
+  remembers the last results-area node D-pad focus visited (Channels card /
+  Programs master card / airing row, identity-keyed via a sealed `Node`);
+  `searchRestoreTarget` pins one restore `FocusRequester` onto the matching
+  composed node and the query bar's DOWN tries remembered → first-node →
+  spatial (`SearchFocusMemory.targets`), so the round-7-verified fresh
+  landings are the fallback. A new result batch clears the memory (the
+  reference's post-change behavior is uncaptured); re-typing the same query
+  keeps it (StateFlow dedupe).
+  **(2) Undimmed originating row under the guide sheet** — the reference
+  dims everything EXCEPT the long-OK row (round7 screencaps: row pixels
+  identical rest vs sheet-open, white outline intact). `GuideFocusMemory`
+  now keeps the origin channel id past the restore; pure
+  `GuideDimExemption.bandTopDp` maps it to the CURRENT row's fixed-geometry
+  band (GRID_TOP 234 dp + 39 dp pitch, null off-viewport/vanished) and
+  `GuideScreenMenuScrim` punches the band out of the shared scrim with
+  `BlendMode.Clear` on an offscreen layer, lingering ~300 ms through the
+  scrim fade-out. Guide host only: the panel host keeps the uniform scrim
+  (no grid rows behind it; evidence covers the guide).
+  **(3) P3 tokens** — Programs two-pane top inset `programsTop` 22 dp
+  (was shelfTop 14) and `TellyScreenTimesLine` gained a `fontSize`
+  parameter (default 15 sp unchanged elsewhere; search airing rows pass
+  13 sp, detail card 14 sp).

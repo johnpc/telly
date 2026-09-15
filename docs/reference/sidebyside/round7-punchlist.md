@@ -16,20 +16,22 @@ timings). Fixed items landed on main in this round; the rest are logged here.
 | 7 | Detail-card title wrapped to 2 lines | theme 0.5 sp tracking | `letterSpacing = 0.sp` — same string now fits one line like the reference |
 | 8 | tv-guide acceptance step crash (steps layer) | "at roughly the same time" with no prior anchor threw in `FixtureServer.nowProgramme` | `GuideSteps.anchorOrNow()` defaults to now on first use |
 
+## Fixed after round 7 (JVM-verified; on-device confirmation pending)
+
+| # | Item | Was | Now |
+| --- | --- | --- | --- |
+| 9 | DOWN-from-bar focus memory with a visited, scrolled shelf (P2, `round7/10-tm-down-scrolled-shelf-focus-memory.png`) | `moveDownFromBar` always requested card 1 | `SearchFocusMemory` in the ViewModel remembers the last results-area node that held D-pad focus (Channels card / Programs master card / airing row, identity-keyed); the query bar's DOWN tries the remembered node's `FocusRequester` first and falls back to the round-7-verified fresh landing (first card, else first airing row) when nothing was visited or the node left composition. A new result batch clears the memory (post-change behavior is uncaptured). e2e scenario added (existing steps only) |
+| 10 | Originating guide row dimmed under the sheet (P2, `round7/02-*`) | fullscreen 0x99 scrim dimmed the whole grid uniformly | scrim cut-out: `GuideDimExemption.bandTopDp` maps the sheet's origin channel (persisted by `GuideFocusMemory` past the restore) to its CURRENT full-width 39 dp row band, and `GuideScreenMenuScrim` punches it out of the shared scrim (`BlendMode.Clear` over an offscreen layer), lingering through the scrim's ~300 ms fade-out. The white focused-cell outline stays visible at full brightness like the reference. Guide host only — the round-7 evidence covers the guide grid; the 5.2.0 free build has no separate panel host and telly's panel has no grid rows behind its sheet, so the panel keeps the uniform scrim |
+| 11 | Programs lanes ~16 px high inside the section (P3) | two-pane content shared the shelf's 14 dp top inset | `SearchScreenDims.programsTop` = 22 dp (shelfTop + 8 dp) on the Programs two-pane row |
+| 12 | Airing-row time line a font size up (P3, 256 vs 209 px) | shared `TellyScreenTimesLine` hardcoded 15 sp | `fontSize` parameter (default 15 sp, so overlay/panel/guide are untouched); `SearchScreenAirTime` passes its own size through — 13 sp on the rows, 14 sp on the detail card (now consistent with its bare-times branch) |
+
+On-device follow-ups for the new fixes: confirm the restored-card behavior with a
+physically scrolled shelf + the IME/focus interaction of the new search scenario;
+eyeball the undimmed row band (full width incl. channel cell, no seam at the band
+edges during the scrim fades); confirm the rows-lane/time-size pixels against tm.
+
 ## P2 — logged
 
-- **DOWN-from-bar focus memory with a visited, scrolled shelf.** Reference: after
-  focusing a card and scrolling the Channels shelf (query "h", RIGHT×8), UP then DOWN
-  RESTORES the last-focused card with the shelf still scrolled
-  (`round7/10-tm-down-scrolled-shelf-focus-memory.png`) — leanback focus memory.
-  telly always requests card 1 (correct for the fresh-batch case, which is what
-  round 6 measured). Needs a focus-memory pass (Compose `focusRestorer` or
-  screen-held state), not a one-liner; behavior after the results change underneath
-  the memory is still uncaptured.
-- **The originating guide row is NOT dimmed under the sheet.** TiviMate's sheet
-  backdrop dims everything EXCEPT the long-OK row (screencap: row-5 pixels identical
-  rest vs sheet-open, all other rows ×0.40). telly's fullscreen scrim dims the whole
-  grid uniformly. Needs a per-row dim (or scrim cut-out) in the grid layer.
 - **Stale guide clock + black preview after a long background.** After ~10+ min
   backgrounded (task-switched to TiviMate), telly's guide header clock read 6:28 PM at
   ~6:40 and the preview window stayed black until process restart; fresh cold start
@@ -37,9 +39,4 @@ timings). Fixed items landed on main in this round; the rest are logged here.
 
 ## P3 — logged (geometry nits, "news" side-by-side, `round7/06-*`)
 
-- telly's Programs rows lane sits ~16 px higher inside the section than the
-  reference (rows title y629 vs 668 with headers 18 px apart).
-- Airing-row time line renders wider than the reference (256 vs 209 px for the same
-  16-char string) — the shared `TellyScreenTimesLine` range font is a size up from
-  tm's ~13 sp; shared with the guide info pane, so left alone this round.
 - TiviMate quick-bar / IME positioning items from earlier rounds unchanged.
