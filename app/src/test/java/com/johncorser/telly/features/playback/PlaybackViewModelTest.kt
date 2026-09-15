@@ -40,7 +40,7 @@ class PlaybackViewModelTest {
     private val historyDao = FakeWatchHistoryDao()
 
     private var exitedToGuide = 0
-    private var exitedToHistory = 0
+    private var openedHistory = 0
     private var now = 1_000_000L
 
     private fun TestScope.buildVm(
@@ -61,7 +61,7 @@ class PlaybackViewModelTest {
             history = WatchHistory(historyDao, clock),
             scope = CoroutineScope(SupervisorJob() + UnconfinedTestDispatcher(testScheduler)),
             onExitToGuide = { exitedToGuide += 1 },
-            onExitToHistory = { exitedToHistory += 1 },
+            onOpenHistory = { openedHistory += 1 },
         )
 
     @Test
@@ -498,15 +498,66 @@ class PlaybackViewModelTest {
         }
 
     @Test
-    fun `the overlay's History card leaves for the guide's history group`() =
+    fun `the overlay's History card pushes the History screen`() =
         runTest {
             val vm = buildVm()
             vm.onKey(PlaybackKey.OK)
 
-            vm.exitToHistory()
+            vm.openHistory()
 
-            assertEquals(1, exitedToHistory)
+            assertEquals(1, openedHistory)
             assertEquals(0, exitedToGuide)
+        }
+
+    @Test
+    fun `recent cards list watched channels newest-first without the playing one`() =
+        runTest {
+            programs.programs.value =
+                listOf(
+                    testProgram("tvg-1", 0, 2_000_000, "Business Hour", episode = "S1 E7"),
+                    testProgram("tvg-2", 0, 2_000_000, "The Daily Brief"),
+                )
+            val vm = buildVm()
+
+            now = 1_000_001L
+            vm.onKey(PlaybackKey.CHANNEL_UP)
+            now = 1_000_002L
+            vm.onKey(PlaybackKey.CHANNEL_UP)
+
+            assertEquals(3L, vm.current.value?.id)
+            assertEquals(listOf(2L, 1L), vm.recents.cards.value.map { it.channel.id })
+            assertEquals(listOf("The Daily Brief", "Business Hour. S1 E7"), vm.recents.cards.value.map { it.nowTitle })
+            assertEquals("12:00 — 12:33 AM", vm.recents.cards.value[0].nowRange)
+        }
+
+    @Test
+    fun `ok on a recent card tunes it with the zap overlay - the documented deviation`() =
+        runTest {
+            val vm = buildVm()
+            vm.onKey(PlaybackKey.CHANNEL_UP)
+            val card = vm.recents.cards.value.first()
+
+            vm.recents.tune(card)
+
+            assertEquals(card.channel.id, vm.current.value?.id)
+            assertEquals(PlaybackOverlay.ZapInfo, vm.overlay.value)
+            // The freshly tuned channel leaves the recent row.
+            assertFalse(vm.recents.cards.value.any { it.channel.id == card.channel.id })
+        }
+
+    @Test
+    fun `the clear card empties the watch history and keeps the overlay alive`() =
+        runTest {
+            val vm = buildVm()
+            vm.onKey(PlaybackKey.CHANNEL_UP)
+            vm.onKey(PlaybackKey.OK)
+            assertEquals(1, vm.recents.cards.value.size)
+
+            vm.recents.clear()
+
+            assertEquals(emptyList<RecentCard>(), vm.recents.cards.value)
+            assertEquals(emptyMap<String, Long>(), historyDao.events.value)
+            assertEquals(PlaybackOverlay.Info, vm.overlay.value)
         }
 
     @Test

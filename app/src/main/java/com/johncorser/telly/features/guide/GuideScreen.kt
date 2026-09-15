@@ -35,11 +35,10 @@ fun GuideScreen(
     onOpenSearch: () -> Unit = {},
     onOpenSettings: () -> Unit = {},
     settingsOpen: Boolean = false,
-    historySource: Boolean = false,
 ) {
     val engine = remember { deps.playback.engineFactory() }
     val callbacks = remember { GuideCallbacks(onFullscreen, onOpenSearch, onOpenSettings) }
-    val controller = rememberGuideController(deps, engine, callbacks, historySource)
+    val controller = rememberGuideController(deps, engine, callbacks)
     val detectors = remember { GuideScreenKeyDetectors() }
     val layer by controller.layer.collectAsState()
     // Background/resume: stop the preview stream on STOP, re-seed the clock

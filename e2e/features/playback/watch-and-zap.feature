@@ -67,24 +67,49 @@ Feature: Watch live TV and zap between channels
     When I press back
     Then the TV guide opens with the programme grid
 
-  # The History card (capture 34: second 150x110 card, clock-with-arrow
-  # icon). Capture 47's note: OK on it "opens the same overlay (with History
-  # as source group when it exists)". Capture 48's uidump — taken right
-  # after the press — is bare playback (zero text nodes, one focused
-  # full-screen ViewGroup): 5.2.0 free has no History screen and no
-  # persistent History group (capture 25 lists only Favorites / All
-  # channels / News / Sports / Movies / Kids / Music). telly honors the
-  # documented intent: the card lands on the guide with a synthetic,
-  # recently-watched History source group.
+  # The corrected History model (history-round2; supersedes the capture-48
+  # guide-with-History-group reading): the info overlay's shortcut row is
+  # TV guide · History · recent-channel cards · Clear. A recent card shows
+  # the channel LOGO + its CURRENT programme title; focusing it adds an
+  # air-time + title line. OK on the History card opens a DISTINCT
+  # full-screen "History" list (title + clear-all trash top-right,
+  # "No history" empty state); BACK returns to the fullscreen player.
+  # Deliberate deviation: the free reference opens Unlock Premium on a
+  # recent card; telly tunes to that channel.
 
-  Scenario: The History card opens the guide on the recently-watched channels
+  Scenario: The info overlay shows recent-channel cards and the Clear card
+    Given I zapped to channel 2 "News One HD"
+    And I zapped to channel 3 "News One +1"
+    When I press ok
+    Then I see 2 recent-channel cards with the current programmes of "News One HD" and "News One"
+    And I see the "Clear" card
+    When I focus the first recent-channel card
+    Then the focused recent card shows the air time of "News One HD"
+
+  Scenario: OK on a recent-channel card tunes to it
+    Given I zapped to channel 2 "News One HD"
+    When I press ok
+    And I select the first recent-channel card
+    Then playback switches to channel 1 "News One"
+
+  Scenario: The Clear card empties the watch history
+    Given I zapped to channel 2 "News One HD"
+    When I press ok
+    And I select the "Clear" card
+    Then no recent-channel cards are visible
+    When I select the "History" card
+    Then the History screen opens
+    And I see "No history"
+
+  Scenario: The History card opens the full-screen History list and back returns to the player
     Given I zapped to channel 2 "News One HD"
     And I zapped to channel 3 "News One +1"
     When I press ok
     And I select the "History" card
-    Then the TV guide opens with the programme grid
-    And "History" is the selected group
-    And the channels column lists exactly "News One +1", "News One HD", "News One"
+    Then the History screen opens
+    And the History screen lists exactly "News One +1", "News One HD", "News One"
+    When I press back
+    Then no chrome is visible over the video
 
   Scenario: History is newest-first and lists each channel once
     Given I zapped to channel 2 "News One HD"
@@ -92,41 +117,28 @@ Feature: Watch live TV and zap between channels
     And I zapped to channel 2 "News One HD"
     When I press ok
     And I select the "History" card
-    Then the channels column lists exactly "News One HD", "News One +1", "News One"
-
-  Scenario: History channel numbers restart from 1
-    Given I zapped to channel 7 "Sports Arena"
-    When I press ok
-    And I select the "History" card
-    Then the "Sports Arena" row shows number 1
-    And the "News One" row shows number 2
+    Then the History screen lists exactly "News One HD", "News One +1", "News One"
 
   Scenario: History survives a relaunch
     Given I zapped to channel 7 "Sports Arena"
     When I relaunch telly
     And I press ok
     And I select the "History" card
-    Then the channels column lists exactly "Sports Arena", "News One"
+    Then the History screen lists exactly "Sports Arena", "News One"
 
-  Scenario: The groups column shows History only while it is the source group
-    When I press ok
-    And I select the "TV guide" card
-    And I press dpad left
-    Then the groups column lists "Favorites", "All channels", "News", "Sports", "Movies", "Kids", "Music"
-    And the groups column does not list "History"
-    When I press back
-    And I press ok
-    And I select the "History" card
-    And I press dpad left
-    Then the groups column lists "History", "Favorites", "All channels", "News", "Sports", "Movies", "Kids", "Music"
-    When I select "Sports"
-    Then the "Sports Arena" row shows number 1
-
-  Scenario: Back from the History guide exits the app, like any guide root
+  Scenario: OK on a History row tunes that channel
+    Given I zapped to channel 2 "News One HD"
     When I press ok
     And I select the "History" card
-    And I press back
-    Then telly exits to the launcher
+    And I select the History row "News One"
+    Then playback starts fullscreen on channel 1 "News One"
+
+  Scenario: The History screen's clear-all empties the history immediately
+    Given I zapped to channel 2 "News One HD"
+    When I press ok
+    And I select the "History" card
+    And I select the History clear-all icon
+    Then I see "No history"
 
   # Multiview (multiview-round captures + multiview-spec.md). The free
   # reference is a single-pane teaser whose every add/change selection

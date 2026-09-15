@@ -3,8 +3,6 @@ package com.johncorser.telly.features.guide
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.remember
-import com.johncorser.telly.features.history.HistoryGroup
-import com.johncorser.telly.features.panel.PanelViewModel
 import com.johncorser.telly.features.playback.PlaybackEnv
 import com.johncorser.telly.features.playback.PlaybackTime
 import com.johncorser.telly.features.player.Media3PlayerEngine
@@ -19,7 +17,6 @@ internal fun rememberGuideController(
     deps: GuideDeps,
     engine: Media3PlayerEngine,
     callbacks: GuideCallbacks,
-    historySource: Boolean = false,
 ): GuideController {
     // A dedicated main-thread scope instead of rememberCoroutineScope(): the
     // controller drives ExoPlayer (main-thread-affine), so its coroutines
@@ -40,7 +37,6 @@ internal fun rememberGuideController(
                 pastDays = deps.pastDays,
                 scope = scope,
                 callbacks = callbacks,
-                initialGroup = if (historySource) HistoryGroup.NAME else PanelViewModel.ALL_CHANNELS,
             )
         }
     DisposableEffect(Unit) {

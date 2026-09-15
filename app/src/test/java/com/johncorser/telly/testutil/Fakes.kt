@@ -205,10 +205,15 @@ class FakeWatchHistoryDao : WatchHistoryDao {
         events.update { it + (event.channelKey to event.watchedAtMs) }
     }
 
-    override fun observeKeys(): Flow<List<String>> = events.map(::ordered)
+    override fun observeEvents(): Flow<List<WatchHistoryEntity>> =
+        events.map { map -> ordered(map).map { key -> WatchHistoryEntity(key, map.getValue(key)) } }
 
     override suspend fun trimTo(cap: Int) {
         events.update { map -> ordered(map).take(cap).associateWith(map::getValue) }
+    }
+
+    override suspend fun clear() {
+        events.value = emptyMap()
     }
 }
 

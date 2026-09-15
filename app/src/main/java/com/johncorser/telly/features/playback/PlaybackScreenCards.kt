@@ -1,91 +1,72 @@
 package com.johncorser.telly.features.playback
 
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.lazy.LazyRow
+import androidx.compose.foundation.lazy.items
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.Alignment
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.focusRequester
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
-import androidx.tv.material3.ClickableSurfaceDefaults
-import androidx.tv.material3.Icon
-import androidx.tv.material3.Surface
-import androidx.tv.material3.Text
 import com.johncorser.telly.R
-import com.johncorser.telly.core.design.TELLY_OVERLAY_CARD
-import com.johncorser.telly.core.design.TELLY_OVERLAY_CARD_FOCUSED
-import com.johncorser.telly.core.ui.FocusScreenDefaults
 import com.johncorser.telly.core.ui.rememberAutoFocus
 
-/** "TV guide" + "History" shortcut cards; TV guide takes focus (capture 34). */
-@Composable
-internal fun PlaybackScreenCards(
-    onGuide: () -> Unit,
-    onHistory: () -> Unit,
-) {
-    val firstFocus = rememberAutoFocus()
-    Row(
-        Modifier.padding(start = 32.dp),
-        horizontalArrangement = Arrangement.spacedBy(2.dp),
-    ) {
-        PlaybackScreenCard(
-            label = stringResource(R.string.playback_card_tv_guide),
-            icon = R.drawable.ic_card_guide,
-            onClick = onGuide,
-            modifier = Modifier.focusRequester(firstFocus),
-        )
-        PlaybackScreenCard(
-            label = stringResource(R.string.playback_card_history),
-            icon = R.drawable.ic_card_history,
-            onClick = onHistory,
-        )
-    }
-}
-
 /**
- * Focused = lighter dark-grey fill with WHITE content, not the app-wide
- * white pill (round3 item 8: #252A2D focused / #181E20 resting).
+ * The shortcut row (history-round2 §1): TV guide · History · one card per
+ * recently watched channel · Clear (only with recent cards). TV guide takes
+ * focus (capture 34); the row scrolls when history outgrows the screen.
  */
 @Composable
-private fun PlaybackScreenCard(
-    label: String,
-    icon: Int,
-    onClick: () -> Unit,
-    modifier: Modifier = Modifier,
+internal fun PlaybackScreenCards(
+    recents: List<RecentCard>,
+    actions: PlaybackCardActions,
+    onRecentFocus: (RecentCard, Boolean) -> Unit,
 ) {
-    Surface(
-        onClick = onClick,
-        modifier = modifier.size(width = 140.dp, height = 103.dp),
-        shape = FocusScreenDefaults.shape(),
-        scale = FocusScreenDefaults.scale(),
-        colors =
-            ClickableSurfaceDefaults.colors(
-                containerColor = Color(TELLY_OVERLAY_CARD),
-                contentColor = Color.White,
-                focusedContainerColor = Color(TELLY_OVERLAY_CARD_FOCUSED),
-                focusedContentColor = Color.White,
-                pressedContainerColor = Color(TELLY_OVERLAY_CARD_FOCUSED),
-                pressedContentColor = Color.White,
-            ),
+    val firstFocus = rememberAutoFocus()
+    // Clear unmounts the focused card row tail; focus falls back to TV guide.
+    LaunchedEffect(recents.isEmpty()) {
+        if (recents.isEmpty()) runCatching { firstFocus.requestFocus() }
+    }
+    LazyRow(
+        contentPadding = PaddingValues(start = 32.dp),
+        horizontalArrangement = Arrangement.spacedBy(2.dp),
     ) {
-        Column(
-            Modifier.fillMaxSize(),
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.Center,
-        ) {
-            Icon(painter = painterResource(icon), contentDescription = null, modifier = Modifier.size(28.dp))
-            Spacer(Modifier.height(10.dp))
-            Text(text = label, fontSize = 15.sp)
+        item {
+            PlaybackScreenCard(
+                label = stringResource(R.string.playback_card_tv_guide),
+                icon = R.drawable.ic_card_guide,
+                onClick = actions.onGuide,
+                modifier = Modifier.focusRequester(firstFocus),
+            )
+        }
+        item {
+            PlaybackScreenCard(
+                label = stringResource(R.string.playback_card_history),
+                icon = R.drawable.ic_card_history,
+                onClick = actions.onHistory,
+            )
+        }
+        items(recents, key = { it.channel.id }) { card ->
+            PlaybackScreenRecentCard(card, onClick = { actions.onRecent(card) }, onFocus = onRecentFocus)
+        }
+        if (recents.isNotEmpty()) {
+            item {
+                PlaybackScreenCard(
+                    label = stringResource(R.string.playback_card_clear),
+                    icon = R.drawable.ic_search_trash,
+                    onClick = actions.onClear,
+                )
+            }
         }
     }
 }
+
+/** The row's activation callbacks, bundled so hosts stay readable. */
+internal class PlaybackCardActions(
+    val onGuide: () -> Unit,
+    val onHistory: () -> Unit,
+    val onRecent: (RecentCard) -> Unit,
+    val onClear: () -> Unit,
+)

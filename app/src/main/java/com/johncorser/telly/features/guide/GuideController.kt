@@ -25,7 +25,6 @@ class GuideController(
     private val pastDays: () -> Int,
     scope: CoroutineScope,
     private val callbacks: GuideCallbacks,
-    initialGroup: String = PanelViewModel.ALL_CHANNELS,
 ) {
     val zone = env.time.zone
 
@@ -38,11 +37,11 @@ class GuideController(
 
     /** Background stop + foreground re-seed/re-tune (round7 resume P2). */
     val lifecycle = PlaybackLifecycle(tuner, onForegrounded = ticker::reseed, recover = tuner::retune)
-    private val selected = MutableStateFlow(initialGroup)
+    private val selected = MutableStateFlow(PanelViewModel.ALL_CHANNELS)
     private val focusEngine = GuideFocusEngine(originMs, pastFloorDp = { GuideWindowMath.scrollFloorDp(pastDays()) })
     private val feed =
         GuideRowsFeed(
-            GuideRowsSources(tuner.channels, selected.asStateFlow(), history.keys),
+            GuideRowsSources(tuner.channels, selected.asStateFlow()),
             focusEngine.scrollX,
             env.epgRepository::programsFor,
             originMs,
@@ -51,7 +50,6 @@ class GuideController(
 
     val rows: StateFlow<List<GuideRow>> = feed.rows
 
-    /** History leads the column only while it is the source group (capture 25). */
     val groups: StateFlow<List<String>> = feed.groups
     val selectedGroup: StateFlow<String> = selected.asStateFlow()
     val focus: StateFlow<GuideFocus?> = focusEngine.focus

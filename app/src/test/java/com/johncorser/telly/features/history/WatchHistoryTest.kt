@@ -34,25 +34,30 @@ class WatchHistoryTest {
                 history.record(testChannel(index.toLong(), index + 1, "Channel $index"))
             }
 
-            val keys = history.keys.first()
-            assertEquals(WatchHistory.CAP, keys.size)
-            assertEquals("tvg-${WatchHistory.CAP + 1}", keys.first())
+            val events = history.events.first()
+            assertEquals(WatchHistory.CAP, events.size)
+            assertEquals("tvg-${WatchHistory.CAP + 1}", events.first().channelKey)
         }
 
     @Test
-    fun `the synthetic group orders channels by recency and drops unknown keys`() {
-        val channels = listOf(testChannel(1, 1, "News One"), testChannel(2, 2, "Sports Arena"))
+    fun `events come back newest-first`() =
+        runTest {
+            now = 1_000L
+            history.record(testChannel(1, 1, "News One"))
+            now = 2_000L
+            history.record(testChannel(2, 2, "Sports Arena"))
 
-        val ordered = HistoryGroup.channelsIn(listOf("tvg-2", "tvg-gone", "tvg-1"), channels)
-
-        assertEquals(listOf(2L, 1L), ordered.map { it.id })
-    }
+            assertEquals(listOf("tvg-2", "tvg-1"), history.events.first().map { it.channelKey })
+        }
 
     @Test
-    fun `the groups column gains History only while it is selected`() {
-        val names = listOf("Favorites", "All channels", "News")
+    fun `clear empties the one table behind both history surfaces`() =
+        runTest {
+            now = 1_000L
+            history.record(testChannel(1, 1, "News One"))
 
-        assertEquals(listOf("History") + names, HistoryGroup.columnFor(HistoryGroup.NAME, names))
-        assertEquals(names, HistoryGroup.columnFor("All channels", names))
-    }
+            history.clear()
+
+            assertEquals(emptyList<Any>(), history.events.first())
+        }
 }

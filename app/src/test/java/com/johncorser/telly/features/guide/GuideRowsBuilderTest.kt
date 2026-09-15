@@ -1,7 +1,6 @@
 package com.johncorser.telly.features.guide
 
 import com.johncorser.telly.features.guide.GuideTestData.at
-import com.johncorser.telly.features.history.HistoryGroup
 import com.johncorser.telly.features.panel.PanelViewModel
 import com.johncorser.telly.testutil.asFavorite
 import com.johncorser.telly.testutil.testChannel
@@ -25,10 +24,8 @@ class GuideRowsBuilderTest {
             testProgram("tvg-2", at(14, 0), at(17, 0), "Boxing Classics"),
         )
 
-    private fun build(
-        group: String,
-        historyKeys: List<String> = emptyList(),
-    ): List<GuideRow> = GuideRowsBuilder.build(GuideRowsInput(channels, group, historyKeys, span), programs)
+    private fun build(group: String): List<GuideRow> =
+        GuideRowsBuilder.build(GuideRowsInput(channels, group, span), programs)
 
     @Test
     fun `all channels keeps playlist numbers`() {
@@ -60,13 +57,5 @@ class GuideRowsBuilderTest {
         val silent = rows.last()
         assertTrue(silent.cells.isNotEmpty())
         assertTrue(silent.cells.none { it.hasInfo })
-    }
-
-    @Test
-    fun `the history group orders by watch recency and renumbers from one`() {
-        val rows = build(HistoryGroup.NAME, historyKeys = listOf("http://s/4.ts|Silent", "tvg-1", "tvg-9"))
-
-        assertEquals(listOf("Silent", "News One"), rows.map { it.channel.source.name })
-        assertEquals(listOf(1, 2), rows.map { it.displayNumber })
     }
 }
