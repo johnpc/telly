@@ -26,3 +26,6 @@ report/
 
 # Local side-by-side / acceptance run output
 artifacts/
+
+# release-local.sh output
+dist/
