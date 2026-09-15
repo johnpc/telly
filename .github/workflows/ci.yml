@@ -80,7 +80,7 @@ jobs:
         # One entry per e2e feature area (cucumber tag = @<feature>).
         # scripts/check-feature-coverage.mjs enforces that every
         # e2e/features/**/*.feature file is listed here.
-        feature: [add-playlist, epg-data, watch-and-zap, channel-panel, settings, tv-guide, search]
+        feature: [add-playlist, epg-data, watch-and-zap, channel-panel, settings, tv-guide, search, recording]
     # Emulator image: android-tv system images only ship x86_64 for API 36
     # (API 34 TV is 32-bit x86 / arm64 only — verified via sdkmanager), so
     # the acceptance suite runs on the API 36 TV image, matching targetSdk.

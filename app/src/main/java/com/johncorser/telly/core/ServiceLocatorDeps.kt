@@ -9,6 +9,7 @@ import com.johncorser.telly.features.multiview.MultiviewDeps
 import com.johncorser.telly.features.playback.PlaybackDeps
 import com.johncorser.telly.features.playback.PlaybackSources
 import com.johncorser.telly.features.player.Media3PlayerEngine
+import com.johncorser.telly.features.recording.recordingCenter
 import com.johncorser.telly.features.search.SearchDeps
 import com.johncorser.telly.features.search.SearchRepository
 import com.johncorser.telly.core.settings.SharedPrefsKeyValueStore as SettingsPrefsStore
@@ -28,6 +29,7 @@ fun ServiceLocator.playbackDeps(context: Context): PlaybackDeps =
         engineFactory = { Media3PlayerEngine.create(context.applicationContext) },
         clock = clock,
         parental = ParentalControls(settingsRepository(context)),
+        recording = recordingCenter(context),
     )
 
 /** Guide slice = the playback bundle + the settings the grid honors. */

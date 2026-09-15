@@ -20,6 +20,8 @@ import com.johncorser.telly.features.onboarding.WizardScreen
 import com.johncorser.telly.features.playback.PlaybackDeps
 import com.johncorser.telly.features.playback.PlaybackScreen
 import com.johncorser.telly.features.playlist.PlaylistRepository
+import com.johncorser.telly.features.recording.RecordingDeps
+import com.johncorser.telly.features.recording.RecordingsScreen
 import com.johncorser.telly.features.search.SearchDeps
 import com.johncorser.telly.features.search.SearchScreen
 
@@ -35,6 +37,7 @@ internal fun RootScreenRoutes(
     guideDeps: GuideDeps,
     searchDeps: SearchDeps,
     multiviewDeps: MultiviewDeps,
+    recordingDeps: RecordingDeps? = null,
 ) {
     ScreenCrossfade(baseRoute) { target ->
         when (target) {
@@ -64,6 +67,7 @@ internal fun RootScreenRoutes(
                     onOpenSearch = { navigator.push(Route.Search) },
                     onOpenSettings = { navigator.push(Route.Settings) },
                     onOpenMultiview = { navigator.push(Route.Multiview) },
+                    onOpenRecordings = { navigator.push(Route.Recordings) },
                 )
             // BACK at the pane grid exits to fullscreen playback of the
             // focused pane's channel (multiview-spec: exit chain).
@@ -74,6 +78,7 @@ internal fun RootScreenRoutes(
                     onFullscreen = { navigator.push(Route.Playback) },
                     onOpenSearch = { navigator.push(Route.Search) },
                     onOpenSettings = { navigator.push(Route.Settings) },
+                    onOpenRecordings = { navigator.push(Route.Recordings) },
                     settingsOpen = settingsOpen,
                 )
             // Tuning from search adopts the guide-root BACK chain: the
@@ -94,6 +99,9 @@ internal fun RootScreenRoutes(
                     deps = playbackDeps,
                     onTuned = { navigator.pop() },
                 )
+            // The DVR library (recording slice): BACK pops back to wherever
+            // it was opened from (quick-bar slot or the guide rail's icon).
+            Route.Recordings -> recordingDeps?.let { RecordingsScreen(deps = it) } ?: BootScreen()
         }
     }
 }

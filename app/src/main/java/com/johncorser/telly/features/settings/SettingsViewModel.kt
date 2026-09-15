@@ -33,7 +33,11 @@ class SettingsViewModel(
     internal val updater: PlaylistUpdater = graph.actions.updater
     internal val updateEpgNow: suspend () -> Unit = graph.actions.updateEpgNow
     internal val backup: SettingsBackupManager = graph.actions.backup
-    private val versionName: String = graph.versionName
+    internal val recordings = graph.actions.recordings
+    internal val versionName: String = graph.versionName
+
+    /** Bumped after actions that change derived rows (recording storage). */
+    internal val refresh = MutableStateFlow(0)
 
     internal val mutableState = MutableStateFlow(SettingsUiState())
     val state: StateFlow<SettingsUiState> = mutableState.asStateFlow()
@@ -57,8 +61,14 @@ class SettingsViewModel(
 
     /** The active sheet's rows (root section list when nothing is pushed). */
     val rows: StateFlow<List<SettingsRow>> =
-        combine(mutableState, playlistItems, epgSourceItems, settings.changes) { uiState, playlists, sources, _ ->
-            rowsFor(uiState.activePane, settings, playlists, versionName, sources)
+        combine(
+            mutableState,
+            playlistItems,
+            epgSourceItems,
+            settings.changes,
+            refresh,
+        ) { uiState, playlists, sources, _, _ ->
+            activeRows(uiState.activePane, playlists, sources)
         }.stateIn(scope, SharingStarted.Eagerly, emptyList())
 
     /** OK on a section row pushes its sheet over the root list. */

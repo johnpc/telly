@@ -264,10 +264,13 @@ class SettingsRowsTest {
     }
 
     @Test
-    fun `other pane is the four locked sub-screens and about matches capture 53`() {
+    fun `other pane unlocks Recording and about matches capture 53`() {
         val other = otherRows()
         assertEquals(listOf("Search", "Reminders", "Recording", "VOD"), titles(other))
-        other.forEach { assertTrue((it as SettingsRow.Value).locked) }
+        other.forEach { row ->
+            val value = row as SettingsRow.Value
+            assertEquals(value.title == "Recording", !value.locked)
+        }
 
         val about = aboutRows(s, "0.1.0")
         assertEquals(listOf("Send anonymous statistics to improve the app", "Privacy policy", "Version"), titles(about))

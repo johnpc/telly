@@ -6,6 +6,7 @@ import com.johncorser.telly.features.epg.EpgRepository
 import com.johncorser.telly.features.history.WatchHistory
 import com.johncorser.telly.features.player.Media3PlayerEngine
 import com.johncorser.telly.features.playlist.db.ChannelDao
+import com.johncorser.telly.features.recording.RecordingCenter
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
@@ -50,4 +51,6 @@ class PlaybackDeps(
     val engineFactory: () -> Media3PlayerEngine,
     val clock: () -> Long,
     val parental: ParentalControls? = null,
+    /** The DVR facade behind the sheet's Record rows (null in JVM tests). */
+    val recording: RecordingCenter? = null,
 )

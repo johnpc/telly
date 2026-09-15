@@ -2,6 +2,14 @@ package com.johncorser.telly.features.playback
 
 import com.johncorser.telly.features.panel.PanelRow
 import com.johncorser.telly.features.playlist.db.ChannelEntity
+import com.johncorser.telly.features.recording.RecordingMenu
+import com.johncorser.telly.features.recording.RecordingPrompt
+
+/** The two navigation callbacks the sheet's Search/Settings rows fire. */
+class PlaybackMenuNav(
+    val openSearch: () -> Unit = {},
+    val openSettings: () -> Unit = {},
+)
 
 /**
  * Executes the panel sheet's rows through the shared [PlayerMenuRouting]
@@ -16,9 +24,9 @@ class PlaybackMenuHandler(
     private val actions: ChannelActions,
     private val overlays: OverlayState,
     private val tuner: TuneController,
-    private val openSettings: () -> Unit = {},
-    private val openSearch: () -> Unit = {},
+    private val nav: PlaybackMenuNav = PlaybackMenuNav(),
     private val rowOf: (Long) -> PanelRow? = { null },
+    private val recording: () -> RecordingMenu? = { null },
 ) {
     /** Which sheet row BACK from a pushed screen re-focuses. */
     val sheetFocus = PlayerMenuFocus()
@@ -45,15 +53,32 @@ class PlaybackMenuHandler(
         val channel = menuChannel() ?: return
         sheetFocus.onActivated(item)
         when (PlayerMenuRouting.routeOf(item)) {
-            PlayerMenuRoute.SEARCH -> openScreen(openSearch)
-            PlayerMenuRoute.SETTINGS -> openScreen(openSettings)
+            PlayerMenuRoute.SEARCH -> openScreen(nav.openSearch)
+            PlayerMenuRoute.SETTINGS -> openScreen(nav.openSettings)
             PlayerMenuRoute.TOGGLE_FAVORITE -> toggleFavorite(channel)
             PlayerMenuRoute.HIDE_CHANNEL -> hide(channel)
-            PlayerMenuRoute.DESCRIPTION -> push { back -> description(channel, back) }
+            PlayerMenuRoute.DESCRIPTION -> push { back -> description(rowOf(channel.id), back) }
             PlayerMenuRoute.CHANNEL_OPTIONS ->
-                overlays.set(PlaybackOverlay.ChannelOptions(channel.source.name, back = afterAction()))
+                overlays.set(PlaybackOverlay.ChannelOptions(channel.source.name, back = afterAction(overlays.value)))
+            PlayerMenuRoute.RECORD -> record { it.onRecord(channel) }
+            PlayerMenuRoute.CUSTOM_RECORDING -> record { it.onCustomRecording(channel) }
             PlayerMenuRoute.COMING_SOON -> push { back -> PlaybackOverlay.ComingSoon(item.label, back) }
         }
+    }
+
+    /** Record rows act through the DVR menu (coming-soon while unwired). */
+    private fun record(action: (RecordingMenu) -> Unit) {
+        val menu = recording()
+        if (menu == null) {
+            push { back -> PlaybackOverlay.ComingSoon(PlayerMenuItem.RECORD.label, back) }
+        } else {
+            action(menu)
+        }
+    }
+
+    /** Maps DVR prompts onto overlays (the guide's controller does its own). */
+    fun onRecordingPrompt(prompt: RecordingPrompt) {
+        overlays.set(PlaybackRecordingPrompts.overlayFor(prompt, overlays.value))
     }
 
     /** All §41 pane rows are locked; any activation lands on coming-soon. */
@@ -71,37 +96,35 @@ class PlaybackMenuHandler(
         open()
     }
 
-    /** The sheet row's airing programme: title + synopsis (dump 40). */
-    private fun description(
-        channel: ChannelEntity,
-        back: PlaybackOverlay,
-    ): PlaybackOverlay {
-        val row = rowOf(channel.id)
-        return PlaybackOverlay.Description(
-            title = row?.nowTitle ?: PlayerMenu.NO_INFORMATION,
-            text = row?.description ?: PlayerMenu.NO_INFORMATION,
-            back = back,
-        )
-    }
-
     private fun toggleFavorite(channel: ChannelEntity) {
-        val next = afterAction()
+        val next = afterAction(overlays.value)
         actions.toggleFavorite(channel)
         overlays.set(next)
     }
 
     private fun hide(channel: ChannelEntity) {
-        val next = afterAction()
+        val next = afterAction(overlays.value)
         tuner.zapAwayFrom(channel)
         actions.hide(channel)
         overlays.set(next)
     }
-
-    /**
-     * Where a row that dismisses the sheet lands: the panel behind the
-     * channel menu, bare playback otherwise. Channel options shares this —
-     * the pane replaces the sheet, so its BACK target is the panel too.
-     */
-    private fun afterAction(): PlaybackOverlay =
-        if (overlays.value is PlaybackOverlay.ChannelMenu) PlaybackOverlay.Panel else PlaybackOverlay.None
 }
+
+/**
+ * Where a row that dismisses the sheet lands: the panel behind the channel
+ * menu, bare playback otherwise. Channel options shares this — the pane
+ * replaces the sheet, so its BACK target is the panel too.
+ */
+private fun afterAction(current: PlaybackOverlay): PlaybackOverlay =
+    if (current is PlaybackOverlay.ChannelMenu) PlaybackOverlay.Panel else PlaybackOverlay.None
+
+/** The sheet row's airing programme: title + synopsis (dump 40). */
+private fun description(
+    row: PanelRow?,
+    back: PlaybackOverlay,
+): PlaybackOverlay =
+    PlaybackOverlay.Description(
+        title = row?.nowTitle ?: PlayerMenu.NO_INFORMATION,
+        text = row?.description ?: PlayerMenu.NO_INFORMATION,
+        back = back,
+    )

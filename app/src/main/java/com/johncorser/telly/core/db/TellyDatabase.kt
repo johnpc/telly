@@ -14,15 +14,17 @@ import com.johncorser.telly.features.playlist.db.ChannelDao
 import com.johncorser.telly.features.playlist.db.ChannelEntity
 import com.johncorser.telly.features.playlist.db.PlaylistDao
 import com.johncorser.telly.features.playlist.db.PlaylistEntity
+import com.johncorser.telly.features.recording.db.RecordingDao
+import com.johncorser.telly.features.recording.db.RecordingEntity
 import com.johncorser.telly.features.search.db.SearchDao
 
 /** The single app database; schema JSON is exported to app/schemas. */
 @Database(
     entities = [
         PlaylistEntity::class, ChannelEntity::class, ProgramEntity::class,
-        WatchHistoryEntity::class, EpgSourceEntity::class,
+        WatchHistoryEntity::class, EpgSourceEntity::class, RecordingEntity::class,
     ],
-    version = 4,
+    version = 5,
     exportSchema = true,
 )
 abstract class TellyDatabase : RoomDatabase() {
@@ -37,6 +39,8 @@ abstract class TellyDatabase : RoomDatabase() {
     abstract fun searchDao(): SearchDao
 
     abstract fun watchHistoryDao(): WatchHistoryDao
+
+    abstract fun recordingDao(): RecordingDao
 
     companion object {
         /** v2 adds the programme `<sub-title>` column (round3 P0 item 1). */
@@ -72,6 +76,22 @@ abstract class TellyDatabase : RoomDatabase() {
                     db.execSQL(
                         "CREATE UNIQUE INDEX IF NOT EXISTS `index_epg_sources_playlistUrl_url` " +
                             "ON `epg_sources` (`playlistUrl`, `url`)",
+                    )
+                }
+            }
+
+        /** v5 adds the recordings table (DVR slice). RENUMBER-ME on merge. */
+        val MIGRATION_4_5 =
+            object : Migration(4, 5) {
+                override fun migrate(db: SupportSQLiteDatabase) {
+                    db.execSQL(
+                        "CREATE TABLE IF NOT EXISTS `recordings` " +
+                            "(`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, " +
+                            "`channelKey` TEXT NOT NULL, `channelName` TEXT NOT NULL, " +
+                            "`streamUrl` TEXT NOT NULL, `title` TEXT NOT NULL, " +
+                            "`filePath` TEXT NOT NULL, `startMs` INTEGER NOT NULL, " +
+                            "`plannedEndMs` INTEGER NOT NULL, `endMs` INTEGER, " +
+                            "`status` TEXT NOT NULL, `sizeBytes` INTEGER NOT NULL)",
                     )
                 }
             }

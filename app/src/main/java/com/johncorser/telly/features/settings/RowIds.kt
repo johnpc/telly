@@ -92,6 +92,11 @@ object RowIds {
     const val OTHER_RECORDING = "other.recording"
     const val OTHER_VOD = "other.vod"
 
+    // Recording pane (Other -> Recording, recording slice).
+    const val RECORDING_STORAGE_USED = "recording.storage_used"
+    const val RECORDING_FREE_SPACE = "recording.free_space"
+    const val RECORDING_DELETE_ALL = "recording.delete_all"
+
     // About.
     const val ABOUT_STATISTICS = "about.statistics"
     const val ABOUT_PRIVACY_POLICY = "about.privacy_policy"

@@ -4,6 +4,7 @@ import com.johncorser.telly.core.settings.ParentalControls
 import com.johncorser.telly.core.settings.SettingsRepository
 import com.johncorser.telly.features.epg.EpgSourceStore
 import com.johncorser.telly.features.playlist.PlaylistRepository
+import com.johncorser.telly.features.recording.RecordingSettingsHook
 import kotlinx.coroutines.CoroutineScope
 
 /** The imperative actions the settings tree can trigger. */
@@ -11,6 +12,8 @@ class SettingsActions(
     val updater: PlaylistUpdater,
     val updateEpgNow: suspend () -> Unit,
     val backup: SettingsBackupManager,
+    /** Other -> Recording pane (recording slice); null in JVM tests. */
+    val recordings: RecordingSettingsHook? = null,
 )
 
 /**

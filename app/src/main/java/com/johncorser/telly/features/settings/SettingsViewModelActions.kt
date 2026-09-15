@@ -27,7 +27,7 @@ internal fun SettingsViewModel.runAction(rowId: String) {
     }
 }
 
-/** Playlist-list and per-playlist actions. */
+/** Playlist-list, per-playlist and recording-pane actions. */
 private fun SettingsViewModel.runPlaylistAction(rowId: String) {
     when (rowId) {
         RowIds.ADD_PLAYLIST -> addPlaylist()
@@ -36,6 +36,8 @@ private fun SettingsViewModel.runPlaylistAction(rowId: String) {
         RowIds.PLAYLIST_ENABLE -> currentDetailUrl()?.let { flip(playlistEnabledSetting(it)) }
         RowIds.PLAYLIST_DELETE -> confirmDeleteOverlay()
         RowIds.PLAYLIST_NAME -> renameOverlay()
+        RowIds.OTHER_RECORDING -> push(SettingsPane.Recording)
+        RowIds.RECORDING_DELETE_ALL -> showOverlay(SettingsOverlay.ConfirmDeleteRecordings)
     }
 }
 

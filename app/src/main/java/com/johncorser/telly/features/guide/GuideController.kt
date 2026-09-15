@@ -7,6 +7,7 @@ import com.johncorser.telly.features.playback.PlaybackEnv
 import com.johncorser.telly.features.playback.PlaybackLifecycle
 import com.johncorser.telly.features.playback.TuneController
 import com.johncorser.telly.features.playlist.db.ChannelEntity
+import com.johncorser.telly.features.recording.RecordingMenu
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -64,13 +65,19 @@ class GuideController(
     /** Layers + the long-OK row context sheet (catalogue §3 38-42). */
     val menu =
         GuideMenuController(
-            actions = ChannelActions(env.channelDao, scope),
-            zapAway = tuner::zapAwayFrom,
+            channelActions = GuideSheetChannelActions(ChannelActions(env.channelDao, scope), tuner::zapAwayFrom),
             focusedRow = ::focusedRow,
             info = { info.value },
             callbacks = callbacks,
             focusMemory = GuideFocusMemory(focusEngine) { rows.value },
+            recording = { recordingMenu },
         )
+
+    /** The sheet/cell Record rows act through this (null while no DVR wired). */
+    val recordingMenu: RecordingMenu? =
+        env.hooks.recording?.let { center ->
+            RecordingMenu(center, scope, env.time.clock) { prompt -> menu.onRecordingPrompt(prompt) }
+        }
 
     val layer: StateFlow<GuideLayer> = menu.layer
 

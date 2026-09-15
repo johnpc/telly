@@ -20,6 +20,12 @@ enum class PlayerMenuRoute {
     /** Pushes the §41 "Channel options" pane, every row locked. */
     CHANNEL_OPTIONS,
 
+    /** Instant record of the channel (or Stop confirm while it records). */
+    RECORD,
+
+    /** The custom-recording form (channel prefilled, start + duration). */
+    CUSTOM_RECORDING,
+
     /** Unbuilt row: the branded coming-soon placeholder. */
     COMING_SOON,
 }
@@ -39,6 +45,8 @@ object PlayerMenuRouting {
             PlayerMenuItem.HIDE_CHANNEL -> PlayerMenuRoute.HIDE_CHANNEL
             PlayerMenuItem.PROGRAM_DESCRIPTION -> PlayerMenuRoute.DESCRIPTION
             PlayerMenuItem.CHANNEL_OPTIONS -> PlayerMenuRoute.CHANNEL_OPTIONS
+            PlayerMenuItem.RECORD -> PlayerMenuRoute.RECORD
+            PlayerMenuItem.CUSTOM_RECORDING -> PlayerMenuRoute.CUSTOM_RECORDING
             else -> PlayerMenuRoute.COMING_SOON
         }
 }

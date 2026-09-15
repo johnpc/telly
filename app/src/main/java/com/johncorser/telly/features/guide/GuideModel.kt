@@ -60,11 +60,24 @@ sealed interface GuideLayer {
     data class Description(
         val title: String,
         val text: String,
+        val back: GuideLayer = RowMenu,
     ) : GuideLayer
 
     /** "Channel options" pane, every row premium-locked (captures 41-42); it REPLACES the sheet, BACK → grid. */
     data class ChannelOptions(
         val channelName: String,
+    ) : GuideLayer
+
+    /** "Stop recording?" GuidedStep from a second Record (recording slice). */
+    data class RecordingStop(
+        val recordingId: Long,
+        val channelName: String,
+        val back: GuideLayer = Grid,
+    ) : GuideLayer
+
+    /** The custom-recording form; BACK returns to the invoking layer. */
+    data class CustomRecording(
+        val back: GuideLayer = Grid,
     ) : GuideLayer
 }
 
@@ -73,7 +86,8 @@ enum class GuideKey { OK, LONG_OK, MENU, BACK, UP, DOWN, LEFT, RIGHT, LONG_LEFT,
 
 /**
  * The five rows of the future-cell dropdown, verbatim from capture 27.
- * Each is an unbuilt feature: they open the branded coming-soon placeholder.
+ * Record / Custom recording are live (recording slice); the rest open the
+ * branded coming-soon placeholder until their slices ship.
  */
 enum class GuideCellAction(
     val label: String,

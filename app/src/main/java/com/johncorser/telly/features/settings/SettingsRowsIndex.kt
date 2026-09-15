@@ -6,6 +6,8 @@ import com.johncorser.telly.features.epg.EpgSource
 /**
  * Routes a sheet to its row builder — the whole captured settings tree.
  * A null pane is the root sheet: the nine captured sections (uidump 18).
+ * The Recording pane is built by the view model (it needs the DVR storage
+ * hook), so here it resolves to an empty list.
  */
 fun rowsFor(
     pane: SettingsPane?,
@@ -28,6 +30,7 @@ fun rowsFor(
                 .firstOrNull { it.id == pane.sourceId }
                 ?.let { epgSourceDetailRows(it) }
                 .orEmpty()
+        SettingsPane.Recording -> emptyList()
     }
 
 private fun rootRows(): List<SettingsRow> =
@@ -66,4 +69,5 @@ fun paneTitle(
         SettingsPane.EpgSources -> "EPG sources"
         is SettingsPane.EpgSourceDetail ->
             epgSources.firstOrNull { it.id == pane.sourceId }?.name ?: "EPG source"
+        SettingsPane.Recording -> "Recording"
     }

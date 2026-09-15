@@ -34,12 +34,13 @@ internal fun GuideScreenRailLogo(modifier: Modifier = Modifier) {
     )
 }
 
-/** A focusable rail icon (search / gear) styled like the settings gear. */
+/** A focusable rail icon (search / DVR / gear) styled like the settings gear. */
 @Composable
 internal fun GuideScreenRailButton(
     icon: Int,
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
+    contentDescription: String? = null,
 ) {
     Surface(
         onClick = onClick,
@@ -48,7 +49,7 @@ internal fun GuideScreenRailButton(
         scale = FocusScreenDefaults.scale(),
         colors = FocusScreenDefaults.colors(restingContainer = Color.Transparent),
     ) {
-        GuideScreenRailIcon(icon, Color.Unspecified, Modifier.padding(8.dp))
+        GuideScreenRailIcon(icon, Color.Unspecified, Modifier.padding(8.dp), contentDescription)
     }
 }
 
@@ -57,10 +58,11 @@ internal fun GuideScreenRailIcon(
     icon: Int,
     tint: Color,
     modifier: Modifier = Modifier,
+    contentDescription: String? = null,
 ) {
     Icon(
         painter = painterResource(icon),
-        contentDescription = null,
+        contentDescription = contentDescription,
         modifier = modifier,
         tint = if (tint == Color.Unspecified) LocalContentColor.current else tint,
     )

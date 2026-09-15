@@ -33,6 +33,15 @@ fun SettingsViewModel.confirmDelete() {
     dismissOverlay()
 }
 
+/** OK on Delete in the "Delete all recordings?" GuidedStep. */
+fun SettingsViewModel.confirmDeleteRecordings() {
+    launch {
+        recordings?.deleteAll()
+        refresh.value += 1
+    }
+    dismissOverlay()
+}
+
 /** Commits a new parental PIN (salted + hashed; never stored raw). */
 fun SettingsViewModel.submitPin(pin: String) {
     if (pin.isNotEmpty()) parental.setPin(pin)

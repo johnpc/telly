@@ -34,6 +34,7 @@ fun GuideScreen(
     onFullscreen: () -> Unit,
     onOpenSearch: () -> Unit = {},
     onOpenSettings: () -> Unit = {},
+    onOpenRecordings: () -> Unit = {},
     settingsOpen: Boolean = false,
 ) {
     val engine = remember { deps.playback.engineFactory() }
@@ -54,7 +55,9 @@ fun GuideScreen(
             .background(Color(TELLY_ONBOARDING_BACKGROUND)),
     ) {
         Row(Modifier.fillMaxSize()) {
-            if (layer == GuideLayer.Groups) GuideScreenGroups(controller, onOpenSearch, onOpenSettings)
+            if (layer == GuideLayer.Groups) {
+                GuideScreenGroups(controller, onOpenSearch, onOpenSettings, onOpenRecordings)
+            }
             Box(Modifier.weight(1f)) {
                 Column(Modifier.fillMaxSize()) {
                     GuideScreenTop(controller, engine)
@@ -86,5 +89,6 @@ private fun guideMenuSurface(layer: GuideLayer): PlayerMenuSurface =
         GuideLayer.RowMenu -> PlayerMenuSurface.SHEET
         is GuideLayer.ChannelOptions -> PlayerMenuSurface.CHANNEL_OPTIONS
         is GuideLayer.Description, is GuideLayer.ComingSoon -> PlayerMenuSurface.PUSHED
+        is GuideLayer.RecordingStop, is GuideLayer.CustomRecording -> PlayerMenuSurface.PUSHED
         else -> PlayerMenuSurface.NONE
     }

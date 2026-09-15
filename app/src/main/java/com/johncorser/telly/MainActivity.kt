@@ -15,6 +15,9 @@ import com.johncorser.telly.core.settings.ParentalControls
 import com.johncorser.telly.core.settings.TellySettings
 import com.johncorser.telly.features.onboarding.StartRoute
 import com.johncorser.telly.features.playlist.M3uFetcher
+import com.johncorser.telly.features.recording.RecordingSettingsHook
+import com.johncorser.telly.features.recording.recordingCenter
+import com.johncorser.telly.features.recording.recordingDeps
 import com.johncorser.telly.features.settings.PlaylistUpdater
 import com.johncorser.telly.features.settings.SettingsActions
 import com.johncorser.telly.features.settings.SettingsBackupManager
@@ -41,6 +44,7 @@ class MainActivity : ComponentActivity() {
                 settingsGraph = settingsGraph(),
                 searchDeps = ServiceLocator.searchDeps(this),
                 multiviewDeps = ServiceLocator.multiviewDeps(this),
+                recordingDeps = ServiceLocator.recordingDeps(this),
             )
         }
     }
@@ -58,6 +62,7 @@ class MainActivity : ComponentActivity() {
                     updater = PlaylistUpdater(fetcher::fetch, repository),
                     updateEpgNow = { ServiceLocator.epgRefresher(this).refreshAllNow() },
                     backup = SettingsBackupManager(settings, repository, filesDir),
+                    recordings = RecordingSettingsHook(ServiceLocator.recordingCenter(this)),
                 ),
             versionName = appVersionName(),
             epgSources = ServiceLocator.epgSourceStore(this),

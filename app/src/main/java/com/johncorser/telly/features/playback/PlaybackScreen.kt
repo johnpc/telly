@@ -34,6 +34,7 @@ fun PlaybackScreen(
     onOpenSearch: () -> Unit = {},
     onOpenSettings: () -> Unit = {},
     onOpenMultiview: () -> Unit = {},
+    onOpenRecordings: () -> Unit = {},
 ) {
     // A dedicated main-thread scope instead of rememberCoroutineScope(): the
     // ViewModel drives ExoPlayer (main-thread-affine) and wall-clock overlay
@@ -56,6 +57,8 @@ fun PlaybackScreen(
                                 panelLock = PanelLock(deps.parental),
                                 onOpenSettings = onOpenSettings,
                                 onOpenMultiview = onOpenMultiview,
+                                onOpenRecordings = onOpenRecordings,
+                                recording = deps.recording,
                             ),
                     ),
                 history = deps.sources.history,

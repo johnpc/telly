@@ -46,6 +46,7 @@ class PlaybackViewModelTest {
         clock: () -> Long = { now },
         onOpenSettings: () -> Unit = {},
         onOpenMultiview: () -> Unit = {},
+        onOpenRecordings: () -> Unit = {},
     ): PlaybackViewModel =
         PlaybackViewModel(
             env =
@@ -55,7 +56,12 @@ class PlaybackViewModelTest {
                     engine = engine,
                     store = store,
                     time = PlaybackTime(clock, TimeZone.getTimeZone("UTC")),
-                    hooks = PlaybackHooks(onOpenSettings = onOpenSettings, onOpenMultiview = onOpenMultiview),
+                    hooks =
+                        PlaybackHooks(
+                            onOpenSettings = onOpenSettings,
+                            onOpenMultiview = onOpenMultiview,
+                            onOpenRecordings = onOpenRecordings,
+                        ),
                 ),
             history = WatchHistory(historyDao, clock),
             scope = CoroutineScope(SupervisorJob() + UnconfinedTestDispatcher(testScheduler)),
@@ -281,9 +287,22 @@ class PlaybackViewModelTest {
             vm.onQuickBarItem(QuickBarAction.CHANNELS_LIST)
             assertEquals(PlaybackOverlay.Panel, vm.overlay.value)
 
-            // Search is real now (PlaybackSearchWiringTest); Recordings is not yet.
+            // Search (PlaybackSearchWiringTest), Recordings and Multiview
+            // are real; the remaining slots stay placeholders.
+            vm.onQuickBarItem(QuickBarAction.PICTURE_IN_PICTURE)
+            assertEquals(PlaybackOverlay.ComingSoon("Picture-in-picture"), vm.overlay.value)
+        }
+
+    @Test
+    fun `the quick-bar's recordings slot opens the DVR library route`() =
+        runTest {
+            var opened = 0
+            val vm = buildVm(onOpenRecordings = { opened += 1 })
+            vm.onKey(PlaybackKey.MENU)
+
             vm.onQuickBarItem(QuickBarAction.RECORDINGS)
-            assertEquals(PlaybackOverlay.ComingSoon("Recordings"), vm.overlay.value)
+
+            assertEquals(1, opened)
         }
 
     @Test
@@ -398,6 +417,7 @@ class PlaybackViewModelTest {
         runTest {
             // telly has no premium tier: the reference's paywall rows now
             // share the coming-soon placeholder with the uncaptured rows.
+            // (Record falls back to it too while no DVR center is wired.)
             val vm = buildVm()
             vm.openPanel()
             vm.showChannelMenu(channels[0])

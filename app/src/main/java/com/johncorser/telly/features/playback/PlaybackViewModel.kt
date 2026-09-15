@@ -1,34 +1,13 @@
 package com.johncorser.telly.features.playback
 
-import com.johncorser.telly.core.kv.KeyValueStore
-import com.johncorser.telly.features.epg.EpgRepository
 import com.johncorser.telly.features.history.WatchHistory
-import com.johncorser.telly.features.panel.PanelLock
 import com.johncorser.telly.features.panel.PanelViewModel
-import com.johncorser.telly.features.player.PlayerEngine
 import com.johncorser.telly.features.player.PlayerState
-import com.johncorser.telly.features.playlist.db.ChannelDao
 import com.johncorser.telly.features.playlist.db.ChannelEntity
+import com.johncorser.telly.features.recording.RecordingMenu
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
-
-/** Cross-slice hooks the playback surface plugs into (nav + parental). */
-class PlaybackHooks(
-    val panelLock: PanelLock = PanelLock(),
-    val onOpenSettings: () -> Unit = {},
-    val onOpenMultiview: () -> Unit = {},
-)
-
-/** Everything [PlaybackViewModel] needs injected, bundled for readability. */
-class PlaybackEnv(
-    val channelDao: ChannelDao,
-    val epgRepository: EpgRepository,
-    val engine: PlayerEngine,
-    val store: KeyValueStore,
-    val time: PlaybackTime,
-    val hooks: PlaybackHooks = PlaybackHooks(),
-)
 
 /**
  * Fullscreen-playback state machine: which channel is tuned, which overlay
@@ -66,10 +45,16 @@ class PlaybackViewModel(
             actions = ChannelActions(env.channelDao, scope),
             overlays = overlays,
             tuner = tuner,
-            openSettings = env.hooks.onOpenSettings,
-            openSearch = openSearch,
+            nav = PlaybackMenuNav(openSearch = openSearch, openSettings = env.hooks.onOpenSettings),
             rowOf = { id -> panel.rows.value.firstOrNull { it.channel.id == id } },
+            recording = { recordingMenu },
         )
+
+    /** The sheet's Record rows act through this (null while no DVR wired). */
+    val recordingMenu: RecordingMenu? =
+        env.hooks.recording?.let { center ->
+            RecordingMenu(center, scope, clock) { prompt -> menu.onRecordingPrompt(prompt) }
+        }
 
     private val video = env.engine.video
 
@@ -115,15 +100,19 @@ class PlaybackViewModel(
 
     fun showComingSoon(feature: String) = overlays.set(PlaybackOverlay.ComingSoon(feature))
 
-    /** Quick-bar OK: Search, Channels list and Multiview are real, the rest later slices. */
+    /** Quick-bar OK: Search, Channels list, Recordings and Multiview are real. */
     fun onQuickBarItem(action: QuickBarAction) {
         when (action) {
             QuickBarAction.CHANNELS_LIST -> openPanel()
             QuickBarAction.SEARCH -> openSearch()
             QuickBarAction.MULTIVIEW -> openMultiview()
+            QuickBarAction.RECORDINGS -> openRecordings()
             else -> showComingSoon(action.feature)
         }
     }
+
+    /** The quick-bar's Recordings slot opens the DVR library route. */
+    val openRecordings: () -> Unit = env.hooks.onOpenRecordings
 
     /** The nine quick-bar slots with live stream labels (round3-ref 07). */
     fun quickBarItems(): List<QuickBarItem> = QuickBar.items(video.value)

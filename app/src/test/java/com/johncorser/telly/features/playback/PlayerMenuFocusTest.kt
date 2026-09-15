@@ -12,7 +12,7 @@ class PlayerMenuFocusTest {
     fun `rows that push a screen remember themselves`() {
         listOf(
             PlayerMenuItem.PROGRAM_DESCRIPTION,
-            PlayerMenuItem.RECORD,
+            PlayerMenuItem.ADD_TO_MY_LIST,
             PlayerMenuItem.ASSIGN_EPG,
         ).forEach { item ->
             focus.onActivated(item)

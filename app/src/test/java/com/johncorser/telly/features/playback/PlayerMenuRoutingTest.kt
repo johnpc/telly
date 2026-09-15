@@ -8,7 +8,8 @@ import org.junit.Test
  * pinning every row here means a drift in either the guide's or the panel's
  * sheet can only come from a change to this table. telly has no premium
  * tier, so every not-yet-built row routes to the branded coming-soon
- * placeholder — the reference's paywall rows included.
+ * placeholder — the reference's paywall rows included. Record and Custom
+ * recording are live since the recording slice.
  */
 class PlayerMenuRoutingTest {
     @Test
@@ -18,8 +19,8 @@ class PlayerMenuRoutingTest {
                 PlayerMenuItem.SEARCH to PlayerMenuRoute.SEARCH,
                 PlayerMenuItem.SETTINGS to PlayerMenuRoute.SETTINGS,
                 PlayerMenuItem.OPEN_IN_EXTERNAL_PLAYER to PlayerMenuRoute.COMING_SOON,
-                PlayerMenuItem.RECORD to PlayerMenuRoute.COMING_SOON,
-                PlayerMenuItem.CUSTOM_RECORDING to PlayerMenuRoute.COMING_SOON,
+                PlayerMenuItem.RECORD to PlayerMenuRoute.RECORD,
+                PlayerMenuItem.CUSTOM_RECORDING to PlayerMenuRoute.CUSTOM_RECORDING,
                 PlayerMenuItem.ADD_TO_MY_LIST to PlayerMenuRoute.COMING_SOON,
                 PlayerMenuItem.PROGRAM_DESCRIPTION to PlayerMenuRoute.DESCRIPTION,
                 PlayerMenuItem.ADD_TO_FAVORITES to PlayerMenuRoute.TOGGLE_FAVORITE,

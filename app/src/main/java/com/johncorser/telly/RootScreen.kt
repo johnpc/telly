@@ -20,6 +20,7 @@ import com.johncorser.telly.features.guide.GuideDeps
 import com.johncorser.telly.features.multiview.MultiviewDeps
 import com.johncorser.telly.features.playback.PlaybackDeps
 import com.johncorser.telly.features.playlist.PlaylistRepository
+import com.johncorser.telly.features.recording.RecordingDeps
 import com.johncorser.telly.features.search.SearchDeps
 import com.johncorser.telly.features.settings.SettingsGraph
 import com.johncorser.telly.features.settings.SettingsScreenHost
@@ -35,6 +36,7 @@ fun RootScreen(
     settingsGraph: SettingsGraph,
     searchDeps: SearchDeps,
     multiviewDeps: MultiviewDeps,
+    recordingDeps: RecordingDeps? = null,
 ) {
     val stack by navigator.stack.collectAsState()
     val route = stack.last()
@@ -63,6 +65,7 @@ fun RootScreen(
                     guideDeps,
                     searchDeps,
                     multiviewDeps,
+                    recordingDeps,
                 )
                 if (settingsOpen) {
                     SettingsScreenHost(

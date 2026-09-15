@@ -1,8 +1,22 @@
 package com.johncorser.telly.features.settings
 
 import com.johncorser.telly.core.settings.Setting
+import com.johncorser.telly.features.epg.EpgSource
+import com.johncorser.telly.features.recording.recordingRows
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+
+/** The active sheet's rows; the Recording pane needs the DVR storage hook. */
+internal fun SettingsViewModel.activeRows(
+    pane: SettingsPane?,
+    playlists: List<PlaylistItem>,
+    sources: List<EpgSource>,
+): List<SettingsRow> =
+    if (pane == SettingsPane.Recording) {
+        recordingRows(recordings)
+    } else {
+        rowsFor(pane, settings, playlists, versionName, sources)
+    }
 
 /** State-mutation helpers shared by the dispatch extension files. */
 

@@ -38,8 +38,11 @@ class GuideMenuControllerTest {
 
     private fun TestScope.build(focusMemory: GuideFocusMemory? = null): GuideMenuController =
         GuideMenuController(
-            actions = ChannelActions(dao, CoroutineScope(SupervisorJob() + UnconfinedTestDispatcher(testScheduler))),
-            zapAway = { zapped += it.id },
+            channelActions =
+                GuideSheetChannelActions(
+                    ChannelActions(dao, CoroutineScope(SupervisorJob() + UnconfinedTestDispatcher(testScheduler))),
+                    zapAway = { zapped += it.id },
+                ),
             focusedRow = { row },
             info = { infoData },
             callbacks =
@@ -173,8 +176,6 @@ class GuideMenuControllerTest {
             val unbuilt =
                 listOf(
                     PlayerMenuItem.OPEN_IN_EXTERNAL_PLAYER,
-                    PlayerMenuItem.RECORD,
-                    PlayerMenuItem.CUSTOM_RECORDING,
                     PlayerMenuItem.ADD_TO_MY_LIST,
                     PlayerMenuItem.BLOCK_CHANNEL,
                     PlayerMenuItem.MANAGE_FAVORITES,
@@ -287,7 +288,7 @@ class GuideMenuControllerTest {
     fun `rows that leave the sheet clear the refocus memory`() {
         runTest {
             val menu = buildOpenSheet()
-            menu.onMenuItem(PlayerMenuItem.RECORD)
+            menu.onMenuItem(PlayerMenuItem.ADD_TO_MY_LIST)
             menu.close()
 
             menu.onMenuItem(PlayerMenuItem.SETTINGS)

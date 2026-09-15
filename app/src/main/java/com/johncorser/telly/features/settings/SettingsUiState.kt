@@ -15,6 +15,9 @@ sealed interface SettingsPane {
     data class EpgSourceDetail(
         val sourceId: Long,
     ) : SettingsPane
+
+    /** Other -> Recording (recording slice): storage + delete-all. */
+    data object Recording : SettingsPane
 }
 
 /** Modal state over the sheet stack. */
@@ -39,6 +42,9 @@ sealed interface SettingsOverlay {
         val sourceId: Long,
         val name: String,
     ) : SettingsOverlay
+
+    /** "Delete all recordings?" GuidedStep (Other -> Recording pane). */
+    data object ConfirmDeleteRecordings : SettingsOverlay
 
     data object PinSetup : SettingsOverlay
 }

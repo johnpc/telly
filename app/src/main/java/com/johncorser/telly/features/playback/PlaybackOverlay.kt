@@ -52,6 +52,18 @@ sealed interface PlaybackOverlay {
         val channelName: String,
         override val back: PlaybackOverlay = None,
     ) : Pushed
+
+    /** "Stop recording?" GuidedStep from a second Record (recording slice). */
+    data class RecordingStop(
+        val recordingId: Long,
+        val channelName: String,
+        override val back: PlaybackOverlay = None,
+    ) : Pushed
+
+    /** The custom-recording form (channel prefilled in the sheet's menu). */
+    data class CustomRecording(
+        override val back: PlaybackOverlay = None,
+    ) : Pushed
 }
 
 /** D-pad / media keys playback reacts to (mapped from KeyEvents in the UI). */
