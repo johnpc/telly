@@ -3,6 +3,7 @@ package com.johncorser.telly.features.playback
 import com.johncorser.telly.core.settings.InMemoryKeyValueStore
 import com.johncorser.telly.core.settings.ParentalControls
 import com.johncorser.telly.core.settings.SettingsRepository
+import com.johncorser.telly.features.playback.tracks.TrackPickerKind
 import com.johncorser.telly.features.player.VideoDetails
 import com.johncorser.telly.testutil.testProgram
 import kotlinx.coroutines.flow.first
@@ -326,18 +327,16 @@ class PlaybackViewModelTest : PlaybackVmHarness() {
         }
 
     @Test
-    fun `the quick-bar routes channels list to the panel and the rest to placeholders`() =
+    fun `the quick-bar routes channels list to the panel`() =
         runTest {
             val vm = buildVm()
             vm.onKey(PlaybackKey.MENU)
 
+            // Search (PlaybackSearchWiringTest), Recordings, Multiview and
+            // PIP are real too; the four stream slots open their pickers
+            // (see the track-picker tests below) — no slot is a placeholder.
             vm.onQuickBarItem(QuickBarAction.CHANNELS_LIST)
             assertEquals(PlaybackOverlay.Panel, vm.overlay.value)
-
-            // Search (PlaybackSearchWiringTest), Recordings, Multiview and
-            // PIP are real; the stream-detail slots stay placeholders.
-            vm.onQuickBarItem(QuickBarAction.SUBTITLES)
-            assertEquals(PlaybackOverlay.ComingSoon("Subtitles"), vm.overlay.value)
         }
 
     @Test
@@ -379,6 +378,35 @@ class PlaybackViewModelTest : PlaybackVmHarness() {
                 ),
                 labels,
             )
+        }
+
+    @Test
+    fun `the quick-bar stream slots open their pickers and back dismisses`() =
+        runTest {
+            val vm = buildVm()
+            vm.onKey(PlaybackKey.MENU)
+
+            vm.onQuickBarItem(QuickBarAction.RESOLUTION)
+            assertEquals(PlaybackOverlay.TrackPicker(TrackPickerKind.VIDEO), vm.overlay.value)
+
+            vm.onQuickBarItem(QuickBarAction.SUBTITLES)
+            assertEquals(PlaybackOverlay.TrackPicker(TrackPickerKind.SUBTITLES), vm.overlay.value)
+
+            assertTrue(vm.onKey(PlaybackKey.BACK))
+            assertEquals(PlaybackOverlay.None, vm.overlay.value)
+        }
+
+    @Test
+    fun `stepping the audio sync updates the quick-bar slot label`() =
+        runTest {
+            val vm = buildVm()
+
+            vm.onQuickBarItem(QuickBarAction.LATENCY)
+            val plus50 = vm.trackPickers.rows(TrackPickerKind.SYNC).first { it.label == "+50 ms" }.id
+            vm.trackPickers.onRow(TrackPickerKind.SYNC, plus50)
+
+            assertEquals(PlaybackOverlay.TrackPicker(TrackPickerKind.SYNC), vm.overlay.value)
+            assertEquals("+50 ms", vm.quickBarItems()[7].label)
         }
 
     @Test

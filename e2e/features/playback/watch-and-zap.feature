@@ -53,13 +53,45 @@ Feature: Watch live TV and zap between channels
     Then I see the quick-bar slots "Search", "Channels list", "Recordings", "Multiview" and "Picture-in-picture"
     And I see the live stream slots "1280 × 720", "Mono", "0 ms" and "Off"
 
-  Scenario: Unbuilt quick-bar slots open a branded placeholder
+  # Every quick-bar slot is live: Recordings opens the DVR library
+  # (recording.feature), the four stream slots open the pickers below.
+
+  # Quick-bar track pickers (ux-spec §3.14): the four stream slots open
+  # compact option dialogs over playback — Auto + each rendition for video,
+  # the stream's audio tracks, an audio-sync stepper (±25/50 ms within
+  # ±1000 ms, per-session), and Off + text tracks for CC. The fixture
+  # streams carry one video and one mono audio track and no text track.
+
+  Scenario: The video slot opens its track picker and Auto returns to playback
     When I long-press ok
-    And I select "Recordings"
-    Then I see "Recordings"
-    And I see "Coming soon to telly"
-    When I press back
+    And I select "Video track"
+    Then I see "Auto"
+    And I see "1280×720"
+    When I select "Auto"
     Then no chrome is visible over the video
+
+  Scenario: The audio slot lists the stream's audio track as current
+    When I long-press ok
+    And I select "Audio track"
+    Then I see "Audio track"
+    And I see "Mono"
+
+  Scenario: The CC slot shows Off for a stream without text tracks
+    When I long-press ok
+    And I select "Subtitles"
+    Then I see "Closed captions"
+    When I select "Off"
+    Then no chrome is visible over the video
+
+  Scenario: The audio sync stepper changes the latency slot label
+    When I long-press ok
+    And I select "Latency"
+    Then I see "Audio sync"
+    When I select "+50 ms"
+    And I select "+25 ms"
+    And I press back
+    And I long-press ok
+    Then I see the live stream slots "1280 × 720", "Mono", "+75 ms" and "Off"
 
   Scenario: Back walks the overlay chain then leaves for the TV guide
     When I press ok

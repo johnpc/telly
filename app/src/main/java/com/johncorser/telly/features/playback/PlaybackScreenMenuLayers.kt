@@ -7,6 +7,7 @@ import androidx.compose.ui.res.stringResource
 import com.johncorser.telly.R
 import com.johncorser.telly.core.ui.OnboardingScreenMessage
 import com.johncorser.telly.features.guide.GuideScreenChannelOptionsPane
+import com.johncorser.telly.features.playback.tracks.PlaybackScreenTrackPicker
 import com.johncorser.telly.features.recording.RecordingScreenForm
 import com.johncorser.telly.features.recording.RecordingScreenStopConfirm
 
@@ -29,6 +30,7 @@ internal fun PlaybackScreenMenuLayers(
                 OnboardingScreenMessage(headline = active.title, subtitle = active.text)
             is PlaybackOverlay.ChannelOptions ->
                 GuideScreenChannelOptionsPane(active.channelName, viewModel.menu::onChannelOption)
+            is PlaybackOverlay.TrackPicker -> PlaybackScreenTrackPicker(viewModel.trackPickers, active.kind)
             is PlaybackOverlay.ComingSoon ->
                 OnboardingScreenMessage(
                     headline = active.feature,

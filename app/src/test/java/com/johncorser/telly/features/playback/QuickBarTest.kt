@@ -37,6 +37,14 @@ class QuickBarTest {
     }
 
     @Test
+    fun `sync and subtitle slot labels come from the caller`() {
+        val items = QuickBar.items(VideoDetails(1280, 720, 25f, 1), sync = "+75 ms", subtitles = "English")
+
+        assertEquals("+75 ms", items[7].label)
+        assertEquals("English", items[8].label)
+    }
+
+    @Test
     fun `every action names the feature its placeholder advertises`() {
         assertEquals("Video track", QuickBarAction.RESOLUTION.feature)
         assertEquals("Audio track", QuickBarAction.AUDIO.feature)

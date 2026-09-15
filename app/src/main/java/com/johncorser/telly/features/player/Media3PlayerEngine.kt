@@ -1,12 +1,12 @@
 package com.johncorser.telly.features.player
 
 import android.content.Context
-import androidx.media3.common.AudioAttributes
-import androidx.media3.common.C
 import androidx.media3.common.MediaItem
 import androidx.media3.common.PlaybackException
 import androidx.media3.common.Player
 import androidx.media3.exoplayer.ExoPlayer
+import com.johncorser.telly.features.player.tracks.ExoTrackFacade
+import com.johncorser.telly.features.player.tracks.TrackFacade
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -22,6 +22,7 @@ import kotlinx.coroutines.flow.update
 class Media3PlayerEngine(
     val player: ExoPlayer,
     private val userAgent: StreamUserAgent? = null,
+    override val tracks: TrackFacade = ExoTrackFacade(player),
 ) : PlayerEngine,
     Player.Listener {
     private val mutableState = MutableStateFlow<PlayerState>(PlayerState.Idle)
@@ -97,31 +98,16 @@ class Media3PlayerEngine(
 
     companion object {
         /**
-         * Built here so devices get audio focus and TV-ready defaults.
-         * Multiview panes pass [handleAudioFocus] = false: N players each
-         * grabbing focus would pause one another, so the pool's engines
-         * share the app's focus and the focused pane owns audio by mute
-         * state instead. Single fullscreen playback keeps the default.
+         * Built in [buildMedia3PlayerEngine] so devices get audio focus and
+         * TV-ready defaults. Multiview panes pass [handleAudioFocus] = false:
+         * N players each grabbing focus would pause one another, so the
+         * pool's engines share the app's focus and the focused pane owns
+         * audio by mute state instead. Single fullscreen keeps the default.
          */
         fun create(
             context: Context,
             handleAudioFocus: Boolean = true,
             userAgentFor: (streamUrl: String) -> String = { STREAM_USER_AGENT },
-        ): Media3PlayerEngine {
-            val audioAttributes =
-                AudioAttributes
-                    .Builder()
-                    .setUsage(C.USAGE_MEDIA)
-                    .setContentType(C.AUDIO_CONTENT_TYPE_MOVIE)
-                    .build()
-            val userAgent = StreamUserAgent(userAgentFor)
-            val player =
-                ExoPlayer
-                    .Builder(context)
-                    .setMediaSourceFactory(streamMediaSourceFactory(context, userAgent::current))
-                    .setAudioAttributes(audioAttributes, handleAudioFocus)
-                    .build()
-            return Media3PlayerEngine(player, userAgent)
-        }
+        ): Media3PlayerEngine = buildMedia3PlayerEngine(context, handleAudioFocus, userAgentFor)
     }
 }

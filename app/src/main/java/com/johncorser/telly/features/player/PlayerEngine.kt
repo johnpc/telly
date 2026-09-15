@@ -1,5 +1,6 @@
 package com.johncorser.telly.features.player
 
+import com.johncorser.telly.features.player.tracks.TrackFacade
 import kotlinx.coroutines.flow.StateFlow
 
 /** Playback status exposed to the UI; [Error] carries a displayable cause. */
@@ -46,4 +47,7 @@ interface PlayerEngine {
 
     /** Absolute seek within a finite (catch-up) stream. */
     fun seekTo(positionMs: Long)
+
+    /** Track selection + audio-sync seam (quick-bar pickers); inert by default. */
+    val tracks: TrackFacade get() = TrackFacade.NONE
 }

@@ -6,6 +6,7 @@ import com.johncorser.telly.features.mylist.MyListMenu
 import com.johncorser.telly.features.mylist.panelMyListHost
 import com.johncorser.telly.features.panel.PanelViewModel
 import com.johncorser.telly.features.pip.PipEnterAction
+import com.johncorser.telly.features.playback.tracks.TrackPickerController
 import com.johncorser.telly.features.player.PlayerState
 import com.johncorser.telly.features.playlist.db.ChannelEntity
 import com.johncorser.telly.features.recording.RecordingMenu
@@ -148,8 +149,12 @@ class PlaybackViewModel(
     /** The quick-bar's Recordings slot opens the DVR library route. */
     val openRecordings: () -> Unit = env.hooks.onOpenRecordings
 
+    /** Quick-bar track pickers: video / audio / audio-sync / CC dialogs (ux-spec §3.14). */
+    val trackPickers = TrackPickerController(env.engine.tracks, overlays)
+
     /** The nine quick-bar slots with live stream labels (round3-ref 07). */
-    fun quickBarItems(): List<QuickBarItem> = QuickBar.items(video.value)
+    fun quickBarItems(): List<QuickBarItem> =
+        QuickBar.items(video.value, trackPickers.syncLabel(), trackPickers.subtitleLabel())
 
     fun onOverlayInteraction() = overlays.keepAlive()
 

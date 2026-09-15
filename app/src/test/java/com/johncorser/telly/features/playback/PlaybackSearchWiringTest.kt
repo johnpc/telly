@@ -49,16 +49,6 @@ class PlaybackSearchWiringTest {
         }
 
     @Test
-    fun `other unbuilt quick-bar slots still show the placeholder`() =
-        runTest {
-            val vm = buildVm { }
-
-            vm.onQuickBarItem(QuickBarAction.SUBTITLES)
-
-            assertEquals(PlaybackOverlay.ComingSoon("Subtitles"), vm.overlay.value)
-        }
-
-    @Test
     fun `the panel sheet's Search row opens search over bare playback`() =
         runTest {
             var opened = false

@@ -23,7 +23,7 @@ enum class QuickBarAction(
     SUBTITLES("Subtitles"),
 }
 
-/** Quick-bar OK: Search, Channels list, Multiview, PIP and Recordings are real. */
+/** Quick-bar OK: every slot is live — navigation or a track picker (ux-spec §3.14). */
 fun PlaybackViewModel.onQuickBarItem(action: QuickBarAction) {
     when (action) {
         QuickBarAction.CHANNELS_LIST -> openPanel()
@@ -31,7 +31,7 @@ fun PlaybackViewModel.onQuickBarItem(action: QuickBarAction) {
         QuickBarAction.MULTIVIEW -> openMultiview()
         QuickBarAction.PICTURE_IN_PICTURE -> enterPip()
         QuickBarAction.RECORDINGS -> openRecordings()
-        else -> showComingSoon(action.feature)
+        else -> trackPickers.open(action)
     }
 }
 
@@ -45,7 +45,11 @@ object QuickBar {
     private const val STEREO_CHANNELS = 2
     private const val UNKNOWN = "—"
 
-    fun items(video: VideoDetails?): List<QuickBarItem> =
+    fun items(
+        video: VideoDetails?,
+        sync: String = "0 ms",
+        subtitles: String = "Off",
+    ): List<QuickBarItem> =
         QuickBarAction.entries.map { action ->
             QuickBarItem(
                 action = action,
@@ -53,8 +57,8 @@ object QuickBar {
                     when (action) {
                         QuickBarAction.RESOLUTION -> resolution(video)
                         QuickBarAction.AUDIO -> audio(video)
-                        QuickBarAction.LATENCY -> "0 ms"
-                        QuickBarAction.SUBTITLES -> "Off"
+                        QuickBarAction.LATENCY -> sync
+                        QuickBarAction.SUBTITLES -> subtitles
                         else -> action.feature
                     },
             )
