@@ -25,6 +25,9 @@ class HistorySteps(
     private val world: TellyWorld,
     private val driver: PlaybackDriver,
 ) {
+    @Then("I see the {string} card")
+    fun seeCard(label: String) = world.waitForText(label)
+
     @Then("I see {int} recent-channel cards with the current programmes of {string} and {string}")
     fun seeRecentCards(
         count: Int,
