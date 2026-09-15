@@ -3,6 +3,7 @@ package com.johncorser.telly.features.reminders
 import com.johncorser.telly.features.settings.RowIds
 import com.johncorser.telly.features.settings.SettingsOverlay
 import com.johncorser.telly.features.settings.SettingsViewModel
+import com.johncorser.telly.features.settings.dismissOverlay
 import com.johncorser.telly.features.settings.launch
 import com.johncorser.telly.features.settings.showOverlay
 

@@ -24,13 +24,19 @@ class SearchRepository(
     ): SearchResults {
         val query = SearchQuery.normalize(raw)
         if (query.isEmpty()) return SearchResults()
-        val channels = searchDao.channels(SearchQuery.nameLike(query), SearchQuery.numberLike(query))
+        // The DAO wrapper applies Manage groups; keep name matches inside it.
+        val visible = channelDao.observeVisible().first()
+        val visibleIds = visible.mapTo(HashSet()) { it.id }
+        val channels =
+            searchDao
+                .channels(SearchQuery.nameLike(query), SearchQuery.numberLike(query))
+                .filter { it.id in visibleIds }
         val guide = epgRepository.nowNext(channels.mapNotNull { it.source.tvgId }, atMs).first()
         val programs = searchDao.programs(SearchQuery.nameLike(query), atMs, PROGRAM_LIMIT)
         return SearchResults(
             query = query,
             channels = SearchResultsBuilder.channels(channels, guide, atMs),
-            programs = SearchResultsBuilder.programs(programs, channelDao.observeVisible().first(), atMs, zone),
+            programs = SearchResultsBuilder.programs(programs, visible, atMs, zone),
         )
     }
 

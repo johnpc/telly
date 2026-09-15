@@ -90,7 +90,7 @@ class SettingsRowsTest {
     }
 
     @Test
-    fun `playlist detail matches capture 20 and only ref-impossible rows are locked`() {
+    fun `playlist detail matches capture 20 with every row unlocked`() {
         val rows = playlistDetailRows(s, item)
         assertEquals(
             listOf(
@@ -102,10 +102,48 @@ class SettingsRowsTest {
         )
         assertTrue((rows[0] as SettingsRow.Toggle).checked)
         assertEquals("1 source", (rows[3] as SettingsRow.Value).summary)
-        assertTrue((rows[2] as SettingsRow.Value).locked)
+        // The reference sells these as premium; telly ships them unlocked
+        // (charter precedent), so no detail row is locked at all.
+        assertFalse((rows[2] as SettingsRow.Value).locked)
+        assertFalse((rows[4] as SettingsRow.Value).locked)
+        assertFalse((rows[5] as SettingsRow.Value).locked)
+        assertFalse((rows[7] as SettingsRow.Value).locked)
+        assertFalse((rows[8] as SettingsRow.Toggle).locked)
         assertFalse((rows[9] as SettingsRow.Action).locked)
         assertFalse((rows[10] as SettingsRow.Action).locked)
     }
+
+    @Test
+    fun `playlist detail summaries reflect the per-playlist settings`() {
+        assertEquals("Not set", detailSummary(RowIds.PLAYLIST_USER_AGENT))
+        assertEquals("None", detailSummary(RowIds.PLAYLIST_UPDATE_INTERVAL))
+        assertFalse(detailToggle(RowIds.PLAYLIST_UPDATE_ON_START).checked)
+
+        s.set(playlistUserAgentSetting(item.url), "telly-agent")
+        s.set(playlistUpdateIntervalSetting(item.url), 8)
+        s.set(playlistUpdateOnStartSetting(item.url), true)
+
+        assertEquals("telly-agent", detailSummary(RowIds.PLAYLIST_USER_AGENT))
+        assertEquals("8", detailSummary(RowIds.PLAYLIST_UPDATE_INTERVAL))
+        assertTrue(detailToggle(RowIds.PLAYLIST_UPDATE_ON_START).checked)
+    }
+
+    @Test
+    fun `manage groups pane lists one default-on toggle per group`() {
+        val grouped = item.copy(groups = listOf("News", "Movies"))
+        s.set(playlistGroupEnabledSetting(item.url, "Movies"), false)
+
+        val rows = playlistGroupRows(s, grouped).filterIsInstance<SettingsRow.Toggle>()
+
+        assertEquals(listOf("News", "Movies"), rows.map { it.title })
+        assertEquals(listOf(true, false), rows.map { it.checked })
+    }
+
+    private fun detailSummary(rowId: String): String? =
+        (playlistDetailRows(s, item).first { it.id == rowId } as SettingsRow.Value).summary
+
+    private fun detailToggle(rowId: String): SettingsRow.Toggle =
+        playlistDetailRows(s, item).first { it.id == rowId } as SettingsRow.Toggle
 
     @Test
     fun `epg pane matches capture 57 with the None default interval`() {

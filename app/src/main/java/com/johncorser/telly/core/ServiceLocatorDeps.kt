@@ -25,13 +25,15 @@ fun ServiceLocator.playbackDeps(
     PlaybackDeps(
         sources =
             PlaybackSources(
-                channelDao = database(context).channelDao(),
+                channelDao = visibleChannelDao(context),
                 epgRepository = epgRepository(context),
                 history = WatchHistory(database(context).watchHistoryDao(), clock),
                 myList = myListStore(context),
             ),
         keyValueStore = keyValueStore(context),
-        engineFactory = { Media3PlayerEngine.create(context.applicationContext) },
+        engineFactory = {
+            Media3PlayerEngine.create(context.applicationContext, userAgentFor = streamUserAgentFor(context))
+        },
         clock = clock,
         parental = ParentalControls(settingsRepository(context)),
         hooks = hooks,
@@ -55,9 +57,15 @@ fun ServiceLocator.guideDeps(
  */
 fun ServiceLocator.multiviewDeps(context: Context): MultiviewDeps =
     MultiviewDeps(
-        channelDao = database(context).channelDao(),
+        channelDao = visibleChannelDao(context),
         epgRepository = epgRepository(context),
-        engines = { Media3PlayerEngine.create(context.applicationContext, handleAudioFocus = false) },
+        engines = {
+            Media3PlayerEngine.create(
+                context.applicationContext,
+                handleAudioFocus = false,
+                userAgentFor = streamUserAgentFor(context),
+            )
+        },
         store = keyValueStore(context),
         clock = clock,
     )
@@ -68,7 +76,7 @@ fun ServiceLocator.searchDeps(context: Context): SearchDeps =
         repository =
             SearchRepository(
                 searchDao = database(context).searchDao(),
-                channelDao = database(context).channelDao(),
+                channelDao = visibleChannelDao(context),
                 epgRepository = epgRepository(context),
             ),
         historyStore =

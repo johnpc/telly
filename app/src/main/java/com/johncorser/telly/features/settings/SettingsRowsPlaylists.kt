@@ -22,6 +22,8 @@ data class PlaylistItem(
     val name: String,
     val channelCount: Int,
     val epgUrl: String? = null,
+    /** Distinct group titles in playlist order (Manage groups pane). */
+    val groups: List<String> = emptyList(),
 )
 
 /** Playlists pane rows (catalogue 19): playlist list + list-level actions. */
@@ -68,7 +70,7 @@ fun playlistDetailRows(
             checked = s.get(playlistEnabledSetting(item.url)),
         ),
         SettingsRow.Value(id = RowIds.PLAYLIST_NAME, title = "Playlist name", summary = item.name),
-        SettingsRow.Value(id = RowIds.PLAYLIST_URL, title = "Playlist URL", summary = item.url, locked = true),
+        SettingsRow.Value(id = RowIds.PLAYLIST_URL, title = "Playlist URL", summary = item.url),
         SettingsRow.Value(
             id = RowIds.PLAYLIST_EPG_SOURCES,
             title = "EPG sources",
@@ -77,22 +79,19 @@ fun playlistDetailRows(
         SettingsRow.Value(
             id = RowIds.PLAYLIST_USER_AGENT,
             title = "User-Agent",
-            summary = "Not set",
-            locked = true,
+            summary = notSet(s.get(playlistUserAgentSetting(item.url))),
         ),
-        SettingsRow.Value(id = RowIds.PLAYLIST_MANAGE_GROUPS, title = "Manage groups", locked = true),
+        SettingsRow.Value(id = RowIds.PLAYLIST_MANAGE_GROUPS, title = "Manage groups"),
         SettingsRow.Header("Update options"),
         SettingsRow.Value(
             id = RowIds.PLAYLIST_UPDATE_INTERVAL,
             title = "Update interval, hours",
-            summary = "None",
-            locked = true,
+            summary = SettingsPickers.intervalLabel(s.get(playlistUpdateIntervalSetting(item.url))),
         ),
         SettingsRow.Toggle(
             id = RowIds.PLAYLIST_UPDATE_ON_START,
             title = "Update on app start",
-            checked = false,
-            locked = true,
+            checked = s.get(playlistUpdateOnStartSetting(item.url)),
         ),
         SettingsRow.Action(id = RowIds.PLAYLIST_UPDATE_NOW, title = "Update playlist"),
         SettingsRow.Action(id = RowIds.PLAYLIST_DELETE, title = "Delete playlist"),

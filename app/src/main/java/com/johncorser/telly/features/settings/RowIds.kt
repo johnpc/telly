@@ -32,6 +32,9 @@ object RowIds {
     const val PLAYLIST_UPDATE_NOW = "playlist.update_now"
     const val PLAYLIST_DELETE = "playlist.delete"
 
+    /** Manage-groups toggle rows append the group title after the prefix. */
+    const val PLAYLIST_GROUP_PREFIX = "playlist_group:"
+
     // EPG.
     const val EPG_SOURCES = "epg.sources"
     const val EPG_PAST_DAYS = "epg.past_days"

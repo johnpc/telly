@@ -3,7 +3,9 @@ package com.johncorser.telly
 import com.johncorser.telly.core.ServiceLocator
 import com.johncorser.telly.core.settings.ParentalControls
 import com.johncorser.telly.features.playlist.M3uFetcher
+import com.johncorser.telly.features.playlist.PlaylistUrlChanger
 import com.johncorser.telly.features.reminders.remindersHub
+import com.johncorser.telly.features.settings.PlaylistKeyMigration
 import com.johncorser.telly.features.settings.PlaylistUpdater
 import com.johncorser.telly.features.settings.SettingsActions
 import com.johncorser.telly.features.settings.SettingsBackupManager
@@ -25,6 +27,13 @@ internal fun MainActivity.settingsGraph(fetcher: M3uFetcher): SettingsGraph {
                 updater = PlaylistUpdater(fetcher::fetch, repository),
                 updateEpgNow = { ServiceLocator.epgRefresher(this).refreshAllNow() },
                 backup = SettingsBackupManager(settings, repository, filesDir),
+                changePlaylistUrl =
+                    PlaylistUrlChanger(
+                        fetchPlaylist = fetcher::fetch,
+                        repository = repository,
+                        rekeySettings = { old, new -> PlaylistKeyMigration.apply(settings, old, new) },
+                        rekeyEpgSources = ServiceLocator.epgSourceStore(this)::rekeyPlaylist,
+                    )::change,
             ),
         versionName = appVersionName(),
         epgSources = ServiceLocator.epgSourceStore(this),

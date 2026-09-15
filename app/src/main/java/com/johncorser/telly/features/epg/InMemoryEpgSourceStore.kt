@@ -35,4 +35,13 @@ class InMemoryEpgSourceStore : EpgSourceStore {
     override suspend fun remove(id: Long) {
         mutableSources.update { current -> current.filterNot { it.id == id } }
     }
+
+    override suspend fun rekeyPlaylist(
+        oldUrl: String,
+        newUrl: String,
+    ) {
+        mutableSources.update { current ->
+            current.map { if (it.playlistUrl == oldUrl) it.copy(playlistUrl = newUrl) else it }
+        }
+    }
 }

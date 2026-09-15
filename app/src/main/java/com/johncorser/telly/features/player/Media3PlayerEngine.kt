@@ -21,6 +21,7 @@ import kotlinx.coroutines.flow.update
  */
 class Media3PlayerEngine(
     val player: ExoPlayer,
+    private val userAgent: StreamUserAgent? = null,
 ) : PlayerEngine,
     Player.Listener {
     private val mutableState = MutableStateFlow<PlayerState>(PlayerState.Idle)
@@ -40,6 +41,7 @@ class Media3PlayerEngine(
     override fun load(streamUrl: String) {
         mutableState.value = PlayerState.Buffering
         frameRates = FrameRateEstimator()
+        userAgent?.onLoad(streamUrl)
         player.setMediaItem(MediaItem.fromUri(streamUrl))
         player.prepare()
         player.play()
@@ -100,6 +102,7 @@ class Media3PlayerEngine(
         fun create(
             context: Context,
             handleAudioFocus: Boolean = true,
+            userAgentFor: (streamUrl: String) -> String = { STREAM_USER_AGENT },
         ): Media3PlayerEngine {
             val audioAttributes =
                 AudioAttributes
@@ -107,13 +110,14 @@ class Media3PlayerEngine(
                     .setUsage(C.USAGE_MEDIA)
                     .setContentType(C.AUDIO_CONTENT_TYPE_MOVIE)
                     .build()
+            val userAgent = StreamUserAgent(userAgentFor)
             val player =
                 ExoPlayer
                     .Builder(context)
-                    .setMediaSourceFactory(streamMediaSourceFactory(context))
+                    .setMediaSourceFactory(streamMediaSourceFactory(context, userAgent::current))
                     .setAudioAttributes(audioAttributes, handleAudioFocus)
                     .build()
-            return Media3PlayerEngine(player)
+            return Media3PlayerEngine(player, userAgent)
         }
     }
 }

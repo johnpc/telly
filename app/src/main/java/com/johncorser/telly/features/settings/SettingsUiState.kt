@@ -10,6 +10,11 @@ sealed interface SettingsPane {
         val url: String,
     ) : SettingsPane
 
+    /** Manage groups: the group toggles of the playlist at [url]. */
+    data class PlaylistGroups(
+        val url: String,
+    ) : SettingsPane
+
     data object EpgSources : SettingsPane
 
     data class EpgSourceDetail(

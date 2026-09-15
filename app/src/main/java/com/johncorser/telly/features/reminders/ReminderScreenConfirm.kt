@@ -5,6 +5,7 @@ import com.johncorser.telly.R
 import com.johncorser.telly.features.settings.SettingsOverlay
 import com.johncorser.telly.features.settings.SettingsScreenGuidedStep
 import com.johncorser.telly.features.settings.SettingsViewModel
+import com.johncorser.telly.features.settings.dismissOverlay
 
 /**
  * "Delete reminder?" GuidedStep confirm (uncapturable — the reference locks

@@ -33,6 +33,11 @@ class SettingsRepository(
         store.write(key, raw)
     }
 
+    /** Removes a raw key (playlist URL re-key drops the old-URL copies). */
+    fun removeRaw(key: String) {
+        store.write(key, null)
+    }
+
     /** The raw persisted map, as exported by backup. */
     fun snapshot(): Map<String, String> = store.readAll()
 

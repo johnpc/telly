@@ -35,6 +35,8 @@ class SettingsViewModel(
     internal val epgSources: EpgSourceStore = graph.epgSources
     internal val parental: ParentalControls = graph.parental
     internal val updater: PlaylistUpdater = graph.actions.updater
+    internal val changePlaylistUrl: suspend (oldUrl: String, newUrl: String) -> Boolean =
+        graph.actions.changePlaylistUrl
     internal val updateEpgNow: suspend () -> Unit = graph.actions.updateEpgNow
     internal val backup: SettingsBackupManager = graph.actions.backup
     internal val reminders: ReminderSettingsFeed? = graph.reminders
@@ -52,6 +54,7 @@ class SettingsViewModel(
                         name = it.name ?: it.sourceUrl,
                         channelCount = it.playlist.channels.size,
                         epgUrl = it.playlist.epgUrl,
+                        groups = it.playlist.channels.mapNotNull { channel -> channel.groupTitle }.distinct(),
                     )
                 }
             }.stateIn(scope, SharingStarted.Eagerly, emptyList())
@@ -98,25 +101,5 @@ class SettingsViewModel(
             rowId.startsWith(RowIds.REMINDER_PREFIX) -> confirmDeleteReminderOverlay(rowId)
             else -> runAction(rowId)
         }
-    }
-
-    /** BACK inside settings: overlay first, then one sheet. False = leave. */
-    fun back(): Boolean {
-        val current = mutableState.value
-        return when {
-            current.overlay != null -> {
-                dismissOverlay()
-                true
-            }
-            current.panes.isNotEmpty() -> {
-                mutableState.update { it.copy(panes = it.panes.dropLast(1)) }
-                true
-            }
-            else -> false
-        }
-    }
-
-    fun dismissOverlay() {
-        mutableState.update { it.copy(overlay = null) }
     }
 }

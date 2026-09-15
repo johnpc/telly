@@ -37,6 +37,7 @@ private fun SettingsViewModel.runPlaylistAction(rowId: String) {
         RowIds.PLAYLIST_ENABLE -> currentDetailUrl()?.let { flip(playlistEnabledSetting(it)) }
         RowIds.PLAYLIST_DELETE -> confirmDeleteOverlay()
         RowIds.PLAYLIST_NAME -> renameOverlay()
+        else -> runPlaylistExtrasAction(rowId)
     }
 }
 

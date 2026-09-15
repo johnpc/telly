@@ -53,6 +53,16 @@ class RoomPlaylistRepository(
         playlistDao.rename(sourceUrl, name)
     }
 
+    override suspend fun changeUrl(
+        oldUrl: String,
+        newUrl: String,
+    ): Boolean =
+        database.withTransaction {
+            val movable = playlistDao.byUrl(newUrl) == null && playlistDao.byUrl(oldUrl) != null
+            if (movable) playlistDao.updateUrl(oldUrl, newUrl)
+            movable
+        }
+
     override suspend fun delete(sourceUrl: String) {
         database.withTransaction {
             val existing = playlistDao.byUrl(sourceUrl) ?: return@withTransaction
