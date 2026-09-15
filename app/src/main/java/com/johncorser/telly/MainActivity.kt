@@ -6,6 +6,7 @@ import androidx.activity.compose.setContent
 import androidx.lifecycle.lifecycleScope
 import com.johncorser.telly.core.ServiceLocator
 import com.johncorser.telly.core.guideDeps
+import com.johncorser.telly.core.multiviewDeps
 import com.johncorser.telly.core.navigation.Navigator
 import com.johncorser.telly.core.navigation.Route
 import com.johncorser.telly.core.playbackDeps
@@ -39,6 +40,7 @@ class MainActivity : ComponentActivity() {
                 guideDeps = ServiceLocator.guideDeps(this),
                 settingsGraph = settingsGraph(),
                 searchDeps = ServiceLocator.searchDeps(this),
+                multiviewDeps = ServiceLocator.multiviewDeps(this),
             )
         }
     }

@@ -127,3 +127,64 @@ Feature: Watch live TV and zap between channels
     And I select the "History" card
     And I press back
     Then telly exits to the launcher
+
+  # Multiview (multiview-round captures + multiview-spec.md). The free
+  # reference is a single-pane teaser whose every add/change selection
+  # opens Unlock Premium; telly ships the multi-pane grid working (charter
+  # precedent: no premium tier). Audio ownership is asserted via the pane
+  # semantics ("audio"/"muted"), never actual sound.
+
+  Scenario: The quick-bar's Multiview slot opens the single-pane teaser
+    When I long-press ok
+    And I select "Multiview"
+    Then I see 1 multiview pane
+    And the multiview pane "News One" is focused with audio
+    And I see "Press OK to show menu"
+    And I see "Your IPTV provider may limit the number of concurrent connections"
+
+  Scenario: OK on the pane opens its menu over the pane view
+    Given I opened multiview
+    When I press ok
+    Then I see the multiview menu rows "Add screen", "Search and add" and "Change channel"
+    When I select "Add screen"
+    Then the multiview channel picker shows the list, schedule and detail panes
+
+  Scenario: Adding a second screen builds the side-by-side grid; the new pane owns audio
+    Given I opened multiview
+    When I press ok
+    And I select "Add screen"
+    And I pick the channel "News One HD" in the multiview picker
+    Then I see 2 multiview panes
+    And the multiview pane "News One HD" is focused with audio
+    And the multiview pane "News One" is muted
+
+  Scenario: D-pad focus moves between panes and audio follows the focused pane
+    Given I opened multiview with a second screen "News One HD"
+    When I press dpad left
+    Then the multiview pane "News One" is focused with audio
+    And the multiview pane "News One HD" is muted
+
+  Scenario: Change channel swaps the focused pane through the picker
+    Given I opened multiview
+    When I press ok
+    And I select "Change channel"
+    And I pick the channel "Sports Arena" in the multiview picker
+    Then I see 1 multiview pane
+    And the multiview pane "Sports Arena" is focused with audio
+
+  Scenario: Remove screen collapses the grid back to a single pane
+    Given I opened multiview with a second screen "News One HD"
+    When I press ok
+    And I select "Remove screen"
+    Then I see 1 multiview pane
+    And the multiview pane "News One" is focused with audio
+
+  Scenario: Back walks picker to panes to fullscreen playback
+    Given I opened multiview
+    When I press ok
+    And I select "Change channel"
+    And I press back
+    Then I see "Press OK to show menu"
+    When I press back
+    Then no chrome is visible over the video
+    And playback starts fullscreen on channel 1 "News One"

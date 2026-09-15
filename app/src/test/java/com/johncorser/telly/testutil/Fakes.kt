@@ -170,6 +170,8 @@ class FakePlayerEngine : PlayerEngine {
     val loaded = mutableListOf<String>()
     var stops = 0
     var released = false
+    private var mutedState = false
+    val muted: Boolean get() = mutedState
 
     override fun load(streamUrl: String) {
         loaded += streamUrl
@@ -183,6 +185,10 @@ class FakePlayerEngine : PlayerEngine {
 
     override fun release() {
         released = true
+    }
+
+    override fun setMuted(muted: Boolean) {
+        mutedState = muted
     }
 }
 

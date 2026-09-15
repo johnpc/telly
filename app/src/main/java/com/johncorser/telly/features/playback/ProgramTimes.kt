@@ -36,6 +36,12 @@ object ProgramTimes {
         zone: TimeZone,
     ): String = format("EEE, MMM d, h:mm a", atMs, zone)
 
+    /** Bare start stamp "12:45 AM" (multiview picker schedule rows, capture 05). */
+    fun startTime(
+        atMs: Long,
+        zone: TimeZone,
+    ): String = format("hh:mm a", atMs, zone)
+
     /** Transport-row span "00:16" / "45:00" / "1:15:00" (round3-ref 03b). */
     fun span(ms: Long): String {
         val totalSeconds = ms.coerceAtLeast(0) / SECOND_MS
