@@ -14,6 +14,7 @@ import com.johncorser.telly.features.playback.PlaybackScreen
 import com.johncorser.telly.features.playlist.PlaylistRepository
 import com.johncorser.telly.features.search.SearchDeps
 import com.johncorser.telly.features.search.SearchScreen
+import com.johncorser.telly.features.vod.VodDeps
 
 /** The crossfading base-route host under RootScreen's settings sheet. */
 @Composable
@@ -27,6 +28,7 @@ internal fun RootScreenRoutes(
     guideDeps: GuideDeps,
     searchDeps: SearchDeps,
     multiviewDeps: MultiviewDeps,
+    vodDeps: VodDeps,
     onEnterPip: () -> Unit = {},
 ) {
     ScreenCrossfade(baseRoute) { target ->
@@ -59,11 +61,13 @@ internal fun RootScreenRoutes(
                     onFullscreen = { navigator.push(Route.Playback) },
                     onOpenSearch = { navigator.push(Route.Search) },
                     onOpenSettings = { navigator.push(Route.Settings) },
+                    onOpenVod = { navigator.push(Route.Vod) },
                     settingsOpen = settingsOpen,
                     onOpenMyList = { navigator.push(Route.MyList) },
                     onOpenManageFavorites = { navigator.push(Route.ManageFavorites) },
                     onOpenReorderChannels = { group -> navigator.push(Route.ReorderChannels(group)) },
                 )
+            Route.Vod, is Route.VodPlayback -> RootScreenVodRoutes(target, navigator, vodDeps)
             // Tuning from search adopts the guide-root BACK chain: the
             // guide becomes the stack root with fullscreen playback above.
             Route.Search ->

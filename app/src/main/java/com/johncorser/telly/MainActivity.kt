@@ -15,6 +15,7 @@ import com.johncorser.telly.core.playlistFetchUserAgentFor
 import com.johncorser.telly.core.playlistRefresher
 import com.johncorser.telly.core.searchDeps
 import com.johncorser.telly.core.settings.TellySettings
+import com.johncorser.telly.core.vodDeps
 import com.johncorser.telly.features.onboarding.StartRoute
 import com.johncorser.telly.features.pip.PipActivityBridge
 import com.johncorser.telly.features.pip.PipState
@@ -67,6 +68,7 @@ class MainActivity : ComponentActivity() {
                 settingsGraph = settingsGraph(fetcher),
                 searchDeps = ServiceLocator.searchDeps(this),
                 multiviewDeps = ServiceLocator.multiviewDeps(this),
+                vodDeps = ServiceLocator.vodDeps(this),
                 onEnterPip = pip::enter,
                 reminders = ServiceLocator.remindersHub(this),
             )

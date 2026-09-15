@@ -34,6 +34,7 @@ internal fun MainActivity.settingsGraph(fetcher: M3uFetcher): SettingsGraph {
                         rekeySettings = { old, new -> PlaylistKeyMigration.apply(settings, old, new) },
                         rekeyEpgSources = ServiceLocator.epgSourceStore(this)::rekeyPlaylist,
                     )::change,
+                clearVodPositions = { ServiceLocator.database(this).vodPositionDao().clearAll() },
             ),
         versionName = appVersionName(),
         epgSources = ServiceLocator.epgSourceStore(this),

@@ -127,6 +127,14 @@ object FixturePlan {
         return out
     }
 
+    // VOD entries (mp4 stream URLs -> classified as Movies, never channels);
+    // mirrors e2e/fixtures/gen-fixtures.mjs VOD_ITEMS 1:1.
+    val vodItems: List<FixtureVodItem> =
+        listOf(
+            FixtureVodItem(tvgId = "vod-big-buck.fixture", name = "Big Buck Bunny", group = "Cinema"),
+            FixtureVodItem(tvgId = "vod-sintel.fixture", name = "Sintel", group = "Cinema"),
+        )
+
     fun m3u(baseUrl: String): String =
         buildString {
             append("#EXTM3U url-tvg=\"$baseUrl/epg.xml\"\n")
@@ -136,6 +144,13 @@ object FixturePlan {
                         "tvg-logo=\"$baseUrl/logos/${c.stream}.png\" group-title=\"${c.group}\",${c.name}\n",
                 )
                 append("$baseUrl/streams/${c.stream}.ts\n")
+            }
+            vodItems.forEach { v ->
+                append(
+                    "#EXTINF:-1 tvg-id=\"${v.tvgId}\" tvg-name=\"${v.name}\" " +
+                        "tvg-logo=\"$baseUrl/logos/movie-house.png\" group-title=\"${v.group}\",${v.name}\n",
+                )
+                append("$baseUrl/streams/vod-sample.mp4\n")
             }
         }
 
@@ -186,6 +201,12 @@ data class FixtureChannel(
     val name: String,
     val group: String,
     val stream: String,
+)
+
+data class FixtureVodItem(
+    val tvgId: String,
+    val name: String,
+    val group: String,
 )
 
 data class FixtureProgramme(

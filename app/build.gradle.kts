@@ -171,7 +171,9 @@ val syncE2eAssets by tasks.registering(Sync::class) {
     into(layout.buildDirectory.dir("generated/e2eAssets"))
     from(rootProject.file("e2e/features")) { into("features") }
     from(rootProject.file("e2e/fixtures/streams")) {
-        include("*.ts")
+        // The tiny vod-sample.mp4 backs the VOD scenarios; the full-length
+        // per-channel .mp4 captures stay dev-only (they'd bloat the APK).
+        include("*.ts", "vod-sample.mp4")
         into("fixtures/streams")
     }
     from(rootProject.file("e2e/fixtures/logos")) { into("fixtures/logos") }

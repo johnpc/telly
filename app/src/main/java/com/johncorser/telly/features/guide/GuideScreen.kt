@@ -34,6 +34,7 @@ fun GuideScreen(
     onFullscreen: () -> Unit,
     onOpenSearch: () -> Unit = {},
     onOpenSettings: () -> Unit = {},
+    onOpenVod: () -> Unit = {},
     settingsOpen: Boolean = false,
     onOpenMyList: () -> Unit = {},
     onOpenManageFavorites: () -> Unit = {},
@@ -67,7 +68,9 @@ fun GuideScreen(
             .background(Color(TELLY_ONBOARDING_BACKGROUND)),
     ) {
         Row(Modifier.fillMaxSize()) {
-            if (layer == GuideLayer.Groups) GuideScreenGroups(controller, onOpenSearch, onOpenSettings, onOpenMyList)
+            if (layer == GuideLayer.Groups) {
+                GuideScreenGroups(controller, onOpenSearch, onOpenSettings, onOpenMyList, onOpenVod)
+            }
             Box(Modifier.weight(1f)) {
                 Column(Modifier.fillMaxSize()) {
                     GuideScreenTop(controller, engine)

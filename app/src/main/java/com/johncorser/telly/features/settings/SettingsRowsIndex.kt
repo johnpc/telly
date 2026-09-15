@@ -3,6 +3,7 @@ package com.johncorser.telly.features.settings
 import com.johncorser.telly.core.settings.SettingsRepository
 import com.johncorser.telly.features.epg.EpgSource
 import com.johncorser.telly.features.reminders.remindersRows
+import com.johncorser.telly.features.vod.vodSettingsRows
 
 /**
  * Routes a sheet to its row builder — the whole captured settings tree.
@@ -36,6 +37,7 @@ fun rowsFor(
                 ?.let { epgSourceDetailRows(it) }
                 .orEmpty()
         SettingsPane.Reminders -> remindersRows(settings, feeds.reminders)
+        SettingsPane.Vod -> vodSettingsRows(settings)
     }
 
 private fun rootRows(): List<SettingsRow> =
@@ -76,4 +78,5 @@ fun paneTitle(
         is SettingsPane.EpgSourceDetail ->
             epgSources.firstOrNull { it.id == pane.sourceId }?.name ?: "EPG source"
         SettingsPane.Reminders -> "Reminders"
+        SettingsPane.Vod -> "VOD"
     }

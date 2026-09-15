@@ -27,6 +27,7 @@ object SettingsToggles {
             RowIds.PARENTAL_CHANNELS_ONLY to TellySettings.PARENTAL_CHANNELS_ONLY,
             RowIds.PARENTAL_REQUIRE_SETTINGS to TellySettings.PARENTAL_REQUIRE_FOR_SETTINGS,
             RowIds.PARENTAL_REQUIRE_PLAYLISTS to TellySettings.PARENTAL_REQUIRE_FOR_PLAYLISTS,
+            RowIds.VOD_REMEMBER_POSITION to TellySettings.VOD_REMEMBER_POSITION,
             RowIds.ABOUT_STATISTICS to TellySettings.SEND_STATISTICS,
         )
 }

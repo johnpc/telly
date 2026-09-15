@@ -40,6 +40,7 @@ class SettingsViewModel(
     internal val updateEpgNow: suspend () -> Unit = graph.actions.updateEpgNow
     internal val backup: SettingsBackupManager = graph.actions.backup
     internal val reminders: ReminderSettingsFeed? = graph.reminders
+    internal val clearVodPositions: suspend () -> Unit = graph.actions.clearVodPositions
     private val versionName: String = graph.versionName
 
     internal val mutableState = MutableStateFlow(SettingsUiState())

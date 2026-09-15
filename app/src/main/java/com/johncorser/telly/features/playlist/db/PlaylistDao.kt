@@ -42,12 +42,15 @@ interface PlaylistDao {
     )
 
     /**
-     * The URL of the playlist owning the channel at [streamUrl]. Blocking on
-     * purpose: the stream User-Agent resolver runs on a player loader thread.
+     * The URL of the playlist owning the channel OR VOD item at [streamUrl]
+     * (VOD playback sends the same per-playlist User-Agent as live streams).
+     * Blocking on purpose: the stream User-Agent resolver runs on a player
+     * loader thread.
      */
     @Query(
         "SELECT url FROM playlists WHERE id = " +
-            "(SELECT playlistId FROM channels WHERE streamUrl = :streamUrl LIMIT 1)",
+            "(SELECT playlistId FROM channels WHERE streamUrl = :streamUrl " +
+            "UNION ALL SELECT playlistId FROM vod_items WHERE streamUrl = :streamUrl LIMIT 1)",
     )
     fun playlistUrlForStream(streamUrl: String): String?
 

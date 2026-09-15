@@ -26,6 +26,7 @@ import com.johncorser.telly.features.reminders.RemindersHub
 import com.johncorser.telly.features.search.SearchDeps
 import com.johncorser.telly.features.settings.SettingsGraph
 import com.johncorser.telly.features.settings.SettingsScreenHost
+import com.johncorser.telly.features.vod.VodDeps
 
 /** Renders the top of the navigator's back stack and owns global BACK. */
 @Composable
@@ -38,6 +39,7 @@ fun RootScreen(
     settingsGraph: SettingsGraph,
     searchDeps: SearchDeps,
     multiviewDeps: MultiviewDeps,
+    vodDeps: VodDeps,
     onEnterPip: () -> Unit = {},
     reminders: RemindersHub? = null,
 ) {
@@ -72,6 +74,7 @@ fun RootScreen(
                         guideDeps,
                         searchDeps,
                         multiviewDeps,
+                        vodDeps,
                         onEnterPip,
                     )
                 }

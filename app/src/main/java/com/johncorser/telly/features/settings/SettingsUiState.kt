@@ -23,6 +23,9 @@ sealed interface SettingsPane {
 
     /** Other -> Reminders: lead-time picker + the scheduled reminders. */
     data object Reminders : SettingsPane
+
+    /** Other -> VOD (remember-position toggle + clear positions). */
+    data object Vod : SettingsPane
 }
 
 /** Modal state over the sheet stack. */
@@ -52,6 +55,9 @@ sealed interface SettingsOverlay {
         val reminderId: Long,
         val title: String,
     ) : SettingsOverlay
+
+    /** "Clear playback positions?" confirm on the VOD pane. */
+    data object ConfirmClearVodPositions : SettingsOverlay
 
     data object PinSetup : SettingsOverlay
 }

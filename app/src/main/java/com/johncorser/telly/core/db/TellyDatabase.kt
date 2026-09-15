@@ -19,15 +19,19 @@ import com.johncorser.telly.features.playlist.db.PlaylistEntity
 import com.johncorser.telly.features.reminders.db.ReminderDao
 import com.johncorser.telly.features.reminders.db.ReminderEntity
 import com.johncorser.telly.features.search.db.SearchDao
+import com.johncorser.telly.features.vod.db.VodItemDao
+import com.johncorser.telly.features.vod.db.VodItemEntity
+import com.johncorser.telly.features.vod.db.VodPositionDao
+import com.johncorser.telly.features.vod.db.VodPositionEntity
 
 /** The single app database; schema JSON is exported to app/schemas. */
 @Database(
     entities = [
         PlaylistEntity::class, ChannelEntity::class, ProgramEntity::class,
         WatchHistoryEntity::class, EpgSourceEntity::class, ReminderEntity::class,
-        MyListEntity::class,
+        MyListEntity::class, VodItemEntity::class, VodPositionEntity::class,
     ],
-    version = 6,
+    version = 7,
     exportSchema = true,
 )
 abstract class TellyDatabase : RoomDatabase() {
@@ -47,6 +51,11 @@ abstract class TellyDatabase : RoomDatabase() {
 
     /** v6: My-list saved programmes (migration in MyListMigration). */
     abstract fun myListDao(): MyListDao
+
+    /** v7: VOD items + resume positions (migration in VodMigrations). */
+    abstract fun vodItemDao(): VodItemDao
+
+    abstract fun vodPositionDao(): VodPositionDao
 
     companion object {
         /** v2 adds the programme `<sub-title>` column (round3 P0 item 1). */

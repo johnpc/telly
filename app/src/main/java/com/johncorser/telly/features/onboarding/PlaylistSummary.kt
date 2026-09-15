@@ -1,6 +1,7 @@
 package com.johncorser.telly.features.onboarding
 
 import com.johncorser.telly.features.playlist.M3uChannel
+import com.johncorser.telly.features.vod.VodClassifier
 import okhttp3.HttpUrl.Companion.toHttpUrlOrNull
 
 /**
@@ -9,9 +10,7 @@ import okhttp3.HttpUrl.Companion.toHttpUrlOrNull
  * as live channels, and suggests the source URL's host as the playlist name.
  */
 object PlaylistSummary {
-    private val movieExtensions = setOf("mp4", "mkv")
-
-    fun movieCount(channels: List<M3uChannel>): Int = channels.count { isMovie(it.streamUrl) }
+    fun movieCount(channels: List<M3uChannel>): Int = channels.count { VodClassifier.isVod(it.streamUrl) }
 
     fun liveCount(channels: List<M3uChannel>): Int = channels.size - movieCount(channels)
 
@@ -24,10 +23,4 @@ object PlaylistSummary {
 
     /** TiviMate pre-fills the playlist name with the URL's host ("10.0.2.2"). */
     fun suggestName(sourceUrl: String): String = sourceUrl.toHttpUrlOrNull()?.host ?: sourceUrl
-
-    private fun isMovie(streamUrl: String): Boolean =
-        streamUrl
-            .substringBefore('?')
-            .substringAfterLast('.', missingDelimiterValue = "")
-            .lowercase() in movieExtensions
 }

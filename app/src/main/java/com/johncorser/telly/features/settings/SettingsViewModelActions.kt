@@ -13,6 +13,15 @@ internal fun SettingsViewModel.runAction(rowId: String) {
         RowIds.EPG_ADD_SOURCE -> showOverlay(SettingsOverlay.TextEdit(rowId, title = "EPG URL", value = ""))
         RowIds.EPG_SOURCE_URL -> editEpgSourceUrlOverlay()
         RowIds.EPG_SOURCE_DELETE -> confirmDeleteEpgSourceOverlay()
+        RowIds.OTHER_VOD -> push(SettingsPane.Vod)
+        RowIds.VOD_CLEAR_POSITIONS -> showOverlay(SettingsOverlay.ConfirmClearVodPositions)
+        else -> runGeneralAction(rowId)
+    }
+}
+
+/** General/parental/about actions, with playlists as the final fallback. */
+private fun SettingsViewModel.runGeneralAction(rowId: String) {
+    when (rowId) {
         RowIds.USER_AGENT -> textEditOverlay(rowId, "User-Agent", settings.get(TellySettings.USER_AGENT))
         RowIds.UDP_PROXY -> textEditOverlay(rowId, "UDP proxy (address:port)", settings.get(TellySettings.UDP_PROXY))
         RowIds.BACK_UP_DATA ->

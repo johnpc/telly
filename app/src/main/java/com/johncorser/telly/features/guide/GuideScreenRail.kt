@@ -15,6 +15,7 @@ import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusProperties
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.unit.dp
 import com.johncorser.telly.R
 import com.johncorser.telly.core.design.TELLY_GUIDANCE_PANE
@@ -24,21 +25,24 @@ import com.johncorser.telly.core.design.TELLY_TEXT_MUTED
  * The 56 dp nav rail at the far left of the guide+groups view (capture
  * 25): logo on top, search / live-TV / DVR / My-list icons mid-rail with
  * the live-TV section lit, settings gear at the bottom. Search, the
- * My-list bookmark and the gear are live targets (LEFT from the groups
- * column reaches the gear, OK opens Search / My List / the settings sheet;
- * UP/DOWN traverse search ↔ bookmark ↔ gear and RIGHT returns to the
- * groups column); the tv/DVR sections are their own future slices and
- * stay decorative.
+ * My-list bookmark, the Movies film icon (telly's VOD section — the
+ * reference sells VOD as premium) and the gear are live targets (LEFT from
+ * the groups column reaches the gear, OK opens Search / My List / Movies /
+ * the settings sheet; UP/DOWN traverse search ↔ bookmark ↔ Movies ↔ gear
+ * and RIGHT returns to the groups column); the tv/DVR sections are their
+ * own future slices and stay decorative.
  */
 @Composable
 internal fun GuideScreenRail(
     onOpenSearch: () -> Unit,
     onOpenSettings: () -> Unit,
     onOpenMyList: () -> Unit = {},
+    onOpenVod: () -> Unit = {},
     searchFocus: FocusRequester = remember { FocusRequester() },
     gearFocus: FocusRequester = remember { FocusRequester() },
     groupsFocus: FocusRequester = remember { FocusRequester() },
     bookmarkFocus: FocusRequester = remember { FocusRequester() },
+    moviesFocus: FocusRequester = remember { FocusRequester() },
 ) {
     Column(
         Modifier
@@ -74,6 +78,20 @@ internal fun GuideScreenRail(
                     .focusRequester(bookmarkFocus)
                     .focusProperties {
                         up = searchFocus
+                        down = moviesFocus
+                        right = groupsFocus
+                    },
+        )
+        GuideScreenRailButton(
+            icon = R.drawable.ic_rail_movie,
+            onClick = onOpenVod,
+            modifier =
+                Modifier
+                    .padding(top = 24.dp)
+                    .testTag("rail-movies")
+                    .focusRequester(moviesFocus)
+                    .focusProperties {
+                        up = bookmarkFocus
                         down = gearFocus
                         right = groupsFocus
                     },
@@ -86,7 +104,7 @@ internal fun GuideScreenRail(
                 Modifier
                     .focusRequester(gearFocus)
                     .focusProperties {
-                        up = bookmarkFocus
+                        up = moviesFocus
                         right = groupsFocus
                     },
         )

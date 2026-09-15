@@ -14,6 +14,8 @@ class SettingsActions(
     val backup: SettingsBackupManager,
     /** Playlist URL edit (PlaylistUrlChanger::change); false keeps the old URL. */
     val changePlaylistUrl: suspend (oldUrl: String, newUrl: String) -> Boolean = { _, _ -> false },
+    /** Other -> VOD -> Clear playback positions (empties vod_positions). */
+    val clearVodPositions: suspend () -> Unit = {},
 )
 
 /**
