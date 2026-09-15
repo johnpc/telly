@@ -66,11 +66,11 @@ Feature: Search channels and programmes
     And I press dpad down
     Then the first airing row of the selected channel is focused
 
-  Scenario: OK on a Programs channel card opens the Unlock Premium screen
+  Scenario: OK on a Programs channel card tunes it
     When I focus the query bar
     And I type "newsroom"
     And I press ok on the Programs channel card "News One"
-    Then I see the "Unlock Premium" screen
+    Then playback starts fullscreen on channel 1 "News One"
 
   Scenario: OK on a channel result tunes it
     When I focus the query bar
@@ -84,7 +84,7 @@ Feature: Search channels and programmes
     And I press ok on the first programme row
     Then I see the dropdown rows "Remind", "Record", "Custom recording", "Add to My list", "Program description"
     When I select "Remind"
-    Then I see the "Unlock Premium" screen
+    Then I see "Coming soon to telly"
 
   Scenario: Committed queries land in the history and the trash clears them
     When I focus the query bar

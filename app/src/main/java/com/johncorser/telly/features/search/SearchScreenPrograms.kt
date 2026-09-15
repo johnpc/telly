@@ -41,11 +41,12 @@ internal fun SearchScreenPrograms(
     viewModel: SearchViewModel,
     firstFocus: FocusRequester?,
     restore: SearchScreenRestore,
+    onTuned: () -> Unit,
 ) {
     SearchScreenHeader(R.string.search_programs)
     val selected by viewModel.selectedChannel.collectAsState()
     Row(Modifier.padding(start = Dims.edgePad, top = Dims.programsTop)) {
-        SearchScreenProgramLane(groups, selected, viewModel, restore)
+        SearchScreenProgramLane(groups, selected, viewModel, restore, onTuned)
         Spacer(Modifier.width(Dims.rowTextStart))
         // With no Channels shelf, DOWN from the query bar lands on the
         // FIRST AIRING ROW, not the master card (round7 device check).

@@ -32,7 +32,7 @@ class SettingsRowsTest {
         }
 
     @Test
-    fun `every pane starts with the premium note and Unlock Premium`() {
+    fun `no pane prepends a premium note or Unlock Premium row`() {
         val panes =
             listOf(
                 generalRows(s),
@@ -46,15 +46,13 @@ class SettingsRowsTest {
                 aboutRows(s, "0.1.0"),
             )
         panes.forEach { rows ->
-            assertEquals(PREMIUM_NOTE, (rows[0] as SettingsRow.Note).text)
-            assertEquals("Unlock Premium", (rows[1] as SettingsRow.Action).title)
-            assertTrue((rows[1] as SettingsRow.Action).premiumKey)
+            assertFalse(rows.any { it is SettingsRow.Action && it.title == "Unlock Premium" })
         }
     }
 
     @Test
     fun `general lists the captured rows in order with captured defaults`() {
-        val rows = generalRows(s).drop(2)
+        val rows = generalRows(s)
         assertEquals(
             listOf(
                 "Auto start app on boot", "Auto start app on wake up from sleep mode",
@@ -72,7 +70,7 @@ class SettingsRowsTest {
 
     @Test
     fun `playlists pane shows the playlist with channel count then list actions`() {
-        val rows = playlistsRows(s, listOf(item)).drop(2)
+        val rows = playlistsRows(s, listOf(item))
         val playlistRow = rows[0] as SettingsRow.Value
         assertEquals("10.0.2.2", playlistRow.title)
         assertEquals("Channels: 30", playlistRow.summary)
@@ -87,13 +85,13 @@ class SettingsRowsTest {
             playlistsRows(
                 s,
                 listOf(item.copy(url = "b", name = "Zeta"), item.copy(url = "a", name = "Alpha")),
-            ).drop(2)
+            )
         assertEquals(listOf("Alpha", "Zeta"), rows.take(2).map { (it as SettingsRow.Value).title })
     }
 
     @Test
     fun `playlist detail matches capture 20 and only ref-impossible rows are locked`() {
-        val rows = playlistDetailRows(s, item).drop(2)
+        val rows = playlistDetailRows(s, item)
         assertEquals(
             listOf(
                 "Enable playlist", "Playlist name", "Playlist URL", "EPG sources", "User-Agent",
@@ -111,7 +109,7 @@ class SettingsRowsTest {
 
     @Test
     fun `epg pane matches capture 57 with the None default interval`() {
-        val rows = epgRows(s).drop(2)
+        val rows = epgRows(s)
         assertEquals(
             listOf(
                 "EPG sources",
@@ -139,7 +137,7 @@ class SettingsRowsTest {
 
     @Test
     fun `epg sources pane lists the url-tvg source with the footer note`() {
-        val rows = epgSourcesRows(listOf(item), emptyList()).drop(2)
+        val rows = epgSourcesRows(listOf(item), emptyList())
         val source = rows[0] as SettingsRow.Value
         assertEquals("10.0.2.2 (default)", source.title)
         assertEquals("http://10.0.2.2:8090/epg.xml", source.summary)
@@ -155,7 +153,7 @@ class SettingsRowsTest {
     @Test
     fun `custom sources render after the default source, named by host`() {
         val custom = EpgSource(id = 7, playlistUrl = item.url, url = "http://guide.example:8080/tv.xml")
-        val rows = epgSourcesRows(listOf(item), listOf(custom)).drop(2)
+        val rows = epgSourcesRows(listOf(item), listOf(custom))
         assertEquals("10.0.2.2 (default)", (rows[0] as SettingsRow.Value).title)
         val customRow = rows[1] as SettingsRow.Value
         assertEquals(RowIds.EPG_CUSTOM_SOURCE_PREFIX + "7", customRow.id)
@@ -168,7 +166,7 @@ class SettingsRowsTest {
     @Test
     fun `a source detail pane offers url edit and delete`() {
         val custom = EpgSource(id = 7, playlistUrl = item.url, url = "http://guide.example/tv.xml")
-        val rows = epgSourceDetailRows(custom).drop(2)
+        val rows = epgSourceDetailRows(custom)
         assertEquals(listOf("Source URL", "Delete source"), titles(rows))
         assertEquals("http://guide.example/tv.xml", (rows[0] as SettingsRow.Value).summary)
     }
@@ -180,7 +178,7 @@ class SettingsRowsTest {
         assertEquals("2 sources", epgSourceCountSummary(2))
         assertEquals(
             "2 sources",
-            (playlistDetailRows(s, item, customEpgSourceCount = 1)[5] as SettingsRow.Value).summary,
+            (playlistDetailRows(s, item, customEpgSourceCount = 1)[3] as SettingsRow.Value).summary,
         )
     }
 
@@ -192,7 +190,7 @@ class SettingsRowsTest {
 
     @Test
     fun `appearance locks the sub-screens and language but not color theme`() {
-        val rows = appearanceRows(s).drop(2)
+        val rows = appearanceRows(s)
         assertEquals(
             listOf("TV guide", "Player", "Groups", "Logos", "Language", "Font size", "Color theme"),
             titles(rows),
@@ -205,7 +203,7 @@ class SettingsRowsTest {
 
     @Test
     fun `playback matches capture 60 with locked afr external and skip steps`() {
-        val rows = playbackRows(s).drop(2)
+        val rows = playbackRows(s)
         assertEquals(
             listOf(
                 "Buffer size",
@@ -229,7 +227,7 @@ class SettingsRowsTest {
 
     @Test
     fun `remote control has both locked sub-screens and the six seek toggles`() {
-        val rows = remoteControlRows(s).drop(2)
+        val rows = remoteControlRows(s)
         assertEquals(9, rows.size)
         assertEquals("Seeking options", (rows[2] as SettingsRow.Header).text)
         val toggles = rows.filterIsInstance<SettingsRow.Toggle>()
@@ -240,14 +238,14 @@ class SettingsRowsTest {
 
     @Test
     fun `parental master toggle title is its state`() {
-        assertEquals("Off", (parentalRows(s).drop(2)[0] as SettingsRow.Toggle).title)
+        assertEquals("Off", (parentalRows(s)[0] as SettingsRow.Toggle).title)
         s.set(TellySettings.PARENTAL_ENABLED, true)
-        assertEquals("On", (parentalRows(s).drop(2)[0] as SettingsRow.Toggle).title)
+        assertEquals("On", (parentalRows(s)[0] as SettingsRow.Toggle).title)
     }
 
     @Test
     fun `parental pane matches capture 67`() {
-        val rows = parentalRows(s).drop(2)
+        val rows = parentalRows(s)
         assertEquals(
             listOf(
                 "Off",
@@ -267,11 +265,11 @@ class SettingsRowsTest {
 
     @Test
     fun `other pane is the four locked sub-screens and about matches capture 53`() {
-        val other = otherRows().drop(2)
+        val other = otherRows()
         assertEquals(listOf("Search", "Reminders", "Recording", "VOD"), titles(other))
         other.forEach { assertTrue((it as SettingsRow.Value).locked) }
 
-        val about = aboutRows(s, "0.1.0").drop(2)
+        val about = aboutRows(s, "0.1.0")
         assertEquals(listOf("Send anonymous statistics to improve the app", "Privacy policy", "Version"), titles(about))
         assertTrue((about[0] as SettingsRow.Toggle).checked)
         assertEquals("0.1.0", (about[2] as SettingsRow.Value).summary)

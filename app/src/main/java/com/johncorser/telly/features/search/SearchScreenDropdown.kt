@@ -20,8 +20,8 @@ import com.johncorser.telly.features.search.SearchScreenDims as Dims
 /**
  * OK on a programme result opens the guide-cell action dropdown (capture
  * 27): Remind / Record / Custom recording / Add to My list / Program
- * description. Rendered at the detail-card anchor; every row leads to the
- * shared Unlock Premium screen, matching the free reference (capture 28).
+ * description. Rendered at the detail-card anchor; each row is an unbuilt
+ * feature and opens the branded coming-soon placeholder.
  */
 @Composable
 internal fun SearchScreenDropdown(viewModel: SearchViewModel) {
@@ -42,7 +42,7 @@ internal fun SearchScreenDropdown(viewModel: SearchViewModel) {
             SearchProgramAction.entries.forEachIndexed { index, action ->
                 SearchScreenTextRow(
                     text = action.label,
-                    onClick = { viewModel.overlays.show(SearchOverlay.Paywall) },
+                    onClick = { viewModel.overlays.show(SearchOverlay.ComingSoon(action.label)) },
                     modifier =
                         Modifier
                             .fillMaxWidth()

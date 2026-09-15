@@ -36,6 +36,7 @@
 
     <string name="playback_card_tv_guide">TV guide</string>
     <string name="playback_card_history">History</string>
+    <string name="playback_card_multiview">Multiview</string>
     <string name="playback_card_clear">Clear</string>
     <string name="playback_coming_soon">Coming soon to telly</string>
 

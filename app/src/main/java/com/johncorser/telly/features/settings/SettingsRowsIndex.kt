@@ -5,8 +5,7 @@ import com.johncorser.telly.features.epg.EpgSource
 
 /**
  * Routes a sheet to its row builder — the whole captured settings tree.
- * A null pane is the root sheet: premium note + Unlock Premium + the nine
- * captured sections (uidump 18).
+ * A null pane is the root sheet: the nine captured sections (uidump 18).
  */
 fun rowsFor(
     pane: SettingsPane?,
@@ -32,10 +31,9 @@ fun rowsFor(
     }
 
 private fun rootRows(): List<SettingsRow> =
-    panePrelude() +
-        SettingsSection.entries.map { section ->
-            SettingsRow.Value(id = RowIds.SECTION_PREFIX + section.name, title = section.title)
-        }
+    SettingsSection.entries.map { section ->
+        SettingsRow.Value(id = RowIds.SECTION_PREFIX + section.name, title = section.title)
+    }
 
 private fun sectionRows(
     section: SettingsSection,

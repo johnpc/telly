@@ -14,9 +14,10 @@ import com.johncorser.telly.R
 import com.johncorser.telly.core.ui.rememberAutoFocus
 
 /**
- * The shortcut row (history-round2 §1): TV guide · History · one card per
- * recently watched channel · Clear (only with recent cards). TV guide takes
- * focus (capture 34); the row scrolls when history outgrows the screen.
+ * The shortcut row (history-round2 §1): TV guide · History · Multiview ·
+ * one card per recently watched channel · Clear (only with recent cards).
+ * TV guide takes focus (capture 34); the row scrolls when history outgrows
+ * the screen. Multiview is telly's addition (see PlaybackViewModel.openMultiview).
  */
 @Composable
 internal fun PlaybackScreenCards(
@@ -48,6 +49,13 @@ internal fun PlaybackScreenCards(
                 onClick = actions.onHistory,
             )
         }
+        item {
+            PlaybackScreenCard(
+                label = stringResource(R.string.playback_card_multiview),
+                icon = R.drawable.ic_qb_multiview,
+                onClick = actions.onMultiview,
+            )
+        }
         items(recents, key = { it.channel.id }) { card ->
             PlaybackScreenRecentCard(card, onClick = { actions.onRecent(card) }, onFocus = onRecentFocus)
         }
@@ -67,6 +75,7 @@ internal fun PlaybackScreenCards(
 internal class PlaybackCardActions(
     val onGuide: () -> Unit,
     val onHistory: () -> Unit,
+    val onMultiview: () -> Unit,
     val onRecent: (RecentCard) -> Unit,
     val onClear: () -> Unit,
 )

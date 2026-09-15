@@ -4,6 +4,7 @@ import com.johncorser.telly.core.settings.InMemoryKeyValueStore
 import com.johncorser.telly.core.settings.SettingsRepository
 import com.johncorser.telly.features.epg.EpgSource
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Test
 
@@ -17,8 +18,11 @@ class SettingsRowsIndexTest {
     fun `rowsFor routes every section to a non-empty captured pane`() {
         SettingsSection.entries.forEach { section ->
             val rows = rowsFor(SettingsPane.Section(section), s, listOf(item), "0.1.0")
-            assertTrue("$section should render rows", rows.size > 2)
-            assertEquals(PREMIUM_NOTE, (rows[0] as SettingsRow.Note).text)
+            assertTrue("$section should render rows", rows.isNotEmpty())
+            assertFalse(
+                "$section must not prepend Unlock Premium",
+                rows.any { it is SettingsRow.Action && it.title == "Unlock Premium" },
+            )
         }
     }
 

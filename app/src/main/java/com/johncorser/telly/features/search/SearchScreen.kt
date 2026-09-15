@@ -15,23 +15,21 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.res.stringResource
-import com.johncorser.telly.R
 import com.johncorser.telly.core.design.TELLY_ONBOARDING_BACKGROUND
-import com.johncorser.telly.core.ui.OnboardingScreenMessage
 import com.johncorser.telly.features.playlist.db.ChannelEntity
-import com.johncorser.telly.features.settings.SettingsScreenPaywall
 
 /**
  * The search screen (catalogue §4, captures 49-51). The reference overlays
  * the dimmed live video; telly's search is its own route over the app
- * background (single player engine). OK on a channel card tunes it via
- * [onTuned]; BACK closes overlays first, then the screen.
+ * background (single player engine). OK on a channel or master card tunes
+ * it via [onTuned]; the gear opens Settings via [onOpenSettings]; BACK
+ * closes overlays first, then the screen.
  */
 @Composable
 fun SearchScreen(
     deps: SearchDeps,
     onTuned: () -> Unit,
+    onOpenSettings: () -> Unit = {},
 ) {
     val scope = rememberCoroutineScope()
     val viewModel = remember { SearchViewModel(deps, scope) }
@@ -49,7 +47,11 @@ fun SearchScreen(
             .background(Color(TELLY_ONBOARDING_BACKGROUND)),
     ) {
         Column(Modifier.fillMaxSize()) {
-            SearchScreenTopBar(viewModel, downTargets = restore.downTargets(firstResult.takeIf { !results.isEmpty }))
+            SearchScreenTopBar(
+                viewModel,
+                downTargets = restore.downTargets(firstResult.takeIf { !results.isEmpty }),
+                onOpenSettings = onOpenSettings,
+            )
             if (results.isEmpty) {
                 SearchScreenHistory(viewModel)
             } else {
@@ -85,28 +87,12 @@ private fun SearchScreenResults(
                     viewModel = viewModel,
                     firstFocus = firstResult.takeIf { results.channels.isEmpty() },
                     restore = restore,
+                    onTuned = onTuned,
                 )
             }
             Column(Modifier.align(Alignment.Top)) {
                 focused?.let { SearchScreenDetail(it) }
             }
         }
-    }
-}
-
-@Composable
-private fun SearchScreenOverlay(
-    overlay: SearchOverlay,
-    viewModel: SearchViewModel,
-) {
-    when (overlay) {
-        is SearchOverlay.ProgramMenu -> SearchScreenDropdown(viewModel)
-        SearchOverlay.Paywall -> SettingsScreenPaywall(onClose = { viewModel.overlays.dismiss() })
-        is SearchOverlay.ComingSoon ->
-            OnboardingScreenMessage(
-                headline = overlay.feature,
-                subtitle = stringResource(R.string.playback_coming_soon),
-            )
-        SearchOverlay.None -> Unit
     }
 }

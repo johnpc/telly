@@ -1,7 +1,5 @@
 package com.johncorser.telly.features.guide
 
-import com.johncorser.telly.features.settings.PREMIUM_NOTE
-import com.johncorser.telly.features.settings.RowIds
 import com.johncorser.telly.features.settings.SettingsRow
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
@@ -12,14 +10,8 @@ class GuideChannelOptionsTest {
     private val rows = GuideChannelOptions.rows("News One")
 
     @Test
-    fun `the pane starts with the premium note and unlock premium row`() {
-        assertEquals(SettingsRow.Note(PREMIUM_NOTE), rows[0])
-        assertEquals(RowIds.UNLOCK_PREMIUM, rows[1].id)
-    }
-
-    @Test
     fun `every captured row renders locked with its captured value`() {
-        val values = rows.drop(2).filterIsInstance<SettingsRow.Value>()
+        val values = rows.filterIsInstance<SettingsRow.Value>()
         assertEquals(
             listOf(
                 "Channel name" to "News One",
@@ -35,6 +27,6 @@ class GuideChannelOptionsTest {
             values.map { it.title to it.summary },
         )
         assertTrue(values.all { it.locked })
-        assertEquals(rows.size - 2, values.size)
+        assertEquals(rows.size, values.size)
     }
 }

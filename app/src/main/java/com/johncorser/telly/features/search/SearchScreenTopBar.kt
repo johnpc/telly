@@ -27,13 +27,14 @@ import com.johncorser.telly.features.search.SearchScreenDims as Dims
 /**
  * Search top bar (capture 49): the voice orb takes default focus, RIGHT
  * reaches the light-grey query bar (system IME on device), gear at the far
- * right. Voice input is a placeholder; the gear's premium search settings
- * open the shared paywall like the guide's premium rows.
+ * right. Voice input is a placeholder; the gear opens the real Settings
+ * screen (the same route the rest of the app uses).
  */
 @Composable
 internal fun SearchScreenTopBar(
     viewModel: SearchViewModel,
     downTargets: List<FocusRequester>,
+    onOpenSettings: () -> Unit,
 ) {
     val query by viewModel.query.collectAsState()
     val orbFocus = rememberAutoFocus()
@@ -58,7 +59,7 @@ internal fun SearchScreenTopBar(
         Spacer(Modifier.weight(1f))
         TellyScreenIconCircle(
             icon = R.drawable.ic_menu_settings,
-            onClick = { viewModel.overlays.show(SearchOverlay.Paywall) },
+            onClick = onOpenSettings,
             size = Dims.gearSize,
             contentDescription = "Search settings",
         )

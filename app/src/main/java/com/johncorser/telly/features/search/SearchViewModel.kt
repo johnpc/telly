@@ -31,7 +31,7 @@ class SearchViewModel(
     val query: StateFlow<String> = mutableQuery.asStateFlow()
     val history: StateFlow<List<String>> = mutableHistory.asStateFlow()
 
-    /** The dropdown / paywall / coming-soon layer over the screen. */
+    /** The dropdown / coming-soon layer over the screen. */
     val overlays = SearchOverlays()
 
     /** Last results-area node D-pad focus visited (round7 §C4 focus memory). */
@@ -101,11 +101,11 @@ class SearchViewModel(
     fun onProgramChannelFocused(group: SearchProgramChannel) = select(group)
 
     /**
-     * OK on a master-lane card opens the shared Unlock Premium screen —
-     * verified on-device in round 7 (live 5.2.0 free build); it does NOT
-     * tune the channel like the Channels-shelf cards do.
+     * OK on a master-lane card TUNES its channel, exactly like a Channels
+     * card (the free reference gated this behind Unlock Premium, which
+     * telly — fully open source — has removed).
      */
-    fun onProgramChannelResult() = overlays.show(SearchOverlay.Paywall)
+    fun onProgramChannelResult(channel: ChannelEntity) = onChannelResult(channel)
 
     private fun select(group: SearchProgramChannel?) {
         mutableSelectedChannel.value = group

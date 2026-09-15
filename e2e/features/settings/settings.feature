@@ -4,7 +4,8 @@ Feature: Settings
   single 360 dp right sheet over the dimmed underlying screen. The root
   sheet lists the captured sections; OK replaces it in place with that
   section's sheet and BACK pops one sheet at a time. Rows render the
-  captured defaults; free-tier premium locks are replicated exactly.
+  captured defaults; not-yet-built rows render dimmed with a padlock (no
+  premium wording — telly is fully open source with no premium tier).
   Reference: capture catalogue §6 (screens 18-22, 52-69) + live drive
   (docs/reference/sidebyside/settings-round1/ref).
 
@@ -14,9 +15,7 @@ Feature: Settings
     And I open Settings
 
   Scenario: The section list renders the captured sections in order
-    Then I see "All features are available in Premium version"
-    And I see "Unlock Premium"
-    And I see the sections "General, Playlists, EPG, Appearance, Playback, Remote control, Parental controls, Other, About" in order
+    Then I see the sections "General, Playlists, EPG, Appearance, Playback, Remote control, Parental controls, Other, About" in order
 
   Scenario: A toggle persists across an app restart
     When I open the "General" section
@@ -56,13 +55,15 @@ Feature: Settings
     And I open the "Playlists" section
     Then the playlists section lists "Living room"
 
-  Scenario: Adding a second playlist hits the captured premium gate
+  # telly has no premium tier: the reference gated a second playlist behind
+  # Unlock Premium; telly just opens the add-playlist wizard.
+  Scenario: Adding a second playlist opens the add-playlist wizard
     When I open the "Playlists" section
     And I activate "Add playlist"
-    Then I see "Unlock Premium"
-    And I see "Support for multiple playlists"
+    Then I see "Playlist type"
+    And I see "M3U playlist"
 
-  Scenario: Premium-locked rows render dimmed with a padlock and skip focus
+  Scenario: Locked rows render dimmed with a padlock and skip focus
     When I open the "Appearance" section
     Then the row "TV guide" is locked
     And the row "Language" is locked

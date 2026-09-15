@@ -2,8 +2,8 @@ package com.johncorser.telly.features.playback
 
 /**
  * Focus memory of the shared long-OK context sheet: a row that pushes a
- * screen over the sheet (Program description, a paywalled or coming-soon
- * row) remembers itself so BACK re-lands sheet focus on it instead of
+ * screen over the sheet (Program description or a coming-soon row)
+ * remembers itself so BACK re-lands sheet focus on it instead of
  * resetting to the first row — standard leanback restore per the routing
  * table's one-level BACK (round 6 did not capture these pops). Channel
  * options is excluded: ref-round6 §A shows the pane REPLACES the sheet and
@@ -30,7 +30,6 @@ class PlayerMenuFocus {
         val PUSHED =
             setOf(
                 PlayerMenuRoute.DESCRIPTION,
-                PlayerMenuRoute.PAYWALL,
                 PlayerMenuRoute.COMING_SOON,
             )
     }

@@ -206,7 +206,7 @@ class GuideControllerTest {
     }
 
     @Test
-    fun `ok on a future programme opens the dropdown and its rows hit the paywall`() {
+    fun `ok on a future programme opens the dropdown and its rows hit coming-soon`() {
         runTest {
             val controller = buildController()
             controller.onKey(GuideKey.RIGHT)
@@ -221,7 +221,7 @@ class GuideControllerTest {
             )
 
             controller.menu.onCellAction(GuideCellAction.REMIND)
-            assertEquals(GuideLayer.Paywall("Remind"), controller.layer.value)
+            assertEquals(GuideLayer.ComingSoon("Remind"), controller.layer.value)
 
             assertTrue(controller.onKey(GuideKey.BACK))
             assertEquals(GuideLayer.Grid, controller.layer.value)

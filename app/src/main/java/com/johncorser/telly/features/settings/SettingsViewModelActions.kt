@@ -8,7 +8,6 @@ import com.johncorser.telly.core.settings.TellySettings
  */
 internal fun SettingsViewModel.runAction(rowId: String) {
     when (rowId) {
-        RowIds.UNLOCK_PREMIUM -> showOverlay(SettingsOverlay.Paywall)
         RowIds.EPG_SOURCES, RowIds.PLAYLIST_EPG_SOURCES -> push(SettingsPane.EpgSources)
         RowIds.EPG_UPDATE_NOW -> launch { updateEpgNow() }
         RowIds.EPG_ADD_SOURCE -> showOverlay(SettingsOverlay.TextEdit(rowId, title = "EPG URL", value = ""))
@@ -31,7 +30,7 @@ internal fun SettingsViewModel.runAction(rowId: String) {
 /** Playlist-list and per-playlist actions. */
 private fun SettingsViewModel.runPlaylistAction(rowId: String) {
     when (rowId) {
-        RowIds.ADD_PLAYLIST -> addPlaylistGated()
+        RowIds.ADD_PLAYLIST -> addPlaylist()
         RowIds.UPDATE_ALL_PLAYLISTS -> launch { updater.updateAll(playlistItems.value.map { it.url }) }
         RowIds.PLAYLIST_UPDATE_NOW -> currentDetailUrl()?.let { url -> launch { updater.update(url) } }
         RowIds.PLAYLIST_ENABLE -> currentDetailUrl()?.let { flip(playlistEnabledSetting(it)) }
@@ -40,13 +39,9 @@ private fun SettingsViewModel.runPlaylistAction(rowId: String) {
     }
 }
 
-/** Free tier allows exactly one playlist; the second add hits the paywall. */
-internal fun SettingsViewModel.addPlaylistGated() {
-    if (playlistItems.value.isEmpty()) {
-        callbacks.onAddPlaylist()
-    } else {
-        showOverlay(SettingsOverlay.Paywall)
-    }
+/** Multiple playlists are allowed; adding always opens the wizard. */
+internal fun SettingsViewModel.addPlaylist() {
+    callbacks.onAddPlaylist()
 }
 
 private fun SettingsViewModel.confirmDeleteOverlay() {

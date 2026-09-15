@@ -184,7 +184,7 @@ class GuideSteps(
 
     @Then("the programme grid is focused again")
     fun gridFocusedAgain() {
-        world.waitForGone(hasText("Unlock Premium"))
+        world.waitForGone(hasText("Coming soon to telly"))
         world.waitForGone(hasText("Remind"))
         // "Channel options" only exists on the row context sheet; its
         // absence proves the sheet fully closed over the still-visible grid.

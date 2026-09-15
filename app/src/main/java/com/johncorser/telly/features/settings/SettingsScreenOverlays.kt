@@ -30,7 +30,6 @@ internal fun SettingsScreenOverlay(
         is SettingsOverlay.ConfirmDelete -> SettingsScreenConfirmDelete(model, overlay)
         is SettingsOverlay.ConfirmDeleteSource -> SettingsScreenConfirmDeleteSource(model, overlay)
         SettingsOverlay.PinSetup -> SettingsScreenPinDialog(model)
-        SettingsOverlay.Paywall -> SettingsScreenPaywall(onClose = { model.dismissOverlay() })
     }
 }
 

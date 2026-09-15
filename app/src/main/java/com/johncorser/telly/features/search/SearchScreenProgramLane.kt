@@ -26,8 +26,9 @@ import com.johncorser.telly.features.search.SearchScreenDims as Dims
  * adjacent 120x103 dp card per matching channel — logo tile over the
  * channel name, no airing line, no progress. Focusing a card selects it in
  * the ViewModel, which swaps the airings pane beside it; the selected card
- * keeps a grey outline while unfocused (round7 tm-search-news) and OK opens
- * the shared Unlock Premium screen (round7 device check — not a tune).
+ * keeps a grey outline while unfocused (round7 tm-search-news) and OK TUNES
+ * the channel via [onTuned], exactly like a Channels card (the free
+ * reference gated this behind Unlock Premium; telly is fully open source).
  */
 @Composable
 internal fun SearchScreenProgramLane(
@@ -35,6 +36,7 @@ internal fun SearchScreenProgramLane(
     selected: SearchProgramChannel?,
     viewModel: SearchViewModel,
     restore: SearchScreenRestore,
+    onTuned: () -> Unit,
 ) {
     LazyColumn(
         contentPadding = PaddingValues(bottom = Dims.edgePad),
@@ -46,6 +48,7 @@ internal fun SearchScreenProgramLane(
                 selected = group.channel.id == selected?.channel?.id,
                 viewModel = viewModel,
                 restore = restore,
+                onTuned = onTuned,
             )
         }
     }
@@ -57,9 +60,13 @@ private fun SearchScreenProgramChannelCard(
     selected: Boolean,
     viewModel: SearchViewModel,
     restore: SearchScreenRestore,
+    onTuned: () -> Unit,
 ) {
     SearchScreenFocusRow(
-        onClick = viewModel::onProgramChannelResult,
+        onClick = {
+            viewModel.onProgramChannelResult(group.channel)
+            onTuned()
+        },
         modifier =
             Modifier
                 .fillMaxWidth()

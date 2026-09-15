@@ -3,7 +3,6 @@ package com.johncorser.telly.features.guide
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxHeight
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -21,7 +20,6 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.johncorser.telly.features.panel.ChannelPanelScreenGroups
 import com.johncorser.telly.features.panel.GroupColumnMetrics
-import com.johncorser.telly.features.settings.SettingsScreenPaywall
 
 /**
  * Nav rail + groups column slid in at the guide's left (capture 25), grid
@@ -31,14 +29,16 @@ import com.johncorser.telly.features.settings.SettingsScreenPaywall
 @Composable
 internal fun GuideScreenGroups(
     controller: GuideController,
+    onOpenSearch: () -> Unit,
     onOpenSettings: () -> Unit,
 ) {
     val groups by controller.groups.collectAsState()
     val selected by controller.selectedGroup.collectAsState()
+    val searchFocus = remember { FocusRequester() }
     val gearFocus = remember { FocusRequester() }
     val groupsFocus = remember { FocusRequester() }
     Row(Modifier.fillMaxHeight()) {
-        GuideScreenRail(onOpenSettings, gearFocus, groupsFocus)
+        GuideScreenRail(onOpenSearch, onOpenSettings, searchFocus, gearFocus, groupsFocus)
         // RIGHT leaves the column back to the grid (capture 25); the grid
         // has no focusables for the focus search to find, so the key is
         // routed to the layer policy before it dead-ends.
@@ -67,17 +67,5 @@ internal fun GuideScreenGroups(
                     ),
             )
         }
-    }
-}
-
-/** The shared Unlock Premium screen; closing pops one layer level. */
-@Composable
-internal fun GuideScreenPaywallLayer(
-    controller: GuideController,
-    layer: GuideLayer,
-) {
-    if (layer !is GuideLayer.Paywall) return
-    Box(Modifier.fillMaxSize()) {
-        SettingsScreenPaywall(onClose = controller.menu::close)
     }
 }

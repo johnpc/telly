@@ -45,7 +45,14 @@ class PlaybackViewModel(
     private val openSearch: () -> Unit = {},
 ) {
     private val clock = env.time.clock
-    private val openMultiview = env.hooks.onOpenMultiview
+
+    /**
+     * Opens the multiview grid. The reference reaches it ONLY from the
+     * long-OK/MENU quick-bar; telly also surfaces it as an info-overlay
+     * card (deliberate deviation — Shield remotes have no MENU button and
+     * long-OK is undiscoverable, so the DOWN overlay carries it too).
+     */
+    val openMultiview: () -> Unit = env.hooks.onOpenMultiview
 
     val panel = PanelViewModel(env.channelDao, env.epgRepository, clock, scope, env.time.zone, env.hooks.panelLock)
 

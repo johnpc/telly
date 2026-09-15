@@ -131,8 +131,10 @@ class SettingsViewModelTest {
         }
 
     @Test
-    fun `add playlist routes into the wizard only while none exists`() =
+    fun `add playlist always routes into the wizard`() =
         runTest {
+            // telly has no premium tier: the reference gated a second
+            // playlist behind Unlock Premium, telly just adds it.
             val model = model()
             model.activate(RowIds.ADD_PLAYLIST)
             assertEquals(1, addPlaylistRoutes)
@@ -140,8 +142,8 @@ class SettingsViewModelTest {
 
             seedPlaylist()
             model.activate(RowIds.ADD_PLAYLIST)
-            assertEquals(1, addPlaylistRoutes)
-            assertEquals(SettingsOverlay.Paywall, model.state.value.overlay)
+            assertEquals(2, addPlaylistRoutes)
+            assertNull(model.state.value.overlay)
         }
 
     @Test
@@ -415,16 +417,6 @@ class SettingsViewModelTest {
             model.activate(RowIds.PLAYLIST_PREFIX + "http://p/x.m3u")
             model.activate(RowIds.PLAYLIST_ENABLE)
             assertFalse(settings.get(playlistEnabledSetting("http://p/x.m3u")))
-        }
-
-    @Test
-    fun `unlock premium and paywall dismissal round-trip`() =
-        runTest {
-            val model = model()
-            model.activate(RowIds.UNLOCK_PREMIUM)
-            assertEquals(SettingsOverlay.Paywall, model.state.value.overlay)
-            model.dismissOverlay()
-            assertNull(model.state.value.overlay)
         }
 
     @Test

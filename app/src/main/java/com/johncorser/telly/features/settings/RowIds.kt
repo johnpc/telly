@@ -2,8 +2,6 @@ package com.johncorser.telly.features.settings
 
 /** Stable row identifiers the view model dispatches on. */
 object RowIds {
-    const val UNLOCK_PREMIUM = "unlock_premium"
-
     /** Root-sheet section rows append the [SettingsSection] name. */
     const val SECTION_PREFIX = "section:"
 

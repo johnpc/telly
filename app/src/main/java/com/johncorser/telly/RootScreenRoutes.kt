@@ -85,6 +85,7 @@ internal fun RootScreenRoutes(
                         navigator.replaceAll(Route.Guide)
                         navigator.push(Route.Playback)
                     },
+                    onOpenSettings = { navigator.push(Route.Settings) },
                 )
             // A History row tunes by persisting lastChannelId (the search
             // precedent); popping recomposes playback, which restores it.

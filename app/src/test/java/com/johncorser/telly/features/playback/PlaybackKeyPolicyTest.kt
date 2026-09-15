@@ -83,7 +83,7 @@ class PlaybackKeyPolicyTest {
         val sheet = PlaybackOverlay.ChannelMenu(1)
         val pushed =
             listOf(
-                PlaybackOverlay.Paywall("Record", back = sheet),
+                PlaybackOverlay.ComingSoon("Record", back = sheet),
                 PlaybackOverlay.Description("T", "D", back = sheet),
                 PlaybackOverlay.ComingSoon("Assign EPG", back = sheet),
             )
@@ -96,8 +96,8 @@ class PlaybackKeyPolicyTest {
         val pane = PlaybackOverlay.ChannelOptions("News One", back = PlaybackOverlay.Panel)
         assertEquals(PlaybackCommand.PopTo(PlaybackOverlay.Panel), at(pane, PlaybackKey.BACK))
         assertNull(at(pane, PlaybackKey.OK))
-        // The pane's Unlock Premium row overlays the paywall over the pane.
-        val paywallOverPane = PlaybackOverlay.Paywall("Channel options", back = pane)
-        assertEquals(PlaybackCommand.PopTo(pane), at(paywallOverPane, PlaybackKey.BACK))
+        // A locked pane row opens the coming-soon placeholder over the pane.
+        val comingSoonOverPane = PlaybackOverlay.ComingSoon("Channel options", back = pane)
+        assertEquals(PlaybackCommand.PopTo(pane), at(comingSoonOverPane, PlaybackKey.BACK))
     }
 }

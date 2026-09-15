@@ -52,6 +52,7 @@ internal fun PlaybackScreenInfoOverlay(
                     PlaybackCardActions(
                         onGuide = { viewModel.exitToGuide() },
                         onHistory = { viewModel.openHistory() },
+                        onMultiview = { viewModel.openMultiview() },
                         onRecent = { card -> viewModel.recents.tune(card) },
                         onClear = { viewModel.recents.clear() },
                     ),

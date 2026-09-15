@@ -2,7 +2,6 @@ package com.johncorser.telly.features.guide
 
 import com.johncorser.telly.features.playback.ChannelActions
 import com.johncorser.telly.features.playback.PlayerMenuItem
-import com.johncorser.telly.features.settings.RowIds
 import com.johncorser.telly.testutil.FakeChannelDao
 import com.johncorser.telly.testutil.testChannel
 import io.mockk.mockk
@@ -166,9 +165,12 @@ class GuideMenuControllerTest {
     }
 
     @Test
-    fun `premium-locked reference rows open the paywall and back pops to the sheet`() {
+    fun `every unbuilt row lands on coming-soon and back pops to the sheet`() {
         runTest {
-            val premium =
+            // The formerly-premium reference rows and the uncaptured rows
+            // now share one fate: telly has no paywall, so both open the
+            // branded coming-soon placeholder that backs to the sheet.
+            val unbuilt =
                 listOf(
                     PlayerMenuItem.OPEN_IN_EXTERNAL_PLAYER,
                     PlayerMenuItem.RECORD,
@@ -177,23 +179,6 @@ class GuideMenuControllerTest {
                     PlayerMenuItem.BLOCK_CHANNEL,
                     PlayerMenuItem.MANAGE_FAVORITES,
                     PlayerMenuItem.REORDER_CHANNELS,
-                )
-            val menu = buildOpenSheet()
-
-            premium.forEach { item ->
-                menu.onMenuItem(item)
-                assertEquals(GuideLayer.Paywall(item.label, back = GuideLayer.RowMenu), menu.layer.value)
-                menu.close()
-                assertEquals(GuideLayer.RowMenu, menu.layer.value)
-            }
-        }
-    }
-
-    @Test
-    fun `rows without captured behavior land on the branded coming-soon`() {
-        runTest {
-            val unknown =
-                listOf(
                     PlayerMenuItem.ASSIGN_EPG,
                     PlayerMenuItem.MANAGE_BLOCKING,
                     PlayerMenuItem.MANAGE_VISIBILITY,
@@ -203,9 +188,9 @@ class GuideMenuControllerTest {
                 )
             val menu = buildOpenSheet()
 
-            unknown.forEach { item ->
+            unbuilt.forEach { item ->
                 menu.onMenuItem(item)
-                assertEquals(GuideLayer.ComingSoon(item.label), menu.layer.value)
+                assertEquals(GuideLayer.ComingSoon(item.label, back = GuideLayer.RowMenu), menu.layer.value)
                 menu.close()
                 assertEquals(GuideLayer.RowMenu, menu.layer.value)
             }
@@ -242,17 +227,16 @@ class GuideMenuControllerTest {
     }
 
     @Test
-    fun `unlock premium is the only live row of the channel options pane`() {
+    fun `channel-options rows are all locked and open coming-soon over the pane`() {
         runTest {
             val menu = buildOpenSheet()
             menu.onMenuItem(PlayerMenuItem.CHANNEL_OPTIONS)
 
+            // Every §41 row is locked; activating one opens the branded
+            // coming-soon placeholder that backs to the pane (no paywall).
             menu.onChannelOption("channel_options.name")
-            assertEquals(GuideLayer.ChannelOptions("News One"), menu.layer.value)
-
-            menu.onChannelOption(RowIds.UNLOCK_PREMIUM)
             assertEquals(
-                GuideLayer.Paywall("Channel options", back = GuideLayer.ChannelOptions("News One")),
+                GuideLayer.ComingSoon("channel_options.name", back = GuideLayer.ChannelOptions("News One")),
                 menu.layer.value,
             )
 
@@ -327,12 +311,12 @@ class GuideMenuControllerTest {
     }
 
     @Test
-    fun `cell dropdown rows still paywall back to the grid`() {
+    fun `cell dropdown rows open coming-soon and back to the grid`() {
         runTest {
             val menu = build()
 
             menu.onCellAction(GuideCellAction.REMIND)
-            assertEquals(GuideLayer.Paywall("Remind"), menu.layer.value)
+            assertEquals(GuideLayer.ComingSoon("Remind"), menu.layer.value)
 
             menu.close()
             assertEquals(GuideLayer.Grid, menu.layer.value)

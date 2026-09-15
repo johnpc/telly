@@ -2,17 +2,15 @@ package com.johncorser.telly.features.playback
 
 import com.johncorser.telly.features.panel.PanelRow
 import com.johncorser.telly.features.playlist.db.ChannelEntity
-import com.johncorser.telly.features.settings.RowIds
 
 /**
  * Executes the panel sheet's rows through the shared [PlayerMenuRouting]
  * table (the guide's sheet consumes the same one, so the two can never
  * drift): favorites/hide persist via [ChannelActions], Search and Settings
- * clear the overlay chrome first, premium-locked reference rows open the
- * shared Unlock Premium screen, Program description pushes a screen whose
+ * clear the overlay chrome first, Program description pushes a screen whose
  * BACK pops back to the sheet, Channel options REPLACES the sheet — its
  * BACK lands directly on the panel, never back on the sheet (ref-round6
- * §A) — and genuinely uncaptured rows keep the coming-soon placeholder.
+ * §A) — and every unbuilt row keeps the coming-soon placeholder.
  */
 class PlaybackMenuHandler(
     private val actions: ChannelActions,
@@ -54,17 +52,12 @@ class PlaybackMenuHandler(
             PlayerMenuRoute.DESCRIPTION -> push { back -> description(channel, back) }
             PlayerMenuRoute.CHANNEL_OPTIONS ->
                 overlays.set(PlaybackOverlay.ChannelOptions(channel.source.name, back = afterAction()))
-            PlayerMenuRoute.PAYWALL -> push { back -> PlaybackOverlay.Paywall(item.label, back) }
             PlayerMenuRoute.COMING_SOON -> push { back -> PlaybackOverlay.ComingSoon(item.label, back) }
         }
     }
 
-    /** All §41 pane rows are locked; only Unlock Premium is focusable. */
-    fun onChannelOption(rowId: String) {
-        if (rowId == RowIds.UNLOCK_PREMIUM) {
-            push { back -> PlaybackOverlay.Paywall("Channel options", back) }
-        }
-    }
+    /** All §41 pane rows are locked; any activation lands on coming-soon. */
+    fun onChannelOption(rowId: String) = push { back -> PlaybackOverlay.ComingSoon(rowId, back) }
 
     /** Pushed screens remember the overlay behind them; BACK pops to it. */
     private fun push(next: (back: PlaybackOverlay) -> PlaybackOverlay) = overlays.set(next(overlays.value))

@@ -1,14 +1,10 @@
 package com.johncorser.telly.features.playback
 
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import com.johncorser.telly.R
 import com.johncorser.telly.core.ui.OnboardingScreenMessage
 import com.johncorser.telly.features.guide.GuideScreenChannelOptionsPane
-import com.johncorser.telly.features.settings.SettingsScreenPaywall
 
 /**
  * The quick-bar, the long-OK sheet and the screens its rows push, hosted in
@@ -25,10 +21,6 @@ internal fun PlaybackScreenMenuLayers(
         when (active) {
             PlaybackOverlay.QuickBar -> PlaybackScreenQuickBar(viewModel)
             is PlaybackOverlay.ChannelMenu -> PlaybackScreenChannelMenu(viewModel, active.channelId)
-            is PlaybackOverlay.Paywall ->
-                Box(Modifier.fillMaxSize()) {
-                    SettingsScreenPaywall(onClose = { viewModel.onKey(PlaybackKey.BACK) })
-                }
             is PlaybackOverlay.Description ->
                 OnboardingScreenMessage(headline = active.title, subtitle = active.text)
             is PlaybackOverlay.ChannelOptions ->

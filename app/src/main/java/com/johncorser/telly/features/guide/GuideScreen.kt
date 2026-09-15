@@ -24,7 +24,7 @@ import com.johncorser.telly.features.playback.PlayerMenuSurface
  * The TV guide (capture 24): preview window + info pane on top, the
  * virtualized programme grid below. The grid layer routes D-pad keys
  * through the controller's pure engine; overlaid layers (groups column,
- * cell dropdown, paywall) use regular Compose focus. BACK on the grid is
+ * cell dropdown, coming-soon) use regular Compose focus. BACK on the grid is
  * deliberately unhandled: at guide root the app exits, the
  * device-verified free-tier behavior.
  */
@@ -54,7 +54,7 @@ fun GuideScreen(
             .background(Color(TELLY_ONBOARDING_BACKGROUND)),
     ) {
         Row(Modifier.fillMaxSize()) {
-            if (layer == GuideLayer.Groups) GuideScreenGroups(controller, onOpenSettings)
+            if (layer == GuideLayer.Groups) GuideScreenGroups(controller, onOpenSearch, onOpenSettings)
             Box(Modifier.weight(1f)) {
                 Column(Modifier.fillMaxSize()) {
                     GuideScreenTop(controller, engine)
@@ -78,7 +78,6 @@ fun GuideScreen(
             GuideScreenRowMenu(controller, menuLayer)
             GuideScreenRowMenuLayers(controller, menuLayer)
         }
-        GuideScreenPaywallLayer(controller, layer)
     }
 }
 

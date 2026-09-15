@@ -50,15 +50,10 @@ sealed interface GuideLayer {
     /** Long-OK/MENU row context sheet over the grid (round3-ref 05, 38-40). */
     data object RowMenu : GuideLayer
 
-    /** Unlock Premium screen (capture 28/31); BACK returns to [back]. */
-    data class Paywall(
-        val feature: String,
-        val back: GuideLayer = Grid,
-    ) : GuideLayer
-
-    /** Branded placeholder for sheet rows whose feature is a later slice. */
+    /** Branded placeholder for unbuilt rows; BACK returns to [back]. */
     data class ComingSoon(
         val feature: String,
+        val back: GuideLayer = Grid,
     ) : GuideLayer
 
     /** The sheet's working "Program description" row. */
@@ -78,8 +73,7 @@ enum class GuideKey { OK, LONG_OK, MENU, BACK, UP, DOWN, LEFT, RIGHT, LONG_LEFT,
 
 /**
  * The five rows of the future-cell dropdown, verbatim from capture 27.
- * All premium-gated in the free reference build (capture 31): each opens
- * the Unlock Premium screen.
+ * Each is an unbuilt feature: they open the branded coming-soon placeholder.
  */
 enum class GuideCellAction(
     val label: String,

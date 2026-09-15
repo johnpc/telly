@@ -20,18 +20,16 @@ import com.johncorser.telly.core.design.TELLY_TEXT_FAINT_FOCUSED
 import com.johncorser.telly.core.design.TELLY_TEXT_GUIDANCE_MUTED
 import com.johncorser.telly.core.ui.LocalAccentColor
 
-/** Padlock, Unlock-Premium key, or playlist circle-check; else nothing. */
+/** Padlock (locked feature) or playlist circle-check; else nothing. */
 @Composable
 internal fun SettingsScreenRowIcon(
     row: SettingsRow,
     locked: Boolean,
 ) {
-    val premiumKey = (row as? SettingsRow.Action)?.premiumKey == true
     val check = (row as? SettingsRow.Value)?.checkIcon == true
-    if (!locked && !premiumKey && !check) return
+    if (!locked && !check) return
     val res =
         when {
-            premiumKey -> R.drawable.ic_settings_key
             check -> R.drawable.ic_settings_check_circle
             else -> R.drawable.ic_settings_lock
         }

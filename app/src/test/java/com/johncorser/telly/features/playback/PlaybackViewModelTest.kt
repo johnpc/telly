@@ -2,7 +2,6 @@ package com.johncorser.telly.features.playback
 
 import com.johncorser.telly.features.history.WatchHistory
 import com.johncorser.telly.features.player.VideoDetails
-import com.johncorser.telly.features.settings.RowIds
 import com.johncorser.telly.testutil.FakeChannelDao
 import com.johncorser.telly.testutil.FakeKeyValueStore
 import com.johncorser.telly.testutil.FakePlayerEngine
@@ -395,8 +394,10 @@ class PlaybackViewModelTest {
         }
 
     @Test
-    fun `premium-locked menu rows open the shared paywall and back pops to the sheet`() =
+    fun `unbuilt menu rows open coming-soon and back pops to the sheet`() =
         runTest {
+            // telly has no premium tier: the reference's paywall rows now
+            // share the coming-soon placeholder with the uncaptured rows.
             val vm = buildVm()
             vm.openPanel()
             vm.showChannelMenu(channels[0])
@@ -404,7 +405,7 @@ class PlaybackViewModelTest {
             vm.menu.onMenuItem(PlayerMenuItem.RECORD)
 
             val sheet = PlaybackOverlay.ChannelMenu(1L)
-            assertEquals(PlaybackOverlay.Paywall("Record", back = sheet), vm.overlay.value)
+            assertEquals(PlaybackOverlay.ComingSoon("Record", back = sheet), vm.overlay.value)
             vm.onKey(PlaybackKey.BACK)
             assertEquals(sheet, vm.overlay.value)
         }
@@ -452,7 +453,7 @@ class PlaybackViewModelTest {
         }
 
     @Test
-    fun `channel options replaces the sheet and unlock premium overlays the paywall`() =
+    fun `channel options replaces the sheet and its locked rows open coming-soon`() =
         runTest {
             val vm = buildVm()
             vm.openPanel()
@@ -465,11 +466,9 @@ class PlaybackViewModelTest {
             val pane = PlaybackOverlay.ChannelOptions("News One", back = PlaybackOverlay.Panel)
             assertEquals(pane, vm.overlay.value)
 
-            // Every §41 row is locked; only Unlock Premium is live.
+            // Every §41 row is locked; activating one opens coming-soon over the pane.
             vm.menu.onChannelOption("channel_options.name")
-            assertEquals(pane, vm.overlay.value)
-            vm.menu.onChannelOption(RowIds.UNLOCK_PREMIUM)
-            assertEquals(PlaybackOverlay.Paywall("Channel options", back = pane), vm.overlay.value)
+            assertEquals(PlaybackOverlay.ComingSoon("channel_options.name", back = pane), vm.overlay.value)
 
             vm.onKey(PlaybackKey.BACK)
             assertEquals(pane, vm.overlay.value)

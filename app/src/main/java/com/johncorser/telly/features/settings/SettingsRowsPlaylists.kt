@@ -43,7 +43,7 @@ fun playlistsRows(
                 checkIcon = true,
             )
         }
-    return panePrelude() + items +
+    return items +
         listOf(
             SettingsRow.Value(
                 id = RowIds.PLAYLISTS_SORTING,
@@ -61,40 +61,39 @@ fun playlistDetailRows(
     item: PlaylistItem,
     customEpgSourceCount: Int = 0,
 ): List<SettingsRow> =
-    panePrelude() +
-        listOf(
-            SettingsRow.Toggle(
-                id = RowIds.PLAYLIST_ENABLE,
-                title = "Enable playlist",
-                checked = s.get(playlistEnabledSetting(item.url)),
-            ),
-            SettingsRow.Value(id = RowIds.PLAYLIST_NAME, title = "Playlist name", summary = item.name),
-            SettingsRow.Value(id = RowIds.PLAYLIST_URL, title = "Playlist URL", summary = item.url, locked = true),
-            SettingsRow.Value(
-                id = RowIds.PLAYLIST_EPG_SOURCES,
-                title = "EPG sources",
-                summary = epgSourceCountSummary((if (item.epgUrl == null) 0 else 1) + customEpgSourceCount),
-            ),
-            SettingsRow.Value(
-                id = RowIds.PLAYLIST_USER_AGENT,
-                title = "User-Agent",
-                summary = "Not set",
-                locked = true,
-            ),
-            SettingsRow.Value(id = RowIds.PLAYLIST_MANAGE_GROUPS, title = "Manage groups", locked = true),
-            SettingsRow.Header("Update options"),
-            SettingsRow.Value(
-                id = RowIds.PLAYLIST_UPDATE_INTERVAL,
-                title = "Update interval, hours",
-                summary = "None",
-                locked = true,
-            ),
-            SettingsRow.Toggle(
-                id = RowIds.PLAYLIST_UPDATE_ON_START,
-                title = "Update on app start",
-                checked = false,
-                locked = true,
-            ),
-            SettingsRow.Action(id = RowIds.PLAYLIST_UPDATE_NOW, title = "Update playlist"),
-            SettingsRow.Action(id = RowIds.PLAYLIST_DELETE, title = "Delete playlist"),
-        )
+    listOf(
+        SettingsRow.Toggle(
+            id = RowIds.PLAYLIST_ENABLE,
+            title = "Enable playlist",
+            checked = s.get(playlistEnabledSetting(item.url)),
+        ),
+        SettingsRow.Value(id = RowIds.PLAYLIST_NAME, title = "Playlist name", summary = item.name),
+        SettingsRow.Value(id = RowIds.PLAYLIST_URL, title = "Playlist URL", summary = item.url, locked = true),
+        SettingsRow.Value(
+            id = RowIds.PLAYLIST_EPG_SOURCES,
+            title = "EPG sources",
+            summary = epgSourceCountSummary((if (item.epgUrl == null) 0 else 1) + customEpgSourceCount),
+        ),
+        SettingsRow.Value(
+            id = RowIds.PLAYLIST_USER_AGENT,
+            title = "User-Agent",
+            summary = "Not set",
+            locked = true,
+        ),
+        SettingsRow.Value(id = RowIds.PLAYLIST_MANAGE_GROUPS, title = "Manage groups", locked = true),
+        SettingsRow.Header("Update options"),
+        SettingsRow.Value(
+            id = RowIds.PLAYLIST_UPDATE_INTERVAL,
+            title = "Update interval, hours",
+            summary = "None",
+            locked = true,
+        ),
+        SettingsRow.Toggle(
+            id = RowIds.PLAYLIST_UPDATE_ON_START,
+            title = "Update on app start",
+            checked = false,
+            locked = true,
+        ),
+        SettingsRow.Action(id = RowIds.PLAYLIST_UPDATE_NOW, title = "Update playlist"),
+        SettingsRow.Action(id = RowIds.PLAYLIST_DELETE, title = "Delete playlist"),
+    )

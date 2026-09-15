@@ -6,7 +6,6 @@ import com.johncorser.telly.features.playback.PlayerMenuItem
 import com.johncorser.telly.features.playback.PlayerMenuRoute
 import com.johncorser.telly.features.playback.PlayerMenuRouting
 import com.johncorser.telly.features.playlist.db.ChannelEntity
-import com.johncorser.telly.features.settings.RowIds
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -15,10 +14,9 @@ import kotlinx.coroutines.flow.asStateFlow
  * The guide's overlay-layer state machine plus the long-OK row context
  * sheet (catalogue §3 38-42 + round3-ref 05), routed through the shared
  * [PlayerMenuRouting] table: genuinely supported rows act (Search,
- * Settings, favorites toggle, hide, the programme description); rows the
- * free reference locks behind Premium open the shared Unlock Premium
- * screen; the remaining rows land on the branded coming-soon placeholder
- * until their slice ships.
+ * Settings, favorites toggle, hide, the programme description); every
+ * unbuilt row lands on the branded coming-soon placeholder until its
+ * slice ships.
  */
 class GuideMenuController(
     private val actions: ChannelActions,
@@ -60,13 +58,11 @@ class GuideMenuController(
         show(GuideLayer.RowMenu)
     }
 
-    /** Every dropdown row is premium in the free reference (capture 31). */
-    fun onCellAction(action: GuideCellAction) = show(GuideLayer.Paywall(action.label))
+    /** Every dropdown row is an unbuilt feature: coming-soon placeholder. */
+    fun onCellAction(action: GuideCellAction) = show(GuideLayer.ComingSoon(action.label))
 
-    /** All §41 pane rows are locked; only Unlock Premium is focusable. */
-    fun onChannelOption(rowId: String) {
-        if (rowId == RowIds.UNLOCK_PREMIUM) show(GuideLayer.Paywall("Channel options", back = mutable.value))
-    }
+    /** All §41 pane rows are locked; any activation lands on coming-soon. */
+    fun onChannelOption(rowId: String) = show(GuideLayer.ComingSoon(rowId, back = mutable.value))
 
     fun onMenuItem(item: PlayerMenuItem) {
         val row = focusedRow() ?: return
@@ -81,8 +77,7 @@ class GuideMenuController(
             PlayerMenuRoute.HIDE_CHANNEL -> hide(row.channel)
             PlayerMenuRoute.DESCRIPTION -> show(description())
             PlayerMenuRoute.CHANNEL_OPTIONS -> show(GuideLayer.ChannelOptions(row.channel.source.name))
-            PlayerMenuRoute.PAYWALL -> show(GuideLayer.Paywall(item.label, back = GuideLayer.RowMenu))
-            PlayerMenuRoute.COMING_SOON -> show(GuideLayer.ComingSoon(item.label))
+            PlayerMenuRoute.COMING_SOON -> show(GuideLayer.ComingSoon(item.label, back = GuideLayer.RowMenu))
         }
     }
 
@@ -117,7 +112,7 @@ class GuideMenuController(
  */
 private fun backOf(layer: GuideLayer): GuideLayer =
     when (layer) {
-        is GuideLayer.Paywall -> layer.back
-        is GuideLayer.ComingSoon, is GuideLayer.Description -> GuideLayer.RowMenu
+        is GuideLayer.ComingSoon -> layer.back
+        is GuideLayer.Description -> GuideLayer.RowMenu
         else -> GuideLayer.Grid
     }

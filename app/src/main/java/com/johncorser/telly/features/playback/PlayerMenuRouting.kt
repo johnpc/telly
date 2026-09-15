@@ -17,13 +17,10 @@ enum class PlayerMenuRoute {
     /** Shows the focused programme's title + synopsis. */
     DESCRIPTION,
 
-    /** Pushes the §41 "Channel options" pane, every row premium-locked. */
+    /** Pushes the §41 "Channel options" pane, every row locked. */
     CHANNEL_OPTIONS,
 
-    /** Premium-locked reference row: the shared Unlock Premium screen. */
-    PAYWALL,
-
-    /** Genuinely uncaptured row: the branded coming-soon placeholder. */
+    /** Unbuilt row: the branded coming-soon placeholder. */
     COMING_SOON,
 }
 
@@ -34,25 +31,6 @@ enum class PlayerMenuRoute {
  * sheets can never drift.
  */
 object PlayerMenuRouting {
-    /**
-     * Sheet rows the free reference locks behind Premium: the guide
-     * dropdown's Record / Custom recording / Add to My list open the
-     * paywall (capture 31), external playback and channel blocking are
-     * locked in the Channel options pane (capture 41), and the paywall
-     * body itself sells "Favorites management" and "Manual channels
-     * sorting" (capture 28).
-     */
-    private val premium =
-        setOf(
-            PlayerMenuItem.OPEN_IN_EXTERNAL_PLAYER,
-            PlayerMenuItem.RECORD,
-            PlayerMenuItem.CUSTOM_RECORDING,
-            PlayerMenuItem.ADD_TO_MY_LIST,
-            PlayerMenuItem.BLOCK_CHANNEL,
-            PlayerMenuItem.MANAGE_FAVORITES,
-            PlayerMenuItem.REORDER_CHANNELS,
-        )
-
     fun routeOf(item: PlayerMenuItem): PlayerMenuRoute =
         when (item) {
             PlayerMenuItem.SEARCH -> PlayerMenuRoute.SEARCH
@@ -61,7 +39,6 @@ object PlayerMenuRouting {
             PlayerMenuItem.HIDE_CHANNEL -> PlayerMenuRoute.HIDE_CHANNEL
             PlayerMenuItem.PROGRAM_DESCRIPTION -> PlayerMenuRoute.DESCRIPTION
             PlayerMenuItem.CHANNEL_OPTIONS -> PlayerMenuRoute.CHANNEL_OPTIONS
-            in premium -> PlayerMenuRoute.PAYWALL
             else -> PlayerMenuRoute.COMING_SOON
         }
 }

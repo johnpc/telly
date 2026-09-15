@@ -6,8 +6,8 @@ import kotlinx.coroutines.flow.asStateFlow
 
 /**
  * The dropdown rows for OK on a programme result — the guide-cell set
- * (capture 27). In the free reference every row leads to Unlock Premium;
- * telly routes them to the shared paywall, exactly like the guide's cells.
+ * (capture 27). Each is an unbuilt feature: they route to the branded
+ * coming-soon placeholder, exactly like the guide's cells.
  */
 enum class SearchProgramAction(
     val label: String,
@@ -28,9 +28,6 @@ sealed interface SearchOverlay {
         val hit: SearchProgramHit,
     ) : SearchOverlay
 
-    /** The shared Unlock Premium screen (capture 28) for premium-gated rows. */
-    data object Paywall : SearchOverlay
-
     /** Branded "coming soon" interstitial for not-yet-built destinations. */
     data class ComingSoon(
         val feature: String,
@@ -38,9 +35,8 @@ sealed interface SearchOverlay {
 }
 
 /**
- * The search screen's overlay stack (one deep): the programme dropdown, the
- * shared paywall (dropdown rows + the gear's premium search settings) and
- * the voice-search placeholder all show through here.
+ * The search screen's overlay stack (one deep): the programme dropdown and
+ * the voice-search placeholder show through here.
  */
 class SearchOverlays {
     private val mutable = MutableStateFlow<SearchOverlay>(SearchOverlay.None)

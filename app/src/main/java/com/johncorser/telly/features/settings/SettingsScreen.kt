@@ -44,7 +44,7 @@ fun SettingsScreen(
     // ON the section sheet (device-verified); rendering the section sheet
     // underneath would keep a second focusable row that the overlay can't
     // steal focus from, so it's dropped while such a sheet is up. The
-    // fullscreen guided steps (paywall, delete confirm) own the screen.
+    // fullscreen guided steps (delete confirm) own the screen.
     val sheetOverlay =
         state.overlay is SettingsOverlay.Picker ||
             state.overlay is SettingsOverlay.TextEdit ||

@@ -30,9 +30,9 @@ sealed interface GuideCommand {
  * app with no confirmation (device-verified BACK chain). Overlaid layers
  * own their own focus; the policy only closes them (RIGHT also leaves
  * the groups column back to the grid, capture 25) and the close pops one
- * level at a time (description/paywall/coming-soon → sheet → grid; the
- * Channel options pane replaced the sheet, so it pops straight to the
- * grid — ref-round6 §A).
+ * level at a time (description/coming-soon → sheet → grid; the Channel
+ * options pane replaced the sheet, so it pops straight to the grid —
+ * ref-round6 §A).
  */
 object GuideKeyPolicy {
     private const val DAY = 1

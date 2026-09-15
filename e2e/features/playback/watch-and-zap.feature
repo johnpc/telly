@@ -28,6 +28,7 @@ Feature: Watch live TV and zap between channels
     And I see the next programme line
     And I see stream badges like "HD", "25 FPS" and "MONO"
     And I see the "TV guide" and "History" cards
+    And I see "Multiview"
 
   Scenario: The info overlay auto-hides after its five-second timeout
     When I press ok
@@ -69,7 +70,9 @@ Feature: Watch live TV and zap between channels
 
   # The corrected History model (history-round2; supersedes the capture-48
   # guide-with-History-group reading): the info overlay's shortcut row is
-  # TV guide · History · recent-channel cards · Clear. A recent card shows
+  # TV guide · History · Multiview · recent-channel cards · Clear (the
+  # Multiview card is telly's addition — Shield remotes have no MENU button
+  # and long-OK is undiscoverable). A recent card shows
   # the channel LOGO + its CURRENT programme title; focusing it adds an
   # air-time + title line. OK on the History card opens a DISTINCT
   # full-screen "History" list (title + clear-all trash top-right,
@@ -153,6 +156,12 @@ Feature: Watch live TV and zap between channels
     And the multiview pane "News One" is focused with audio
     And I see "Press OK to show menu"
     And I see "Your IPTV provider may limit the number of concurrent connections"
+
+  Scenario: The info overlay's Multiview card also opens multiview
+    When I press ok
+    And I select the "Multiview" card
+    Then I see 1 multiview pane
+    And the multiview pane "News One" is focused with audio
 
   Scenario: OK on the pane opens its menu over the pane view
     Given I opened multiview

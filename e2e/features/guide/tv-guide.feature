@@ -39,12 +39,12 @@ Feature: TV guide
     When I press ok
     Then playback goes fullscreen on channel 2 "News One HD"
 
-  Scenario: OK on a future programme opens the premium dropdown
+  Scenario: OK on a future programme opens the cell dropdown
     When I press dpad right
     And I press ok
     Then a dropdown anchored under the cell lists exactly "Remind", "Record", "Custom recording", "Add to My list", "Program description"
     When I select "Remind"
-    Then I see the "Unlock Premium" screen
+    Then I see "Coming soon to telly"
     When I press back
     Then the programme grid is focused again
 
@@ -91,10 +91,12 @@ Feature: TV guide
     And I select "Hide channel"
     Then the channel column no longer lists "News One HD"
 
-  Scenario: Premium sheet rows open the Unlock Premium screen and BACK pops back to the sheet
+  # telly has no premium tier: the reference's paywalled rows share the
+  # branded coming-soon placeholder with the uncaptured rows.
+  Scenario: Formerly-premium sheet rows open the coming-soon placeholder and BACK pops back to the sheet
     When I long-press ok
     And I select "Record"
-    Then I see the "Unlock Premium" screen
+    Then I see "Coming soon to telly"
     When I press back
     Then I see the menu rows "Search" and "Settings"
 
@@ -113,14 +115,12 @@ Feature: TV guide
   Scenario: The sheet's Settings row opens the settings sheet
     When I long-press ok
     And I select "Settings"
-    Then I see "All features are available in Premium version"
-    And I see the sections "General, Playlists, EPG, Appearance, Playback, Remote control, Parental controls, Other, About" in order
+    Then I see the sections "General, Playlists, EPG, Appearance, Playback, Remote control, Parental controls, Other, About" in order
 
   Scenario: Channel options replaces the sheet and BACK lands directly on the guide grid
     When I long-press ok
     And I select "Channel options"
     Then a right pane titled "News One" opens
-    And I see "All features are available in Premium version"
     And the locked rows list "Channel name", "Restore channel name", "Channel names editor", "Audio decoder", "Video decoder", "Use external player", "EPG time offset, h:min", "Block channel" and "Hide channel"
     When I press back
     Then the programme grid is focused again

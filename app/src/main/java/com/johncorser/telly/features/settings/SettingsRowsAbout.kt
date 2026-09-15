@@ -5,26 +5,24 @@ import com.johncorser.telly.core.settings.TellySettings
 
 /** Other pane rows (catalogue 68): four locked sub-screens. */
 fun otherRows(): List<SettingsRow> =
-    panePrelude() +
-        listOf(
-            SettingsRow.Value(id = RowIds.OTHER_SEARCH, title = "Search", locked = true),
-            SettingsRow.Value(id = RowIds.OTHER_REMINDERS, title = "Reminders", locked = true),
-            SettingsRow.Value(id = RowIds.OTHER_RECORDING, title = "Recording", locked = true),
-            SettingsRow.Value(id = RowIds.OTHER_VOD, title = "VOD", locked = true),
-        )
+    listOf(
+        SettingsRow.Value(id = RowIds.OTHER_SEARCH, title = "Search", locked = true),
+        SettingsRow.Value(id = RowIds.OTHER_REMINDERS, title = "Reminders", locked = true),
+        SettingsRow.Value(id = RowIds.OTHER_RECORDING, title = "Recording", locked = true),
+        SettingsRow.Value(id = RowIds.OTHER_VOD, title = "VOD", locked = true),
+    )
 
 /** About pane rows (catalogue 53). */
 fun aboutRows(
     s: SettingsRepository,
     versionName: String,
 ): List<SettingsRow> =
-    panePrelude() +
-        listOf(
-            SettingsRow.Toggle(
-                id = RowIds.ABOUT_STATISTICS,
-                title = "Send anonymous statistics to improve the app",
-                checked = s.get(TellySettings.SEND_STATISTICS),
-            ),
-            SettingsRow.Action(id = RowIds.ABOUT_PRIVACY_POLICY, title = "Privacy policy"),
-            SettingsRow.Value(id = RowIds.ABOUT_VERSION, title = "Version", summary = versionName),
-        )
+    listOf(
+        SettingsRow.Toggle(
+            id = RowIds.ABOUT_STATISTICS,
+            title = "Send anonymous statistics to improve the app",
+            checked = s.get(TellySettings.SEND_STATISTICS),
+        ),
+        SettingsRow.Action(id = RowIds.ABOUT_PRIVACY_POLICY, title = "Privacy policy"),
+        SettingsRow.Value(id = RowIds.ABOUT_VERSION, title = "Version", summary = versionName),
+    )

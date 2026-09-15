@@ -18,7 +18,7 @@ sealed interface PlaybackCommand {
 
     data object BackToPanel : PlaybackCommand
 
-    /** One-level BACK from a sheet-pushed screen (paywall, description, …). */
+    /** One-level BACK from a sheet-pushed screen (coming-soon, description, …). */
     data class PopTo(
         val overlay: PlaybackOverlay,
     ) : PlaybackCommand

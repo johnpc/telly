@@ -36,12 +36,6 @@ sealed interface PlaybackOverlay {
         override val back: PlaybackOverlay = None,
     ) : Pushed
 
-    /** Shared Unlock Premium screen for premium-locked rows (capture 28). */
-    data class Paywall(
-        val feature: String,
-        override val back: PlaybackOverlay = None,
-    ) : Pushed
-
     /** The sheet's "Program description": the airing programme's synopsis. */
     data class Description(
         val title: String,
@@ -50,8 +44,8 @@ sealed interface PlaybackOverlay {
     ) : Pushed
 
     /**
-     * "Channel options" pane, every §41 row premium-locked (capture 41).
-     * It replaces the sheet (ref-round6 §A), so [back] is the panel, not
+     * "Channel options" pane, every §41 row locked (capture 41). It
+     * replaces the sheet (ref-round6 §A), so [back] is the panel, not
      * the channel menu.
      */
     data class ChannelOptions(

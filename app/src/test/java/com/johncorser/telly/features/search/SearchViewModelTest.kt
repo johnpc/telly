@@ -204,24 +204,28 @@ class SearchViewModelTest {
         }
 
     @Test
-    fun `ok on a master-lane card opens the shared paywall, not a tune`() =
+    fun `ok on a master-lane card tunes its channel like a Channels card`() =
         runTest {
+            // telly has no premium tier: the free reference gated the master
+            // card behind Unlock Premium, telly tunes it like a Channels card.
             val vm = buildVm()
             vm.onQueryChange("newsroom")
+            val channel = vm.results.value.programs.first().channel
 
-            vm.onProgramChannelResult()
+            vm.onProgramChannelResult(channel)
 
-            assertEquals(SearchOverlay.Paywall, vm.overlays.current.value)
+            assertEquals(channel.id, lastChannelStore.getLong(TuneController.LAST_CHANNEL_KEY))
+            assertEquals(SearchOverlay.None, vm.overlays.current.value)
         }
 
     @Test
-    fun `dropdown actions and the gear open the shared paywall`() =
+    fun `a coming-soon overlay dismisses back to none`() =
         runTest {
             val vm = buildVm()
 
-            vm.overlays.show(SearchOverlay.Paywall)
+            vm.overlays.show(SearchOverlay.ComingSoon("Record"))
 
-            assertEquals(SearchOverlay.Paywall, vm.overlays.current.value)
+            assertEquals(SearchOverlay.ComingSoon("Record"), vm.overlays.current.value)
             assertTrue(vm.overlays.dismiss())
             assertEquals(SearchOverlay.None, vm.overlays.current.value)
         }

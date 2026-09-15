@@ -41,8 +41,6 @@ sealed interface SettingsOverlay {
     ) : SettingsOverlay
 
     data object PinSetup : SettingsOverlay
-
-    data object Paywall : SettingsOverlay
 }
 
 /**
