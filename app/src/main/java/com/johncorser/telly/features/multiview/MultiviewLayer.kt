@@ -27,12 +27,19 @@ enum class MultiviewMenuAction(
     REMOVE_SCREEN("Remove screen"),
 }
 
-/** Remove screen only exists while the grid has panes to spare (>1). */
+/**
+ * Remove screen only exists while the grid has panes to spare (>1), and the
+ * two add rows leave at the [MultiviewGrid.MAX_PANES] cap (round8 :44-46 —
+ * listing a no-op "Add screen" at four panes was the logged delta).
+ */
 object MultiviewMenu {
     fun rows(paneCount: Int): List<MultiviewMenuAction> =
-        if (paneCount > 1) {
-            MultiviewMenuAction.entries
-        } else {
-            MultiviewMenuAction.entries - MultiviewMenuAction.REMOVE_SCREEN
+        MultiviewMenuAction.entries.filter { action ->
+            when (action) {
+                MultiviewMenuAction.ADD_SCREEN, MultiviewMenuAction.SEARCH_AND_ADD ->
+                    paneCount < MultiviewGrid.MAX_PANES
+                MultiviewMenuAction.CHANGE_CHANNEL -> true
+                MultiviewMenuAction.REMOVE_SCREEN -> paneCount > 1
+            }
         }
 }
