@@ -88,6 +88,41 @@ Local SDK note: `local.properties` must contain
 
 ## Decisions log
 
+- **2026-09-15** Custom groups + bulk channel managers: the context sheet's
+  last six coming-soon rows are real. **Create group** = name editor (creates
+  an EMPTY custom group — the ux-spec never specifies seeding it with the
+  sheet's channel; Copy channels populates), **Copy channels** = target picker
+  (skipped at exactly one group) + multi-select toggle list with an explicit
+  Done, **Group options** = Rename/Delete of the SELECTED group (locked on
+  playlist groups/Favorites/All channels — only custom groups are editable),
+  **Assign EPG** = per-channel picker of every EPG id with stored data +
+  "Auto (tvg-id)" default, **Manage blocking / Manage visibility** = bulk
+  toggle editors over EVERY channel (blocking gated once per entry behind the
+  parental PIN when enabled, PanelLock precedent). Storage (Room v5, ONE
+  renumberable migration: `features/groups/db/CustomGroupsMigration` +
+  TellyDatabase.version + ServiceLocator.addMigrations): `custom_groups` +
+  `custom_group_members` join table keyed by `ChannelImporter.keyOf`
+  (identityOf over a row) so membership survives playlist refreshes with zero
+  importer changes, plus `channels.blocked` (NOT NULL DEFAULT 0; persisted
+  only — no tune gate yet) and `channels.epgOverride` living INSIDE
+  `ChannelFlags` so the importer carries both automatically.
+  `ChannelEntity.epgId` (= epgOverride ?: tvg-id) is the ONE lookup key the
+  guide/panel/playback-info/recents/history EPG paths use (search + multiview
+  intentionally untouched this slice). Custom groups append after the
+  playlist groups in BOTH group columns (PanelRows.groupNames/channelsIn grew
+  custom-group parameters; a name collision resolves to the playlist group).
+  Architecture: one `GroupTools` factory per host (fed by
+  `CustomGroupStore` — Room + in-memory impls — via `PlaybackHooks`) builds a
+  `GroupToolSession` per row (`CreateGroup`/`GroupOptions`/`CopyChannels`/
+  `AssignEpg`/`BulkFlag` sessions, pure JVM-tested state machines emitting
+  `GroupToolUi` = SettingsRow lists / text editor / PIN wheel), rendered by
+  the single shared `GroupToolScreen` sheet; hosts push it as
+  `GuideLayer.GroupTool` / `PlaybackOverlay.GroupTool` (BACK pops to the
+  sheet, a completed action lands on the grid/panel). The sheet controllers'
+  channel deps are bundled (`GuideSheetChannelActions` / `SheetActions`).
+  The routing fallback (`PlayerMenuRoute.COMING_SOON`) still serves the seven
+  genuinely-unbuilt rows (Record, Custom recording, Add to My list, Open in
+  external player, Block channel, Manage Favorites, Reorder channels).
 - **2026-09-15** Multiview (multiview-round captures + `multiview-spec.md`).
   **Captured facts, matched exactly:** the quick-bar Multiview slot opens
   `Route.Multiview` — a single centered half-size 16:9 pane on black

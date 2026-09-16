@@ -31,6 +31,6 @@ class PlayerMenuFocus {
             setOf(
                 PlayerMenuRoute.DESCRIPTION,
                 PlayerMenuRoute.COMING_SOON,
-            )
+            ) + PlayerMenuRouting.GROUP_TOOL_ROUTES
     }
 }

@@ -6,6 +6,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.res.stringResource
 import com.johncorser.telly.R
 import com.johncorser.telly.core.ui.OnboardingScreenMessage
+import com.johncorser.telly.features.groups.GroupToolScreen
 import com.johncorser.telly.features.playback.PlaybackScreenMenu
 import com.johncorser.telly.features.playback.PlayerMenu
 import com.johncorser.telly.features.settings.SettingsScreenRows
@@ -48,6 +49,7 @@ internal fun GuideScreenRowMenuLayers(
     when (layer) {
         is GuideLayer.ChannelOptions ->
             GuideScreenChannelOptionsPane(layer.channelName, controller.menu::onChannelOption)
+        is GuideLayer.GroupTool -> GroupToolScreen(layer.session)
         is GuideLayer.Description -> OnboardingScreenMessage(headline = layer.title, subtitle = layer.text)
         is GuideLayer.ComingSoon ->
             OnboardingScreenMessage(

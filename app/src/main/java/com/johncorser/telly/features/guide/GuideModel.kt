@@ -1,6 +1,7 @@
 package com.johncorser.telly.features.guide
 
 import com.johncorser.telly.features.epg.db.ProgramEntity
+import com.johncorser.telly.features.groups.GroupToolSession
 import com.johncorser.telly.features.playlist.db.ChannelEntity
 
 /**
@@ -65,6 +66,11 @@ sealed interface GuideLayer {
     /** "Channel options" pane, every row premium-locked (captures 41-42); it REPLACES the sheet, BACK → grid. */
     data class ChannelOptions(
         val channelName: String,
+    ) : GuideLayer
+
+    /** A pushed group/bulk tool screen (Create group, Assign EPG, …); BACK → sheet. */
+    data class GroupTool(
+        val session: GroupToolSession,
     ) : GuideLayer
 }
 

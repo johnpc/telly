@@ -80,6 +80,30 @@ class ChannelImporterTest {
     }
 
     @Test
+    fun `the blocked flag and the EPG override survive a refresh too`() {
+        val previous =
+            ChannelEntity(
+                id = 9,
+                playlistId = 1,
+                number = 5,
+                sortIndex = 4,
+                source = ChannelSource(name = "Old Name", streamUrl = "http://old/x.ts", tvgId = "keep-1"),
+                flags = ChannelFlags(blocked = true, epgOverride = "alt-epg-id"),
+            )
+
+        val row =
+            ChannelImporter
+                .import(
+                    playlistId = 1,
+                    parsed = listOf(channel("New Name", streamUrl = "http://new/y.ts", tvgId = "keep-1")),
+                    previous = listOf(previous),
+                ).single()
+
+        assertEquals(ChannelFlags(blocked = true, epgOverride = "alt-epg-id"), row.flags)
+        assertEquals("alt-epg-id", row.epgId)
+    }
+
+    @Test
     fun `flags fall back to stream url plus name when tvg id is missing`() {
         val previous =
             ChannelEntity(

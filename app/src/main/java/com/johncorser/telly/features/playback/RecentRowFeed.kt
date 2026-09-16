@@ -33,7 +33,7 @@ class RecentRowFeed(
             HistoryRows.recentChannels(events, channels, current?.id) to at
         }.flatMapLatest { (recent, at) ->
             epgRepository
-                .nowNext(recent.mapNotNull { it.source.tvgId }, at)
+                .nowNext(recent.mapNotNull { it.epgId }, at)
                 .map { guide -> build(recent, guide) }
         }.stateIn(scope, SharingStarted.Eagerly, emptyList())
 
@@ -42,7 +42,7 @@ class RecentRowFeed(
         guide: Map<String, NowNext>,
     ): List<RecentCard> =
         recent.map { channel ->
-            val now = guide[channel.source.tvgId]?.now
+            val now = guide[channel.epgId]?.now
             RecentCard(
                 channel = channel,
                 nowTitle = now?.details?.let(ProgramTitle::of),

@@ -9,7 +9,9 @@ import androidx.compose.ui.semantics.SemanticsActions
 import androidx.compose.ui.semantics.SemanticsProperties
 import androidx.compose.ui.semantics.getOrNull
 import androidx.compose.ui.test.SemanticsMatcher
+import androidx.compose.ui.test.hasAnyAncestor
 import androidx.compose.ui.test.hasContentDescription
+import androidx.compose.ui.test.hasTestTag
 import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.isFocused
 import androidx.compose.ui.test.junit4.ComposeTestRule
@@ -161,8 +163,18 @@ class TellyWorld(
         pressKey(KeyEvent.KEYCODE_DPAD_CENTER)
     }
 
-    fun focus(text: String) {
-        val labelled = hasText(text).or(hasContentDescription(text))
+    /** [select], scoped under the node tagged [tag] (overlaid sheets reuse row texts). */
+    fun selectWithin(
+        tag: String,
+        text: String,
+    ) {
+        focusMatching(hasText(text) and hasAnyAncestor(hasTestTag(tag)))
+        pressKey(KeyEvent.KEYCODE_DPAD_CENTER)
+    }
+
+    fun focus(text: String) = focusMatching(hasText(text).or(hasContentDescription(text)))
+
+    private fun focusMatching(labelled: SemanticsMatcher) {
         val focusable = labelled and SemanticsMatcher.keyIsDefined(SemanticsActions.RequestFocus)
         waitFor(focusable)
         requestFocusOn(focusable)
@@ -185,9 +197,14 @@ class TellyWorld(
     fun rowAligned(
         textA: String,
         textB: String,
+    ): Boolean = rowAlignedMatching(hasText(textA), hasText(textB))
+
+    fun rowAlignedMatching(
+        matcherA: SemanticsMatcher,
+        matcherB: SemanticsMatcher,
     ): Boolean {
-        val aBounds = boundsOf(hasText(textA))
-        val bBounds = boundsOf(hasText(textB))
+        val aBounds = boundsOf(matcherA)
+        val bBounds = boundsOf(matcherB)
         return aBounds.any { a -> bBounds.any { b -> a.top < b.bottom && b.top < a.bottom } }
     }
 

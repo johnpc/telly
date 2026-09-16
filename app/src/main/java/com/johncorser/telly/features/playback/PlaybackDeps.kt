@@ -3,6 +3,8 @@ package com.johncorser.telly.features.playback
 import com.johncorser.telly.core.kv.KeyValueStore
 import com.johncorser.telly.core.settings.ParentalControls
 import com.johncorser.telly.features.epg.EpgRepository
+import com.johncorser.telly.features.groups.CustomGroupStore
+import com.johncorser.telly.features.groups.InMemoryCustomGroupStore
 import com.johncorser.telly.features.history.WatchHistory
 import com.johncorser.telly.features.player.Media3PlayerEngine
 import com.johncorser.telly.features.playlist.db.ChannelDao
@@ -50,4 +52,5 @@ class PlaybackDeps(
     val engineFactory: () -> Media3PlayerEngine,
     val clock: () -> Long,
     val parental: ParentalControls? = null,
+    val customGroups: CustomGroupStore = InMemoryCustomGroupStore(),
 )

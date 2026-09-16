@@ -1,5 +1,6 @@
 package com.johncorser.telly.features.playlist.db
 
+import androidx.room.ColumnInfo
 import androidx.room.Embedded
 import androidx.room.Entity
 import androidx.room.ForeignKey
@@ -19,6 +20,9 @@ data class ChannelSource(
 data class ChannelFlags(
     val favorite: Boolean = false,
     val hidden: Boolean = false,
+    @ColumnInfo(defaultValue = "0") val blocked: Boolean = false,
+    /** Per-channel EPG id override; null = auto (the playlist's tvg-id). */
+    val epgOverride: String? = null,
 )
 
 /**
@@ -45,4 +49,7 @@ data class ChannelEntity(
     val sortIndex: Int,
     @Embedded val source: ChannelSource,
     @Embedded val flags: ChannelFlags = ChannelFlags(),
-)
+) {
+    /** The EPG channel id guide lookups use: the override, else the tvg-id. */
+    val epgId: String? get() = flags.epgOverride ?: source.tvgId
+}

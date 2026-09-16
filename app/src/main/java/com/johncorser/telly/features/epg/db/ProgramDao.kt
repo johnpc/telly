@@ -43,4 +43,8 @@ interface ProgramDao {
 
     @Query("SELECT COUNT(*) FROM programs")
     suspend fun count(): Int
+
+    /** Every EPG channel id with data — the Assign EPG picker's options. */
+    @Query("SELECT DISTINCT channelTvgId FROM programs ORDER BY channelTvgId")
+    fun observeChannelIds(): Flow<List<String>>
 }

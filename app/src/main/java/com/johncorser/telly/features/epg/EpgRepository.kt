@@ -55,6 +55,9 @@ class EpgRepository(
     /** Trims history; honors Settings -> EPG -> "Past days to keep EPG". */
     suspend fun trimEndedBefore(cutoffMs: Long) = programDao.deleteEndedBefore(cutoffMs)
 
+    /** Every EPG channel id with stored data — the Assign EPG picker. */
+    fun channelIds(): Flow<List<String>> = programDao.observeChannelIds()
+
     /** Replace semantics per refresh: old rows of the refreshed channels go away. */
     private suspend fun store(document: XmltvDocument): Int {
         val keepDescriptions = storeDescriptions()

@@ -20,6 +20,24 @@ enum class PlayerMenuRoute {
     /** Pushes the §41 "Channel options" pane, every row locked. */
     CHANNEL_OPTIONS,
 
+    /** Name editor that creates an empty custom group. */
+    CREATE_GROUP,
+
+    /** Rename/Delete of the selected group (locked on playlist groups). */
+    GROUP_OPTIONS,
+
+    /** Multi-select channel list copying into a custom group. */
+    COPY_CHANNELS,
+
+    /** Per-channel EPG-id picker persisting the epgOverride column. */
+    ASSIGN_EPG,
+
+    /** Bulk blocked-flag editor, PIN-gated when parental controls are on. */
+    MANAGE_BLOCKING,
+
+    /** Bulk hidden-flag editor over every channel. */
+    MANAGE_VISIBILITY,
+
     /** Unbuilt row: the branded coming-soon placeholder. */
     COMING_SOON,
 }
@@ -31,6 +49,17 @@ enum class PlayerMenuRoute {
  * sheets can never drift.
  */
 object PlayerMenuRouting {
+    /** The six routes [com.johncorser.telly.features.groups.GroupTools] serves. */
+    val GROUP_TOOL_ROUTES: Set<PlayerMenuRoute> =
+        setOf(
+            PlayerMenuRoute.CREATE_GROUP,
+            PlayerMenuRoute.GROUP_OPTIONS,
+            PlayerMenuRoute.COPY_CHANNELS,
+            PlayerMenuRoute.ASSIGN_EPG,
+            PlayerMenuRoute.MANAGE_BLOCKING,
+            PlayerMenuRoute.MANAGE_VISIBILITY,
+        )
+
     fun routeOf(item: PlayerMenuItem): PlayerMenuRoute =
         when (item) {
             PlayerMenuItem.SEARCH -> PlayerMenuRoute.SEARCH
@@ -39,6 +68,12 @@ object PlayerMenuRouting {
             PlayerMenuItem.HIDE_CHANNEL -> PlayerMenuRoute.HIDE_CHANNEL
             PlayerMenuItem.PROGRAM_DESCRIPTION -> PlayerMenuRoute.DESCRIPTION
             PlayerMenuItem.CHANNEL_OPTIONS -> PlayerMenuRoute.CHANNEL_OPTIONS
+            PlayerMenuItem.CREATE_GROUP -> PlayerMenuRoute.CREATE_GROUP
+            PlayerMenuItem.GROUP_OPTIONS -> PlayerMenuRoute.GROUP_OPTIONS
+            PlayerMenuItem.COPY_CHANNELS -> PlayerMenuRoute.COPY_CHANNELS
+            PlayerMenuItem.ASSIGN_EPG -> PlayerMenuRoute.ASSIGN_EPG
+            PlayerMenuItem.MANAGE_BLOCKING -> PlayerMenuRoute.MANAGE_BLOCKING
+            PlayerMenuItem.MANAGE_VISIBILITY -> PlayerMenuRoute.MANAGE_VISIBILITY
             else -> PlayerMenuRoute.COMING_SOON
         }
 }

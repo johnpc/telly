@@ -1,5 +1,6 @@
 package com.johncorser.telly.features.playback
 
+import com.johncorser.telly.features.groups.GroupToolLauncher
 import com.johncorser.telly.features.panel.PanelRow
 import com.johncorser.telly.features.playlist.db.ChannelEntity
 
@@ -13,7 +14,7 @@ import com.johncorser.telly.features.playlist.db.ChannelEntity
  * §A) — and every unbuilt row keeps the coming-soon placeholder.
  */
 class PlaybackMenuHandler(
-    private val actions: ChannelActions,
+    private val sheet: SheetActions,
     private val overlays: OverlayState,
     private val tuner: TuneController,
     private val openSettings: () -> Unit = {},
@@ -44,15 +45,30 @@ class PlaybackMenuHandler(
     fun onMenuItem(item: PlayerMenuItem) {
         val channel = menuChannel() ?: return
         sheetFocus.onActivated(item)
-        when (PlayerMenuRouting.routeOf(item)) {
+        when (val route = PlayerMenuRouting.routeOf(item)) {
             PlayerMenuRoute.SEARCH -> openScreen(openSearch)
             PlayerMenuRoute.SETTINGS -> openScreen(openSettings)
             PlayerMenuRoute.TOGGLE_FAVORITE -> toggleFavorite(channel)
             PlayerMenuRoute.HIDE_CHANNEL -> hide(channel)
-            PlayerMenuRoute.DESCRIPTION -> push { back -> description(channel, back) }
+            PlayerMenuRoute.DESCRIPTION -> push { back -> descriptionOverlay(rowOf(channel.id), back) }
             PlayerMenuRoute.CHANNEL_OPTIONS ->
                 overlays.set(PlaybackOverlay.ChannelOptions(channel.source.name, back = afterAction()))
-            PlayerMenuRoute.COMING_SOON -> push { back -> PlaybackOverlay.ComingSoon(item.label, back) }
+            else -> openGroupTool(item, route, channel)
+        }
+    }
+
+    /** A pushed group/bulk tool (or coming-soon for the unserved rows). */
+    private fun openGroupTool(
+        item: PlayerMenuItem,
+        route: PlayerMenuRoute,
+        channel: ChannelEntity,
+    ) {
+        val exit = afterAction()
+        val session = sheet.groupTools?.session(route, channel, onDone = { overlays.set(exit) })
+        if (session == null) {
+            push { back -> PlaybackOverlay.ComingSoon(item.label, back) }
+        } else {
+            push { back -> PlaybackOverlay.GroupTool(session, back) }
         }
     }
 
@@ -71,29 +87,16 @@ class PlaybackMenuHandler(
         open()
     }
 
-    /** The sheet row's airing programme: title + synopsis (dump 40). */
-    private fun description(
-        channel: ChannelEntity,
-        back: PlaybackOverlay,
-    ): PlaybackOverlay {
-        val row = rowOf(channel.id)
-        return PlaybackOverlay.Description(
-            title = row?.nowTitle ?: PlayerMenu.NO_INFORMATION,
-            text = row?.description ?: PlayerMenu.NO_INFORMATION,
-            back = back,
-        )
-    }
-
     private fun toggleFavorite(channel: ChannelEntity) {
         val next = afterAction()
-        actions.toggleFavorite(channel)
+        sheet.channels.toggleFavorite(channel)
         overlays.set(next)
     }
 
     private fun hide(channel: ChannelEntity) {
         val next = afterAction()
         tuner.zapAwayFrom(channel)
-        actions.hide(channel)
+        sheet.channels.hide(channel)
         overlays.set(next)
     }
 
@@ -105,3 +108,23 @@ class PlaybackMenuHandler(
     private fun afterAction(): PlaybackOverlay =
         if (overlays.value is PlaybackOverlay.ChannelMenu) PlaybackOverlay.Panel else PlaybackOverlay.None
 }
+
+/**
+ * What the panel sheet's channel rows act through: favorite/hide
+ * persistence and the launcher behind the six group/bulk tool rows.
+ */
+class SheetActions(
+    val channels: ChannelActions,
+    val groupTools: GroupToolLauncher? = null,
+)
+
+/** The sheet row's airing programme: title + synopsis (dump 40). */
+private fun descriptionOverlay(
+    row: PanelRow?,
+    back: PlaybackOverlay,
+): PlaybackOverlay =
+    PlaybackOverlay.Description(
+        title = row?.nowTitle ?: PlayerMenu.NO_INFORMATION,
+        text = row?.description ?: PlayerMenu.NO_INFORMATION,
+        back = back,
+    )

@@ -85,6 +85,6 @@ private fun guideMenuSurface(layer: GuideLayer): PlayerMenuSurface =
     when (layer) {
         GuideLayer.RowMenu -> PlayerMenuSurface.SHEET
         is GuideLayer.ChannelOptions -> PlayerMenuSurface.CHANNEL_OPTIONS
-        is GuideLayer.Description, is GuideLayer.ComingSoon -> PlayerMenuSurface.PUSHED
+        is GuideLayer.Description, is GuideLayer.ComingSoon, is GuideLayer.GroupTool -> PlayerMenuSurface.PUSHED
         else -> PlayerMenuSurface.NONE
     }

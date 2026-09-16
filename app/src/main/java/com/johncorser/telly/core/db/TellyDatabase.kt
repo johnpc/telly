@@ -8,6 +8,9 @@ import com.johncorser.telly.features.epg.db.EpgSourceDao
 import com.johncorser.telly.features.epg.db.EpgSourceEntity
 import com.johncorser.telly.features.epg.db.ProgramDao
 import com.johncorser.telly.features.epg.db.ProgramEntity
+import com.johncorser.telly.features.groups.db.CustomGroupDao
+import com.johncorser.telly.features.groups.db.CustomGroupEntity
+import com.johncorser.telly.features.groups.db.CustomGroupMemberEntity
 import com.johncorser.telly.features.history.db.WatchHistoryDao
 import com.johncorser.telly.features.history.db.WatchHistoryEntity
 import com.johncorser.telly.features.playlist.db.ChannelDao
@@ -21,8 +24,9 @@ import com.johncorser.telly.features.search.db.SearchDao
     entities = [
         PlaylistEntity::class, ChannelEntity::class, ProgramEntity::class,
         WatchHistoryEntity::class, EpgSourceEntity::class,
+        CustomGroupEntity::class, CustomGroupMemberEntity::class,
     ],
-    version = 4,
+    version = 5,
     exportSchema = true,
 )
 abstract class TellyDatabase : RoomDatabase() {
@@ -35,6 +39,8 @@ abstract class TellyDatabase : RoomDatabase() {
     abstract fun epgSourceDao(): EpgSourceDao
 
     abstract fun searchDao(): SearchDao
+
+    abstract fun customGroupDao(): CustomGroupDao
 
     abstract fun watchHistoryDao(): WatchHistoryDao
 

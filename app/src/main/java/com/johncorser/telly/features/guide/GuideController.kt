@@ -1,5 +1,7 @@
 package com.johncorser.telly.features.guide
 
+import com.johncorser.telly.features.groups.GroupToolLauncher
+import com.johncorser.telly.features.groups.GroupTools
 import com.johncorser.telly.features.history.WatchHistory
 import com.johncorser.telly.features.panel.PanelViewModel
 import com.johncorser.telly.features.playback.ChannelActions
@@ -39,9 +41,13 @@ class GuideController(
     val lifecycle = PlaybackLifecycle(tuner, onForegrounded = ticker::reseed, recover = tuner::retune)
     private val selected = MutableStateFlow(PanelViewModel.ALL_CHANNELS)
     private val focusEngine = GuideFocusEngine(originMs, pastFloorDp = { GuideWindowMath.scrollFloorDp(pastDays()) })
+
+    /** The shared factory behind the sheet's six group/bulk tool rows. */
+    private val groupTools =
+        GroupTools(env.hooks.customGroups, env.channelDao, env.epgRepository.channelIds(), env.hooks.parental, scope)
     private val feed =
         GuideRowsFeed(
-            GuideRowsSources(tuner.channels, selected.asStateFlow()),
+            GuideRowsSources(tuner.channels, selected.asStateFlow(), groupTools.groups),
             focusEngine.scrollX,
             env.epgRepository::programsFor,
             originMs,
@@ -64,8 +70,12 @@ class GuideController(
     /** Layers + the long-OK row context sheet (catalogue §3 38-42). */
     val menu =
         GuideMenuController(
-            actions = ChannelActions(env.channelDao, scope),
-            zapAway = tuner::zapAwayFrom,
+            sheet =
+                GuideSheetChannelActions(
+                    actions = ChannelActions(env.channelDao, scope),
+                    zapAway = tuner::zapAwayFrom,
+                    groupTools = GroupToolLauncher(groupTools) { selected.value },
+                ),
             focusedRow = ::focusedRow,
             info = { info.value },
             callbacks = callbacks,

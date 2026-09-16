@@ -33,7 +33,7 @@ class HistoryViewModel(
             .flatMapLatest { (list, events) ->
                 val span = HistoryRows.programmeSpan(events)
                 sources.epgRepository
-                    .programsFor(list.mapNotNull { it.source.tvgId }, span.first, span.last)
+                    .programsFor(list.mapNotNull { it.epgId }, span.first, span.last)
                     .map { programs -> HistoryRows.rows(events, list, programs, zone) }
             }.stateIn(scope, SharingStarted.Eagerly, emptyList())
 

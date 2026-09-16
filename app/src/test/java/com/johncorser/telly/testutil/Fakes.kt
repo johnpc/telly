@@ -51,9 +51,9 @@ class FakeChannelDao(
     override fun observeVisible(): Flow<List<ChannelEntity>> =
         channels.map { list -> list.filter { !it.flags.hidden }.sortedBy { it.number } }
 
-    override suspend fun totalCount(): Int = channels.value.size
+    override fun observeAll(): Flow<List<ChannelEntity>> = channels.map { list -> list.sortedBy { it.number } }
 
-    override suspend fun totalGroupCount(): Int = channels.value.mapNotNull { it.source.groupTitle }.distinct().size
+    override suspend fun totalCount(): Int = channels.value.size
 
     override suspend fun forPlaylist(playlistId: Long): List<ChannelEntity> =
         channels.value.filter { it.playlistId == playlistId }.sortedBy { it.sortIndex }
@@ -111,6 +111,9 @@ class FakeProgramDao(
     }
 
     override suspend fun count(): Int = programs.value.size
+
+    override fun observeChannelIds(): Flow<List<String>> =
+        programs.map { list -> list.map { it.channelTvgId }.distinct().sorted() }
 }
 
 /** In-memory [SearchDao] over the channel/programme fakes. */

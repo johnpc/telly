@@ -1,34 +1,15 @@
 package com.johncorser.telly.features.playback
 
-import com.johncorser.telly.core.kv.KeyValueStore
-import com.johncorser.telly.features.epg.EpgRepository
+import com.johncorser.telly.features.groups.GroupToolLauncher
+import com.johncorser.telly.features.groups.GroupTools
 import com.johncorser.telly.features.history.WatchHistory
-import com.johncorser.telly.features.panel.PanelLock
+import com.johncorser.telly.features.panel.PanelHooks
 import com.johncorser.telly.features.panel.PanelViewModel
-import com.johncorser.telly.features.player.PlayerEngine
 import com.johncorser.telly.features.player.PlayerState
-import com.johncorser.telly.features.playlist.db.ChannelDao
 import com.johncorser.telly.features.playlist.db.ChannelEntity
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
-
-/** Cross-slice hooks the playback surface plugs into (nav + parental). */
-class PlaybackHooks(
-    val panelLock: PanelLock = PanelLock(),
-    val onOpenSettings: () -> Unit = {},
-    val onOpenMultiview: () -> Unit = {},
-)
-
-/** Everything [PlaybackViewModel] needs injected, bundled for readability. */
-class PlaybackEnv(
-    val channelDao: ChannelDao,
-    val epgRepository: EpgRepository,
-    val engine: PlayerEngine,
-    val store: KeyValueStore,
-    val time: PlaybackTime,
-    val hooks: PlaybackHooks = PlaybackHooks(),
-)
 
 /**
  * Fullscreen-playback state machine: which channel is tuned, which overlay
@@ -54,7 +35,19 @@ class PlaybackViewModel(
      */
     val openMultiview: () -> Unit = env.hooks.onOpenMultiview
 
-    val panel = PanelViewModel(env.channelDao, env.epgRepository, clock, scope, env.time.zone, env.hooks.panelLock)
+    /** The shared factory behind the sheet's six group/bulk tool rows. */
+    private val groupTools =
+        GroupTools(env.hooks.customGroups, env.channelDao, env.epgRepository.channelIds(), env.hooks.parental, scope)
+
+    val panel =
+        PanelViewModel(
+            env.channelDao,
+            env.epgRepository,
+            clock,
+            scope,
+            env.time.zone,
+            PanelHooks(lock = env.hooks.panelLock, customGroups = groupTools.groups),
+        )
 
     private val tuner = TuneController(env.engine, env.store, scope, env.channelDao, history)
     private val overlays = OverlayState(scope)
@@ -63,7 +56,11 @@ class PlaybackViewModel(
     /** Executes context-menu rows; also resolves the channel they act on. */
     val menu =
         PlaybackMenuHandler(
-            actions = ChannelActions(env.channelDao, scope),
+            sheet =
+                SheetActions(
+                    channels = ChannelActions(env.channelDao, scope),
+                    groupTools = GroupToolLauncher(groupTools) { panel.selectedGroup.value },
+                ),
             overlays = overlays,
             tuner = tuner,
             openSettings = env.hooks.onOpenSettings,

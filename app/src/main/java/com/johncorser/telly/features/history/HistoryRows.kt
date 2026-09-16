@@ -67,7 +67,7 @@ object HistoryRows {
         programs: List<ProgramEntity>,
     ): String? =
         programs
-            .firstOrNull { it.channelTvgId == channel.source.tvgId && it.startMs <= atMs && atMs < it.endMs }
+            .firstOrNull { it.channelTvgId == channel.epgId && it.startMs <= atMs && atMs < it.endMs }
             ?.details
             ?.let(ProgramTitle::of)
 }

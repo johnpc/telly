@@ -93,6 +93,19 @@ class GuideSteps(
         world.waitForText(placeholder, substring = true)
     }
 
+    /** After Assign EPG: the named row's cells come from the picked id. */
+    @Then("the guide row of {string} shows the current programme of EPG id {string}")
+    fun guideRowShowsEpgProgramme(
+        name: String,
+        tvgId: String,
+    ) {
+        val programme = FixtureServer.nowProgramme(tvgId, System.currentTimeMillis())
+        val cell = world.hasTextMatching(Regex(".*" + Regex.escape(programme.title) + ".*"))
+        driver.awaitCondition("the $name row shows ${programme.title}") {
+            world.rowAlignedMatching(hasText(name), cell)
+        }
+    }
+
     @Then("the header clock shows today's date and time")
     fun headerClock() {
         // "Sun, Sep 14, 2:45 PM" — assert the date part (minutes drift) and

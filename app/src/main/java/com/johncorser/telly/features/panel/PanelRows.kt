@@ -2,26 +2,53 @@ package com.johncorser.telly.features.panel
 
 import com.johncorser.telly.features.epg.NowNext
 import com.johncorser.telly.features.epg.ProgramTitle
+import com.johncorser.telly.features.groups.CustomGroup
 import com.johncorser.telly.features.playback.ProgramTimes
+import com.johncorser.telly.features.playlist.ChannelImporter
 import com.johncorser.telly.features.playlist.db.ChannelEntity
 import java.util.TimeZone
 
 /** Pure row assembly for the channel panel: filtering, renumbering, formatting. */
 object PanelRows {
-    /** Groups column order (capture 25): Favorites, All channels, playlist groups. */
-    fun groupNames(channels: List<ChannelEntity>): List<String> =
-        listOf(PanelViewModel.FAVORITES, PanelViewModel.ALL_CHANNELS) +
-            channels.mapNotNull { it.source.groupTitle }.distinct()
+    /**
+     * Groups column order (capture 25): Favorites, All channels, playlist
+     * groups — then the user's custom groups, in their own sort order.
+     */
+    fun groupNames(
+        channels: List<ChannelEntity>,
+        custom: List<CustomGroup> = emptyList(),
+    ): List<String> =
+        (
+            listOf(PanelViewModel.FAVORITES, PanelViewModel.ALL_CHANNELS) +
+                channels.mapNotNull { it.source.groupTitle } + custom.map { it.name }
+        ).distinct()
 
+    /**
+     * A custom group's members match by refresh-stable channel key; a name
+     * shared with a playlist group resolves to the playlist group.
+     */
     fun channelsIn(
         list: List<ChannelEntity>,
         group: String,
+        custom: List<CustomGroup> = emptyList(),
     ): List<ChannelEntity> =
         when (group) {
             PanelViewModel.ALL_CHANNELS -> list
             PanelViewModel.FAVORITES -> list.filter { it.flags.favorite }
-            else -> list.filter { it.source.groupTitle == group }
+            else ->
+                list
+                    .filter { it.source.groupTitle == group }
+                    .ifEmpty { customMembers(list, group, custom) }
         }
+
+    private fun customMembers(
+        list: List<ChannelEntity>,
+        group: String,
+        custom: List<CustomGroup>,
+    ): List<ChannelEntity> {
+        val members = custom.firstOrNull { it.name == group }?.members ?: return emptyList()
+        return list.filter { ChannelImporter.keyOf(it) in members }
+    }
 
     fun build(
         groupChannels: List<ChannelEntity>,
@@ -31,7 +58,7 @@ object PanelRows {
         zone: TimeZone,
     ): List<PanelRow> =
         groupChannels.mapIndexed { index, channel ->
-            val nowNext = guide[channel.source.tvgId] ?: NowNext()
+            val nowNext = guide[channel.epgId] ?: NowNext()
             val now = nowNext.now
             PanelRow(
                 channel = channel,

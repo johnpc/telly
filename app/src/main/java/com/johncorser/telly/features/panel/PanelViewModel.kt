@@ -16,12 +16,6 @@ import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import java.util.TimeZone
 
-/** A focus move the row list must execute (scroll + focus the index). */
-data class PanelFocusCommand(
-    val version: Int,
-    val index: Int,
-)
-
 /**
  * Channel-list panel state: the groups column (Favorites + All channels +
  * playlist groups, capture 25), the channel rows of the selected group with
@@ -34,9 +28,11 @@ class PanelViewModel(
     private val clock: () -> Long,
     scope: CoroutineScope,
     private val zone: TimeZone = TimeZone.getDefault(),
-    private val lock: PanelLock = PanelLock(),
+    hooks: PanelHooks = PanelHooks(),
 ) {
+    private val lock = hooks.lock
     private val channels = channelDao.observeVisible().stateIn(scope, SharingStarted.Eagerly, emptyList())
+    private val custom = hooks.customGroups.stateIn(scope, SharingStarted.Eagerly, emptyList())
     private val selected = MutableStateFlow(ALL_CHANNELS)
     private val instant = MutableStateFlow(clock())
     private val mutableFocusIndex = MutableStateFlow(0)
@@ -57,18 +53,18 @@ class PanelViewModel(
             .stateIn(scope, SharingStarted.Eagerly, "")
 
     val groups: StateFlow<List<String>> =
-        channels
-            .map(PanelRows::groupNames)
+        combine(channels, custom, PanelRows::groupNames)
             .stateIn(scope, SharingStarted.Eagerly, PanelRows.groupNames(emptyList()))
 
     @OptIn(ExperimentalCoroutinesApi::class)
     val rows: StateFlow<List<PanelRow>> =
-        combine(channels, selected, instant) { list, group, at -> Triple(PanelRows.channelsIn(list, group), group, at) }
-            .flatMapLatest { (groupChannels, group, at) ->
-                epgRepository
-                    .nowNext(groupChannels.mapNotNull { it.source.tvgId }, at)
-                    .map { guide -> PanelRows.build(groupChannels, group, guide, at, zone) }
-            }.stateIn(scope, SharingStarted.Eagerly, emptyList())
+        combine(channels, custom, selected, instant) { list, customList, group, at ->
+            Triple(PanelRows.channelsIn(list, group, customList), group, at)
+        }.flatMapLatest { (groupChannels, group, at) ->
+            epgRepository
+                .nowNext(groupChannels.mapNotNull { it.epgId }, at)
+                .map { guide -> PanelRows.build(groupChannels, group, guide, at, zone) }
+        }.stateIn(scope, SharingStarted.Eagerly, emptyList())
 
     /** The airing programme title of a row — the channel menu's blue header. */
     fun nowTitleOf(channelId: Long): String? = rows.value.firstOrNull { it.channel.id == channelId }?.nowTitle
@@ -109,7 +105,8 @@ class PanelViewModel(
     }
 
     private fun focusChannel(channelId: Long) {
-        val index = PanelRows.channelsIn(channels.value, selected.value).indexOfFirst { it.id == channelId }
+        val index =
+            PanelRows.channelsIn(channels.value, selected.value, custom.value).indexOfFirst { it.id == channelId }
         if (index >= 0) {
             commandFocus(index)
         } else {

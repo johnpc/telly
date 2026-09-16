@@ -1,5 +1,6 @@
 package com.johncorser.telly.features.guide
 
+import com.johncorser.telly.features.groups.CustomGroup
 import com.johncorser.telly.features.guide.GuideTestData.at
 import com.johncorser.telly.features.panel.PanelViewModel
 import com.johncorser.telly.testutil.asFavorite
@@ -57,5 +58,28 @@ class GuideRowsBuilderTest {
         val silent = rows.last()
         assertTrue(silent.cells.isNotEmpty())
         assertTrue(silent.cells.none { it.hasInfo })
+    }
+
+    @Test
+    fun `an assigned EPG override remaps the channel's programme cells`() {
+        val remapped =
+            channels.map { row ->
+                if (row.id == 3L) row.copy(flags = row.flags.copy(epgOverride = "tvg-1")) else row
+            }
+
+        val rows = GuideRowsBuilder.build(GuideRowsInput(remapped, "Sports", span), programs)
+
+        val extra = rows.single { it.channel.id == 3L }
+        assertEquals("Business Hour", extra.cells.first { it.hasInfo }.program?.details?.title)
+    }
+
+    @Test
+    fun `a custom group renders its member rows renumbered from one`() {
+        val custom = CustomGroup(1, "Picks", members = setOf("tvg-3", "tvg-1"))
+
+        val rows = GuideRowsBuilder.build(GuideRowsInput(channels, "Picks", span, listOf(custom)), programs)
+
+        assertEquals(listOf("News One", "Sports Extra"), rows.map { it.channel.source.name })
+        assertEquals(listOf(1, 2), rows.map { it.displayNumber })
     }
 }

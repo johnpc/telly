@@ -1,5 +1,7 @@
 package com.johncorser.telly.features.playback
 
+import com.johncorser.telly.features.groups.GroupToolSession
+
 /** Which layer currently covers the fullscreen video. */
 sealed interface PlaybackOverlay {
     /** Bare playback: zero chrome (capture 33). */
@@ -50,6 +52,12 @@ sealed interface PlaybackOverlay {
      */
     data class ChannelOptions(
         val channelName: String,
+        override val back: PlaybackOverlay = None,
+    ) : Pushed
+
+    /** A pushed group/bulk tool screen (Create group, Assign EPG, …). */
+    data class GroupTool(
+        val session: GroupToolSession,
         override val back: PlaybackOverlay = None,
     ) : Pushed
 }

@@ -14,6 +14,7 @@ import com.johncorser.telly.features.epg.EpgRetention
 import com.johncorser.telly.features.epg.EpgSourceStore
 import com.johncorser.telly.features.epg.RefreshScheduler
 import com.johncorser.telly.features.epg.RoomEpgSourceStore
+import com.johncorser.telly.features.groups.db.CustomGroupsMigration
 import com.johncorser.telly.features.playlist.PlaylistRepository
 import com.johncorser.telly.features.playlist.RoomPlaylistRepository
 import com.johncorser.telly.core.settings.SharedPrefsKeyValueStore as SettingsPrefsStore
@@ -41,6 +42,7 @@ object ServiceLocator {
                     TellyDatabase.MIGRATION_1_2,
                     TellyDatabase.MIGRATION_2_3,
                     TellyDatabase.MIGRATION_3_4,
+                    CustomGroupsMigration.MIGRATION_4_5,
                 )
                 .build()
                 .also { database = it }

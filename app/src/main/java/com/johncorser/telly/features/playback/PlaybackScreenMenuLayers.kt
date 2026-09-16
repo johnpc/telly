@@ -4,6 +4,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.res.stringResource
 import com.johncorser.telly.R
 import com.johncorser.telly.core.ui.OnboardingScreenMessage
+import com.johncorser.telly.features.groups.GroupToolScreen
 import com.johncorser.telly.features.guide.GuideScreenChannelOptionsPane
 
 /**
@@ -25,6 +26,7 @@ internal fun PlaybackScreenMenuLayers(
                 OnboardingScreenMessage(headline = active.title, subtitle = active.text)
             is PlaybackOverlay.ChannelOptions ->
                 GuideScreenChannelOptionsPane(active.channelName, viewModel.menu::onChannelOption)
+            is PlaybackOverlay.GroupTool -> GroupToolScreen(active.session)
             is PlaybackOverlay.ComingSoon ->
                 OnboardingScreenMessage(
                     headline = active.feature,

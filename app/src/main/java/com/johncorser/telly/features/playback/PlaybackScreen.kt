@@ -56,6 +56,8 @@ fun PlaybackScreen(
                                 panelLock = PanelLock(deps.parental),
                                 onOpenSettings = onOpenSettings,
                                 onOpenMultiview = onOpenMultiview,
+                                parental = deps.parental,
+                                customGroups = deps.customGroups,
                             ),
                     ),
                 history = deps.sources.history,

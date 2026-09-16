@@ -1,5 +1,6 @@
 package com.johncorser.telly.features.guide
 
+import com.johncorser.telly.features.groups.GroupToolLauncher
 import com.johncorser.telly.features.playback.ChannelActions
 import com.johncorser.telly.features.playback.PlayerMenuFocus
 import com.johncorser.telly.features.playback.PlayerMenuItem
@@ -19,8 +20,7 @@ import kotlinx.coroutines.flow.asStateFlow
  * slice ships.
  */
 class GuideMenuController(
-    private val actions: ChannelActions,
-    private val zapAway: (ChannelEntity) -> Unit,
+    private val sheet: GuideSheetChannelActions,
     private val focusedRow: () -> GuideRow?,
     private val info: () -> GuideInfoData?,
     private val callbacks: GuideCallbacks,
@@ -67,7 +67,7 @@ class GuideMenuController(
     fun onMenuItem(item: PlayerMenuItem) {
         val row = focusedRow() ?: return
         sheetFocus.onActivated(item)
-        when (PlayerMenuRouting.routeOf(item)) {
+        when (val route = PlayerMenuRouting.routeOf(item)) {
             PlayerMenuRoute.SEARCH -> {
                 reset()
                 callbacks.onOpenSearch()
@@ -75,33 +75,57 @@ class GuideMenuController(
             PlayerMenuRoute.SETTINGS -> callbacks.onOpenSettings()
             PlayerMenuRoute.TOGGLE_FAVORITE -> toggleFavorite(row.channel)
             PlayerMenuRoute.HIDE_CHANNEL -> hide(row.channel)
-            PlayerMenuRoute.DESCRIPTION -> show(description())
+            PlayerMenuRoute.DESCRIPTION -> show(descriptionLayer(info()))
             PlayerMenuRoute.CHANNEL_OPTIONS -> show(GuideLayer.ChannelOptions(row.channel.source.name))
-            PlayerMenuRoute.COMING_SOON -> show(GuideLayer.ComingSoon(item.label, back = GuideLayer.RowMenu))
+            else -> openGroupTool(route, item, row.channel)
         }
+    }
+
+    /**
+     * A group/bulk tool pushed over the sheet; finishing an action → grid.
+     * Routes the tools don't serve (the still-unbuilt rows) fall through
+     * to the branded coming-soon placeholder that backs to the sheet.
+     */
+    private fun openGroupTool(
+        route: PlayerMenuRoute,
+        item: PlayerMenuItem,
+        channel: ChannelEntity,
+    ) {
+        val session = sheet.groupTools?.session(route, channel, onDone = ::reset)
+        show(session?.let { GuideLayer.GroupTool(it) } ?: GuideLayer.ComingSoon(item.label, back = GuideLayer.RowMenu))
     }
 
     /** A sheet channel action returns to the grid, like the panel's sheet. */
     private fun toggleFavorite(channel: ChannelEntity) {
-        actions.toggleFavorite(channel)
+        sheet.actions.toggleFavorite(channel)
         reset()
     }
 
     /** Hiding the previewed channel retunes first, like the panel's sheet. */
     private fun hide(channel: ChannelEntity) {
-        zapAway(channel)
-        actions.hide(channel)
+        sheet.zapAway(channel)
+        sheet.actions.hide(channel)
         reset()
     }
-
-    private fun description(): GuideLayer.Description {
-        val data = info()
-        return GuideLayer.Description(
-            title = data?.title ?: GuideInfoBuilder.NO_INFORMATION,
-            text = data?.description ?: GuideInfoBuilder.NO_INFORMATION,
-        )
-    }
 }
+
+/**
+ * What the guide sheet's channel rows act through: favorite/hide
+ * persistence, the zap-away used before hiding the previewed channel, and
+ * the launcher behind the six group/bulk tool rows.
+ */
+class GuideSheetChannelActions(
+    val actions: ChannelActions,
+    val zapAway: (ChannelEntity) -> Unit,
+    val groupTools: GroupToolLauncher? = null,
+)
+
+/** The sheet's working "Program description" row over the focused cell. */
+private fun descriptionLayer(data: GuideInfoData?): GuideLayer.Description =
+    GuideLayer.Description(
+        title = data?.title ?: GuideInfoBuilder.NO_INFORMATION,
+        text = data?.description ?: GuideInfoBuilder.NO_INFORMATION,
+    )
 
 /**
  * One BACK level per layer: pushed screens → sheet, everything else → grid.
@@ -114,5 +138,6 @@ private fun backOf(layer: GuideLayer): GuideLayer =
     when (layer) {
         is GuideLayer.ComingSoon -> layer.back
         is GuideLayer.Description -> GuideLayer.RowMenu
+        is GuideLayer.GroupTool -> GuideLayer.RowMenu
         else -> GuideLayer.Grid
     }

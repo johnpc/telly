@@ -25,17 +25,32 @@ class PlayerMenuRoutingTest {
                 PlayerMenuItem.ADD_TO_FAVORITES to PlayerMenuRoute.TOGGLE_FAVORITE,
                 PlayerMenuItem.BLOCK_CHANNEL to PlayerMenuRoute.COMING_SOON,
                 PlayerMenuItem.HIDE_CHANNEL to PlayerMenuRoute.HIDE_CHANNEL,
-                PlayerMenuItem.ASSIGN_EPG to PlayerMenuRoute.COMING_SOON,
+                PlayerMenuItem.ASSIGN_EPG to PlayerMenuRoute.ASSIGN_EPG,
                 PlayerMenuItem.CHANNEL_OPTIONS to PlayerMenuRoute.CHANNEL_OPTIONS,
                 PlayerMenuItem.MANAGE_FAVORITES to PlayerMenuRoute.COMING_SOON,
-                PlayerMenuItem.MANAGE_BLOCKING to PlayerMenuRoute.COMING_SOON,
-                PlayerMenuItem.MANAGE_VISIBILITY to PlayerMenuRoute.COMING_SOON,
+                PlayerMenuItem.MANAGE_BLOCKING to PlayerMenuRoute.MANAGE_BLOCKING,
+                PlayerMenuItem.MANAGE_VISIBILITY to PlayerMenuRoute.MANAGE_VISIBILITY,
                 PlayerMenuItem.REORDER_CHANNELS to PlayerMenuRoute.COMING_SOON,
-                PlayerMenuItem.COPY_CHANNELS to PlayerMenuRoute.COMING_SOON,
-                PlayerMenuItem.CREATE_GROUP to PlayerMenuRoute.COMING_SOON,
-                PlayerMenuItem.GROUP_OPTIONS to PlayerMenuRoute.COMING_SOON,
+                PlayerMenuItem.COPY_CHANNELS to PlayerMenuRoute.COPY_CHANNELS,
+                PlayerMenuItem.CREATE_GROUP to PlayerMenuRoute.CREATE_GROUP,
+                PlayerMenuItem.GROUP_OPTIONS to PlayerMenuRoute.GROUP_OPTIONS,
             )
 
         assertEquals(expected, PlayerMenuItem.entries.associateWith(PlayerMenuRouting::routeOf))
+    }
+
+    @Test
+    fun `the six group and bulk rows route through the group-tool set`() {
+        val expected =
+            setOf(
+                PlayerMenuRoute.CREATE_GROUP,
+                PlayerMenuRoute.GROUP_OPTIONS,
+                PlayerMenuRoute.COPY_CHANNELS,
+                PlayerMenuRoute.ASSIGN_EPG,
+                PlayerMenuRoute.MANAGE_BLOCKING,
+                PlayerMenuRoute.MANAGE_VISIBILITY,
+            )
+
+        assertEquals(expected, PlayerMenuRouting.GROUP_TOOL_ROUTES)
     }
 }

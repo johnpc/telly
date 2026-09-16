@@ -1,7 +1,11 @@
 package com.johncorser.telly.features.guide
 
+import com.johncorser.telly.features.groups.GroupToolLauncher
+import com.johncorser.telly.features.groups.GroupTools
+import com.johncorser.telly.features.groups.InMemoryCustomGroupStore
 import com.johncorser.telly.features.playback.ChannelActions
 import com.johncorser.telly.features.playback.PlayerMenuItem
+import com.johncorser.telly.features.settings.SettingsRow
 import com.johncorser.telly.testutil.FakeChannelDao
 import com.johncorser.telly.testutil.testChannel
 import io.mockk.mockk
@@ -9,6 +13,7 @@ import io.mockk.verify
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import kotlinx.coroutines.test.runTest
@@ -36,10 +41,18 @@ class GuideMenuControllerTest {
             favorite = false,
         )
 
-    private fun TestScope.build(focusMemory: GuideFocusMemory? = null): GuideMenuController =
-        GuideMenuController(
-            actions = ChannelActions(dao, CoroutineScope(SupervisorJob() + UnconfinedTestDispatcher(testScheduler))),
-            zapAway = { zapped += it.id },
+    private val groupStore = InMemoryCustomGroupStore()
+
+    private fun TestScope.build(focusMemory: GuideFocusMemory? = null): GuideMenuController {
+        val scope = CoroutineScope(SupervisorJob() + UnconfinedTestDispatcher(testScheduler))
+        val launcher = GroupToolLauncher(GroupTools(groupStore, dao, flowOf(emptyList()), null, scope)) { "News" }
+        return GuideMenuController(
+            sheet =
+                GuideSheetChannelActions(
+                    actions = ChannelActions(dao, scope),
+                    zapAway = { zapped += it.id },
+                    groupTools = launcher,
+                ),
             focusedRow = { row },
             info = { infoData },
             callbacks =
@@ -50,6 +63,7 @@ class GuideMenuControllerTest {
                 ),
             focusMemory = focusMemory,
         )
+    }
 
     private fun TestScope.buildOpenSheet(): GuideMenuController = build().apply { openRowMenu() }
 
@@ -179,12 +193,6 @@ class GuideMenuControllerTest {
                     PlayerMenuItem.BLOCK_CHANNEL,
                     PlayerMenuItem.MANAGE_FAVORITES,
                     PlayerMenuItem.REORDER_CHANNELS,
-                    PlayerMenuItem.ASSIGN_EPG,
-                    PlayerMenuItem.MANAGE_BLOCKING,
-                    PlayerMenuItem.MANAGE_VISIBILITY,
-                    PlayerMenuItem.COPY_CHANNELS,
-                    PlayerMenuItem.CREATE_GROUP,
-                    PlayerMenuItem.GROUP_OPTIONS,
                 )
             val menu = buildOpenSheet()
 
@@ -194,6 +202,46 @@ class GuideMenuControllerTest {
                 menu.close()
                 assertEquals(GuideLayer.RowMenu, menu.layer.value)
             }
+        }
+    }
+
+    @Test
+    fun `group tool rows push their screen over the sheet and back pops to it`() {
+        runTest {
+            val menu = buildOpenSheet()
+
+            menu.onMenuItem(PlayerMenuItem.ASSIGN_EPG)
+
+            val tool = menu.layer.value as GuideLayer.GroupTool
+            assertEquals("Assign EPG", tool.session.ui.value.title)
+            menu.close()
+            assertEquals(GuideLayer.RowMenu, menu.layer.value)
+        }
+    }
+
+    @Test
+    fun `create group commits a custom group and returns to the grid`() {
+        runTest {
+            val menu = buildOpenSheet()
+
+            menu.onMenuItem(PlayerMenuItem.CREATE_GROUP)
+            (menu.layer.value as GuideLayer.GroupTool).session.submitText("My Picks")
+
+            assertEquals(GuideLayer.Grid, menu.layer.value)
+            assertEquals(listOf("My Picks"), groupStore.groups.value.map { it.name })
+        }
+    }
+
+    @Test
+    fun `group options on a playlist group offers rename and delete locked`() {
+        runTest {
+            val menu = buildOpenSheet()
+
+            menu.onMenuItem(PlayerMenuItem.GROUP_OPTIONS)
+
+            val ui = (menu.layer.value as GuideLayer.GroupTool).session.ui.value
+            assertEquals("News", ui.title)
+            assertTrue(ui.rows.filterIsInstance<SettingsRow.Action>().all { it.locked })
         }
     }
 
