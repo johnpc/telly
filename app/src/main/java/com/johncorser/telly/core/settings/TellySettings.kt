@@ -20,6 +20,9 @@ object TellySettings {
     val USER_AGENT = stringSetting("general_user_agent", "")
     val UDP_PROXY = stringSetting("general_udp_proxy", "")
 
+    // Reinstall-proof config: keep Documents/telly/telly-backup.json fresh.
+    val AUTO_BACKUP = boolSetting("general_auto_backup", true)
+
     // Playlists (catalogue 19–22).
     val PLAYLISTS_SORTING = stringSetting("playlists_sorting", "By name")
 

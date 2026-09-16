@@ -397,6 +397,43 @@ Local SDK note: `local.properties` must contain
   add-playlist happy path. Verified locally (quality.sh); on-device
   acceptance legs pending (emulators occupied this round).
 
+- **2026-09-16** Reinstall-proof configuration (README "Backups"). **(1) Auto
+  Backup:** manifest `dataExtractionRules` (31+) + `fullBackupContent` (23-30)
+  include telly-settings/telly prefs + `telly.db` with its `-wal`/`-shm`
+  (framework-driven full backup can't checkpoint on demand, so the WAL trio
+  travels together; files domain + telly-search stay out). Proven on the
+  emulator: `bmgr backupnow` → uninstall → reinstall → `bmgr restore` boots
+  straight to playback, no onboarding. **(2) Automatic local export:**
+  `ConfigAutoBackup` (JVM-tested: 5 s debounce via collectLatest+delay,
+  NonCancellable write, payload-hash dedupe in the scalar KV store — NOT the
+  settings store, which would re-trigger the loop; empty-playlists exports are
+  skipped so a fresh reinstall never clobbers the old backup) re-exports the
+  manual "Back up data" JSON to `Documents/telly/telly-backup.json` on
+  playlist/settings changes via `MediaStoreBackupDocuments` (raw-path write
+  first — the only way to overwrite another owner's orphan under all-files
+  access — then MediaStore insert-or-update; API <29 has no permissionless
+  path and only Auto Backup covers it). Engine restarts per MainActivity
+  onCreate (fresh ServiceLocator deps; e2e resets) and stops on onDestroy.
+  General pane: "Automatic backup" toggle (default ON) + last-export summary
+  (`AutoBackupState` StateFlow through `SettingsFeeds`). **(3) Restore offer:**
+  the welcome screen gains a focused-first "Restore previous setup" pill when
+  `WelcomeRestore.offerOf` finds a readable backup (Ready) or a
+  sighted-but-unreadable one (NeedsAccess). EMPIRICAL (API 34 TV emulator):
+  after uninstall→reinstall the orphaned Documents file is *sighted* but NOT
+  readable — scoped storage hides other-owner non-media content from both raw
+  paths and MediaStore, and READ_EXTERNAL_STORAGE wouldn't help (non-media;
+  no-op on 33+) — so NeedsAccess opens the system **All files access** grant
+  (`MANAGE_EXTERNAL_STORAGE`; the leanback settings screen is D-pad drivable);
+  the grant reliably takes effect for the app's NEXT process (the emulator's
+  running process kept a stale storage view; real grants normally kill the
+  app). Ready → `RestoreRunner`: importJson → re-fetch every playlist →
+  land per cold-start policy. On-device proof: add fixture playlist → auto
+  export → `adb uninstall` → reinstall → pill → grant → restore → channel 1
+  playing with EPG. e2e: add-playlist gains the seeded-backup restore
+  scenario, settings gains the auto-export round-trip scenario (BackupSteps
+  seam; hooks delete the Documents file per scenario). Verified locally
+  (quality.sh + add-playlist 6/6 + settings 24/24 on a TV-34 emulator).
+
 - **2026-09-15** GitHub Actions credits are exhausted: CI/deploy workflows stay in
   the repo but must be treated as unavailable. The authoritative gate is local —
   `./scripts/quality.sh` (pre-commit enforced) plus the acceptance legs on the

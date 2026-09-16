@@ -10,4 +10,6 @@ data class SettingsFeeds(
     val reminders: List<ReminderListItem> = emptyList(),
     /** Parental -> Blocked channels; one row per blocked channel. */
     val blockedChannels: List<ChannelEntity> = emptyList(),
+    /** General -> Automatic backup; the row's live summary line. */
+    val autoBackup: AutoBackupStatus = AutoBackupStatus(),
 )

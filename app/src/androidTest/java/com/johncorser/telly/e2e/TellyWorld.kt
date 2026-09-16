@@ -26,6 +26,7 @@ import com.johncorser.telly.MainActivity
 import com.johncorser.telly.core.ServiceLocator
 import com.johncorser.telly.core.db.TellyDatabase
 import com.johncorser.telly.e2e.fixtures.FixtureServer
+import com.johncorser.telly.features.settings.MediaStoreBackupDocuments
 
 /**
  * Shared per-scenario state + the primitive gestures every step builds on:
@@ -67,6 +68,8 @@ class TellyWorld(
         listOf("telly-settings", "telly", "telly-search").forEach { name ->
             targetContext.getSharedPreferences(name, Context.MODE_PRIVATE).edit().clear().commit()
         }
+        // Shared storage outlives app data by design; scenarios must not.
+        runCatching { MediaStoreBackupDocuments(targetContext).delete() }
     }
 
     private fun resetServiceLocatorField(

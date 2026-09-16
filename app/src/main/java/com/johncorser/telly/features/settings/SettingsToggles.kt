@@ -12,6 +12,7 @@ object SettingsToggles {
             RowIds.LAST_CHANNEL to TellySettings.LAST_CHANNEL_ON_START,
             RowIds.PIP_ON_HOME to TellySettings.PIP_ON_HOME,
             RowIds.CONFIRM_EXIT to TellySettings.CONFIRM_EXIT,
+            RowIds.AUTO_BACKUP to TellySettings.AUTO_BACKUP,
             RowIds.EPG_STORE_DESCRIPTIONS to TellySettings.EPG_STORE_DESCRIPTIONS,
             RowIds.EPG_UPDATE_ON_APP_START to TellySettings.EPG_UPDATE_ON_APP_START,
             RowIds.EPG_UPDATE_ON_PLAYLISTS_CHANGE to TellySettings.EPG_UPDATE_ON_PLAYLISTS_CHANGE,

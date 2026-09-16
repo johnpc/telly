@@ -19,7 +19,7 @@ fun rowsFor(
 ): List<SettingsRow> =
     when (pane) {
         null -> rootRows()
-        is SettingsPane.Section -> sectionRows(pane.section, settings, playlists, versionName)
+        is SettingsPane.Section -> sectionRows(pane.section, settings, playlists, versionName, feeds)
         is SettingsPane.PlaylistDetail -> playlistDetailRowsFor(pane.url, settings, playlists, feeds)
         is SettingsPane.PlaylistGroups -> playlistGroupRowsFor(pane.url, settings, playlists)
         SettingsPane.EpgSources -> epgSourcesRows(playlists, feeds.epgSources)
@@ -85,9 +85,10 @@ private fun sectionRows(
     settings: SettingsRepository,
     playlists: List<PlaylistItem>,
     versionName: String,
+    feeds: SettingsFeeds,
 ): List<SettingsRow> =
     when (section) {
-        SettingsSection.GENERAL -> generalRows(settings)
+        SettingsSection.GENERAL -> generalRows(settings, feeds.autoBackup)
         SettingsSection.PLAYLISTS -> playlistsRows(settings, playlists)
         SettingsSection.EPG -> epgRows(settings)
         SettingsSection.APPEARANCE -> appearanceRows(settings)

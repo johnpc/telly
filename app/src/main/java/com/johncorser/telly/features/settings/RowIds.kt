@@ -13,6 +13,7 @@ object RowIds {
     const val CONFIRM_EXIT = "general.confirm_exit"
     const val USER_AGENT = "general.user_agent"
     const val UDP_PROXY = "general.udp_proxy"
+    const val AUTO_BACKUP = "general.auto_backup"
     const val BACK_UP_DATA = "general.back_up_data"
     const val RESTORE_DATA = "general.restore_data"
 

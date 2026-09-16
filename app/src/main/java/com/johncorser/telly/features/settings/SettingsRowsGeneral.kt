@@ -7,7 +7,10 @@ import com.johncorser.telly.core.settings.TellySettings
 fun notSet(value: String): String = value.ifBlank { "Not set" }
 
 /** General pane rows (catalogue 54–56), all wired to the store. */
-fun generalRows(s: SettingsRepository): List<SettingsRow> =
+fun generalRows(
+    s: SettingsRepository,
+    autoBackup: AutoBackupStatus = AutoBackupStatus(),
+): List<SettingsRow> =
     listOf(
         SettingsRow.Toggle(
             id = RowIds.AUTOSTART_BOOT,
@@ -44,6 +47,12 @@ fun generalRows(s: SettingsRepository): List<SettingsRow> =
             id = RowIds.UDP_PROXY,
             title = "UDP proxy (address:port)",
             summary = notSet(s.get(TellySettings.UDP_PROXY)),
+        ),
+        SettingsRow.Toggle(
+            id = RowIds.AUTO_BACKUP,
+            title = "Automatic backup",
+            summary = autoBackup.summary(),
+            checked = s.get(TellySettings.AUTO_BACKUP),
         ),
         SettingsRow.Action(id = RowIds.BACK_UP_DATA, title = "Back up data"),
         SettingsRow.Action(id = RowIds.RESTORE_DATA, title = "Restore data"),

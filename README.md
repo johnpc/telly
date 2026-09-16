@@ -195,7 +195,31 @@ Or build from source:
 Your URLs never leave the device. Playlist and guide data are fetched directly
 (OkHttp) and cached in a local Room database.
 
-## Architecture
+## Backups
+
+Playlist/EPG URLs and every setting survive an uninstall → reinstall through
+two independent mechanisms:
+
+- **Android Auto Backup** — the manifest opts the settings preferences and
+  the Room database into the system backup (cloud transport / device-to-device
+  transfer, API 23+). When the platform restores it, telly simply starts with
+  your channels back and never shows onboarding.
+- **Automatic local export** — whenever playlists or settings change, telly
+  re-exports the same JSON the manual *Settings → General → Back up data* row
+  produces to `Documents/telly/telly-backup.json` on shared storage
+  (debounced ~5 s; toggle: *Settings → General → Automatic backup*, default
+  on; the row's summary shows the last export). Shared storage outlives the
+  app, so a fresh install that finds the file offers **Restore previous
+  setup** on the welcome screen: it re-imports the JSON, re-fetches every
+  playlist, and lands on live TV. Restored settings apply immediately and the
+  EPG refreshes on its normal never-fetched-is-due policy.
+
+Honest platform caveat: on Android 11+ scoped storage hides another owner's
+non-media files, and after a reinstall telly counts as a new owner — so the
+welcome screen's restore action may first open the system **All files
+access** grant for telly (one time) before it can read the previous
+install's file. The manual **Back up data / Restore data** rows (SAF
+document picker) are unchanged.
 
 - **Native Kotlin + Jetpack Compose for TV** (`androidx.tv:tv-material`) — no
   webviews, no cross-platform layer. Leanback launcher integration, Compose UI.
