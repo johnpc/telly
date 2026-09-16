@@ -1,6 +1,7 @@
 package com.johncorser.telly.features.recording
 
 import android.content.Context
+import android.util.Log
 import com.johncorser.telly.core.ServiceLocator
 import com.johncorser.telly.core.db.TellyDatabase
 import com.johncorser.telly.core.streamUserAgentFor
@@ -63,14 +64,20 @@ private fun buildRecordingRuntime(
     val clock = ServiceLocator.clock
     val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
     val store = RecordingStore(db.recordingDao, clock)
+    val hlsClient = HlsClient()
     val files =
         RecordingFiles(
             directory = { appContext.getExternalFilesDir(RECORDINGS_DIR) ?: File(appContext.filesDir, RECORDINGS_DIR) },
+            container = HlsContainerProbe(hlsClient),
         )
     val engine =
         RecordingEngine(
             store = store,
-            recorder = OkHttpStreamRecorder(),
+            recorder =
+                RoutingStreamRecorder(
+                    hls = HlsStreamRecorder(hlsClient, log = { Log.w(LOG_TAG, it) }),
+                    progressive = OkHttpStreamRecorder(),
+                ),
             files = files,
             scope = scope,
             clock = clock,
@@ -101,3 +108,4 @@ private fun airingLookup(epg: EpgRepository): RecordingProgrammes =
     }
 
 private const val RECORDINGS_DIR = "recordings"
+private const val LOG_TAG = "HlsStreamRecorder"

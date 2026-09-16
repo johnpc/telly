@@ -28,6 +28,22 @@ object FixturePlan {
             "Music" to GroupPlan("music-box", "Music / Ballet / Dance", MUSIC_TITLES),
         )
 
+    // HLS recording e2e: ONE channel appended after the 30-channel plan (the
+    // VOD/catch-up append precedent keeps existing numbering intact) whose
+    // stream is a live-style HLS master playlist over three tiny TS segments
+    // sliced out of news-one.ts — static files written by gen-fixtures.mjs
+    // (mirrored 1:1). No EPG, so instant record uses the 3 h fallback. The
+    // name deliberately avoids the search scenarios' word-prefix queries.
+    private val hlsChannel =
+        FixtureChannel(
+            number = 31,
+            tvgId = "hls-live-1.fixture",
+            name = "HLS Live",
+            group = "HLS",
+            stream = "news-one",
+            streamPath = "streams/hls-live.m3u8",
+        )
+
     val channels: List<FixtureChannel> =
         groups.entries.flatMapIndexed { groupIndex, (group, plan) ->
             List(CHANNELS_PER_GROUP) { i ->
@@ -40,7 +56,7 @@ object FixturePlan {
                     stream = plan.stream,
                 )
             }
-        }
+        } + hlsChannel
 
     fun channelNamed(name: String): FixtureChannel = channels.first { it.name == name }
 
@@ -73,10 +89,11 @@ object FixturePlan {
         return out
     }
 
-    // One channel ships WITHOUT EPG so "No information" cells are real:
-    // Sports Arena (7) is visible in the guide's initial 7 rows but outside
-    // the news family the search scenarios assert complete cards for.
-    val noEpgTvgIds: Set<String> = setOf("sports-arena-1.fixture")
+    // Channels WITHOUT EPG so "No information" cells are real: Sports Arena
+    // (7) is visible in the guide's initial 7 rows but outside the news
+    // family the search scenarios assert complete cards for; the appended
+    // HLS Live (31) records on the no-EPG 3 h fallback.
+    val noEpgTvgIds: Set<String> = setOf("sports-arena-1.fixture", "hls-live-1.fixture")
 
     // Catch-up e2e: News One is the ONLY catch-up-enabled channel (standard
     // #EXTINF attributes; the template resolves to the same fixture .ts —
@@ -177,7 +194,7 @@ object FixturePlan {
                         "tvg-logo=\"$baseUrl/logos/${c.stream}.png\"${catchupAttributes(c, baseUrl)} " +
                         "group-title=\"${c.group}\",${c.name}\n",
                 )
-                append("$baseUrl/streams/${c.stream}.ts\n")
+                append("$baseUrl/${c.streamPath ?: "streams/${c.stream}.ts"}\n")
             }
             vodItems.forEach { v ->
                 append(
@@ -246,6 +263,8 @@ data class FixtureChannel(
     val name: String,
     val group: String,
     val stream: String,
+    /** Non-null overrides the default "streams/<stream>.ts" stream URL path. */
+    val streamPath: String? = null,
 )
 
 data class FixtureVodItem(

@@ -46,7 +46,6 @@ class RecordingCenter(
     suspend fun toggleInstant(channel: ChannelEntity): RecordingPrompt {
         val active = store.activeFor(keyOf(channel))
         return when {
-            !RecordingSupport.isRecordable(channel.source.streamUrl) -> RecordingPrompt.Unsupported(channel.source.name)
             active != null -> RecordingPrompt.StopConfirm(active.id, channel.source.name)
             else -> startInstant(channel)
         }
@@ -67,9 +66,6 @@ class RecordingCenter(
         startMs: Long,
         endMs: Long,
     ): RecordingPrompt {
-        if (!RecordingSupport.isRecordable(channel.source.streamUrl)) {
-            return RecordingPrompt.Unsupported(channel.source.name)
-        }
         store.schedule(newEntry(channel, title, startMs, endMs))
         return RecordingPrompt.Done
     }
@@ -94,7 +90,7 @@ class RecordingCenter(
 
     fun storage(): RecordingStorageInfo = files.storage()
 
-    private fun newEntry(
+    private suspend fun newEntry(
         channel: ChannelEntity,
         title: String?,
         startMs: Long,
@@ -105,7 +101,7 @@ class RecordingCenter(
             channelName = channel.source.name,
             streamUrl = channel.source.streamUrl,
             title = title ?: channel.source.name,
-            filePath = files.newFile(channel.source.name, startMs).path,
+            filePath = files.newFileFor(channel.source.name, startMs, channel.source.streamUrl).path,
             startMs = startMs,
             plannedEndMs = endMs,
             endMs = null,

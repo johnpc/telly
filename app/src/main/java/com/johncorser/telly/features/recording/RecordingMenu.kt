@@ -42,10 +42,6 @@ class RecordingMenu(
 
     /** "Custom recording": prime the form and ask the host to show it. */
     fun onCustomRecording(channel: ChannelEntity) {
-        if (!RecordingSupport.isRecordable(channel.source.streamUrl)) {
-            show(RecordingPrompt.Unsupported(channel.source.name))
-            return
-        }
         mutableForm.value = CustomRecordingForm(channel, clock())
         show(RecordingPrompt.CustomForm)
     }

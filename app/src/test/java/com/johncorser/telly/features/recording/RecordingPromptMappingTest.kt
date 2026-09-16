@@ -39,14 +39,6 @@ class RecordingPromptMappingTest {
     }
 
     @Test
-    fun `playback Unsupported shows the HLS explainer over the current layer`() {
-        val overlay = PlaybackRecordingPrompts.overlayFor(RecordingPrompt.Unsupported("HLS"), PlaybackOverlay.QuickBar)
-        assertTrue(overlay is PlaybackOverlay.Description)
-        assertEquals(RecordingSupport.HLS_MESSAGE, (overlay as PlaybackOverlay.Description).text)
-        assertEquals(PlaybackOverlay.QuickBar, overlay.back)
-    }
-
-    @Test
     fun `guide Done returns to the grid and the rest get their own layers`() {
         assertEquals(GuideLayer.Grid, GuideRecordingPrompts.layerFor(RecordingPrompt.Done, GuideLayer.RowMenu))
         assertTrue(
@@ -61,7 +53,5 @@ class RecordingPromptMappingTest {
                 GuideLayer.RowMenu,
             ) is GuideLayer.CustomRecording,
         )
-        val hls = GuideRecordingPrompts.layerFor(RecordingPrompt.Unsupported("A"), GuideLayer.RowMenu)
-        assertEquals(RecordingSupport.HLS_MESSAGE, (hls as GuideLayer.Description).text)
     }
 }

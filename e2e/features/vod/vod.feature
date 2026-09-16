@@ -11,7 +11,7 @@ Feature: VOD movies
     And I completed the add-playlist wizard
 
   Scenario: VOD entries never become guide channels
-    Then the playlist imported 30 live channels and 2 VOD items
+    Then the playlist imported 31 live channels and 2 VOD items
     When I open the guide's groups column
     Then I see "Movies"
     And the groups column does not list "Cinema"

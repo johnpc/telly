@@ -121,11 +121,40 @@ Local SDK note: `local.properties` must contain
   + TV guide sub-screens; `PlayerKeymap`/`GuideKeymap` remap D-pad and media
   keys ahead of the default key policies.
 - **2026-09-15** Recording/DVR: `RecordingEngine` byte-copies raw TS/progressive
-  HTTP streams (HLS is honestly unsupported — `RecordingSupport.HLS_MESSAGE`
-  explains instead of writing a broken file) under a foreground
-  `RecordingService`; the in-app `RecordingScheduler` has no alarm-manager
-  wakeups (scheduled captures start only while telly runs — the settings pane
-  says so), and the quick-bar/rail DVR icon opens the recordings library.
+  HTTP streams and records HLS for real (see the HLS-recording bullet below)
+  under a foreground `RecordingService`; the in-app `RecordingScheduler` has no
+  alarm-manager wakeups (scheduled captures start only while telly runs — the
+  settings pane says so), and the quick-bar/rail DVR icon opens the recordings
+  library.
+- **2026-09-15** HLS recording supported (supersedes the "HLS is honestly
+  unsupported" half of the Recording/DVR bullet — `RecordingSupport.HLS_MESSAGE`
+  and `RecordingPrompt.Unsupported` are deleted; every source records).
+  `RoutingStreamRecorder` keeps the engine's single `StreamRecorder` seam and
+  dispatches `.m3u8` sources (`RecordingSupport.isHls`) to `HlsStreamRecorder`:
+  fetch the playlist (`HlsClient`, same UA/redirect treatment as
+  `OkHttpStreamRecorder`), hop a MASTER playlist onto its highest-bandwidth
+  variant, then poll the MEDIA playlist per `#EXT-X-TARGETDURATION` and append
+  every new segment in order — TS segments concatenate into a valid TS stream;
+  fMP4 (`#EXT-X-MAP`) captures get the init segment first and concatenate into
+  a valid fragmented MP4, and `HlsContainerProbe` (probes the playlist once at
+  schedule time, via `RecordingFiles.newFileFor`'s `StreamContainer` seam)
+  names those captures `.mp4` (probe failure falls back to `.ts`; telly's
+  player sniffs the container either way). Progress is deduped by
+  `#EXT-X-MEDIA-SEQUENCE`-seeded sequence numbers per capture file, so the
+  engine's reconnect attempts never append a segment twice; a sequence jump
+  (missed segments) logs and continues; `#EXT-X-ENDLIST` finishes the attempt
+  and live playlists run to user stop / planned end. Failures keep the TS
+  recorder's policy: zero-progress attempts throw (engine counts idle, FAILED
+  after 3), partial-progress attempts report their bytes and reconnect.
+  `HlsPlaylistParser` is pure (master-vs-media, variant pick, sequence
+  numbers, ENDLIST/MAP, relative-URL resolution) and exhaustively JVM-tested.
+  e2e: fixture channel 31 "HLS Live" (group "HLS", no EPG, appended so
+  existing numbering is untouched; zap-wrap + VOD-count assertions updated to
+  31) streams a live-style master→media playlist over three TS slices of
+  news-one.ts cut at packet boundaries (gen-fixtures.mjs; concatenation is
+  byte-identical to news-one.ts), and the recording feature records it,
+  stops, and plays the capture back. Verified locally (quality.sh);
+  on-device acceptance legs pending.
 - **2026-09-15** Block channel: the context sheet's Block channel row flags the
   channel (v9); every tune path — including lastChannelId restores — passes the
   parental PIN gate first. Multiview pane tunes stay deliberately ungated.

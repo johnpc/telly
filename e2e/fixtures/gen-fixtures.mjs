@@ -4,7 +4,7 @@
 //   startEpochMillis: "now" anchor. EPG covers now-6h .. now+24h. Defaults to Date.now().
 // Writes playlist.m3u and epg.xml next to this script.
 
-import { writeFileSync } from "node:fs";
+import { readFileSync, writeFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 
@@ -59,6 +59,49 @@ for (const [group, def] of Object.entries(GROUPS)) {
   }
 }
 
+// HLS recording e2e: ONE channel appended after the 30-channel plan (the
+// VOD/catch-up append precedent keeps existing numbering intact) whose stream
+// is a live-style HLS master playlist over three TS segments sliced out of
+// news-one.ts below. No EPG (see NO_EPG_IDS); mirrored 1:1 by FixturePlan.
+const HLS_ID = "hls-live-1.fixture";
+channels.push({
+  num: num++,
+  id: HLS_ID,
+  name: "HLS Live",
+  group: "HLS",
+  logo: `${BASE}/logos/news-one.png`,
+  url: `${BASE}/streams/hls-live.m3u8`,
+  titles: GROUPS.News.titles,
+  cat: "News",
+});
+
+// ---- HLS stream fixture: master + live media playlist + TS segment slices --
+// Slices are cut at 188-byte TS packet boundaries, so concatenating them (what
+// the recorder does) reproduces news-one.ts byte for byte. The media playlist
+// has no #EXT-X-ENDLIST: it is a live playlist that never advances, like a
+// stalled provider — recording stops on user stop / planned end.
+{
+  const TS_PACKET = 188;
+  const SEGMENTS = 3;
+  const source = readFileSync(join(DIR, "streams", "news-one.ts"));
+  const per = Math.ceil(Math.floor(source.length / TS_PACKET) / SEGMENTS) * TS_PACKET;
+  const names = [];
+  for (let i = 0; i < SEGMENTS; i++) {
+    const name = `hls-live-${i}.ts`;
+    names.push(name);
+    writeFileSync(join(DIR, "streams", name), source.subarray(i * per, Math.min((i + 1) * per, source.length)));
+  }
+  writeFileSync(
+    join(DIR, "streams", "hls-live.m3u8"),
+    `#EXTM3U\n#EXT-X-STREAM-INF:BANDWIDTH=1280000,RESOLUTION=1280x720\nhls-live-media.m3u8\n`,
+  );
+  writeFileSync(
+    join(DIR, "streams", "hls-live-media.m3u8"),
+    `#EXTM3U\n#EXT-X-VERSION:3\n#EXT-X-TARGETDURATION:2\n#EXT-X-MEDIA-SEQUENCE:0\n` +
+      names.map((n) => `#EXTINF:2.0,\n${n}`).join("\n") + "\n",
+  );
+}
+
 // ---- playlist.m3u ---------------------------------------------------------
 // VOD entries: video-file (.mp4) stream URLs that telly must classify as
 // "Movies", never as guide channels. Mirrored 1:1 by FixturePlan.vodItems.
@@ -101,8 +144,9 @@ let xml = `<?xml version="1.0" encoding="UTF-8"?>\n<!DOCTYPE tv SYSTEM "xmltv.dt
 for (const c of channels) {
   xml += `  <channel id="${esc(c.id)}">\n    <display-name>${esc(c.name)}</display-name>\n    <icon src="${esc(c.logo)}" />\n  </channel>\n`;
 }
-// sports-arena-1 ships WITHOUT EPG so "No information" guide cells are real.
-const NO_EPG_IDS = new Set(["sports-arena-1.fixture"]);
+// sports-arena-1 ships WITHOUT EPG so "No information" guide cells are real;
+// hls-live-1 records on the no-EPG 3 h fallback.
+const NO_EPG_IDS = new Set(["sports-arena-1.fixture", HLS_ID]);
 for (const c of channels) {
   if (NO_EPG_IDS.has(c.id)) continue;
   const rand = rng(c.num * 7919);

@@ -56,13 +56,15 @@ class RecordingMenuTest {
         }
 
     @Test
-    fun `onCustomRecording on an HLS channel reports it unsupported`() =
+    fun `onCustomRecording on an HLS channel opens the form like any other`() =
         runTest(StandardTestDispatcher()) {
             val hls = channel.copy(source = channel.source.copy(streamUrl = "http://h/x.m3u8"))
+            val menu = menu()
 
-            menu().onCustomRecording(hls)
+            menu.onCustomRecording(hls)
 
-            assertEquals(RecordingPrompt.Unsupported("News One"), prompts.last())
+            assertEquals(RecordingPrompt.CustomForm, prompts.last())
+            assertEquals(hls, menu.form.value?.channel)
         }
 
     @Test

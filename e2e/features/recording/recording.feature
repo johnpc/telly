@@ -1,12 +1,14 @@
 @recording
 Feature: Record live TV to disk and manage recordings (DVR)
   telly's premium-style DVR, shipped free (telly has no paywall): "Record"
-  on the channel context sheet copies the live stream to a .ts file under
-  the app's files dir via a foreground service, "Custom recording" schedules
-  a future capture, and the Recordings library (reached from the quick-bar's
-  Recordings slot and the guide rail's DVR icon) lists, plays back and
-  deletes them. Fixture streams are local .ts files served over HTTP, so a
-  short real record is exercised end to end.
+  on the channel context sheet captures the live stream to a file under the
+  app's files dir via a foreground service — raw TS/progressive streams are
+  byte-copied and HLS playlists are polled with their segments concatenated —
+  "Custom recording" schedules a future capture, and the Recordings library
+  (reached from the quick-bar's Recordings slot and the guide rail's DVR
+  icon) lists, plays back and deletes them. Fixture streams are local .ts
+  files plus an HLS playlist served over HTTP, so short real records of both
+  source types are exercised end to end.
   Reference: docs/reference/tivimate-ux-spec.md §2.9 / §3.6.
 
   Background:
@@ -50,6 +52,21 @@ Feature: Record live TV to disk and manage recordings (DVR)
     Then I see "Stop recording?"
     When I select "Stop"
     Then the transport record dot is idle again
+
+  Scenario: An HLS channel records to a playable capture
+    When I press channel down
+    Then playback switches to channel 31 "HLS Live"
+    When I record the playing channel from the context sheet
+    And I open the recordings library
+    Then the recordings library shows a recording of "HLS Live"
+    And the recording shows the REC badge
+    When I select the recording of "HLS Live"
+    Then I see "Stop recording?"
+    When I select "Stop"
+    And I select the recording of "HLS Live"
+    Then the recording plays back fullscreen
+    When I press back
+    Then the recordings library shows a recording of "HLS Live"
 
   Scenario: Custom recording schedules a future capture
     When I open the custom recording form for the playing channel

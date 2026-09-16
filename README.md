@@ -87,11 +87,14 @@ supported — default (template), append, shift, flussonic and xtream-codes.
 Record the current programme instantly, schedule one from the guide, or build a
 custom recording; captures run in a foreground service with notifications and
 land in a recordings library (quick-bar Recordings / the guide rail's DVR icon)
-with playback and delete. Two honest limitations: recording copies raw TS and
-progressive HTTP streams byte-for-byte, so **HLS channels cannot be recorded
-yet**, and the scheduler is in-app only — **scheduled recordings start only
-while telly is running** (no alarm-manager wakeups). The settings pane says both
-out loud.
+with playback and delete. Raw TS and progressive HTTP streams are copied
+byte-for-byte, and **HLS recording is supported**: the media playlist (via the
+master's highest-bandwidth variant) is polled per target duration and its
+segments concatenated — TS segments into a `.ts` capture, fMP4 renditions
+(`#EXT-X-MAP`) into a valid fragmented `.mp4` capture (init segment first).
+One honest limitation: the scheduler is in-app only — **scheduled recordings
+start only while telly is running** (no alarm-manager wakeups). The settings
+pane says so out loud.
 
 ### VOD
 

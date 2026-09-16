@@ -26,6 +26,20 @@ class RecordingFilesTest {
     }
 
     @Test
+    fun `newFileFor names the capture with the container's extension`() =
+        kotlinx.coroutines.test.runTest {
+            val probed =
+                RecordingFiles(
+                    directory = { dir },
+                    zone = java.util.TimeZone.getTimeZone("UTC"),
+                    container = { url -> if (RecordingSupport.isHls(url)) "mp4" else "ts" },
+                )
+
+            assertEquals("HLS_Live-19700101-0000.mp4", probed.newFileFor("HLS Live", 0L, "http://h/a.m3u8").name)
+            assertEquals("News_One-19700101-0000.ts", probed.newFileFor("News One", 0L, "http://h/a.ts").name)
+        }
+
+    @Test
     fun `storage sums the capture files and delete removes one`() {
         val a = files.newFile("A", 0L).apply { writeText("12345") }
         files.newFile("B", 60_000L).apply { writeText("123") }
