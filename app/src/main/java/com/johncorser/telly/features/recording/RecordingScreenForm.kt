@@ -10,6 +10,7 @@ import androidx.compose.ui.unit.sp
 import com.johncorser.telly.core.design.TELLY_MENU_SHEET
 import com.johncorser.telly.core.ui.TellyScreenDialog
 import com.johncorser.telly.core.ui.TellyScreenMenuRow
+import com.johncorser.telly.core.ui.rememberFocusSeed
 import com.johncorser.telly.features.playback.ProgramTimes
 import com.johncorser.telly.features.playlist.db.displayName
 import java.util.TimeZone
@@ -29,6 +30,7 @@ fun RecordingScreenForm(
     val form = open ?: return
     val startMs by form.startMs.collectAsState()
     val durationMinutes by form.durationMinutes.collectAsState()
+    val seed = rememberFocusSeed()
     TellyScreenDialog(
         title = "Custom recording",
         width = 420.dp,
@@ -42,14 +44,22 @@ fun RecordingScreenForm(
         RecordingScreenFormStepperRow(
             label = "Start time",
             value = ProgramTimes.clock(startMs, zone),
+            modifier = seed.modifier(),
             requestFocus = true,
+            grabYielded = seed.seeded,
             onAdjust = form::adjustStart,
         )
         RecordingScreenFormStepperRow(
             label = "Duration",
             value = "$durationMinutes min",
+            modifier = seed.modifier(),
             onAdjust = form::adjustDuration,
         )
-        TellyScreenMenuRow(label = "Create", onClick = menu::createFromForm, height = 40.dp)
+        TellyScreenMenuRow(
+            label = "Create",
+            onClick = menu::createFromForm,
+            modifier = seed.modifier(),
+            height = 40.dp,
+        )
     }
 }

@@ -10,11 +10,13 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.withFrameNanos
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.input.key.Key
 import androidx.compose.ui.input.key.KeyEvent
 import androidx.compose.ui.input.key.KeyEventType
 import androidx.compose.ui.input.key.key
 import androidx.compose.ui.input.key.type
+import androidx.compose.ui.layout.onPlaced
 
 /** Panes positioned by [MultiviewGrid] fractions; 16:9 letterboxed inside. */
 @Composable
@@ -27,6 +29,7 @@ internal fun MultiviewScreenGrid(
     BoxWithConstraints(Modifier.fillMaxSize()) {
         val cells = MultiviewGrid.cells(panes.size)
         val requesters = remember { mutableMapOf<Int, FocusRequester>() }
+        val tracker = remember { MultiviewPaneFocus() }
         panes.forEachIndexed { index, pane ->
             val cell = cells[index]
             MultiviewScreenPane(
@@ -38,15 +41,22 @@ internal fun MultiviewScreenGrid(
                 modifier =
                     Modifier
                         .offset(x = maxWidth * cell.x, y = maxHeight * cell.y)
-                        .size(width = maxWidth * cell.w, height = maxHeight * cell.h),
+                        .size(width = maxWidth * cell.w, height = maxHeight * cell.h)
+                        .onPlaced { tracker.onPanePlaced(pane.id) }
+                        .onFocusChanged { tracker.onPaneFocusChanged(pane.id, it.hasFocus) },
             )
         }
         // D-pad focus returns to the focused pane whenever the grid is the
-        // active layer again (menu/picker closed) or the grid reshapes.
+        // active layer again (menu/picker closed) or the grid reshapes —
+        // through the tracker's placement-gated bounded grab.
         LaunchedEffect(panesFocusable, focusedId, panes.size) {
-            while (panesFocusable && runCatching { requesters[focusedId]?.requestFocus() }.isFailure) {
-                withFrameNanos { }
-            }
+            tracker.prune(panes.map { it.id })
+            if (!panesFocusable) return@LaunchedEffect
+            tracker.grabOnto(
+                id = focusedId,
+                request = { checkNotNull(requesters[focusedId]).requestFocus() },
+                awaitFrame = { withFrameNanos { } },
+            )
         }
     }
 }

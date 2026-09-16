@@ -14,8 +14,6 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.focus.FocusRequester
-import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
@@ -23,7 +21,8 @@ import androidx.compose.ui.unit.sp
 import androidx.tv.material3.Text
 import com.johncorser.telly.R
 import com.johncorser.telly.core.ui.TellyScreenIconCircle
-import com.johncorser.telly.core.ui.rememberAutoFocus
+import com.johncorser.telly.core.ui.focusOnAppear
+import com.johncorser.telly.core.ui.rememberFocusSeed
 
 /**
  * Bottom icon quick-bar from long-OK / MENU at fullscreen (round3-ref
@@ -33,7 +32,7 @@ import com.johncorser.telly.core.ui.rememberAutoFocus
 @Composable
 internal fun PlaybackScreenQuickBar(viewModel: PlaybackViewModel) {
     val info by viewModel.info.collectAsState()
-    val firstFocus = rememberAutoFocus()
+    val seed = rememberFocusSeed()
     Box(Modifier.fillMaxSize()) {
         PlaybackScreenTopScrim(info?.group, info?.clockText.orEmpty(), Modifier.align(Alignment.TopCenter))
         Row(
@@ -41,7 +40,8 @@ internal fun PlaybackScreenQuickBar(viewModel: PlaybackViewModel) {
                 .align(Alignment.BottomStart)
                 .fillMaxWidth()
                 .background(Brush.verticalGradient(listOf(Color.Transparent, Color.Black.copy(alpha = 0.8f))))
-                .padding(horizontal = 16.dp, vertical = 14.dp),
+                .padding(horizontal = 16.dp, vertical = 14.dp)
+                .then(seed.modifier()),
             verticalAlignment = Alignment.Bottom,
         ) {
             viewModel.quickBarItems().forEachIndexed { index, item ->
@@ -49,7 +49,8 @@ internal fun PlaybackScreenQuickBar(viewModel: PlaybackViewModel) {
                     item = item,
                     onClick = { viewModel.onQuickBarItem(item.action) },
                     modifier = Modifier.weight(1f),
-                    focusRequester = if (index == 0) firstFocus else null,
+                    requestFocus = index == 0,
+                    grabYielded = seed.seeded,
                 )
             }
         }
@@ -61,13 +62,14 @@ private fun PlaybackScreenQuickBarSlot(
     item: QuickBarItem,
     onClick: () -> Unit,
     modifier: Modifier,
-    focusRequester: FocusRequester?,
+    requestFocus: Boolean,
+    grabYielded: () -> Boolean,
 ) {
     Column(modifier, horizontalAlignment = Alignment.CenterHorizontally) {
         TellyScreenIconCircle(
             icon = quickBarIcon(item.action),
             onClick = onClick,
-            modifier = focusRequester?.let { Modifier.focusRequester(it) } ?: Modifier,
+            modifier = Modifier.focusOnAppear(requestFocus, grabYielded),
             contentDescription = item.action.feature,
         )
         Spacer(Modifier.height(6.dp))

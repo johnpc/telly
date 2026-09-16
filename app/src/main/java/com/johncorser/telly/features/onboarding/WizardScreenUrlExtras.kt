@@ -4,7 +4,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalClipboardManager
 import androidx.compose.ui.res.stringResource
@@ -39,7 +38,7 @@ internal fun WizardScreenUrlField(
             modifier =
                 Modifier
                     .width(WizardScreenDims.actionWidth)
-                    .focusRequester(edit.rowFocus),
+                    .then(edit.rowFocus.target()),
             secondaryText = value.ifBlank { null },
         )
     }

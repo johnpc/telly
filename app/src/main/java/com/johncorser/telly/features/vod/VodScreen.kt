@@ -18,6 +18,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import com.johncorser.telly.core.design.TELLY_ONBOARDING_BACKGROUND
+import com.johncorser.telly.core.ui.rememberFocusSeed
 import com.johncorser.telly.features.panel.ChannelPanelScreenGroups
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -68,9 +69,17 @@ private fun VodScreenBrowser(
             selected = selected.orEmpty(),
             onSelect = viewModel::select,
         )
+        // Once focus lands anywhere in the browser the appear grab stands
+        // down: a category switch re-keys the cards and must not yank
+        // focus off the categories column onto the fresh first card.
+        val seed = rememberFocusSeed()
         LazyVerticalGrid(
             columns = GridCells.Adaptive(minSize = 156.dp),
-            modifier = Modifier.fillMaxSize().padding(start = 8.dp, end = 40.dp),
+            modifier =
+                Modifier
+                    .fillMaxSize()
+                    .padding(start = 8.dp, end = 40.dp)
+                    .then(seed.modifier()),
             horizontalArrangement = Arrangement.spacedBy(12.dp),
             verticalArrangement = Arrangement.spacedBy(12.dp),
         ) {
@@ -79,6 +88,7 @@ private fun VodScreenBrowser(
                     card = card,
                     onClick = { onPlay(card.item.itemKey) },
                     requestFocus = index == 0,
+                    grabYielded = seed.seeded,
                 )
             }
         }

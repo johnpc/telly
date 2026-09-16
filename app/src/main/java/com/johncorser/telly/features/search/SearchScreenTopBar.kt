@@ -11,7 +11,6 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
-import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
@@ -21,7 +20,8 @@ import com.johncorser.telly.R
 import com.johncorser.telly.core.design.TELLY_FOCUS_FILL
 import com.johncorser.telly.core.ui.LocalAccentColor
 import com.johncorser.telly.core.ui.TellyScreenIconCircle
-import com.johncorser.telly.core.ui.rememberAutoFocus
+import com.johncorser.telly.core.ui.focusOnAppear
+import com.johncorser.telly.core.ui.rememberFocusSeed
 import com.johncorser.telly.features.search.SearchScreenDims as Dims
 
 /**
@@ -38,18 +38,19 @@ internal fun SearchScreenTopBar(
     onOpenSettings: () -> Unit,
 ) {
     val query by viewModel.query.collectAsState()
-    val orbFocus = rememberAutoFocus()
+    val seed = rememberFocusSeed()
     val voiceLabel = stringResource(R.string.search_voice)
     Row(
         Modifier
             .fillMaxWidth()
-            .padding(start = Dims.orbStart, top = Dims.topBarTop, end = Dims.edgePad),
+            .padding(start = Dims.orbStart, top = Dims.topBarTop, end = Dims.edgePad)
+            .then(seed.modifier()),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         TellyScreenIconCircle(
             icon = R.drawable.ic_search_mic,
             onClick = viewModel.voice::start,
-            modifier = Modifier.focusRequester(orbFocus),
+            modifier = Modifier.focusOnAppear(yielded = seed.seeded),
             size = Dims.orbSize,
             iconSize = 24.dp,
             colors = orbColors(),

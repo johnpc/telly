@@ -6,16 +6,20 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
-import androidx.compose.ui.focus.FocusRequester
+import com.johncorser.telly.core.ui.FocusScreenReclaim
+import com.johncorser.telly.core.ui.FocusScreenReclaimEffect
 
 /**
  * Shared inline-edit state for wizard rows: tracks whether the editor is
  * open and, when it closes, returns focus to the row — or jumps to Next
- * after an ENTER commit, matching reference screen 10.
+ * after an ENTER commit, matching reference screen 10. Both hand-offs are
+ * placement-gated [FocusScreenReclaim] grabs: the row remounts the very frame
+ * the editor closes, and a raw requestFocus there can fire before the
+ * fresh node is placed.
  */
 class WizardScreenEditState internal constructor() {
-    val rowFocus = FocusRequester()
-    val nextFocus = FocusRequester()
+    val rowFocus = FocusScreenReclaim()
+    val nextFocus = FocusScreenReclaim()
     var editing by mutableStateOf(false)
         private set
     internal var committed by mutableStateOf(false)
@@ -34,12 +38,14 @@ class WizardScreenEditState internal constructor() {
 @Composable
 fun rememberWizardScreenEditState(canFocusNext: () -> Boolean): WizardScreenEditState {
     val state = remember { WizardScreenEditState() }
+    FocusScreenReclaimEffect(state.rowFocus)
+    FocusScreenReclaimEffect(state.nextFocus)
     LaunchedEffect(state.editing) {
         if (!state.editing) {
             if (state.committed && canFocusNext()) {
-                state.nextFocus.requestFocus()
+                state.nextFocus.reclaim()
             } else {
-                state.rowFocus.requestFocus()
+                state.rowFocus.reclaim()
             }
             state.committed = false
         }

@@ -4,7 +4,6 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.width
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import com.johncorser.telly.R
@@ -39,7 +38,7 @@ fun WizardScreenNameStep(
                     modifier =
                         Modifier
                             .width(WizardScreenDims.actionWidth)
-                            .focusRequester(edit.rowFocus),
+                            .then(edit.rowFocus.target()),
                     secondaryText = name.ifBlank { null },
                 )
             }

@@ -10,14 +10,13 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.focus.FocusRequester
-import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import com.johncorser.telly.R
 import com.johncorser.telly.core.design.TELLY_PANE_DIVIDER
+import com.johncorser.telly.core.ui.FocusScreenReclaim
 
 /** The wizard's middle column: action rows starting 189 dp from the top. */
 @Composable
@@ -62,7 +61,7 @@ fun WizardScreenNextBackButtons(
     onNext: () -> Unit,
     onBack: () -> Unit,
     nextEnabled: Boolean,
-    nextFocus: FocusRequester,
+    nextFocus: FocusScreenReclaim,
 ) {
     WizardScreenActionRow(
         text = stringResource(R.string.wizard_next),
@@ -70,7 +69,7 @@ fun WizardScreenNextBackButtons(
         modifier =
             Modifier
                 .width(WizardScreenDims.buttonWidth)
-                .focusRequester(nextFocus),
+                .then(nextFocus.target()),
         enabled = nextEnabled,
         trailingIcon = painterResource(R.drawable.ic_wizard_next),
     )

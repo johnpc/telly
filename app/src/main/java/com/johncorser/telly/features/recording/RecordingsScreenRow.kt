@@ -26,6 +26,7 @@ import com.johncorser.telly.core.ui.focusOnAppear
 internal fun RecordingsScreenRow(
     row: RecordingRow,
     requestFocus: Boolean,
+    grabYielded: () -> Boolean,
     onClick: () -> Unit,
     onLongClick: () -> Unit,
 ) {
@@ -33,7 +34,7 @@ internal fun RecordingsScreenRow(
         tag = "recording-row",
         onClick = onClick,
         onLongClick = onLongClick,
-        modifier = Modifier.focusOnAppear(requestFocus),
+        modifier = Modifier.focusOnAppear(requestFocus, grabYielded),
     ) {
         if (row.status == RecordingStatus.RECORDING) {
             RecordingsScreenRecBadge()

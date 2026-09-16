@@ -12,13 +12,13 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.focus.FocusRequester
-import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import com.johncorser.telly.R
 import com.johncorser.telly.core.ui.OnboardingScreenMessage
 import com.johncorser.telly.core.ui.ScreenLifecycleStartStop
+import com.johncorser.telly.core.ui.focusOnAppear
+import com.johncorser.telly.core.ui.rememberFocusScreenReclaim
 
 /** First-run landing screen; pixel-matched to reference screen 02-welcome. */
 @Composable
@@ -27,14 +27,15 @@ fun WelcomeScreen(
     onOpenSettings: () -> Unit,
     restore: OnboardingRestore? = null,
 ) {
-    val addPlaylistFocus = remember { FocusRequester() }
-    val restoreFocus = remember { FocusRequester() }
+    // Add playlist is the reclaim target: it takes the initial grab (plain
+    // welcome) and re-takes focus when the restore pill disappears after a
+    // re-probe — both through the placement-gated engine, never a raw
+    // LaunchedEffect+requestFocus (the uncatchable bring-into-view crash).
+    val addPlaylistReclaim = rememberFocusScreenReclaim()
     var offer by remember { mutableStateOf<RestoreOffer>(RestoreOffer.None) }
     var probeTick by remember { mutableIntStateOf(0) }
     LaunchedEffect(probeTick) { offer = restore?.probe?.invoke() ?: RestoreOffer.None }
-    // The restore pill grabs focus itself when it composes (below); this
-    // covers the plain welcome and the pill disappearing after a re-probe.
-    LaunchedEffect(offer) { if (offer == RestoreOffer.None) addPlaylistFocus.requestFocus() }
+    LaunchedEffect(offer) { if (restore != null && offer == RestoreOffer.None) addPlaylistReclaim.reclaim() }
     // Coming back from the all-files-access grant screen re-probes.
     ScreenLifecycleStartStop(onStart = { probeTick++ }, onStop = {})
     OnboardingScreenMessage(
@@ -44,18 +45,18 @@ fun WelcomeScreen(
         Spacer(Modifier.height(40.dp))
         Row(horizontalArrangement = Arrangement.spacedBy(16.dp)) {
             if (restore != null && offer != RestoreOffer.None) {
+                // Focused-first: the pill's appear grab wins over the
+                // reclaim's initial land once the offer resolves.
                 WelcomeScreenRestorePill(
                     restore = restore,
                     offer = offer,
-                    modifier = Modifier.focusRequester(restoreFocus),
+                    modifier = Modifier.focusOnAppear(),
                 )
-                // Focused-first: runs after the pill's node is attached.
-                LaunchedEffect(Unit) { restoreFocus.requestFocus() }
             }
             WelcomeScreenPill(
                 text = stringResource(R.string.welcome_add_playlist),
                 onClick = onAddPlaylist,
-                modifier = Modifier.focusRequester(addPlaylistFocus),
+                modifier = addPlaylistReclaim.target(),
             )
             WelcomeScreenPill(
                 text = stringResource(R.string.welcome_settings),

@@ -14,9 +14,9 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.unit.dp
-import com.johncorser.telly.core.ui.rememberAutoFocus
+import com.johncorser.telly.core.ui.focusOnAppear
+import com.johncorser.telly.core.ui.rememberFocusSeed
 import com.johncorser.telly.features.search.SearchScreenDims as Dims
 
 /**
@@ -31,7 +31,7 @@ internal fun SearchScreenDropdown(
     viewModel: SearchViewModel,
     hit: SearchProgramHit,
 ) {
-    val firstFocus = rememberAutoFocus()
+    val seed = rememberFocusSeed()
     val reminderKeys by viewModel.programMenu.reminderKeys.collectAsState()
     val myListKeys by viewModel.programMenu.myListKeys.collectAsState()
     Box(
@@ -45,7 +45,8 @@ internal fun SearchScreenDropdown(
                 .width(Dims.detailWidth)
                 .clip(RoundedCornerShape(Dims.barCorner))
                 .background(Dims.detailFill)
-                .padding(vertical = 8.dp),
+                .padding(vertical = 8.dp)
+                .then(seed.modifier()),
         ) {
             SearchProgramAction.entries.forEachIndexed { index, action ->
                 SearchScreenTextRow(
@@ -55,7 +56,7 @@ internal fun SearchScreenDropdown(
                         Modifier
                             .fillMaxWidth()
                             .padding(horizontal = 8.dp)
-                            .let { if (index == 0) it.focusRequester(firstFocus) else it },
+                            .focusOnAppear(index == 0, seed.seeded),
                 )
             }
         }

@@ -10,6 +10,7 @@ import androidx.compose.ui.unit.sp
 import com.johncorser.telly.R
 import com.johncorser.telly.core.ui.TellyScreenDialog
 import com.johncorser.telly.core.ui.TellyScreenMenuRow
+import com.johncorser.telly.core.ui.rememberFocusSeed
 
 /**
  * Compact centered picker dialog over playback (ux-spec §3.14): title, then
@@ -25,6 +26,7 @@ internal fun PlaybackScreenTrackPicker(
     val snapshot by controller.tracks.snapshot.collectAsState()
     val offset by controller.tracks.audioOffsetMs.collectAsState()
     val rows = TrackPickerRows.of(kind, snapshot)
+    val seed = rememberFocusSeed()
     TellyScreenDialog(
         title = if (kind == TrackPickerKind.SYNC) "${kind.title} · ${TrackLabels.sync(offset)}" else kind.title,
         width = 320.dp,
@@ -38,8 +40,12 @@ internal fun PlaybackScreenTrackPicker(
             TellyScreenMenuRow(
                 label = row.label,
                 onClick = { controller.onRow(kind, row.id) },
+                // Any focused row seeds the shared stop signal, so the
+                // first row's appear grab never yanks a moved focus back.
+                modifier = seed.modifier(),
                 icon = pickerRowIcon(kind, row.checked),
                 requestFocus = index == 0,
+                grabYielded = seed.seeded,
             )
         }
     }

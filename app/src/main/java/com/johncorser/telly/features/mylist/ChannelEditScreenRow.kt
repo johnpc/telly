@@ -37,6 +37,7 @@ internal fun ChannelEditScreenRow(
     channel: ChannelEntity,
     showStars: Boolean,
     requestFocus: Boolean,
+    grabYielded: () -> Boolean,
     onToggle: (ChannelEntity) -> Unit,
     onMove: (ChannelEntity, Int) -> Unit,
 ) {
@@ -45,7 +46,7 @@ internal fun ChannelEditScreenRow(
         onClick = { onToggle(channel) },
         modifier =
             Modifier
-                .focusOnAppear(requestFocus)
+                .focusOnAppear(requestFocus, grabYielded)
                 .onPreviewKeyEvent { event -> moveKey(event)?.let { onMove(channel, it) } != null },
     ) {
         TellyScreenLogoTile(logoUrl = channel.source.logoUrl, name = channel.displayName, size = 24.dp)

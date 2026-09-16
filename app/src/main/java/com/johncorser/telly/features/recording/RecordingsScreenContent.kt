@@ -20,6 +20,7 @@ import com.johncorser.telly.R
 import com.johncorser.telly.core.design.TELLY_ONBOARDING_BACKGROUND
 import com.johncorser.telly.core.ui.TellyScreenEmptyState
 import com.johncorser.telly.core.ui.TellyScreenWhiteText
+import com.johncorser.telly.core.ui.rememberFocusSeed
 
 /**
  * The library's title header + the row list (or the "No recordings" empty
@@ -49,15 +50,18 @@ internal fun RecordingsScreenContent(
         if (rows.isEmpty()) {
             TellyScreenEmptyState(stringResource(R.string.recordings_empty))
         } else {
+            val seed = rememberFocusSeed()
             LazyColumn(
                 Modifier
                     .fillMaxSize()
-                    .padding(start = 40.dp, top = 80.dp, end = 40.dp),
+                    .padding(start = 40.dp, top = 80.dp, end = 40.dp)
+                    .then(seed.modifier()),
             ) {
                 items(rows, key = { it.entry.id }) { row ->
                     RecordingsScreenRow(
                         row = row,
                         requestFocus = row == rows.first(),
+                        grabYielded = seed.seeded,
                         onClick = { onClick(row) },
                         onLongClick = { onLongClick(row) },
                     )

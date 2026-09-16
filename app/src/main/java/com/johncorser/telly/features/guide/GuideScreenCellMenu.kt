@@ -14,6 +14,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import com.johncorser.telly.core.design.TELLY_MENU_SHEET
 import com.johncorser.telly.core.ui.TellyScreenMenuRow
+import com.johncorser.telly.core.ui.rememberFocusSeed
 import com.johncorser.telly.features.mylist.MyListKeys
 
 /**
@@ -43,12 +44,14 @@ internal fun GuideScreenCellMenu(
             scrollXDp = scrollX,
             rowHeightDp = LocalGuideStyle.current.rowHeightDp,
         )
+    val seed = rememberFocusSeed()
     Column(
         Modifier
             .padding(top = GuideGeometry.GRID_TOP_DP.dp)
             .offset(x = anchor.xDp.dp, y = anchor.yDp.dp)
             .width(GuideDropdownAnchor.MENU_WIDTH_DP.dp)
-            .background(Color(TELLY_MENU_SHEET), RoundedCornerShape(4.dp)),
+            .background(Color(TELLY_MENU_SHEET), RoundedCornerShape(4.dp))
+            .then(seed.modifier()),
     ) {
         val saved = channel != null && MyListKeys.saved(myListKeys, channel, layer.cell.program?.startMs)
         GuideCellAction.entries.forEachIndexed { index, action ->
@@ -62,6 +65,7 @@ internal fun GuideScreenCellMenu(
                 onClick = { controller.menu.onCellAction(action) },
                 height = GuideDropdownAnchor.MENU_ROW_DP.dp,
                 requestFocus = index == 0,
+                grabYielded = seed.seeded,
             )
         }
     }
