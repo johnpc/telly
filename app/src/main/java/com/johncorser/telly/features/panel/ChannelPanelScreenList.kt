@@ -14,7 +14,6 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
-import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.input.key.Key
 import androidx.compose.ui.input.key.KeyEvent
@@ -22,6 +21,7 @@ import androidx.compose.ui.input.key.KeyEventType
 import androidx.compose.ui.input.key.key
 import androidx.compose.ui.input.key.onPreviewKeyEvent
 import androidx.compose.ui.input.key.type
+import com.johncorser.telly.core.ui.stickyFocusGrab
 import com.johncorser.telly.features.playlist.db.ChannelEntity
 import kotlinx.coroutines.launch
 
@@ -60,11 +60,16 @@ internal fun ChannelPanelScreenList(
     LazyColumn(state = listState) {
         itemsIndexed(rows, key = { _, row -> row.channel.id }) { index, row ->
             Column {
+                // The target row grabs focus through the shared
+                // placement-gated sticky grab: a command-scrolled target is
+                // subcomposed MID-MEASURE, where a raw requestFocus fires
+                // before parents are placed and dies in the focus system's
+                // bring-into-view coroutine (the group-tool lifecycle crash).
                 ChannelPanelScreenRow(
                     row = row,
                     playing = row.channel.id == playingChannelId,
                     modifier =
-                        (if (index == target) Modifier.focusRequester(requester) else Modifier)
+                        (if (index == target) stickyFocusGrab(requester) else Modifier)
                             .onFocusChanged { if (it.isFocused) panel.onRowFocused(index) }
                             .onPreviewKeyEvent { event ->
                                 wrapIndexFor(event, index, rows.lastIndex)?.let {
@@ -76,9 +81,6 @@ internal fun ChannelPanelScreenList(
                     onLongClick = { onChannelMenu(row.channel) },
                 )
                 if (index == focusIndex) ChannelPanelScreenDetail(row)
-            }
-            if (index == target) {
-                LaunchedEffect(target) { requester.requestFocus() }
             }
         }
     }

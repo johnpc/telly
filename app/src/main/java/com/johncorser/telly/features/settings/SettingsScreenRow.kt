@@ -33,6 +33,7 @@ internal fun SettingsScreenRow(
     onFocused: () -> Unit = {},
     requestFocus: Boolean = false,
     resting: Color = Color(TELLY_GUIDANCE_PANE),
+    grabYielded: () -> Boolean = { false },
 ) {
     val locked = row.isLocked()
     Surface(
@@ -40,7 +41,7 @@ internal fun SettingsScreenRow(
         enabled = !locked,
         modifier =
             modifier
-                .focusOnAppear(requestFocus)
+                .focusOnAppear(requestFocus, grabYielded)
                 .then(rowStateSemantics(row))
                 .fillMaxWidth()
                 .heightIn(min = SettingsScreenDims.rowMinHeight)

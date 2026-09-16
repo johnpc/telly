@@ -52,15 +52,21 @@ fun ProvideAppLocale(
     // explicitly across the wrapper or it crashes with "No
     // ActivityResultRegistryOwner was provided".
     val registryOwner = LocalActivityResultRegistryOwner.current
-    if (localized === base) {
-        content()
-    } else {
-        val locals =
+    // ONE provider wrapper on BOTH paths ("System" provides nothing):
+    // flipping between a bare content() call and a CompositionLocalProvider
+    // wrapper changes the composition group structure at the theme level,
+    // which discards every remember{} below it — picking a language used to
+    // silently unmount the whole settings sheet (its view model is
+    // composition-remembered) and dump the user back at bare playback.
+    val locals =
+        if (localized === base) {
+            emptyList()
+        } else {
             listOfNotNull(
                 LocalContext provides localized,
                 LocalConfiguration provides localized.resources.configuration,
                 registryOwner?.let { LocalActivityResultRegistryOwner provides it },
             )
-        CompositionLocalProvider(values = locals.toTypedArray(), content = content)
-    }
+        }
+    CompositionLocalProvider(values = locals.toTypedArray(), content = content)
 }
