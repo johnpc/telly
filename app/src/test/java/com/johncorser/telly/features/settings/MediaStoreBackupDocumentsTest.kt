@@ -69,6 +69,26 @@ class MediaStoreBackupDocumentsTest {
         assertTrue(provider.entries.isEmpty())
         assertNull(store.read())
     }
+
+    @Test
+    fun `a MediaStore write prunes every other backup entry it can delete`() {
+        documentsDir().mkdirs()
+        File(documentsDir(), "telly").writeText("blocker")
+        // A previous install's collision renames left "(N)" duplicates behind.
+        val kept = seedEntry(AutoBackupLocation.FILE_NAME)
+        seedEntry("telly-backup (1).json")
+        seedEntry("telly-backup (2).json")
+        val unrelated = seedEntry("unrelated.txt")
+        store.write("only")
+        assertEquals(listOf(kept, unrelated), provider.entries.map { it.id })
+        assertEquals("only", store.read())
+    }
+
+    private fun seedEntry(name: String): Long {
+        val values = ContentValues().apply { put(MediaStore.MediaColumns.DISPLAY_NAME, name) }
+        val uri = provider.insert(MediaStore.Files.getContentUri("external"), values)
+        return checkNotNull(uri.lastPathSegment).toLong()
+    }
 }
 
 /** Minimal in-memory stand-in for the platform MediaProvider. */

@@ -14,7 +14,8 @@ import java.io.File
  * MediaStore insert-or-update (API 29+, no permission needed for
  * app-created Documents entries; a name collision with a previous
  * install's orphan auto-renames to "telly-backup (1).json", which reads
- * back as the newest match).
+ * back as the newest match). A MediaStore write then prunes every other
+ * deletable backup entry so the app never stacks its own duplicates.
  */
 class MediaStoreBackupDocuments(
     private val context: Context,
@@ -36,6 +37,12 @@ class MediaStoreBackupDocuments(
         val uri = newestEntry() ?: insertEntry()
         resolver.openOutputStream(uri, "wt")?.use { it.write(json.toByteArray()) }
             ?: error("cannot open $uri for writing")
+        pruneOthers(uri)
+    }
+
+    /** Drops every other backup entry; other-owner orphans may refuse and stay. */
+    private fun pruneOthers(kept: Uri) {
+        allEntries().filter { it != kept }.forEach { runCatching { resolver.delete(it, null, null) } }
     }
 
     override fun read(): String? = direct.read() ?: readViaMediaStore()
@@ -44,13 +51,7 @@ class MediaStoreBackupDocuments(
 
     override fun delete() {
         direct.deleteAll()
-        if (!hasMediaStorePaths()) return
-        runCatching {
-            while (true) {
-                val entry = newestEntry() ?: break
-                resolver.delete(entry, null, null)
-            }
-        }
+        runCatching { allEntries().forEach { resolver.delete(it, null, null) } }
     }
 
     private fun hasMediaStorePaths() = Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q
@@ -63,8 +64,11 @@ class MediaStoreBackupDocuments(
         }.getOrNull()
 
     /** The newest visible MediaStore entry for the backup file, if any. */
-    private fun newestEntry(): Uri? {
-        if (!hasMediaStorePaths()) return null
+    private fun newestEntry(): Uri? = allEntries().firstOrNull()
+
+    /** Every visible MediaStore entry for the backup file, newest first. */
+    private fun allEntries(): List<Uri> {
+        if (!hasMediaStorePaths()) return emptyList()
         val files = MediaStore.Files.getContentUri(VOLUME)
         val selection = "${MediaStore.MediaColumns.RELATIVE_PATH} = ?"
         val order = "${MediaStore.MediaColumns.DATE_MODIFIED} DESC"
@@ -72,13 +76,14 @@ class MediaStoreBackupDocuments(
         return resolver
             .query(files, projection, selection, arrayOf(RELATIVE_PATH), order)
             ?.use { cursor ->
-                while (cursor.moveToNext()) {
-                    if (AutoBackupLocation.isBackupName(cursor.getString(1))) {
-                        return@use Uri.withAppendedPath(files, cursor.getLong(0).toString())
+                buildList {
+                    while (cursor.moveToNext()) {
+                        if (AutoBackupLocation.isBackupName(cursor.getString(1))) {
+                            add(Uri.withAppendedPath(files, cursor.getLong(0).toString()))
+                        }
                     }
                 }
-                null
-            }
+            }.orEmpty()
     }
 
     private fun insertEntry(): Uri {
