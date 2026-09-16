@@ -1,5 +1,6 @@
 package com.johncorser.telly.core.ui
 
+import androidx.activity.compose.LocalActivityResultRegistryOwner
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.getValue
@@ -44,13 +45,22 @@ fun ProvideAppLocale(
     val language by settingState(settings, TellySettings.LANGUAGE)
     val base = LocalContext.current
     val localized = remember(base, language) { base.withAppLocale(language) }
+    // Resolved BEFORE the LocalContext override: the locale context from
+    // createConfigurationContext no longer chains to the Activity, so the
+    // ActivityResult registry lookup (rememberLauncherForActivityResult
+    // walks LocalContext, with no view-tree fallback) must be pinned
+    // explicitly across the wrapper or it crashes with "No
+    // ActivityResultRegistryOwner was provided".
+    val registryOwner = LocalActivityResultRegistryOwner.current
     if (localized === base) {
         content()
     } else {
-        CompositionLocalProvider(
-            LocalContext provides localized,
-            LocalConfiguration provides localized.resources.configuration,
-            content = content,
-        )
+        val locals =
+            listOfNotNull(
+                LocalContext provides localized,
+                LocalConfiguration provides localized.resources.configuration,
+                registryOwner?.let { LocalActivityResultRegistryOwner provides it },
+            )
+        CompositionLocalProvider(values = locals.toTypedArray(), content = content)
     }
 }
