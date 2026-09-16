@@ -40,17 +40,17 @@ fun SettingsScreen(
     // One trap around the whole surface: focus roams freely between the
     // sheet and any overlay, but never crosses to the dimmed underlay —
     // BACK is the only way out (device-verified).
-    // The picker / text-edit overlays are themselves 360 dp sheets that sit
-    // ON the section sheet (device-verified); rendering the section sheet
-    // underneath would keep a second focusable row that the overlay can't
-    // steal focus from, so it's dropped while such a sheet is up. The
-    // fullscreen guided steps (delete confirm) own the screen.
-    val sheetOverlay =
-        state.overlay is SettingsOverlay.Picker ||
-            state.overlay is SettingsOverlay.TextEdit ||
-            state.overlay is SettingsOverlay.PinSetup
+    // EVERY overlay owns the screen: the picker / text-edit overlays are
+    // themselves 360 dp sheets ON the section sheet, the GuidedStep
+    // confirms are fullscreen and the PIN dialogs are centered cards —
+    // rendering the section sheet underneath any of them keeps a second
+    // focusable subtree that the overlay's initial-focus grab loses to
+    // (on-device: the reminders delete-confirm pill could never take
+    // focus from the pane's still-composed rows), so the sheet is
+    // dropped whenever an overlay is up and its focus memory restores
+    // the row when the overlay closes.
     Box(Modifier.fillMaxSize().focusProperties { exit = { FocusRequester.Cancel } }) {
-        if (!sheetOverlay) {
+        if (state.overlay == null) {
             // Pushing/popping a section cross-fades the sheet content in
             // place over ~300 ms while the frame stays static (settings
             // punch list: frame-scan of the reference screenrecord). The
