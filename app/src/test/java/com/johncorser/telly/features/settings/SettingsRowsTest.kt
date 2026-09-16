@@ -59,18 +59,21 @@ class SettingsRowsTest {
                 "Auto start app on boot", "Auto start app on wake up from sleep mode",
                 "Turn on last channel on app start", "Switch to picture-in-picture mode on press Home",
                 "Confirm exit by second press Back", "User-Agent", "UDP proxy (address:port)",
-                "Back up data", "Restore data",
+                "Automatic backup", "Back up data", "Restore data",
             ),
             titles(rows),
         )
-        // "Turn on last channel on app start" defaults ON — the documented
-        // default flip preserving telly's shipped cold-start-to-playback.
+        // Default-ON toggles: "Turn on last channel on app start" (the
+        // documented default flip preserving telly's shipped cold-start-to-
+        // playback) and "Automatic backup" (reinstall-proof by default).
+        val defaultOn = setOf("Turn on last channel on app start", "Automatic backup")
         rows
             .filterIsInstance<SettingsRow.Toggle>()
-            .forEach { assertEquals(it.title == "Turn on last channel on app start", it.checked) }
+            .forEach { assertEquals(it.title in defaultOn, it.checked) }
         assertEquals("May not work on all devices", (rows[1] as SettingsRow.Toggle).summary)
         assertEquals("Not set", (rows[5] as SettingsRow.Value).summary)
         assertEquals("Not set", (rows[6] as SettingsRow.Value).summary)
+        assertEquals(AutoBackupStatus().summary(), (rows[7] as SettingsRow.Toggle).summary)
     }
 
     @Test

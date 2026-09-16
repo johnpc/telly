@@ -78,6 +78,10 @@ class SettingsViewModel(
     val blockedItems: StateFlow<List<ChannelEntity>> =
         (blocked?.channels ?: flowOf(emptyList())).stateIn(scope, SharingStarted.Eagerly, emptyList())
 
+    /** Auto-backup status (General row summary; updates as exports land). */
+    private val autoBackupStatus: StateFlow<AutoBackupStatus> =
+        graph.stores.autoBackup.stateIn(scope, SharingStarted.Eagerly, AutoBackupStatus())
+
     /** The active sheet's rows (root section list when nothing is pushed). */
     val rows: StateFlow<List<SettingsRow>> =
         combine(mutableState, playlistItems, feedItems(), rowTicks()) { state, pls, feeds, _ ->
@@ -86,8 +90,8 @@ class SettingsViewModel(
 
     /** The deeper panes' live lists, joined for the rows combine above. */
     private fun feedItems() =
-        combine(epgSourceItems, reminderItems, blockedItems) { sources, reminders, blockedChannels ->
-            SettingsFeeds(sources, reminders, blockedChannels)
+        combine(epgSourceItems, reminderItems, blockedItems, autoBackupStatus) { sources, rem, blockedCh, backup ->
+            SettingsFeeds(sources, rem, blockedCh, backup)
         }
 
     /** OK on a row. Locked rows are unfocusable and never reach this. */

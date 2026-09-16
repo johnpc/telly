@@ -26,6 +26,13 @@ Feature: Settings
     And I open the "General" section
     Then the "Confirm exit by second press Back" toggle is on
 
+  # telly addition (no reference row): reinstall-proof automatic backup,
+  # default ON, re-exports the backup JSON to Documents/telly on changes.
+  Scenario: Automatic backup keeps a shared-storage copy of the configuration
+    When I open the "General" section
+    Then the "Automatic backup" toggle is on
+    And the automatic backup file eventually contains the playlist "http://10.0.2.2:8090/playlist.m3u"
+
   Scenario: Changing the EPG update interval changes the refresh policy
     When I open the "EPG" section
     Then the "Update interval, hours" row shows "None"

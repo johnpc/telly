@@ -50,7 +50,8 @@ class SettingsPickersTest {
         assertEquals(TellySettings.SEEK_RWFF_CATCHUP, SettingsToggles.byRowId[RowIds.REMOTE_SEEK_RWFF])
         assertEquals(TellySettings.VOD_REMEMBER_POSITION, SettingsToggles.byRowId[RowIds.VOD_REMEMBER_POSITION])
         assertEquals(TellySettings.SEARCH_SAVE_HISTORY, SettingsToggles.byRowId[BlockRowIds.SEARCH_SAVE_HISTORY])
-        assertEquals(28, SettingsToggles.byRowId.size)
+        assertEquals(TellySettings.AUTO_BACKUP, SettingsToggles.byRowId[RowIds.AUTO_BACKUP])
+        assertEquals(29, SettingsToggles.byRowId.size)
     }
 
     @Test

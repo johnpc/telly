@@ -77,6 +77,7 @@ class MainActivity : ComponentActivity() {
         restoreStartRoute()
         keepEpgFresh()
         keepPlaylistsFresh(fetcher)
+        keepConfigBackedUp()
         setContent {
             RootScreen(
                 navigator = navigator,
@@ -91,6 +92,7 @@ class MainActivity : ComponentActivity() {
                 onEnterPip = pip::enter,
                 reminders = ServiceLocator.remindersHub(this),
                 recordingDeps = ServiceLocator.recordingDeps(this),
+                onboardingRestore = onboardingRestore(fetcher),
             )
         }
     }
@@ -101,8 +103,13 @@ class MainActivity : ComponentActivity() {
         super.onStop()
     }
 
+    override fun onDestroy() {
+        stopConfigBackup()
+        super.onDestroy()
+    }
+
     /** Boot stays blank until Room answers; then playback/guide/onboarding. */
-    private fun restoreStartRoute() {
+    internal fun restoreStartRoute() {
         lifecycleScope.launch {
             val channelCount = ServiceLocator.database(this@MainActivity).channelDao().totalCount()
             navigator.replaceAll(startRoute.forChannelCount(channelCount))

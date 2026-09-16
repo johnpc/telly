@@ -9,6 +9,7 @@ import com.johncorser.telly.features.guide.GuideScreen
 import com.johncorser.telly.features.history.HistoryScreen
 import com.johncorser.telly.features.multiview.MultiviewDeps
 import com.johncorser.telly.features.multiview.MultiviewScreen
+import com.johncorser.telly.features.onboarding.OnboardingRestore
 import com.johncorser.telly.features.playback.PlaybackDeps
 import com.johncorser.telly.features.playback.PlaybackScreen
 import com.johncorser.telly.features.playlist.PlaylistRepository
@@ -33,11 +34,12 @@ internal fun RootScreenRoutes(
     vodDeps: VodDeps,
     onEnterPip: () -> Unit = {},
     recordingDeps: RecordingDeps? = null,
+    onboardingRestore: OnboardingRestore? = null,
 ) {
     ScreenCrossfade(baseRoute) { target ->
         when (target) {
             Route.Boot, Route.Settings, Route.Welcome, Route.AddPlaylistWizard ->
-                RootScreenOnboardingRoutes(target, navigator, repository, fetchPlaylist)
+                RootScreenOnboardingRoutes(target, navigator, repository, fetchPlaylist, onboardingRestore)
             // BACK/TV-guide card leave playback for the guide as its
             // new root: BACK at guide root then exits the app with no
             // confirmation, the device-verified free-tier BACK chain. The

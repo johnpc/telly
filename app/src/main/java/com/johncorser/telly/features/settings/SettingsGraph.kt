@@ -8,6 +8,8 @@ import com.johncorser.telly.features.recording.RecordingSettingsHook
 import com.johncorser.telly.features.reminders.ReminderSettingsFeed
 import com.johncorser.telly.features.search.SearchHistory
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.flowOf
 
 /** The imperative actions the settings tree can trigger. */
 class SettingsActions(
@@ -29,6 +31,8 @@ class SettingsStores(
     val blocked: BlockedChannels? = null,
     /** Other -> Search -> Clear search history; null makes clear a no-op. */
     val searchHistory: SearchHistory? = null,
+    /** General -> "Automatic backup" row summary (last export time). */
+    val autoBackup: Flow<AutoBackupStatus> = flowOf(AutoBackupStatus()),
 )
 
 /**

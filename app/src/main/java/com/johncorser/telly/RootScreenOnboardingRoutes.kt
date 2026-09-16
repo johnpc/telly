@@ -9,6 +9,7 @@ import androidx.compose.ui.graphics.Color
 import com.johncorser.telly.core.design.TELLY_ONBOARDING_BACKGROUND
 import com.johncorser.telly.core.navigation.Navigator
 import com.johncorser.telly.core.navigation.Route
+import com.johncorser.telly.features.onboarding.OnboardingRestore
 import com.johncorser.telly.features.onboarding.WelcomeScreen
 import com.johncorser.telly.features.onboarding.WizardScreen
 import com.johncorser.telly.features.playlist.PlaylistRepository
@@ -20,12 +21,14 @@ internal fun RootScreenOnboardingRoutes(
     navigator: Navigator,
     repository: PlaylistRepository,
     fetchPlaylist: suspend (String) -> String,
+    restore: OnboardingRestore? = null,
 ) {
     when (target) {
         Route.Welcome ->
             WelcomeScreen(
                 onAddPlaylist = { navigator.push(Route.AddPlaylistWizard) },
                 onOpenSettings = { navigator.push(Route.Settings) },
+                restore = restore,
             )
         Route.AddPlaylistWizard ->
             WizardScreen(

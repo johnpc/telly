@@ -54,6 +54,19 @@ Feature: Add playlist onboarding
     And I select "Next"
     Then I see "Could not load the playlist. Check the URL and try again."
 
+  # Reinstall-proof restore: the automatic backup in Documents/telly offers
+  # itself on the welcome screen. The harness cannot drive a real
+  # uninstall/reinstall (that leg is verified manually over adb); it seeds
+  # the previous install's file through the backup-store seam and proves the
+  # read -> import -> re-fetch round trip lands back on live channels.
+  Scenario: A previous install's local backup restores from the welcome screen
+    Given a local backup of a configured install exists
+    When I relaunch telly
+    Then I see "telly doesn't provide any sources of TV channels"
+    And "Restore previous setup" has focus
+    When I select "Restore previous setup"
+    Then playback starts fullscreen on channel 1 "News One"
+
   Scenario: Back walks the wizard one step at a time
     When I select "Add playlist"
     And I select "M3U playlist"

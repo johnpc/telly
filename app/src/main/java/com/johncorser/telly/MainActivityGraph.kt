@@ -50,6 +50,7 @@ internal fun MainActivity.settingsGraph(fetcher: M3uFetcher): SettingsGraph {
             SettingsStores(
                 epgSources = ServiceLocator.epgSourceStore(this),
                 blocked = BlockedChannels(ServiceLocator.database(this).channelDao()),
+                autoBackup = autoBackupState(this).status,
                 searchHistory =
                     SearchHistory(
                         store = ServiceLocator.searchHistoryStore(this),

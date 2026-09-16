@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Auto Backup rules for API 23-30 (android:fullBackupContent).
+
+     Everything backed up is the user's own configuration: the settings
+     SharedPreferences (telly-settings, incl. per-playlist keys), the tiny
+     scalar store (telly) and the Room database telly.db (playlists, EPG
+     custom sources, channel flags/overrides, groups, reminders, my-list).
+     Room runs in WAL mode, so the -wal/-shm companions are included with
+     the main file: Auto Backup snapshots the app while it is idle, and
+     restoring the trio together is the accepted way to keep any
+     un-checkpointed transactions (checkpointing on a backup-agent callback
+     is not possible with the framework-driven full backup).
+
+     Deliberately NOT included: the files domain (recordings and the local
+     telly-backup.json working copy) and telly-search (search history stays
+     out of backups by decision). -->
+<full-backup-content>
+    <include domain="sharedpref" path="telly-settings.xml" />
+    <include domain="sharedpref" path="telly.xml" />
+    <include domain="database" path="telly.db" />
+    <include domain="database" path="telly.db-wal" />
+    <include domain="database" path="telly.db-shm" />
+</full-backup-content>
