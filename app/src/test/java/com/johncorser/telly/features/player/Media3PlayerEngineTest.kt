@@ -27,10 +27,18 @@ class Media3PlayerEngineTest {
     private val listener = slot<Player.Listener>()
     private val frameListener = slot<VideoFrameMetadataListener>()
 
-    private fun engine(): Media3PlayerEngine {
+    // Reconnect retries are posted through this seam instead of a real Handler,
+    // so tests can assert the backoff delay and fire the retry synchronously.
+    private val scheduled = mutableListOf<Pair<Long, () -> Unit>>()
+
+    private fun engine(policy: ReconnectPolicy = ReconnectPolicy()): Media3PlayerEngine {
         every { player.addListener(capture(listener)) } just Runs
         every { player.setVideoFrameMetadataListener(capture(frameListener)) } just Runs
-        return Media3PlayerEngine(player)
+        return Media3PlayerEngine(
+            player,
+            reconnect = policy,
+            schedule = { delayMs, task -> scheduled += delayMs to task },
+        )
     }
 
     @Test
@@ -122,18 +130,56 @@ class Media3PlayerEngineTest {
     }
 
     @Test
-    fun `errors surface their code name and idle states are ignored`() {
-        val engine = engine()
+    fun `a dropped stream reconnects with backoff before surfacing a hard error`() {
+        val engine = engine(ReconnectPolicy(maxAttempts = 2, baseDelayMs = 1_000L))
 
         listener.captured.onPlaybackStateChanged(Player.STATE_IDLE)
         assertEquals(PlayerState.Idle, engine.state.value)
 
-        listener.captured.onPlayerError(
-            PlaybackException("boom", null, PlaybackException.ERROR_CODE_IO_UNSPECIFIED),
-        )
-        val state = engine.state.value
-        assertEquals(PlayerState.Error("ERROR_CODE_IO_UNSPECIFIED"), state)
+        listener.captured.onPlayerError(ioError())
+        assertEquals(PlayerState.Reconnecting, engine.state.value)
+        assertEquals(1_000L, scheduled.single().first)
+
+        scheduled.removeAt(0).second() // the scheduled retry re-prepares
+        listener.captured.onPlayerError(ioError())
+        assertEquals(2_000L, scheduled.single().first)
+
+        scheduled.removeAt(0).second()
+        listener.captured.onPlayerError(ioError())
+        assertEquals(PlayerState.Error("ERROR_CODE_IO_UNSPECIFIED"), engine.state.value)
+
+        verify(exactly = 2) { player.prepare() }
     }
+
+    @Test
+    fun `becoming ready re-arms the reconnect budget`() {
+        val engine = engine(ReconnectPolicy(maxAttempts = 1))
+
+        listener.captured.onPlayerError(ioError())
+        scheduled.removeAt(0).second()
+        listener.captured.onPlaybackStateChanged(Player.STATE_READY)
+        assertEquals(PlayerState.Playing, engine.state.value)
+
+        listener.captured.onPlayerError(ioError())
+        assertEquals(PlayerState.Reconnecting, engine.state.value)
+    }
+
+    @Test
+    fun `a live-window overrun rejoins the edge before re-preparing`() {
+        val engine = engine()
+
+        listener.captured.onPlayerError(
+            PlaybackException("behind", null, PlaybackException.ERROR_CODE_BEHIND_LIVE_WINDOW),
+        )
+        scheduled.single().second()
+
+        verify {
+            player.seekToDefaultPosition()
+            player.prepare()
+        }
+    }
+
+    private fun ioError() = PlaybackException("boom", null, PlaybackException.ERROR_CODE_IO_UNSPECIFIED)
 
     @Test
     fun `a finished stream reports Ended`() {

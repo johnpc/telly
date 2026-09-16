@@ -11,6 +11,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import com.johncorser.telly.features.panel.ChannelPanelScreen
+import com.johncorser.telly.features.player.PlayerState
 
 /**
  * Renders whichever overlay is active over the fullscreen video, with
@@ -52,6 +53,10 @@ internal fun PlaybackScreenOverlays(
     // instant cut with a ~300 ms fade-out (ref-round6 §A).
     PlaybackScreenMenuScrim(visible = overlay is PlaybackOverlay.ChannelMenu)
     PlaybackScreenMenuLayers(viewModel, overlay)
+    // A dropped live stream re-preparing with backoff: a corner pill over
+    // the frozen frame, regardless of which overlay (if any) is up.
+    val playerState by viewModel.playerState.collectAsState()
+    if (playerState == PlayerState.Reconnecting) PlaybackScreenReconnecting()
 }
 
 private const val INFO_FADE_MS = 350

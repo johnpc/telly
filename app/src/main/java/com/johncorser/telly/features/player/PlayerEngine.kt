@@ -11,6 +11,13 @@ sealed interface PlayerState {
 
     data object Playing : PlayerState
 
+    /**
+     * A live stream dropped and the engine is re-preparing it (auto-reconnect
+     * with exponential backoff). Transient — resolves to [Playing] on success
+     * or [Error] once the retry budget is spent.
+     */
+    data object Reconnecting : PlayerState
+
     /** A finite stream (archive / VOD / capture) reached its end. */
     data object Ended : PlayerState
 

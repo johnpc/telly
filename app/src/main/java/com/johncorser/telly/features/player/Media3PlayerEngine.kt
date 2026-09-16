@@ -1,6 +1,7 @@
 package com.johncorser.telly.features.player
 
 import android.content.Context
+import android.os.Handler
 import androidx.media3.common.MediaItem
 import androidx.media3.common.PlaybackException
 import androidx.media3.common.Player
@@ -23,6 +24,10 @@ class Media3PlayerEngine(
     private val userAgent: StreamUserAgent? = null,
     override val tracks: TrackFacade = ExoTrackFacade(player),
     override val decoders: DecoderPreferences = DecoderPreferences.NONE,
+    private val reconnect: ReconnectPolicy = ReconnectPolicy(),
+    // Retries post on the player's own (main) thread; tests inject a capturing
+    // scheduler so the reconnect logic runs without a real Handler.
+    private val schedule: (Long, () -> Unit) -> Unit = { d, t -> Handler(player.applicationLooper).postDelayed(t, d) },
 ) : PlayerEngine,
     Player.Listener {
     private val mutableState = MutableStateFlow<PlayerState>(PlayerState.Idle)
@@ -43,6 +48,7 @@ class Media3PlayerEngine(
     override fun load(streamUrl: String) {
         mutableState.value = PlayerState.Buffering
         mutablePaused.value = false
+        reconnect.reset()
         videoFeed.reset()
         userAgent?.onLoad(streamUrl)
         player.setMediaItem(MediaItem.fromUri(streamUrl))
@@ -52,6 +58,7 @@ class Media3PlayerEngine(
 
     override fun stop() {
         player.stop()
+        reconnect.reset()
         mutableState.value = PlayerState.Idle
         mutablePaused.value = false
     }
@@ -82,6 +89,7 @@ class Media3PlayerEngine(
         when (playbackState) {
             Player.STATE_BUFFERING -> mutableState.value = PlayerState.Buffering
             Player.STATE_READY -> {
+                reconnect.reset()
                 mutableState.value = PlayerState.Playing
                 videoFeed.onReady(player)
             }
@@ -91,7 +99,17 @@ class Media3PlayerEngine(
     }
 
     override fun onPlayerError(error: PlaybackException) {
-        mutableState.value = PlayerState.Error(error.errorCodeName)
+        val delayMs = reconnect.nextDelayMs()
+        if (delayMs == null) {
+            mutableState.value = PlayerState.Error(error.errorCodeName)
+            return
+        }
+        mutableState.value = PlayerState.Reconnecting
+        // A live-window overrun rejoins the edge first; otherwise just re-prepare.
+        schedule(delayMs) {
+            if (error.errorCode == PlaybackException.ERROR_CODE_BEHIND_LIVE_WINDOW) player.seekToDefaultPosition()
+            player.prepare()
+        }
     }
 
     companion object {
