@@ -15,6 +15,7 @@ import androidx.compose.ui.unit.sp
 import com.johncorser.telly.core.design.TELLY_MENU_SHEET
 import com.johncorser.telly.core.ui.FocusScreenDefaults
 import com.johncorser.telly.core.ui.TellyScreenMenuRow
+import com.johncorser.telly.core.ui.rememberFocusSeed
 
 /**
  * The pane menu (multiview-round 04): a 200 dp dark popup right of the
@@ -33,11 +34,13 @@ internal fun MultiviewScreenMenu(
         val index = panes.indexOfFirst { it.id == focusedId }.coerceAtLeast(0)
         val cell = MultiviewGrid.cells(panes.size)[index]
         val (x, y) = MultiviewGrid.menuOffset(cell, maxWidth.value, maxHeight.value, rows.size)
+        val seed = rememberFocusSeed()
         Column(
             Modifier
                 .offset(x = x.dp, y = y.dp)
                 .width(MultiviewGrid.MENU_WIDTH_DP.dp)
-                .background(Color(TELLY_MENU_SHEET), RoundedCornerShape(FocusScreenDefaults.cornerRadius)),
+                .background(Color(TELLY_MENU_SHEET), RoundedCornerShape(FocusScreenDefaults.cornerRadius))
+                .then(seed.modifier()),
         ) {
             rows.forEachIndexed { rowIndex, action ->
                 TellyScreenMenuRow(
@@ -46,6 +49,7 @@ internal fun MultiviewScreenMenu(
                     height = MultiviewGrid.MENU_ROW_DP.dp,
                     fontSize = 16.sp,
                     requestFocus = rowIndex == 0,
+                    grabYielded = seed.seeded,
                 )
             }
         }

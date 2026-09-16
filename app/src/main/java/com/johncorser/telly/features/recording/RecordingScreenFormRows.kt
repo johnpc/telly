@@ -41,13 +41,15 @@ internal fun RecordingScreenFormStepperRow(
     label: String,
     value: String,
     onAdjust: (Int) -> Unit,
+    modifier: Modifier = Modifier,
     requestFocus: Boolean = false,
+    grabYielded: () -> Boolean = { false },
 ) {
     Surface(
         onClick = { onAdjust(+1) },
         modifier =
-            Modifier
-                .focusOnAppear(requestFocus)
+            modifier
+                .focusOnAppear(requestFocus, grabYielded)
                 .fillMaxWidth()
                 .height(40.dp)
                 .onPreviewKeyEvent { event -> onStepperKey(event.type, event.key, onAdjust) },

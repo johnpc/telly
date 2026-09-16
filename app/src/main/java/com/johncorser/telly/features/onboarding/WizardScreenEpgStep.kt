@@ -4,7 +4,6 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.width
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.res.stringResource
 import com.johncorser.telly.R
 
@@ -52,7 +51,7 @@ fun WizardScreenEpgStep(
                 modifier =
                     Modifier
                         .width(WizardScreenDims.buttonWidth)
-                        .focusRequester(edit.nextFocus),
+                        .then(edit.nextFocus.target()),
             )
             WizardScreenActionRow(
                 text = stringResource(R.string.wizard_back),

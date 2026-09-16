@@ -18,6 +18,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import com.johncorser.telly.core.design.TELLY_ONBOARDING_BACKGROUND
 import com.johncorser.telly.core.ui.focusOnAppear
+import com.johncorser.telly.core.ui.rememberFocusSeed
 
 /**
  * A full-screen GuidedStep in the reference style (screens 22/28): left
@@ -46,10 +47,12 @@ internal fun SettingsScreenGuidedStep(
             },
     ) {
         SettingsScreenGuidedPane(iconRes = iconRes, title = title, bodyLines = bodyLines)
+        val seed = rememberFocusSeed()
         Column(
             Modifier
                 .fillMaxHeight()
-                .padding(start = 20.dp, top = 189.dp),
+                .padding(start = 20.dp, top = 189.dp)
+                .then(seed.modifier()),
             verticalArrangement = Arrangement.spacedBy(8.dp),
         ) {
             actions.forEachIndexed { index, (label, onClick) ->
@@ -59,7 +62,7 @@ internal fun SettingsScreenGuidedStep(
                     modifier =
                         Modifier
                             .width(328.dp)
-                            .focusOnAppear(enabled = index == 0),
+                            .focusOnAppear(enabled = index == 0, yielded = seed.seeded),
                     resting = Color.Transparent,
                 )
             }

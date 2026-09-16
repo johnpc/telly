@@ -6,12 +6,12 @@ import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.ui.Modifier
-import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import com.johncorser.telly.R
-import com.johncorser.telly.core.ui.rememberAutoFocus
+import com.johncorser.telly.core.ui.focusOnAppear
+import com.johncorser.telly.core.ui.rememberFocusScreenReclaim
+import com.johncorser.telly.core.ui.rememberFocusSeed
 
 /**
  * The shortcut row (history-round2 §1): TV guide · History · Multiview ·
@@ -25,16 +25,19 @@ internal fun PlaybackScreenCards(
     actions: PlaybackCardActions,
     onRecentFocus: (RecentCard, Boolean) -> Unit,
 ) {
-    val firstFocus = rememberAutoFocus()
-    // Clear unmounts the focused card row tail; focus falls back to TV guide.
+    val reclaim = rememberFocusScreenReclaim()
+    val seed = rememberFocusSeed()
+    // Clear unmounts the focused card row tail; focus falls back to TV
+    // guide through the placement-gated reclaim.
     LaunchedEffect(recents.isEmpty()) {
-        if (recents.isEmpty()) runCatching { firstFocus.requestFocus() }
+        if (recents.isEmpty()) reclaim.reclaim()
     }
     // Round8 :73-78 geometry: 27 dp start keeps the first card's x-center at
     // the verified 204 px once the tile widens to 150 dp, and the 1 dp
     // underlap applies the "pitch ~3 dp wider than the reference" correction
     // (invisible between the identical resting fills).
     LazyRow(
+        modifier = seed.modifier(),
         contentPadding = PaddingValues(start = 27.dp),
         horizontalArrangement = Arrangement.spacedBy((-1).dp),
     ) {
@@ -43,7 +46,7 @@ internal fun PlaybackScreenCards(
                 label = stringResource(R.string.playback_card_tv_guide),
                 icon = R.drawable.ic_card_guide,
                 onClick = actions.onGuide,
-                modifier = Modifier.focusRequester(firstFocus),
+                modifier = reclaim.target().focusOnAppear(yielded = seed.seeded),
             )
         }
         item {

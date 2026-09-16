@@ -21,6 +21,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.johncorser.telly.core.ui.TellyScreenWhiteText
 import com.johncorser.telly.core.ui.focusOnAppear
+import com.johncorser.telly.core.ui.rememberFocusSeed
 import com.johncorser.telly.features.panel.ChannelPanelScreenRow
 import com.johncorser.telly.features.panel.PanelRow
 
@@ -65,9 +66,13 @@ private fun MultiviewScreenPickerList(
 ) {
     val panel = viewModel.picker.panel
     val initialIndex = remember { panel.focusIndex.value.coerceAtLeast(0) }
+    val seed = rememberFocusSeed()
     Column(modifier.padding(start = 8.dp, top = 8.dp)) {
         TellyScreenWhiteText("All channels", fontSize = 16.sp)
-        LazyColumn(state = rememberLazyListState(initialFirstVisibleItemIndex = initialIndex)) {
+        LazyColumn(
+            modifier = seed.modifier(),
+            state = rememberLazyListState(initialFirstVisibleItemIndex = initialIndex),
+        ) {
             itemsIndexed(rows, key = { _, row -> row.channel.id }) { index, row ->
                 ChannelPanelScreenRow(
                     row = row,
@@ -75,7 +80,7 @@ private fun MultiviewScreenPickerList(
                     modifier =
                         Modifier
                             .onFocusChanged { if (it.isFocused) panel.onRowFocused(index) }
-                            .focusOnAppear(index == initialIndex),
+                            .focusOnAppear(index == initialIndex, seed.seeded),
                     onClick = { viewModel.onPick(row.channel) },
                 )
             }

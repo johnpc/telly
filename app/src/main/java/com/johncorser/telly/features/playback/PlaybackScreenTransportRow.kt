@@ -11,7 +11,6 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.unit.dp
@@ -19,7 +18,8 @@ import androidx.compose.ui.unit.sp
 import androidx.tv.material3.Text
 import com.johncorser.telly.core.design.TELLY_TEXT_MUTED
 import com.johncorser.telly.core.ui.TellyScreenIconCircle
-import com.johncorser.telly.core.ui.rememberAutoFocus
+import com.johncorser.telly.core.ui.focusOnAppear
+import com.johncorser.telly.core.ui.rememberFocusSeed
 
 /**
  * Transport row revealed by a second UP in the info overlay (round3-ref
@@ -38,12 +38,13 @@ internal fun PlaybackScreenTransportRow(
     catchup: TransportCatchup? = null,
     record: TransportRecord = TransportRecord(),
 ) {
-    val firstFocus = rememberAutoFocus()
+    val seed = rememberFocusSeed()
     Row(
         Modifier
             .fillMaxWidth()
             .padding(horizontal = 40.dp, vertical = 8.dp)
-            .then(if (catchup != null) Modifier.testTag("catchup-transport") else Modifier),
+            .then(if (catchup != null) Modifier.testTag("catchup-transport") else Modifier)
+            .then(seed.modifier()),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Text(text = data.elapsed.orEmpty(), color = Color.White, fontSize = 15.sp)
@@ -54,7 +55,7 @@ internal fun PlaybackScreenTransportRow(
                 TellyScreenIconCircle(
                     icon = transportIcon(index, button.icon, catchup),
                     onClick = { transportAction(index, button.feature, onFeature, catchup) },
-                    modifier = if (index == PAUSE_INDEX) Modifier.focusRequester(firstFocus) else Modifier,
+                    modifier = Modifier.focusOnAppear(index == PAUSE_INDEX, seed.seeded),
                     contentDescription = transportLabel(index, button.feature, catchup),
                 )
             }

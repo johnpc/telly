@@ -28,6 +28,7 @@ internal fun VodScreenCard(
     card: VodCard,
     onClick: () -> Unit,
     requestFocus: Boolean,
+    grabYielded: () -> Boolean,
 ) {
     Surface(
         onClick = onClick,
@@ -35,7 +36,7 @@ internal fun VodScreenCard(
             Modifier
                 .testTag("vod-card")
                 .width(156.dp)
-                .focusOnAppear(requestFocus),
+                .focusOnAppear(requestFocus, grabYielded),
         shape = FocusScreenDefaults.shape(),
         scale = FocusScreenDefaults.scale(),
         colors = FocusScreenDefaults.colors(restingContainer = Color.Transparent),

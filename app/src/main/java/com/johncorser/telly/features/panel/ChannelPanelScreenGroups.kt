@@ -17,6 +17,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.johncorser.telly.core.design.TELLY_BUTTON_RESTING
 import com.johncorser.telly.core.ui.TellyScreenMenuRow
+import com.johncorser.telly.core.ui.rememberFocusSeed
 
 /**
  * Groups column (captures 25/47): Favorites, All channels, then playlist
@@ -35,11 +36,13 @@ internal fun ChannelPanelScreenGroups(
     metrics: GroupColumnMetrics = GroupColumnMetrics(),
     rowModifier: Modifier = Modifier,
 ) {
+    val seed = rememberFocusSeed()
     LazyColumn(
         Modifier
             .width(metrics.width)
             .fillMaxHeight()
-            .padding(start = 16.dp, top = metrics.topPadding, end = 16.dp),
+            .padding(start = 16.dp, top = metrics.topPadding, end = 16.dp)
+            .then(seed.modifier()),
         verticalArrangement = Arrangement.spacedBy(metrics.rowSpacing),
     ) {
         items(groups, key = { it }) { group ->
@@ -52,6 +55,7 @@ internal fun ChannelPanelScreenGroups(
                 fontSize = metrics.fontSize,
                 restingContainer = if (isSelected) Color(TELLY_BUTTON_RESTING) else Color.Transparent,
                 requestFocus = autoFocusSelected && isSelected,
+                grabYielded = seed.seeded,
             )
         }
     }

@@ -24,12 +24,13 @@ import com.johncorser.telly.features.playlist.db.displayName
 internal fun HistoryScreenRow(
     row: HistoryRow,
     requestFocus: Boolean,
+    grabYielded: () -> Boolean,
     onClick: () -> Unit,
 ) {
     TellyScreenChannelRow(
         tag = "history-row",
         onClick = onClick,
-        modifier = Modifier.focusOnAppear(requestFocus),
+        modifier = Modifier.focusOnAppear(requestFocus, grabYielded),
     ) {
         TellyScreenLogoTile(
             logoUrl = row.channel.source.logoUrl,

@@ -18,6 +18,7 @@ import androidx.compose.ui.unit.dp
 import com.johncorser.telly.R
 import com.johncorser.telly.core.design.TELLY_ONBOARDING_BACKGROUND
 import com.johncorser.telly.core.ui.TellyScreenEmptyState
+import com.johncorser.telly.core.ui.rememberFocusSeed
 import com.johncorser.telly.features.playback.PlaybackDeps
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -51,15 +52,18 @@ fun HistoryScreen(
         if (rows.isEmpty()) {
             TellyScreenEmptyState(stringResource(R.string.history_empty))
         } else {
+            val seed = rememberFocusSeed()
             LazyColumn(
                 Modifier
                     .fillMaxSize()
-                    .padding(start = 40.dp, top = 80.dp, end = 40.dp),
+                    .padding(start = 40.dp, top = 80.dp, end = 40.dp)
+                    .then(seed.modifier()),
             ) {
                 items(rows, key = { it.channel.id }) { row ->
                     HistoryScreenRow(
                         row = row,
                         requestFocus = row == rows.first(),
+                        grabYielded = seed.seeded,
                         onClick = {
                             viewModel.tune(row)
                             onTuned()

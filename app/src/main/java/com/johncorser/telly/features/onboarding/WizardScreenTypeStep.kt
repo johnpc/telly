@@ -3,13 +3,10 @@ package com.johncorser.telly.features.onboarding
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.width
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.focus.FocusRequester
-import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.res.stringResource
 import com.johncorser.telly.R
+import com.johncorser.telly.core.ui.focusOnAppear
 
 /** Step 1 (screen 03): pick the playlist type; only M3U advances this slice. */
 @Composable
@@ -18,8 +15,6 @@ fun WizardScreenTypeStep(
     onCancel: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    val firstRowFocus = remember { FocusRequester() }
-    LaunchedEffect(Unit) { firstRowFocus.requestFocus() }
     Row(modifier) {
         WizardScreenActionsPane(Modifier.weight(1f)) {
             WizardScreenActionRow(
@@ -28,7 +23,7 @@ fun WizardScreenTypeStep(
                 modifier =
                     Modifier
                         .width(WizardScreenDims.actionWidth)
-                        .focusRequester(firstRowFocus),
+                        .focusOnAppear(),
             )
             WizardScreenActionRow(
                 text = stringResource(R.string.wizard_xtream_codes),
