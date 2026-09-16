@@ -26,6 +26,7 @@ import com.johncorser.telly.R
 import com.johncorser.telly.core.design.TELLY_MENU_SHEET
 import com.johncorser.telly.core.ui.LocalAccentColor
 import com.johncorser.telly.core.ui.TellyScreenMenuRow
+import com.johncorser.telly.core.ui.rememberFocusSeed
 
 /**
  * Right-side context-menu sheet (round3-ref 05 + captures 38-40): 256 dp
@@ -56,6 +57,9 @@ internal fun PlaybackScreenMenu(
         if (listState.layoutInfo.visibleItemsInfo.none { it.index == index }) listState.scrollToItem(index)
     }
     val entrance = remember { MutableTransitionState(false).apply { targetState = true } }
+    // The initial grab stands down once focus lands on ANY sheet row, so a
+    // deliberate move during the entrance window is never yanked back.
+    val seed = rememberFocusSeed()
     Box(Modifier.fillMaxSize(), contentAlignment = Alignment.TopEnd) {
         AnimatedVisibility(visibleState = entrance, enter = playerMenuSheetEnter()) {
             LazyColumn(
@@ -64,7 +68,8 @@ internal fun PlaybackScreenMenu(
                     .width(256.dp)
                     .fillMaxHeight()
                     .clip(RoundedCornerShape(4.dp))
-                    .background(Color(TELLY_MENU_SHEET)),
+                    .background(Color(TELLY_MENU_SHEET))
+                    .then(seed.modifier()),
                 state = listState,
             ) {
                 sections.forEach { section ->
@@ -79,6 +84,7 @@ internal fun PlaybackScreenMenu(
                             icon = menuIcon(menuItem),
                             height = 40.dp,
                             requestFocus = menuItem == target,
+                            grabYielded = seed.seeded,
                         )
                     }
                 }

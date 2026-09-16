@@ -20,6 +20,7 @@ import androidx.tv.material3.Text
 import com.johncorser.telly.core.design.TELLY_SETTINGS_HEADER
 import com.johncorser.telly.core.design.TELLY_TEXT_PRIMARY
 import com.johncorser.telly.core.ui.LocalAccentColor
+import com.johncorser.telly.core.ui.rememberFocusSeed
 
 /** Header strip (#333639, 72 dp) + content — both panes share this frame. */
 @Composable
@@ -57,8 +58,12 @@ internal fun SettingsScreenRows(
     initialFocusId: String? = null,
     onRowFocused: (String) -> Unit = {},
 ) {
+    // Once focus lands on ANY row, the initial grab stands down — it must
+    // never yank focus back from a row a D-pad move (or the harness) just
+    // reached (the Assign-EPG picker steal).
+    val seed = rememberFocusSeed()
     LazyColumn(
-        modifier = Modifier.fillMaxSize(),
+        modifier = Modifier.fillMaxSize().then(seed.modifier()),
         contentPadding = PaddingValues(vertical = 12.dp),
     ) {
         items(rows, key = { it.id }) { row ->
@@ -71,6 +76,7 @@ internal fun SettingsScreenRows(
                         modifier = Modifier.padding(horizontal = SettingsScreenDims.rowMargin),
                         onFocused = { onRowFocused(row.id) },
                         requestFocus = row.id == initialFocusId,
+                        grabYielded = seed.seeded,
                     )
             }
         }

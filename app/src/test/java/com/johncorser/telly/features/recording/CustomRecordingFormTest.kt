@@ -15,6 +15,18 @@ class CustomRecordingFormTest {
     }
 
     @Test
+    fun `a boundary only seconds away is skipped -- the default keeps a minute of lead`() {
+        // 12:04:30 -> the 12:05 boundary is 30 s out and would already have
+        // PASSED by the time Create lands (the acceptance run's 23:59:55
+        // form started recording instantly instead of scheduling): the
+        // default hops to 12:10.
+        assertEquals(10 * MINUTE, CustomRecordingForm(channel, 4 * MINUTE + 30_000L).startMs.value)
+        // 59 s of lead is still too little; a full minute is enough.
+        assertEquals(10 * MINUTE, CustomRecordingForm(channel, 4 * MINUTE + 1_000L).startMs.value)
+        assertEquals(5 * MINUTE, CustomRecordingForm(channel, 4 * MINUTE).startMs.value)
+    }
+
+    @Test
     fun `start steps five minutes and never drops below the opening boundary`() {
         val form = CustomRecordingForm(channel, 3 * MINUTE)
 

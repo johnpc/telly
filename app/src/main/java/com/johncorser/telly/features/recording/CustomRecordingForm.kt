@@ -9,14 +9,16 @@ import kotlinx.coroutines.flow.update
 /**
  * State of the "Custom recording" form: the channel comes prefilled from
  * the invoking context, the start defaults to the next five-minute
- * boundary (always in the future, never a start-immediately race) and the
- * duration to an hour. LEFT/RIGHT on the form rows step through both.
+ * boundary AT LEAST [MIN_LEAD_MS] out (a boundary seconds away would pass
+ * before the user presses Create and start the capture immediately —
+ * never a start-immediately race) and the duration to an hour.
+ * LEFT/RIGHT on the form rows step through both.
  */
 class CustomRecordingForm(
     val channel: ChannelEntity,
     nowMs: Long,
 ) {
-    private val floorMs = (nowMs / START_STEP_MS + 1) * START_STEP_MS
+    private val floorMs = (nowMs + MIN_LEAD_MS + START_STEP_MS - 1) / START_STEP_MS * START_STEP_MS
 
     private val mutableStart = MutableStateFlow(floorMs)
     private val mutableDuration = MutableStateFlow(DEFAULT_DURATION_MINUTES)
@@ -41,6 +43,10 @@ class CustomRecordingForm(
 
     companion object {
         private const val MINUTE_MS = 60_000L
+
+        /** The default start never sits closer than this to "now". */
+        const val MIN_LEAD_MS = MINUTE_MS
+
         const val START_STEP_MINUTES = 5
         private const val START_STEP_MS = START_STEP_MINUTES * MINUTE_MS
         const val DEFAULT_DURATION_MINUTES = 60
