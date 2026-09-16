@@ -40,7 +40,7 @@ Feature: Watch live TV and zap between channels
     Then playback switches to channel 2 "News One HD"
     When I press channel down
     And I press channel down
-    Then playback switches to channel 30 "Music Box 24"
+    Then playback switches to channel 31 "HLS Live"
 
   Scenario: The quick-bar's Channels list opens the panel focused on the playing channel
     When I long-press ok

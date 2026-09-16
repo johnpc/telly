@@ -1,0 +1,10 @@
+#EXTM3U
+#EXT-X-VERSION:3
+#EXT-X-TARGETDURATION:2
+#EXT-X-MEDIA-SEQUENCE:0
+#EXTINF:2.0,
+hls-live-0.ts
+#EXTINF:2.0,
+hls-live-1.ts
+#EXTINF:2.0,
+hls-live-2.ts

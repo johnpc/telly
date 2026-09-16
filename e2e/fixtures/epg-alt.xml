@@ -9,312 +9,312 @@
     <display-name>Sports Arena</display-name>
     <icon src="http://10.0.2.2:8090/logos/sports-arena.png" />
   </channel>
-  <programme start="20260914220000 +0000" stop="20260914224500 +0000" channel="news-one-1.fixture">
+  <programme start="20260915200000 +0000" stop="20260915204500 +0000" channel="news-one-1.fixture">
     <title lang="en">Alt Politics Tonight</title>
     <sub-title lang="en">Alt Politics Tonight Special</sub-title>
     <desc lang="en">Join our hosts for the latest updates, interviews and highlights you won&apos;t want to miss.</desc>
   </programme>
-  <programme start="20260914224500 +0000" stop="20260914234500 +0000" channel="news-one-1.fixture">
+  <programme start="20260915204500 +0000" stop="20260915214500 +0000" channel="news-one-1.fixture">
     <title lang="en">Alt Business Hour</title>
     <sub-title lang="en">Alt Business Hour Special</sub-title>
     <desc lang="en">A fan-favorite returns with more surprises, bigger moments and unforgettable characters.</desc>
   </programme>
-  <programme start="20260914234500 +0000" stop="20260915010000 +0000" channel="news-one-1.fixture">
+  <programme start="20260915214500 +0000" stop="20260915230000 +0000" channel="news-one-1.fixture">
     <title lang="en">Alt Weather Watch</title>
     <sub-title lang="en">Alt Weather Watch Special</sub-title>
     <desc lang="en">Critics call it &apos;a triumph&apos; - experience the acclaimed hit everyone is talking about.</desc>
   </programme>
-  <programme start="20260915010000 +0000" stop="20260915023000 +0000" channel="news-one-1.fixture">
+  <programme start="20260915230000 +0000" stop="20260916003000 +0000" channel="news-one-1.fixture">
     <title lang="en">Alt Global Update</title>
     <sub-title lang="en">Alt Global Update Special</sub-title>
     <desc lang="en">All-new episode featuring special guests and exclusive behind-the-scenes footage.</desc>
   </programme>
-  <programme start="20260915023000 +0000" stop="20260915030000 +0000" channel="news-one-1.fixture">
+  <programme start="20260916003000 +0000" stop="20260916010000 +0000" channel="news-one-1.fixture">
     <title lang="en">Alt Newsroom Live</title>
     <sub-title lang="en">Alt Newsroom Live Special</sub-title>
     <desc lang="en">The definitive guide to what&apos;s happening now, presented by our award-winning team.</desc>
   </programme>
-  <programme start="20260915030000 +0000" stop="20260915034500 +0000" channel="news-one-1.fixture">
+  <programme start="20260916010000 +0000" stop="20260916014500 +0000" channel="news-one-1.fixture">
     <title lang="en">Alt Morning Report</title>
     <sub-title lang="en">Alt Morning Report Special</sub-title>
     <desc lang="en">An in-depth look at the stories shaping our world today, with expert analysis and live reports from the field.</desc>
   </programme>
-  <programme start="20260915034500 +0000" stop="20260915044500 +0000" channel="news-one-1.fixture">
+  <programme start="20260916014500 +0000" stop="20260916024500 +0000" channel="news-one-1.fixture">
     <title lang="en">Alt World News Now</title>
     <sub-title lang="en">Alt World News Now Special</sub-title>
     <desc lang="en">Join our hosts for the latest updates, interviews and highlights you won&apos;t want to miss.</desc>
   </programme>
-  <programme start="20260915044500 +0000" stop="20260915060000 +0000" channel="news-one-1.fixture">
+  <programme start="20260916024500 +0000" stop="20260916040000 +0000" channel="news-one-1.fixture">
     <title lang="en">Alt The Daily Brief</title>
     <sub-title lang="en">Alt The Daily Brief Special</sub-title>
     <desc lang="en">A fan-favorite returns with more surprises, bigger moments and unforgettable characters.</desc>
   </programme>
-  <programme start="20260915060000 +0000" stop="20260915073000 +0000" channel="news-one-1.fixture">
+  <programme start="20260916040000 +0000" stop="20260916053000 +0000" channel="news-one-1.fixture">
     <title lang="en">Alt Politics Tonight</title>
     <sub-title lang="en">Alt Politics Tonight Special</sub-title>
     <desc lang="en">Critics call it &apos;a triumph&apos; - experience the acclaimed hit everyone is talking about.</desc>
   </programme>
-  <programme start="20260915073000 +0000" stop="20260915080000 +0000" channel="news-one-1.fixture">
+  <programme start="20260916053000 +0000" stop="20260916060000 +0000" channel="news-one-1.fixture">
     <title lang="en">Alt Business Hour</title>
     <sub-title lang="en">Alt Business Hour Special</sub-title>
     <desc lang="en">All-new episode featuring special guests and exclusive behind-the-scenes footage.</desc>
   </programme>
-  <programme start="20260915080000 +0000" stop="20260915084500 +0000" channel="news-one-1.fixture">
+  <programme start="20260916060000 +0000" stop="20260916064500 +0000" channel="news-one-1.fixture">
     <title lang="en">Alt Weather Watch</title>
     <sub-title lang="en">Alt Weather Watch Special</sub-title>
     <desc lang="en">The definitive guide to what&apos;s happening now, presented by our award-winning team.</desc>
   </programme>
-  <programme start="20260915084500 +0000" stop="20260915094500 +0000" channel="news-one-1.fixture">
+  <programme start="20260916064500 +0000" stop="20260916074500 +0000" channel="news-one-1.fixture">
     <title lang="en">Alt Global Update</title>
     <sub-title lang="en">Alt Global Update Special</sub-title>
     <desc lang="en">An in-depth look at the stories shaping our world today, with expert analysis and live reports from the field.</desc>
   </programme>
-  <programme start="20260915094500 +0000" stop="20260915110000 +0000" channel="news-one-1.fixture">
+  <programme start="20260916074500 +0000" stop="20260916090000 +0000" channel="news-one-1.fixture">
     <title lang="en">Alt Newsroom Live</title>
     <sub-title lang="en">Alt Newsroom Live Special</sub-title>
     <desc lang="en">Join our hosts for the latest updates, interviews and highlights you won&apos;t want to miss.</desc>
   </programme>
-  <programme start="20260915110000 +0000" stop="20260915123000 +0000" channel="news-one-1.fixture">
+  <programme start="20260916090000 +0000" stop="20260916103000 +0000" channel="news-one-1.fixture">
     <title lang="en">Alt Morning Report</title>
     <sub-title lang="en">Alt Morning Report Special</sub-title>
     <desc lang="en">A fan-favorite returns with more surprises, bigger moments and unforgettable characters.</desc>
   </programme>
-  <programme start="20260915123000 +0000" stop="20260915130000 +0000" channel="news-one-1.fixture">
+  <programme start="20260916103000 +0000" stop="20260916110000 +0000" channel="news-one-1.fixture">
     <title lang="en">Alt World News Now</title>
     <sub-title lang="en">Alt World News Now Special</sub-title>
     <desc lang="en">Critics call it &apos;a triumph&apos; - experience the acclaimed hit everyone is talking about.</desc>
   </programme>
-  <programme start="20260915130000 +0000" stop="20260915134500 +0000" channel="news-one-1.fixture">
+  <programme start="20260916110000 +0000" stop="20260916114500 +0000" channel="news-one-1.fixture">
     <title lang="en">Alt The Daily Brief</title>
     <sub-title lang="en">Alt The Daily Brief Special</sub-title>
     <desc lang="en">All-new episode featuring special guests and exclusive behind-the-scenes footage.</desc>
   </programme>
-  <programme start="20260915134500 +0000" stop="20260915144500 +0000" channel="news-one-1.fixture">
+  <programme start="20260916114500 +0000" stop="20260916124500 +0000" channel="news-one-1.fixture">
     <title lang="en">Alt Politics Tonight</title>
     <sub-title lang="en">Alt Politics Tonight Special</sub-title>
     <desc lang="en">The definitive guide to what&apos;s happening now, presented by our award-winning team.</desc>
   </programme>
-  <programme start="20260915144500 +0000" stop="20260915160000 +0000" channel="news-one-1.fixture">
+  <programme start="20260916124500 +0000" stop="20260916140000 +0000" channel="news-one-1.fixture">
     <title lang="en">Alt Business Hour</title>
     <sub-title lang="en">Alt Business Hour Special</sub-title>
     <desc lang="en">An in-depth look at the stories shaping our world today, with expert analysis and live reports from the field.</desc>
   </programme>
-  <programme start="20260915160000 +0000" stop="20260915173000 +0000" channel="news-one-1.fixture">
+  <programme start="20260916140000 +0000" stop="20260916153000 +0000" channel="news-one-1.fixture">
     <title lang="en">Alt Weather Watch</title>
     <sub-title lang="en">Alt Weather Watch Special</sub-title>
     <desc lang="en">Join our hosts for the latest updates, interviews and highlights you won&apos;t want to miss.</desc>
   </programme>
-  <programme start="20260915173000 +0000" stop="20260915180000 +0000" channel="news-one-1.fixture">
+  <programme start="20260916153000 +0000" stop="20260916160000 +0000" channel="news-one-1.fixture">
     <title lang="en">Alt Global Update</title>
     <sub-title lang="en">Alt Global Update Special</sub-title>
     <desc lang="en">A fan-favorite returns with more surprises, bigger moments and unforgettable characters.</desc>
   </programme>
-  <programme start="20260915180000 +0000" stop="20260915184500 +0000" channel="news-one-1.fixture">
+  <programme start="20260916160000 +0000" stop="20260916164500 +0000" channel="news-one-1.fixture">
     <title lang="en">Alt Newsroom Live</title>
     <sub-title lang="en">Alt Newsroom Live Special</sub-title>
     <desc lang="en">Critics call it &apos;a triumph&apos; - experience the acclaimed hit everyone is talking about.</desc>
   </programme>
-  <programme start="20260915184500 +0000" stop="20260915194500 +0000" channel="news-one-1.fixture">
+  <programme start="20260916164500 +0000" stop="20260916174500 +0000" channel="news-one-1.fixture">
     <title lang="en">Alt Morning Report</title>
     <sub-title lang="en">Alt Morning Report Special</sub-title>
     <desc lang="en">All-new episode featuring special guests and exclusive behind-the-scenes footage.</desc>
   </programme>
-  <programme start="20260915194500 +0000" stop="20260915210000 +0000" channel="news-one-1.fixture">
+  <programme start="20260916174500 +0000" stop="20260916190000 +0000" channel="news-one-1.fixture">
     <title lang="en">Alt World News Now</title>
     <sub-title lang="en">Alt World News Now Special</sub-title>
     <desc lang="en">The definitive guide to what&apos;s happening now, presented by our award-winning team.</desc>
   </programme>
-  <programme start="20260915210000 +0000" stop="20260915223000 +0000" channel="news-one-1.fixture">
+  <programme start="20260916190000 +0000" stop="20260916203000 +0000" channel="news-one-1.fixture">
     <title lang="en">Alt The Daily Brief</title>
     <sub-title lang="en">Alt The Daily Brief Special</sub-title>
     <desc lang="en">An in-depth look at the stories shaping our world today, with expert analysis and live reports from the field.</desc>
   </programme>
-  <programme start="20260915223000 +0000" stop="20260915230000 +0000" channel="news-one-1.fixture">
+  <programme start="20260916203000 +0000" stop="20260916210000 +0000" channel="news-one-1.fixture">
     <title lang="en">Alt Politics Tonight</title>
     <sub-title lang="en">Alt Politics Tonight Special</sub-title>
     <desc lang="en">Join our hosts for the latest updates, interviews and highlights you won&apos;t want to miss.</desc>
   </programme>
-  <programme start="20260915230000 +0000" stop="20260915234500 +0000" channel="news-one-1.fixture">
+  <programme start="20260916210000 +0000" stop="20260916214500 +0000" channel="news-one-1.fixture">
     <title lang="en">Alt Business Hour</title>
     <sub-title lang="en">Alt Business Hour Special</sub-title>
     <desc lang="en">A fan-favorite returns with more surprises, bigger moments and unforgettable characters.</desc>
   </programme>
-  <programme start="20260915234500 +0000" stop="20260916004500 +0000" channel="news-one-1.fixture">
+  <programme start="20260916214500 +0000" stop="20260916224500 +0000" channel="news-one-1.fixture">
     <title lang="en">Alt Weather Watch</title>
     <sub-title lang="en">Alt Weather Watch Special</sub-title>
     <desc lang="en">Critics call it &apos;a triumph&apos; - experience the acclaimed hit everyone is talking about.</desc>
   </programme>
-  <programme start="20260916004500 +0000" stop="20260916020000 +0000" channel="news-one-1.fixture">
+  <programme start="20260916224500 +0000" stop="20260917000000 +0000" channel="news-one-1.fixture">
     <title lang="en">Alt Global Update</title>
     <sub-title lang="en">Alt Global Update Special</sub-title>
     <desc lang="en">All-new episode featuring special guests and exclusive behind-the-scenes footage.</desc>
   </programme>
-  <programme start="20260916020000 +0000" stop="20260916033000 +0000" channel="news-one-1.fixture">
+  <programme start="20260917000000 +0000" stop="20260917013000 +0000" channel="news-one-1.fixture">
     <title lang="en">Alt Newsroom Live</title>
     <sub-title lang="en">Alt Newsroom Live Special</sub-title>
     <desc lang="en">The definitive guide to what&apos;s happening now, presented by our award-winning team.</desc>
   </programme>
-  <programme start="20260916033000 +0000" stop="20260916040000 +0000" channel="news-one-1.fixture">
+  <programme start="20260917013000 +0000" stop="20260917020000 +0000" channel="news-one-1.fixture">
     <title lang="en">Alt Morning Report</title>
     <sub-title lang="en">Alt Morning Report Special</sub-title>
     <desc lang="en">An in-depth look at the stories shaping our world today, with expert analysis and live reports from the field.</desc>
   </programme>
-  <programme start="20260916040000 +0000" stop="20260916044500 +0000" channel="news-one-1.fixture">
+  <programme start="20260917020000 +0000" stop="20260917024500 +0000" channel="news-one-1.fixture">
     <title lang="en">Alt World News Now</title>
     <sub-title lang="en">Alt World News Now Special</sub-title>
     <desc lang="en">Join our hosts for the latest updates, interviews and highlights you won&apos;t want to miss.</desc>
   </programme>
-  <programme start="20260914220000 +0000" stop="20260914230000 +0000" channel="sports-arena-1.fixture">
+  <programme start="20260915200000 +0000" stop="20260915210000 +0000" channel="sports-arena-1.fixture">
     <title lang="en">Alt Motorsport Weekly</title>
     <sub-title lang="en">Alt Motorsport Weekly Special</sub-title>
     <desc lang="en">Join our hosts for the latest updates, interviews and highlights you won&apos;t want to miss.</desc>
   </programme>
-  <programme start="20260914230000 +0000" stop="20260915001500 +0000" channel="sports-arena-1.fixture">
+  <programme start="20260915210000 +0000" stop="20260915221500 +0000" channel="sports-arena-1.fixture">
     <title lang="en">Alt Tennis Masters</title>
     <sub-title lang="en">Alt Tennis Masters Special</sub-title>
     <desc lang="en">A fan-favorite returns with more surprises, bigger moments and unforgettable characters.</desc>
   </programme>
-  <programme start="20260915001500 +0000" stop="20260915014500 +0000" channel="sports-arena-1.fixture">
+  <programme start="20260915221500 +0000" stop="20260915234500 +0000" channel="sports-arena-1.fixture">
     <title lang="en">Alt Extreme Games</title>
     <sub-title lang="en">Alt Extreme Games Special</sub-title>
     <desc lang="en">Critics call it &apos;a triumph&apos; - experience the acclaimed hit everyone is talking about.</desc>
   </programme>
-  <programme start="20260915014500 +0000" stop="20260915021500 +0000" channel="sports-arena-1.fixture">
+  <programme start="20260915234500 +0000" stop="20260916001500 +0000" channel="sports-arena-1.fixture">
     <title lang="en">Alt Match of the Day</title>
     <sub-title lang="en">Alt Match of the Day Special</sub-title>
     <desc lang="en">All-new episode featuring special guests and exclusive behind-the-scenes footage.</desc>
   </programme>
-  <programme start="20260915021500 +0000" stop="20260915030000 +0000" channel="sports-arena-1.fixture">
+  <programme start="20260916001500 +0000" stop="20260916010000 +0000" channel="sports-arena-1.fixture">
     <title lang="en">Alt Championship Live</title>
     <sub-title lang="en">Alt Championship Live Special</sub-title>
     <desc lang="en">The definitive guide to what&apos;s happening now, presented by our award-winning team.</desc>
   </programme>
-  <programme start="20260915030000 +0000" stop="20260915040000 +0000" channel="sports-arena-1.fixture">
+  <programme start="20260916010000 +0000" stop="20260916020000 +0000" channel="sports-arena-1.fixture">
     <title lang="en">Alt Sports Center</title>
     <sub-title lang="en">Alt Sports Center Special</sub-title>
     <desc lang="en">An in-depth look at the stories shaping our world today, with expert analysis and live reports from the field.</desc>
   </programme>
-  <programme start="20260915040000 +0000" stop="20260915051500 +0000" channel="sports-arena-1.fixture">
+  <programme start="20260916020000 +0000" stop="20260916031500 +0000" channel="sports-arena-1.fixture">
     <title lang="en">Alt The Halftime Show</title>
     <sub-title lang="en">Alt The Halftime Show Special</sub-title>
     <desc lang="en">Join our hosts for the latest updates, interviews and highlights you won&apos;t want to miss.</desc>
   </programme>
-  <programme start="20260915051500 +0000" stop="20260915064500 +0000" channel="sports-arena-1.fixture">
+  <programme start="20260916031500 +0000" stop="20260916044500 +0000" channel="sports-arena-1.fixture">
     <title lang="en">Alt Boxing Classics</title>
     <sub-title lang="en">Alt Boxing Classics Special</sub-title>
     <desc lang="en">A fan-favorite returns with more surprises, bigger moments and unforgettable characters.</desc>
   </programme>
-  <programme start="20260915064500 +0000" stop="20260915071500 +0000" channel="sports-arena-1.fixture">
+  <programme start="20260916044500 +0000" stop="20260916051500 +0000" channel="sports-arena-1.fixture">
     <title lang="en">Alt Motorsport Weekly</title>
     <sub-title lang="en">Alt Motorsport Weekly Special</sub-title>
     <desc lang="en">Critics call it &apos;a triumph&apos; - experience the acclaimed hit everyone is talking about.</desc>
   </programme>
-  <programme start="20260915071500 +0000" stop="20260915080000 +0000" channel="sports-arena-1.fixture">
+  <programme start="20260916051500 +0000" stop="20260916060000 +0000" channel="sports-arena-1.fixture">
     <title lang="en">Alt Tennis Masters</title>
     <sub-title lang="en">Alt Tennis Masters Special</sub-title>
     <desc lang="en">All-new episode featuring special guests and exclusive behind-the-scenes footage.</desc>
   </programme>
-  <programme start="20260915080000 +0000" stop="20260915090000 +0000" channel="sports-arena-1.fixture">
+  <programme start="20260916060000 +0000" stop="20260916070000 +0000" channel="sports-arena-1.fixture">
     <title lang="en">Alt Extreme Games</title>
     <sub-title lang="en">Alt Extreme Games Special</sub-title>
     <desc lang="en">The definitive guide to what&apos;s happening now, presented by our award-winning team.</desc>
   </programme>
-  <programme start="20260915090000 +0000" stop="20260915101500 +0000" channel="sports-arena-1.fixture">
+  <programme start="20260916070000 +0000" stop="20260916081500 +0000" channel="sports-arena-1.fixture">
     <title lang="en">Alt Match of the Day</title>
     <sub-title lang="en">Alt Match of the Day Special</sub-title>
     <desc lang="en">An in-depth look at the stories shaping our world today, with expert analysis and live reports from the field.</desc>
   </programme>
-  <programme start="20260915101500 +0000" stop="20260915114500 +0000" channel="sports-arena-1.fixture">
+  <programme start="20260916081500 +0000" stop="20260916094500 +0000" channel="sports-arena-1.fixture">
     <title lang="en">Alt Championship Live</title>
     <sub-title lang="en">Alt Championship Live Special</sub-title>
     <desc lang="en">Join our hosts for the latest updates, interviews and highlights you won&apos;t want to miss.</desc>
   </programme>
-  <programme start="20260915114500 +0000" stop="20260915121500 +0000" channel="sports-arena-1.fixture">
+  <programme start="20260916094500 +0000" stop="20260916101500 +0000" channel="sports-arena-1.fixture">
     <title lang="en">Alt Sports Center</title>
     <sub-title lang="en">Alt Sports Center Special</sub-title>
     <desc lang="en">A fan-favorite returns with more surprises, bigger moments and unforgettable characters.</desc>
   </programme>
-  <programme start="20260915121500 +0000" stop="20260915130000 +0000" channel="sports-arena-1.fixture">
+  <programme start="20260916101500 +0000" stop="20260916110000 +0000" channel="sports-arena-1.fixture">
     <title lang="en">Alt The Halftime Show</title>
     <sub-title lang="en">Alt The Halftime Show Special</sub-title>
     <desc lang="en">Critics call it &apos;a triumph&apos; - experience the acclaimed hit everyone is talking about.</desc>
   </programme>
-  <programme start="20260915130000 +0000" stop="20260915140000 +0000" channel="sports-arena-1.fixture">
+  <programme start="20260916110000 +0000" stop="20260916120000 +0000" channel="sports-arena-1.fixture">
     <title lang="en">Alt Boxing Classics</title>
     <sub-title lang="en">Alt Boxing Classics Special</sub-title>
     <desc lang="en">All-new episode featuring special guests and exclusive behind-the-scenes footage.</desc>
   </programme>
-  <programme start="20260915140000 +0000" stop="20260915151500 +0000" channel="sports-arena-1.fixture">
+  <programme start="20260916120000 +0000" stop="20260916131500 +0000" channel="sports-arena-1.fixture">
     <title lang="en">Alt Motorsport Weekly</title>
     <sub-title lang="en">Alt Motorsport Weekly Special</sub-title>
     <desc lang="en">The definitive guide to what&apos;s happening now, presented by our award-winning team.</desc>
   </programme>
-  <programme start="20260915151500 +0000" stop="20260915164500 +0000" channel="sports-arena-1.fixture">
+  <programme start="20260916131500 +0000" stop="20260916144500 +0000" channel="sports-arena-1.fixture">
     <title lang="en">Alt Tennis Masters</title>
     <sub-title lang="en">Alt Tennis Masters Special</sub-title>
     <desc lang="en">An in-depth look at the stories shaping our world today, with expert analysis and live reports from the field.</desc>
   </programme>
-  <programme start="20260915164500 +0000" stop="20260915171500 +0000" channel="sports-arena-1.fixture">
+  <programme start="20260916144500 +0000" stop="20260916151500 +0000" channel="sports-arena-1.fixture">
     <title lang="en">Alt Extreme Games</title>
     <sub-title lang="en">Alt Extreme Games Special</sub-title>
     <desc lang="en">Join our hosts for the latest updates, interviews and highlights you won&apos;t want to miss.</desc>
   </programme>
-  <programme start="20260915171500 +0000" stop="20260915180000 +0000" channel="sports-arena-1.fixture">
+  <programme start="20260916151500 +0000" stop="20260916160000 +0000" channel="sports-arena-1.fixture">
     <title lang="en">Alt Match of the Day</title>
     <sub-title lang="en">Alt Match of the Day Special</sub-title>
     <desc lang="en">A fan-favorite returns with more surprises, bigger moments and unforgettable characters.</desc>
   </programme>
-  <programme start="20260915180000 +0000" stop="20260915190000 +0000" channel="sports-arena-1.fixture">
+  <programme start="20260916160000 +0000" stop="20260916170000 +0000" channel="sports-arena-1.fixture">
     <title lang="en">Alt Championship Live</title>
     <sub-title lang="en">Alt Championship Live Special</sub-title>
     <desc lang="en">Critics call it &apos;a triumph&apos; - experience the acclaimed hit everyone is talking about.</desc>
   </programme>
-  <programme start="20260915190000 +0000" stop="20260915201500 +0000" channel="sports-arena-1.fixture">
+  <programme start="20260916170000 +0000" stop="20260916181500 +0000" channel="sports-arena-1.fixture">
     <title lang="en">Alt Sports Center</title>
     <sub-title lang="en">Alt Sports Center Special</sub-title>
     <desc lang="en">All-new episode featuring special guests and exclusive behind-the-scenes footage.</desc>
   </programme>
-  <programme start="20260915201500 +0000" stop="20260915214500 +0000" channel="sports-arena-1.fixture">
+  <programme start="20260916181500 +0000" stop="20260916194500 +0000" channel="sports-arena-1.fixture">
     <title lang="en">Alt The Halftime Show</title>
     <sub-title lang="en">Alt The Halftime Show Special</sub-title>
     <desc lang="en">The definitive guide to what&apos;s happening now, presented by our award-winning team.</desc>
   </programme>
-  <programme start="20260915214500 +0000" stop="20260915221500 +0000" channel="sports-arena-1.fixture">
+  <programme start="20260916194500 +0000" stop="20260916201500 +0000" channel="sports-arena-1.fixture">
     <title lang="en">Alt Boxing Classics</title>
     <sub-title lang="en">Alt Boxing Classics Special</sub-title>
     <desc lang="en">An in-depth look at the stories shaping our world today, with expert analysis and live reports from the field.</desc>
   </programme>
-  <programme start="20260915221500 +0000" stop="20260915230000 +0000" channel="sports-arena-1.fixture">
+  <programme start="20260916201500 +0000" stop="20260916210000 +0000" channel="sports-arena-1.fixture">
     <title lang="en">Alt Motorsport Weekly</title>
     <sub-title lang="en">Alt Motorsport Weekly Special</sub-title>
     <desc lang="en">Join our hosts for the latest updates, interviews and highlights you won&apos;t want to miss.</desc>
   </programme>
-  <programme start="20260915230000 +0000" stop="20260916000000 +0000" channel="sports-arena-1.fixture">
+  <programme start="20260916210000 +0000" stop="20260916220000 +0000" channel="sports-arena-1.fixture">
     <title lang="en">Alt Tennis Masters</title>
     <sub-title lang="en">Alt Tennis Masters Special</sub-title>
     <desc lang="en">A fan-favorite returns with more surprises, bigger moments and unforgettable characters.</desc>
   </programme>
-  <programme start="20260916000000 +0000" stop="20260916011500 +0000" channel="sports-arena-1.fixture">
+  <programme start="20260916220000 +0000" stop="20260916231500 +0000" channel="sports-arena-1.fixture">
     <title lang="en">Alt Extreme Games</title>
     <sub-title lang="en">Alt Extreme Games Special</sub-title>
     <desc lang="en">Critics call it &apos;a triumph&apos; - experience the acclaimed hit everyone is talking about.</desc>
   </programme>
-  <programme start="20260916011500 +0000" stop="20260916024500 +0000" channel="sports-arena-1.fixture">
+  <programme start="20260916231500 +0000" stop="20260917004500 +0000" channel="sports-arena-1.fixture">
     <title lang="en">Alt Match of the Day</title>
     <sub-title lang="en">Alt Match of the Day Special</sub-title>
     <desc lang="en">All-new episode featuring special guests and exclusive behind-the-scenes footage.</desc>
   </programme>
-  <programme start="20260916024500 +0000" stop="20260916031500 +0000" channel="sports-arena-1.fixture">
+  <programme start="20260917004500 +0000" stop="20260917011500 +0000" channel="sports-arena-1.fixture">
     <title lang="en">Alt Championship Live</title>
     <sub-title lang="en">Alt Championship Live Special</sub-title>
     <desc lang="en">The definitive guide to what&apos;s happening now, presented by our award-winning team.</desc>
   </programme>
-  <programme start="20260916031500 +0000" stop="20260916040000 +0000" channel="sports-arena-1.fixture">
+  <programme start="20260917011500 +0000" stop="20260917020000 +0000" channel="sports-arena-1.fixture">
     <title lang="en">Alt Sports Center</title>
     <sub-title lang="en">Alt Sports Center Special</sub-title>
     <desc lang="en">An in-depth look at the stories shaping our world today, with expert analysis and live reports from the field.</desc>
   </programme>
-  <programme start="20260916040000 +0000" stop="20260916050000 +0000" channel="sports-arena-1.fixture">
+  <programme start="20260917020000 +0000" stop="20260917030000 +0000" channel="sports-arena-1.fixture">
     <title lang="en">Alt The Halftime Show</title>
     <sub-title lang="en">Alt The Halftime Show Special</sub-title>
     <desc lang="en">Join our hosts for the latest updates, interviews and highlights you won&apos;t want to miss.</desc>

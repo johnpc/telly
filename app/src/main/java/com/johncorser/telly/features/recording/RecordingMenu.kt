@@ -1,7 +1,6 @@
 package com.johncorser.telly.features.recording
 
 import com.johncorser.telly.features.playlist.db.ChannelEntity
-import com.johncorser.telly.features.playlist.db.displayName
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -43,10 +42,6 @@ class RecordingMenu(
 
     /** "Custom recording": prime the form and ask the host to show it. */
     fun onCustomRecording(channel: ChannelEntity) {
-        if (!RecordingSupport.isRecordable(channel.source.streamUrl)) {
-            show(RecordingPrompt.Unsupported(channel.displayName))
-            return
-        }
         mutableForm.value = CustomRecordingForm(channel, clock())
         show(RecordingPrompt.CustomForm)
     }

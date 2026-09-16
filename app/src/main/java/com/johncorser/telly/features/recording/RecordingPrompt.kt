@@ -15,11 +15,6 @@ sealed interface RecordingPrompt {
         val channelName: String,
     ) : RecordingPrompt
 
-    /** HLS channel: show [RecordingSupport.HLS_MESSAGE] instead of recording. */
-    data class Unsupported(
-        val channelName: String,
-    ) : RecordingPrompt
-
     /** Open the custom-recording form (already primed in [RecordingMenu]). */
     data object CustomForm : RecordingPrompt
 }

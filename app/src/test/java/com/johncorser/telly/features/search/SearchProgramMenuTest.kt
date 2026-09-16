@@ -8,7 +8,6 @@ import com.johncorser.telly.features.recording.RecordingEngine
 import com.johncorser.telly.features.recording.RecordingScheduler
 import com.johncorser.telly.features.recording.RecordingStatus
 import com.johncorser.telly.features.recording.RecordingStore
-import com.johncorser.telly.features.recording.RecordingSupport
 import com.johncorser.telly.features.recording.oneShotRecorder
 import com.johncorser.telly.features.recording.recordingStatus
 import com.johncorser.telly.features.recording.tempRecordingFiles
@@ -108,16 +107,16 @@ class SearchProgramMenuTest {
         }
 
     @Test
-    fun `record on an HLS channel shows the honest explainer instead`() =
+    fun `record on an HLS channel schedules for real (no unsupported path)`() =
         runTest {
             val hls = channel.copy(source = channel.source.copy(streamUrl = "http://h/x.m3u8"))
 
             menu().onAction(SearchProgramAction.RECORD, hit.copy(channel = hls))
 
-            assertEquals(
-                SearchOverlay.Message("Record", RecordingSupport.HLS_MESSAGE),
-                overlays.current.value,
-            )
+            val row = recordingDao.rows.value.single()
+            assertEquals("http://h/x.m3u8", row.streamUrl)
+            assertEquals(RecordingStatus.SCHEDULED, row.recordingStatus)
+            assertEquals(SearchOverlay.None, overlays.current.value)
         }
 
     @Test

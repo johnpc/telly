@@ -6,7 +6,6 @@ import com.johncorser.telly.features.mylist.MyListMenu
 import com.johncorser.telly.features.mylist.MyListProgramme
 import com.johncorser.telly.features.recording.RecordingMenu
 import com.johncorser.telly.features.recording.RecordingPrompt
-import com.johncorser.telly.features.recording.RecordingSupport
 import com.johncorser.telly.features.reminders.GuideReminders
 import com.johncorser.telly.features.reminders.ReminderKey
 import kotlinx.coroutines.CoroutineScope
@@ -111,8 +110,6 @@ class SearchProgramMenu(
     private fun onPrompt(prompt: RecordingPrompt) {
         when (prompt) {
             RecordingPrompt.CustomForm -> overlays.show(SearchOverlay.CustomRecording)
-            is RecordingPrompt.Unsupported ->
-                overlays.show(SearchOverlay.Message(SearchProgramAction.RECORD.label, RecordingSupport.HLS_MESSAGE))
             RecordingPrompt.Done, is RecordingPrompt.StopConfirm -> overlays.dismiss()
         }
     }

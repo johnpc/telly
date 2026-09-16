@@ -34,12 +34,6 @@ sealed interface SearchOverlay {
         val feature: String,
     ) : SearchOverlay
 
-    /** A titled explainer (the DVR's honest HLS message). */
-    data class Message(
-        val title: String,
-        val text: String,
-    ) : SearchOverlay
-
     /** The DVR custom-recording form ([SearchProgramMenu]'s RecordingMenu owns it). */
     data object CustomRecording : SearchOverlay
 }

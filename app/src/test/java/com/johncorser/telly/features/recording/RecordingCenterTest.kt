@@ -93,12 +93,22 @@ class RecordingCenterTest {
         }
 
     @Test
-    fun `HLS channels are reported unsupported instead of recorded`() =
+    fun `HLS channels record like any other and name the capture per its container`() =
         runTest(StandardTestDispatcher()) {
-            val center = build()
+            val probed =
+                RecordingFiles(
+                    directory = { filesPair.first },
+                    container = { url -> if (RecordingSupport.isHls(url)) "mp4" else "ts" },
+                )
+            val engine = RecordingEngine(store, oneShotRecorder(), probed, this, { now })
+            val scheduler = RecordingScheduler(store, engine, { now }, this, MutableSharedFlow())
+            val center = RecordingCenter(store, engine, scheduler, probed, { _, _ -> null }, { now })
 
-            assertEquals(RecordingPrompt.Unsupported("HLS Channel"), center.toggleInstant(hls))
-            assertTrue(dao.rows.value.isEmpty())
+            val prompt = center.toggleInstant(hls)
+            advanceUntilIdle()
+
+            assertEquals(RecordingPrompt.Done, prompt)
+            assertTrue(dao.rows.value.single().filePath.endsWith(".mp4"))
         }
 
     @Test

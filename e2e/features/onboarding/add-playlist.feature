@@ -24,7 +24,7 @@ Feature: Add playlist onboarding
     And I type "http://10.0.2.2:8090/playlist.m3u"
     And I select "Next"
     Then I see "Playlist is processed"
-    And I see "Channels: 30"
+    And I see "Channels: 31"
     And I see "Playlist name"
     And I see "10.0.2.2"
     And I see "TV playlist"

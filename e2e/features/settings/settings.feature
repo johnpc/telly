@@ -137,7 +137,7 @@ Feature: Settings
     And I type "http://10.0.2.2:8090/playlist.m3u?edited=1"
     Then the "Playlist URL" row shows "http://10.0.2.2:8090/playlist.m3u?edited=1"
     And the playlists section lists "10.0.2.2"
-    And I see "Channels: 30"
+    And I see "Channels: 31"
 
   Scenario: A per-playlist User-Agent persists across a relaunch
     When I open the "Playlists" section

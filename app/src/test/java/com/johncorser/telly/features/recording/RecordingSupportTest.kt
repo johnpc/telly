@@ -7,17 +7,17 @@ import org.junit.Test
 
 class RecordingSupportTest {
     @Test
-    fun `raw TS and progressive URLs are recordable`() {
-        assertTrue(RecordingSupport.isRecordable("http://host/streams/news-one.ts"))
-        assertTrue(RecordingSupport.isRecordable("https://host/live/12345"))
-        assertTrue(RecordingSupport.isRecordable("http://host/video.mp4?token=a.m3u8"))
+    fun `raw TS and progressive URLs are not classified HLS`() {
+        assertFalse(RecordingSupport.isHls("http://host/streams/news-one.ts"))
+        assertFalse(RecordingSupport.isHls("https://host/live/12345"))
+        assertFalse(RecordingSupport.isHls("http://host/video.mp4?token=a.m3u8"))
     }
 
     @Test
-    fun `HLS playlists are not recordable regardless of query or case`() {
-        assertFalse(RecordingSupport.isRecordable("http://host/live/master.m3u8"))
-        assertFalse(RecordingSupport.isRecordable("http://host/live/master.M3U8?token=abc"))
-        assertFalse(RecordingSupport.isRecordable("http://host/live/master.m3u8#frag"))
+    fun `HLS playlists are classified HLS regardless of query or case`() {
+        assertTrue(RecordingSupport.isHls("http://host/live/master.m3u8"))
+        assertTrue(RecordingSupport.isHls("http://host/live/master.M3U8?token=abc"))
+        assertTrue(RecordingSupport.isHls("http://host/live/master.m3u8#frag"))
     }
 
     @Test

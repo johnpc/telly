@@ -1,13 +1,12 @@
 package com.johncorser.telly.features.playback
 
 import com.johncorser.telly.features.recording.RecordingPrompt
-import com.johncorser.telly.features.recording.RecordingSupport
 
 /**
  * Pure mapping from the recording slice's host-agnostic [RecordingPrompt]s
  * onto playback overlays: completed actions dismiss the sheet like the
- * favorites/hide rows do, the Stop confirm and the custom form ride the
- * Pushed-overlay BACK chain, and HLS channels get the honest explainer.
+ * favorites/hide rows do, and the Stop confirm and the custom form ride
+ * the Pushed-overlay BACK chain.
  */
 object PlaybackRecordingPrompts {
     fun overlayFor(
@@ -18,12 +17,6 @@ object PlaybackRecordingPrompts {
             RecordingPrompt.Done -> doneTarget(current)
             is RecordingPrompt.StopConfirm ->
                 PlaybackOverlay.RecordingStop(prompt.recordingId, prompt.channelName, back = doneTarget(current))
-            is RecordingPrompt.Unsupported ->
-                PlaybackOverlay.Description(
-                    title = PlayerMenuItem.RECORD.label,
-                    text = RecordingSupport.HLS_MESSAGE,
-                    back = current,
-                )
             RecordingPrompt.CustomForm -> PlaybackOverlay.CustomRecording(back = current)
         }
 
