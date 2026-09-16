@@ -21,7 +21,7 @@ import java.util.concurrent.ConcurrentHashMap
 class HlsStreamRecorder(
     private val http: HlsClient = HlsClient(),
     private val dispatcher: CoroutineDispatcher = Dispatchers.IO,
-    private val pollDelay: suspend (Long) -> Unit = { delay(it) },
+    private val pollDelay: suspend (Long, () -> Boolean) -> Unit = ::awaitNextHlsPoll,
     private val log: (String) -> Unit = {},
 ) : StreamRecorder {
     private class CaptureProgress {
@@ -47,7 +47,7 @@ class HlsStreamRecorder(
                     written += append(media.playlist, sink, progress, shouldStop)
                     live = !media.playlist.ended && !shouldStop()
                     if (live) {
-                        pollDelay(media.playlist.targetDurationMs)
+                        pollDelay(media.playlist.targetDurationMs, shouldStop)
                         live = !shouldStop()
                         if (live) media = http.mediaPlaylist(media.url)
                     }
@@ -106,3 +106,21 @@ class HlsStreamRecorder(
         private const val NO_SEQUENCE = -1L
     }
 }
+
+/**
+ * The default between-polls wait, sliced so a user stop lands promptly —
+ * one plain target-duration delay kept the engine's stop() joined for
+ * whole seconds while the row still said RECORDING.
+ */
+internal suspend fun awaitNextHlsPoll(
+    totalMs: Long,
+    shouldStop: () -> Boolean,
+) {
+    var waitedMs = 0L
+    while (waitedMs < totalMs && !shouldStop()) {
+        delay(HLS_STOP_CHECK_SLICE_MS.coerceAtMost(totalMs - waitedMs))
+        waitedMs += HLS_STOP_CHECK_SLICE_MS
+    }
+}
+
+internal const val HLS_STOP_CHECK_SLICE_MS = 250L

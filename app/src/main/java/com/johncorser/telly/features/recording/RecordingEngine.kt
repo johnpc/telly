@@ -1,11 +1,12 @@
 package com.johncorser.telly.features.recording
 
 import com.johncorser.telly.features.recording.db.RecordingEntity
+import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.CoroutineStart
 import kotlinx.coroutines.Job
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withTimeoutOrNull
 import java.io.File
 import java.util.concurrent.ConcurrentHashMap
 
@@ -29,6 +30,7 @@ class RecordingEngine(
         val startedAtMs: Long,
     ) {
         @Volatile var stopped: Boolean = false
+        val stopSignal = CompletableDeferred<Unit>()
         lateinit var job: Job
     }
 
@@ -50,6 +52,7 @@ class RecordingEngine(
     suspend fun stop(id: Long) {
         val capture = active[id] ?: return
         capture.stopped = true
+        capture.stopSignal.complete(Unit)
         capture.job.join()
     }
 
@@ -69,7 +72,7 @@ class RecordingEngine(
                 val written = attempt(capture)
                 idleAttempts = if (written > 0) 0 else idleAttempts + 1
                 if (!capture.stopped && clock() < entry.plannedEndMs && idleAttempts < MAX_IDLE_ATTEMPTS) {
-                    delay(RETRY_DELAY_MS)
+                    awaitRetry(capture)
                 }
             }
             finish(entry)
@@ -88,6 +91,16 @@ class RecordingEngine(
         } catch (_: java.io.IOException) {
             0L
         }
+    }
+
+    /**
+     * The between-attempts pause, cut short the moment a user stop lands —
+     * a plain delay here kept the row RECORDING for up to a second after
+     * Stop was confirmed, so an immediate OK on the row re-opened the stop
+     * confirm instead of playing the capture.
+     */
+    private suspend fun awaitRetry(capture: Active) {
+        withTimeoutOrNull(RETRY_DELAY_MS) { capture.stopSignal.await() }
     }
 
     /** DONE when bytes landed on disk, FAILED otherwise. */

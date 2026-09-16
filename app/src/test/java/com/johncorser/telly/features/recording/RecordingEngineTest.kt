@@ -4,6 +4,8 @@ import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.advanceUntilIdle
+import kotlinx.coroutines.test.currentTime
+import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
@@ -83,6 +85,29 @@ class RecordingEngineTest {
 
             assertEquals(RecordingStatus.DONE, dao.rows.value.single().recordingStatus)
             assertFalse(engine.isActive(entry.id))
+        }
+
+    @Test
+    fun `stop during the between-attempts delay finalizes without waiting it out`() =
+        runTest(StandardTestDispatcher()) {
+            val file = captureFile("News One")
+            val entry = store.schedule(recordingEntity(filePath = file.path, plannedEndMs = Long.MAX_VALUE))!!
+            // Each attempt writes and returns immediately, so the loop sits
+            // in its between-attempts retry wait when the user stop lands.
+            val recorder =
+                StreamRecorder { _, sink, _ ->
+                    sink.appendText("x")
+                    1L
+                }
+            val engine = engine(recorder)
+
+            engine.start(entry)
+            runCurrent() // first attempt done -> the loop is inside the retry wait
+            engine.stop(entry.id)
+
+            assertEquals(RecordingStatus.DONE, dao.rows.value.single().recordingStatus)
+            // The stop signal cut the retry wait short: no virtual time passed.
+            assertEquals(0L, currentTime)
         }
 
     @Test
