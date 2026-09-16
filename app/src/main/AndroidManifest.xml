@@ -17,6 +17,10 @@
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_DATA_SYNC" />
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
     <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
+    <!-- Search mic orb: Android TV has no ACTION_RECOGNIZE_SPEECH activity
+         (that intent only resolves on phones), so voice runs through the
+         bound SpeechRecognizer service, which needs RECORD_AUDIO. -->
+    <uses-permission android:name="android.permission.RECORD_AUDIO" />
     <!-- Reinstall-proof restore: on API 30+ a NEW install cannot read the
          Documents/telly/telly-backup.json the OLD (uninstalled) install
          wrote — scoped storage hides other-owner non-media files from both
@@ -25,11 +29,15 @@
          works; the welcome screen's Restore action requests it once. -->
     <uses-permission android:name="android.permission.MANAGE_EXTERNAL_STORAGE" />
 
-    <!-- Package visibility (API 30+): resolving external video players. -->
+    <!-- Package visibility (API 30+): resolving external video players and
+         the speech recognition service the mic orb binds to. -->
     <queries>
         <intent>
             <action android:name="android.intent.action.VIEW" />
             <data android:mimeType="video/*" />
+        </intent>
+        <intent>
+            <action android:name="android.speech.RecognitionService" />
         </intent>
     </queries>
 

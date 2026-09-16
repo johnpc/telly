@@ -11,11 +11,13 @@ import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
+import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.focus.FocusDirection
 import androidx.compose.ui.focus.FocusManager
 import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.input.key.Key
 import androidx.compose.ui.input.key.KeyEventType
@@ -23,6 +25,7 @@ import androidx.compose.ui.input.key.key
 import androidx.compose.ui.input.key.onPreviewKeyEvent
 import androidx.compose.ui.input.key.type
 import androidx.compose.ui.platform.LocalFocusManager
+import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.input.ImeAction
@@ -36,6 +39,7 @@ import com.johncorser.telly.features.search.SearchScreenDims as Dims
  * stand-in that accepts key input directly; the IME search action commits
  * the query into the history.
  */
+@OptIn(ExperimentalComposeUiApi::class)
 @Composable
 internal fun SearchScreenQueryField(
     query: String,
@@ -58,6 +62,11 @@ internal fun SearchScreenQueryField(
         // would trap D-pad focus in the bar (device-verified); hand the key
         // to the focus manager so DOWN reaches the results like TiviMate.
         val focusManager = LocalFocusManager.current
+        // Android TV does NOT auto-raise the leanback IME when a Compose text
+        // field merely gains focus (unlike phones) — landing on the bar left
+        // the user with no keyboard. Show it explicitly on focus so typing
+        // works the moment the bar is reached, matching TiviMate.
+        val keyboard = LocalSoftwareKeyboardController.current
         BasicTextField(
             value = query,
             onValueChange = viewModel::onQueryChange,
@@ -67,13 +76,16 @@ internal fun SearchScreenQueryField(
             keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
             keyboardActions = KeyboardActions(onSearch = { viewModel.commit(query) }),
             modifier =
-                Modifier.fillMaxWidth().onPreviewKeyEvent { event ->
-                    if (event.type == KeyEventType.KeyDown && event.key == Key.DirectionDown) {
-                        moveDownFromBar(downTargets, focusManager)
-                    } else {
-                        false
-                    }
-                },
+                Modifier
+                    .fillMaxWidth()
+                    .onFocusChanged { if (it.isFocused) keyboard?.show() }
+                    .onPreviewKeyEvent { event ->
+                        if (event.type == KeyEventType.KeyDown && event.key == Key.DirectionDown) {
+                            moveDownFromBar(downTargets, focusManager)
+                        } else {
+                            false
+                        }
+                    },
         )
     }
 }
