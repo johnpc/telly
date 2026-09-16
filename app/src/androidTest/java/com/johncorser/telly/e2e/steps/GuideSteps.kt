@@ -131,9 +131,30 @@ class GuideSteps(
 
     @Then("the next programme cell of channel {int} is focused")
     fun nextCellFocused(number: Int) {
-        val next = FixtureServer.nextProgramme(FixturePlan.channels[number - 1].tvgId, System.currentTimeMillis())
-        anchorMs = next.startMs
-        world.waitForText(next.rangeText(), substring = true)
+        val tvgId = FixturePlan.channels[number - 1].tvgId
+        // Recomputed per poll so the expectation tracks a programme
+        // boundary passing mid-wait; the range text renders ONLY in the
+        // info pane, so seeing the AIRING range means the RIGHT that led
+        // here fired before the grid's key anchor held focus — self-heal
+        // with a bounded re-press (the wizard hand-off precedent) instead
+        // of timing out.
+        var represses = 0
+        driver.awaitCondition("the next programme cell of channel $number focused") {
+            val now = System.currentTimeMillis()
+            val next = FixtureServer.nextProgramme(tvgId, now)
+            if (world.nodeCount(hasText(next.rangeText(), substring = true)) > 0) {
+                anchorMs = next.startMs
+                true
+            } else {
+                val airing = FixtureServer.nowProgramme(tvgId, now)
+                val stuckOnAiring = world.nodeCount(hasText(airing.rangeText(), substring = true)) > 0
+                if (stuckOnAiring && represses < MAX_REPRESSES) {
+                    represses++
+                    world.pressKey(KeyEvent.KEYCODE_DPAD_RIGHT)
+                }
+                false
+            }
+        }
     }
 
     @Then("the info pane shows that programme's title")
@@ -296,5 +317,6 @@ class GuideSteps(
         val TICK_LABEL = Regex("\\d{2}:(00|30) [AP]M")
         val TICK_LABEL_24H = Regex("\\d{2}:(00|30)")
         val REMAINING_LABEL = Regex("\\d+ min")
+        const val MAX_REPRESSES = 3
     }
 }

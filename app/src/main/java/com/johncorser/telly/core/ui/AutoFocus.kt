@@ -26,14 +26,26 @@ fun rememberAutoFocus(): FocusRequester {
  * row unmounts (device-verified on tv34: the grab is denied until the
  * exiting pane leaves, ~frame 20). Request failures (node not yet
  * attached) are swallowed and retried.
+ *
+ * No request fires until [placed] reports the node placed: a grab that
+ * lands on an attached-but-unplaced node makes the focus system scroll it
+ * into view against unplaced parents, and that IllegalStateException
+ * ("Expected BringIntoViewRequester to not be used before parents are
+ * placed") is thrown in the focusable's own coroutine — no runCatching
+ * here can reach it (the group-tool sheet crash).
  */
 suspend fun grabFocusUntilLanded(
     landed: () -> Boolean,
     request: () -> Unit,
     awaitFrame: suspend () -> Unit,
+    placed: () -> Boolean = { true },
     maxFrames: Int = FOCUS_GRAB_FRAMES,
 ) {
     var frame = 0
+    while (!placed() && frame < maxFrames) {
+        awaitFrame()
+        frame++
+    }
     while (!landed() && frame < maxFrames) {
         runCatching { request() }
         awaitFrame()

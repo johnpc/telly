@@ -4,6 +4,7 @@ import android.view.KeyEvent
 import androidx.compose.ui.test.hasTestTag
 import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.isEnabled
+import androidx.compose.ui.test.isNotEnabled
 import androidx.compose.ui.test.isOff
 import androidx.compose.ui.test.isOn
 import androidx.compose.ui.test.onFirst
@@ -202,8 +203,11 @@ class SettingsSteps(
         assertEquals(0, world.nodeCount(hasText(group)))
     }
 
-    // "the row ... is locked" is gone with the premium tier: no settings
-    // row anywhere renders locked any more, so the step went with it.
+    // The premium tier is gone, but the group-tool sheet still renders
+    // Rename/Delete group locked (dimmed + disabled) on non-custom groups.
+    @Then("the row {string} is locked")
+    fun rowLocked(title: String) = world.waitFor(hasText(title) and isNotEnabled())
+
     @Then("the row {string} is not locked")
     fun rowNotLocked(title: String) = world.waitFor(hasText(title) and isEnabled())
 

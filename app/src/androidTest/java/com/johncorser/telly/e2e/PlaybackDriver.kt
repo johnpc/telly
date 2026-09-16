@@ -170,13 +170,17 @@ class PlaybackDriver(
             hasText(channelLabel(currentChannel.number, currentChannel.name), substring = true),
         )
 
-    /** The channel panel lives behind the quick-bar's Channels list slot. */
+    /**
+     * The channel panel lives behind the quick-bar's Channels list slot.
+     * The settle sentinel is "All channels" only: the synthetic Favorites
+     * group is hideable (Appearance -> Groups), so waiting on it here
+     * dead-locks the scenarios that hide it and then inspect the panel.
+     */
     fun openPanel() {
         dismissChrome()
         world.longPressOk()
         world.select("Channels list")
         world.waitForText("All channels")
-        world.waitForText("Favorites")
     }
 
     fun zapBy(delta: Int) {

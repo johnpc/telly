@@ -7,7 +7,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.input.key.Key
 import androidx.compose.ui.input.key.KeyEvent
 import androidx.compose.ui.input.key.KeyEventType
@@ -16,7 +15,7 @@ import androidx.compose.ui.input.key.onPreviewKeyEvent
 import androidx.compose.ui.input.key.type
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.unit.dp
-import com.johncorser.telly.core.ui.rememberAutoFocus
+import com.johncorser.telly.core.ui.focusOnAppear
 
 /**
  * The four-digit picker wheel row shared by the settings "Change PIN"
@@ -30,12 +29,14 @@ internal fun SettingsScreenPinWheel(
     modifier: Modifier = Modifier,
 ) {
     val entry = remember { mutableStateOf(PinEntry()) }
-    val focusRequester = rememberAutoFocus()
     Row(
         modifier =
             modifier
                 .testTag("pin-wheel")
-                .focusRequester(focusRequester)
+                // Placement-gated sticky grab: an eager single-shot
+                // request can land before the sheet is placed and
+                // crash the focus system's bring-into-view.
+                .focusOnAppear()
                 .focusable()
                 .onPreviewKeyEvent { event ->
                     handleWheelKey(event, entry.value, onSubmit) { entry.value = it }

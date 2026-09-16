@@ -11,6 +11,7 @@ import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.onPlaced
 import androidx.compose.ui.unit.dp
 import androidx.tv.material3.ClickableSurfaceColors
 import androidx.tv.material3.ClickableSurfaceDefaults
@@ -32,20 +33,28 @@ fun Modifier.focusOnAppear(enabled: Boolean = true): Modifier {
     return if (enabled) then(grab) else this
 }
 
-/** The sticky grab as a standalone modifier: requester + bounded retry. */
+/**
+ * The sticky grab as a standalone modifier: requester + bounded retry,
+ * held back until the node is actually PLACED — requesting focus on an
+ * attached-but-unplaced node crashes in the focus system's own
+ * bring-into-view coroutine (see [grabFocusUntilLanded]).
+ */
 @Composable
 private fun rememberStickyFocusGrab(): Modifier {
     val requester = remember { FocusRequester() }
     val landed = remember { mutableStateOf(false) }
+    val placed = remember { mutableStateOf(false) }
     LaunchedEffect(Unit) {
         grabFocusUntilLanded(
             landed = { landed.value },
             request = { requester.requestFocus() },
             awaitFrame = { withFrameNanos { } },
+            placed = { placed.value },
         )
     }
     return Modifier
         .focusRequester(requester)
+        .onPlaced { placed.value = true }
         .onFocusChanged { if (it.hasFocus) landed.value = true }
 }
 
