@@ -39,7 +39,13 @@ internal fun GuideScreenGrid(
     val listState = rememberLazyListState()
     LaunchedEffect(firstRow) { listState.animateScrollToItem(firstRow) }
     Box(modifier) {
-        LazyColumn(state = listState) {
+        // The controller owns the vertical position (firstVisibleRow): with
+        // user scrolling on, the list also exposes scroll semantics actions,
+        // so any external scroll (accessibility/test scroll-to-node, a touch
+        // fling) desyncs the list from the controller FOREVER — the
+        // LaunchedEffect above only re-scrolls when firstRow CHANGES. The
+        // grid renders no focusable rows, so scrolling is programmatic only.
+        LazyColumn(state = listState, userScrollEnabled = false) {
             itemsIndexed(rows, key = { _, row -> row.channel.id }) { index, row ->
                 GuideScreenRow(
                     row = row,
