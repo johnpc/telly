@@ -30,6 +30,7 @@ internal fun SettingsScreenOverlay(
         is SettingsOverlay.ConfirmDelete -> SettingsScreenConfirmDelete(model, overlay)
         is SettingsOverlay.ConfirmDeleteSource -> SettingsScreenConfirmDeleteSource(model, overlay)
         SettingsOverlay.PinSetup -> SettingsScreenPinDialog(model)
+        is SettingsOverlay.PinVerify -> SettingsScreenPinVerify(model)
     }
 }
 

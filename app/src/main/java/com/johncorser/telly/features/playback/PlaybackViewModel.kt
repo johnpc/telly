@@ -13,11 +13,13 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 
-/** Cross-slice hooks the playback surface plugs into (nav + parental). */
+/** Cross-slice hooks the playback surface plugs into (nav + parental + stream-URL resolution). */
 class PlaybackHooks(
     val panelLock: PanelLock = PanelLock(),
     val onOpenSettings: () -> Unit = {},
     val onOpenMultiview: () -> Unit = {},
+    /** UDP-proxy rewrite applied where the tuner hands URLs to the engine. */
+    val resolveUrl: (String) -> String = { it },
 )
 
 /** Everything [PlaybackViewModel] needs injected, bundled for readability. */
@@ -54,9 +56,9 @@ class PlaybackViewModel(
      */
     val openMultiview: () -> Unit = env.hooks.onOpenMultiview
 
-    val panel = PanelViewModel(env.channelDao, env.epgRepository, clock, scope, env.time.zone, env.hooks.panelLock)
+    val panel = PanelViewModel(env.channelDao, env.epgRepository, clock, scope, env.time.style, env.hooks.panelLock)
 
-    private val tuner = TuneController(env.engine, env.store, scope, env.channelDao, history)
+    private val tuner = TuneController(env.engine, env.store, scope, env.channelDao, history, env.hooks.resolveUrl)
     private val overlays = OverlayState(scope)
     private val instant = MutableStateFlow(clock())
 
@@ -77,7 +79,7 @@ class PlaybackViewModel(
     val overlay: StateFlow<PlaybackOverlay> = overlays.overlay
     val playerState: StateFlow<PlayerState> = env.engine.state
     val info: StateFlow<PlaybackInfoData?> =
-        PlaybackInfoFeed(tuner.current, instant, env.engine.video, env.epgRepository, env.time.zone, scope).info
+        PlaybackInfoFeed(tuner.current, instant, env.engine.video, env.epgRepository, env.time.style, scope).info
 
     init {
         tuner.start()

@@ -178,6 +178,29 @@ class EpgRefresherTest {
         }
 
     @Test
+    fun `a playlists change with the update toggle ON forces a full refresh`() =
+        runTest {
+            coEvery { playlistDao.all() } returns
+                listOf(playlist(1, "http://e/fresh.xml", epgLastUpdatedMs = nowMs - 1))
+
+            assertEquals(listOf(1L), refresher().onPlaylistsChanged(updateOnChange = true))
+            assertEquals(listOf("http://e/fresh.xml"), refreshedUrls)
+        }
+
+    @Test
+    fun `a playlists change with the toggle OFF keeps the due-only policy`() =
+        runTest {
+            coEvery { playlistDao.all() } returns
+                listOf(
+                    playlist(1, "http://e/fresh.xml", epgLastUpdatedMs = nowMs - 1),
+                    playlist(2, "http://e/never.xml"),
+                )
+
+            assertEquals(listOf(2L), refresher().onPlaylistsChanged(updateOnChange = false))
+            assertEquals(listOf("http://e/never.xml"), refreshedUrls)
+        }
+
+    @Test
     fun `every run trims programmes past the keep horizon`() =
         runTest {
             coEvery { playlistDao.all() } returns emptyList()

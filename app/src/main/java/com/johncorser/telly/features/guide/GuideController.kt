@@ -25,15 +25,23 @@ class GuideController(
     private val pastDays: () -> Int,
     scope: CoroutineScope,
     private val callbacks: GuideCallbacks,
+    /** False exactly once after a cold start with "last channel on start" off. */
+    resumePreview: () -> Boolean = { true },
 ) {
     val zone = env.time.zone
+
+    /** 12/24-hour rendering for the header clock and timeline ticks. */
+    val clockStyle = env.time.style
 
     /** Minute-ticked "now" (header clock, now-line); origin stays anchored. */
     private val ticker = GuideNow(env.time.clock, scope, env.time.minuteTicks)
     val now: StateFlow<Long> = ticker.now
     val originMs = GuideGeometry.halfHourFloor(now.value, zone)
 
-    private val tuner = TuneController(env.engine, env.store, scope, env.channelDao, history)
+    private val tuner = TuneController(env.engine, env.store, scope, env.channelDao, history, env.hooks.resolveUrl)
+
+    /** "Confirm exit by second press Back" state at the guide root. */
+    val exit = ExitConfirm(env.time.clock, scope)
 
     /** Background stop + foreground re-seed/re-tune (round7 resume P2). */
     val lifecycle = PlaybackLifecycle(tuner, onForegrounded = ticker::reseed, recover = tuner::retune)
@@ -59,7 +67,7 @@ class GuideController(
 
     val hint: StateFlow<Boolean> = GuideHint(env.store).startIn(scope)
 
-    val info: StateFlow<GuideInfoData?> = GuideInfoBuilder.feed(rows, focusEngine.focus, now, zone, scope)
+    val info: StateFlow<GuideInfoData?> = GuideInfoBuilder.feed(rows, focusEngine.focus, now, clockStyle, scope)
 
     /** Layers + the long-OK row context sheet (catalogue §3 38-42). */
     val menu =
@@ -77,9 +85,10 @@ class GuideController(
     init {
         scope.launch { rows.collect { focusEngine.ensureFocus(it, now.value) } }
         // The guide is reached from playback (BACK / the TV-guide card), where
-        // the last channel keeps playing in the preview window; cold starts
-        // land on fullscreen playback instead, so nothing double-tunes.
-        tuner.resumeStored()
+        // the last channel keeps playing in the preview window; a cold start
+        // with "Turn on last channel on app start" OFF instead lands here
+        // untuned — the preview stays dark until OK tunes a cell.
+        if (resumePreview()) tuner.resumeStored()
     }
 
     /** Routes a key through the layer map; true = consumed. */

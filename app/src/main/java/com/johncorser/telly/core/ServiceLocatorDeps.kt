@@ -2,22 +2,43 @@ package com.johncorser.telly.core
 
 import android.content.Context
 import com.johncorser.telly.core.settings.ParentalControls
+import com.johncorser.telly.core.settings.SettingsRepository
 import com.johncorser.telly.core.settings.TellySettings
 import com.johncorser.telly.features.guide.GuideDeps
 import com.johncorser.telly.features.history.WatchHistory
 import com.johncorser.telly.features.multiview.MultiviewDeps
+import com.johncorser.telly.features.playback.ClockStyle
 import com.johncorser.telly.features.playback.PlaybackDeps
 import com.johncorser.telly.features.playback.PlaybackSources
+import com.johncorser.telly.features.playback.PlaybackTuning
+import com.johncorser.telly.features.playback.UdpProxy
 import com.johncorser.telly.features.player.Media3PlayerEngine
+import com.johncorser.telly.features.player.PlayerAudioPrefs
+import com.johncorser.telly.features.player.create
 import com.johncorser.telly.features.search.SearchDeps
 import com.johncorser.telly.features.search.SearchRepository
 import com.johncorser.telly.core.settings.SharedPrefsKeyValueStore as SettingsPrefsStore
 
 private const val SEARCH_PREFS_NAME = "telly-search"
 
+/** The persisted knobs the playback slice honors, read live. */
+private fun playbackTuning(settings: SettingsRepository): PlaybackTuning =
+    PlaybackTuning(
+        resolveUrl = { url -> UdpProxy.resolve(settings.get(TellySettings.UDP_PROXY), url) },
+        is24h = { ClockStyle.is24Raw(settings.get(TellySettings.CLOCK_FORMAT)) },
+    )
+
+/** Surround-by-default + passthrough, read from the store per engine. */
+private fun audioPrefs(settings: SettingsRepository): PlayerAudioPrefs =
+    PlayerAudioPrefs(
+        surroundByDefault = { settings.get(TellySettings.SURROUND_BY_DEFAULT) },
+        passthrough = { settings.get(TellySettings.AUDIO_PASSTHROUGH) },
+    )
+
 /** Playback slice bundle over [ServiceLocator]'s app-scoped singletons. */
-fun ServiceLocator.playbackDeps(context: Context): PlaybackDeps =
-    PlaybackDeps(
+fun ServiceLocator.playbackDeps(context: Context): PlaybackDeps {
+    val settings = settingsRepository(context)
+    return PlaybackDeps(
         sources =
             PlaybackSources(
                 channelDao = database(context).channelDao(),
@@ -25,16 +46,23 @@ fun ServiceLocator.playbackDeps(context: Context): PlaybackDeps =
                 history = WatchHistory(database(context).watchHistoryDao(), clock),
             ),
         keyValueStore = keyValueStore(context),
-        engineFactory = { Media3PlayerEngine.create(context.applicationContext) },
+        engineFactory = { Media3PlayerEngine.create(context.applicationContext, audio = audioPrefs(settings)) },
         clock = clock,
-        parental = ParentalControls(settingsRepository(context)),
+        parental = ParentalControls(settings),
+        tuning = playbackTuning(settings),
     )
+}
 
 /** Guide slice = the playback bundle + the settings the grid honors. */
-fun ServiceLocator.guideDeps(context: Context): GuideDeps =
+fun ServiceLocator.guideDeps(
+    context: Context,
+    resumePreview: () -> Boolean = { true },
+): GuideDeps =
     GuideDeps(
         playback = playbackDeps(context),
         pastDays = { settingsRepository(context).get(TellySettings.EPG_PAST_DAYS_TO_KEEP) },
+        confirmExit = { settingsRepository(context).get(TellySettings.CONFIRM_EXIT) },
+        resumePreview = resumePreview,
     )
 
 /**

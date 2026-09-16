@@ -54,7 +54,7 @@ class PlaybackViewModelTest {
                     epgRepository = testEpgRepository(programs),
                     engine = engine,
                     store = store,
-                    time = PlaybackTime(clock, TimeZone.getTimeZone("UTC")),
+                    time = PlaybackTime(clock, ClockStyle(TimeZone.getTimeZone("UTC"))),
                     hooks = PlaybackHooks(onOpenSettings = onOpenSettings, onOpenMultiview = onOpenMultiview),
                 ),
             history = WatchHistory(historyDao, clock),

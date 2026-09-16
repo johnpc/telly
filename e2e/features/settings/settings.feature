@@ -68,3 +68,19 @@ Feature: Settings
     Then the row "TV guide" is locked
     And the row "Language" is locked
     And the row "Color theme" is not locked
+
+  # The reference PIN dialogs are premium-locked/uncapturable; telly's
+  # "Keyboard" method is a masked 4-digit IME entry with the same verify
+  # semantics as the wheels, used by every PIN prompt.
+  Scenario: The keyboard PIN input method drives a masked text entry everywhere
+    When I open the "Parental controls" section
+    And I activate "PIN input method"
+    And I choose "Keyboard"
+    Then the "PIN input method" row shows "Keyboard"
+    When I activate "Off"
+    Then I see "Change PIN"
+    When I type the PIN "2468" on the keyboard
+    And the group "Movies" is locked
+    Then opening the group "Movies" requires the PIN
+    When I type the PIN "2468" on the keyboard
+    Then I see "Movie House"

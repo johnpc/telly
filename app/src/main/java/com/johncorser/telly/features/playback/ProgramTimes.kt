@@ -6,10 +6,13 @@ import java.util.Locale
 import java.util.TimeZone
 
 /**
- * TiviMate-style 12-hour time strings (captures 34/47): programme ranges
- * render as "02:30 — 03:45 PM" (start meridiem only when it differs) and the
- * overlay clock as "Sun, Sep 13, 2:45 PM". Epoch-millis in, strings out; the
- * zone is injected so tests stay deterministic.
+ * TiviMate-style time strings (captures 34/47): programme ranges render as
+ * "02:30 — 03:45 PM" (start meridiem only when it differs) and the overlay
+ * clock as "Sun, Sep 13, 2:45 PM"; the persisted 24-hour clock format
+ * renders "14:30 — 15:45" / "Sun, Sep 13, 14:45" instead. Epoch-millis in,
+ * strings out; the zone/style is injected so tests stay deterministic. The
+ * bare-TimeZone overloads keep the 12-hour rendering for the search and
+ * multiview slices, which are owned elsewhere.
  */
 object ProgramTimes {
     private const val MINUTE_MS = 60_000L
@@ -22,8 +25,10 @@ object ProgramTimes {
     fun range(
         startMs: Long,
         endMs: Long,
-        zone: TimeZone,
+        style: ClockStyle,
     ): String {
+        val zone = style.zone
+        if (style.is24h) return "${format("HH:mm", startMs, zone)} — ${format("HH:mm", endMs, zone)}"
         val start = format("hh:mm", startMs, zone)
         val startMeridiem = format("a", startMs, zone)
         val end = format("hh:mm a", endMs, zone)
@@ -31,16 +36,27 @@ object ProgramTimes {
         return "$prefix — $end"
     }
 
+    fun range(
+        startMs: Long,
+        endMs: Long,
+        zone: TimeZone,
+    ): String = range(startMs, endMs, ClockStyle(zone))
+
     fun clock(
         atMs: Long,
-        zone: TimeZone,
-    ): String = format("EEE, MMM d, h:mm a", atMs, zone)
+        style: ClockStyle,
+    ): String = format(if (style.is24h) "EEE, MMM d, HH:mm" else "EEE, MMM d, h:mm a", atMs, style.zone)
 
     /** Bare start stamp "12:45 AM" (multiview picker schedule rows, capture 05). */
     fun startTime(
         atMs: Long,
+        style: ClockStyle,
+    ): String = format(if (style.is24h) "HH:mm" else "hh:mm a", atMs, style.zone)
+
+    fun startTime(
+        atMs: Long,
         zone: TimeZone,
-    ): String = format("hh:mm a", atMs, zone)
+    ): String = startTime(atMs, ClockStyle(zone))
 
     /** Transport-row span "00:16" / "45:00" / "1:15:00" (round3-ref 03b). */
     fun span(ms: Long): String {

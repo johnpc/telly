@@ -20,18 +20,18 @@ import androidx.tv.material3.Text
 import com.johncorser.telly.core.design.TELLY_CLOCK_BLUE
 import com.johncorser.telly.core.design.TELLY_NOW_LINE
 import com.johncorser.telly.core.design.TELLY_TEXT_MUTED
+import com.johncorser.telly.features.playback.ClockStyle
 import com.johncorser.telly.features.playback.ProgramTimes
-import java.util.TimeZone
 
 /** Blue date+clock over the channel column (uidump 24); minute-ticked. */
 @Composable
 internal fun GuideScreenClock(
     nowMs: Long,
-    zone: TimeZone,
+    style: ClockStyle,
 ) {
     Box(Modifier.width(GuideGeometry.CHANNEL_COLUMN_DP.dp)) {
         Text(
-            text = ProgramTimes.clock(nowMs, zone),
+            text = ProgramTimes.clock(nowMs, style),
             modifier = Modifier.padding(start = 16.dp),
             color = Color(TELLY_CLOCK_BLUE),
             fontSize = 14.sp,
@@ -55,7 +55,7 @@ internal fun GuideScreenTimelineTicks(
     // slot straddles the tick, the first hanging into the channel column).
     val halfSlot = GuideGeometry.DP_PER_30_MIN / 2
     Box(modifier.fillMaxHeight()) {
-        GuideTimeline.ticks(controller.originMs, scrollX, viewport, controller.zone).forEach { tick ->
+        GuideTimeline.ticks(controller.originMs, scrollX, viewport, controller.clockStyle).forEach { tick ->
             Text(
                 text = tick.label,
                 modifier =

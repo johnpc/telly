@@ -14,8 +14,10 @@ import com.johncorser.telly.e2e.fixtures.FixtureServer
 import com.johncorser.telly.e2e.fixtures.rangeText
 import com.johncorser.telly.features.guide.GuideGeometry
 import com.johncorser.telly.features.guide.GuideTimeline
+import com.johncorser.telly.features.playback.ClockStyle
 import io.cucumber.java.en.Then
 import io.cucumber.java.en.When
+import org.junit.Assert.assertFalse
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
@@ -134,7 +136,8 @@ class GuideSteps(
     @Then("the timeline header has scrolled forward with the cells")
     fun timelineScrolled() {
         val zone = TimeZone.getDefault()
-        val originLabel = GuideTimeline.timeLabel(GuideGeometry.halfHourFloor(System.currentTimeMillis(), zone), zone)
+        val originLabel =
+            GuideTimeline.timeLabel(GuideGeometry.halfHourFloor(System.currentTimeMillis(), zone), ClockStyle(zone))
         world.waitFor(world.hasTextMatching(TICK_LABEL))
         driver.awaitCondition("origin tick label scrolled away") {
             world.nodeCount(hasText(originLabel)) == 0
@@ -243,8 +246,26 @@ class GuideSteps(
         driver.awaitCondition("activity destroyed") { world.appDestroyed() }
     }
 
+    @Then("telly is still running")
+    fun appStillRunning() {
+        world.compose.waitForIdle()
+        assertFalse("the exit-confirm warning must not exit", world.appDestroyed())
+    }
+
+    @Then("the header clock shows today's date and a 24-hour time")
+    fun headerClock24h() {
+        val datePart = SimpleDateFormat("EEE, MMM d", Locale.US).format(Date())
+        world.waitFor(world.hasTextMatching(Regex("$datePart, \\d{2}:\\d{2}")))
+    }
+
+    @Then("the timeline shows 24-hour labels every 30 minutes")
+    fun timelineTicks24h() {
+        world.waitFor(world.hasTextMatching(TICK_LABEL_24H), atLeast = 2)
+    }
+
     private companion object {
         val TICK_LABEL = Regex("\\d{2}:(00|30) [AP]M")
+        val TICK_LABEL_24H = Regex("\\d{2}:(00|30)")
         val REMAINING_LABEL = Regex("\\d+ min")
     }
 }

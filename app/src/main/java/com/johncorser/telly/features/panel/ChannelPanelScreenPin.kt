@@ -14,15 +14,19 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import com.johncorser.telly.core.design.TELLY_GUIDANCE_PANE
 import com.johncorser.telly.core.ui.TellyScreenProgramTitle
-import com.johncorser.telly.features.settings.SettingsScreenPinWheel
+import com.johncorser.telly.features.settings.SettingsScreenPinEntry
 
 /**
  * The parental prompt over the panel when a locked group is selected:
- * centered card with the shared PIN wheel. The reference dialog is
+ * centered card with the shared PIN entry (wheels or masked keyboard per
+ * the persisted "PIN input method"). The reference dialog is
  * premium-locked and uncapturable — minimal matching style.
  */
 @Composable
-internal fun ChannelPanelScreenPin(onSubmit: (String) -> Unit) {
+internal fun ChannelPanelScreenPin(
+    onSubmit: (String) -> Unit,
+    keyboard: Boolean = false,
+) {
     Box(
         Modifier
             .fillMaxSize()
@@ -37,7 +41,7 @@ internal fun ChannelPanelScreenPin(onSubmit: (String) -> Unit) {
             verticalArrangement = Arrangement.spacedBy(16.dp),
         ) {
             TellyScreenProgramTitle("Enter PIN")
-            SettingsScreenPinWheel(onSubmit = onSubmit)
+            SettingsScreenPinEntry(keyboard = keyboard, onSubmit = onSubmit)
         }
     }
 }

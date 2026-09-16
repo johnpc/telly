@@ -13,7 +13,6 @@ import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
-import java.util.TimeZone
 
 /**
  * Streams the recent-channel cards (history-round2 §1): recently watched
@@ -24,7 +23,7 @@ import java.util.TimeZone
 class RecentRowFeed(
     sources: RecentRowSources,
     private val epgRepository: EpgRepository,
-    private val zone: TimeZone,
+    private val style: ClockStyle,
     scope: CoroutineScope,
 ) {
     @OptIn(ExperimentalCoroutinesApi::class)
@@ -46,7 +45,7 @@ class RecentRowFeed(
             RecentCard(
                 channel = channel,
                 nowTitle = now?.details?.let(ProgramTitle::of),
-                nowRange = now?.let { ProgramTimes.range(it.startMs, it.endMs, zone) },
+                nowRange = now?.let { ProgramTimes.range(it.startMs, it.endMs, style) },
             )
         }
 }

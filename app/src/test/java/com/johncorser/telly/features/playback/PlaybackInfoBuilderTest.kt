@@ -32,7 +32,14 @@ class PlaybackInfoBuilderTest {
                 next = testProgram("tvg-1", at(15, 45), at(17, 15), "Newsroom Live", episode = "S1 E8"),
             )
 
-        val data = PlaybackInfoBuilder.build(channel, nowNext, VideoDetails(1280, 720, 25f, 1), at(14, 45), utc)
+        val data =
+            PlaybackInfoBuilder.build(
+                channel,
+                nowNext,
+                VideoDetails(1280, 720, 25f, 1),
+                at(14, 45),
+                ClockStyle(utc),
+            )
 
         assertEquals(1, data.number)
         assertEquals("News One", data.name)
@@ -51,14 +58,21 @@ class PlaybackInfoBuilderTest {
     fun `the description of the airing programme feeds the zap overlay`() {
         val nowNext = NowNext(now = testProgram("tvg-1", at(14, 30), at(15, 45), "Business Hour"))
 
-        val data = PlaybackInfoBuilder.build(testChannel(1, 1, "News One"), nowNext, null, at(14, 45), utc)
+        val data = PlaybackInfoBuilder.build(testChannel(1, 1, "News One"), nowNext, null, at(14, 45), ClockStyle(utc))
 
         assertEquals("Description of Business Hour", data.description)
     }
 
     @Test
     fun `a channel without guide data keeps every line empty`() {
-        val data = PlaybackInfoBuilder.build(testChannel(1, 1, "News One"), NowNext(), null, at(14, 45), utc)
+        val data =
+            PlaybackInfoBuilder.build(
+                testChannel(1, 1, "News One"),
+                NowNext(),
+                null,
+                at(14, 45),
+                ClockStyle(utc),
+            )
 
         assertNull(data.title)
         assertNull(data.description)

@@ -1,11 +1,9 @@
 package com.johncorser.telly.features.player
 
-import android.content.Context
-import androidx.media3.common.AudioAttributes
-import androidx.media3.common.C
 import androidx.media3.common.MediaItem
 import androidx.media3.common.PlaybackException
 import androidx.media3.common.Player
+import androidx.media3.common.Tracks
 import androidx.media3.exoplayer.ExoPlayer
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -21,6 +19,7 @@ import kotlinx.coroutines.flow.update
  */
 class Media3PlayerEngine(
     val player: ExoPlayer,
+    private val preferSurround: () -> Boolean = { false },
 ) : PlayerEngine,
     Player.Listener {
     private val mutableState = MutableStateFlow<PlayerState>(PlayerState.Idle)
@@ -70,6 +69,22 @@ class Media3PlayerEngine(
         mutableState.value = PlayerState.Error(error.errorCodeName)
     }
 
+    /**
+     * "Select surround audio track by default": once the stream's tracks are
+     * known, override onto the audio track with the most channels. The pick
+     * is null when the selection is already best, so this never loops.
+     */
+    override fun onTracksChanged(tracks: Tracks) {
+        if (!preferSurround()) return
+        SurroundAudio.pick(tracks)?.let { override ->
+            player.trackSelectionParameters =
+                player.trackSelectionParameters
+                    .buildUpon()
+                    .setOverrideForType(override)
+                    .build()
+        }
+    }
+
     private fun onReady() {
         mutableState.value = PlayerState.Playing
         val videoFormat = player.videoFormat
@@ -89,31 +104,6 @@ class Media3PlayerEngine(
         }
     }
 
-    companion object {
-        /**
-         * Built here so devices get audio focus and TV-ready defaults.
-         * Multiview panes pass [handleAudioFocus] = false: N players each
-         * grabbing focus would pause one another, so the pool's engines
-         * share the app's focus and the focused pane owns audio by mute
-         * state instead. Single fullscreen playback keeps the default.
-         */
-        fun create(
-            context: Context,
-            handleAudioFocus: Boolean = true,
-        ): Media3PlayerEngine {
-            val audioAttributes =
-                AudioAttributes
-                    .Builder()
-                    .setUsage(C.USAGE_MEDIA)
-                    .setContentType(C.AUDIO_CONTENT_TYPE_MOVIE)
-                    .build()
-            val player =
-                ExoPlayer
-                    .Builder(context)
-                    .setMediaSourceFactory(streamMediaSourceFactory(context))
-                    .setAudioAttributes(audioAttributes, handleAudioFocus)
-                    .build()
-            return Media3PlayerEngine(player)
-        }
-    }
+    /** The real-device factory lives in PlayerAudioPrefs.kt ([create]). */
+    companion object
 }

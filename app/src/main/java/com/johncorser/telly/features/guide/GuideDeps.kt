@@ -10,6 +10,10 @@ import com.johncorser.telly.features.playback.PlaybackDeps
 class GuideDeps(
     val playback: PlaybackDeps,
     val pastDays: () -> Int,
+    /** "Confirm exit by second press Back" (default off = exit immediately). */
+    val confirmExit: () -> Boolean = { false },
+    /** False exactly once after a cold start with "last channel on start" off. */
+    val resumePreview: () -> Boolean = { true },
 )
 
 /** Navigation the guide triggers: fullscreen playback, search, settings. */

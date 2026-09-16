@@ -1,5 +1,6 @@
 package com.johncorser.telly.features.guide
 
+import android.app.Activity
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
@@ -14,6 +15,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import com.johncorser.telly.core.design.TELLY_ONBOARDING_BACKGROUND
 import com.johncorser.telly.core.ui.ScreenLifecycleStartStop
 import com.johncorser.telly.core.ui.TellyScreenKeyAnchor
@@ -24,9 +26,9 @@ import com.johncorser.telly.features.playback.PlayerMenuSurface
  * The TV guide (capture 24): preview window + info pane on top, the
  * virtualized programme grid below. The grid layer routes D-pad keys
  * through the controller's pure engine; overlaid layers (groups column,
- * cell dropdown, coming-soon) use regular Compose focus. BACK on the grid is
- * deliberately unhandled: at guide root the app exits, the
- * device-verified free-tier behavior.
+ * cell dropdown, coming-soon) use regular Compose focus. BACK on the grid
+ * exits the app at the guide root (the device-verified free-tier behavior),
+ * gated by "Confirm exit by second press Back" when that toggle is on.
  */
 @Composable
 fun GuideScreen(
@@ -45,6 +47,14 @@ fun GuideScreen(
     // and re-tune on the START after it (round7 resume P2).
     ScreenLifecycleStartStop(onStart = controller.lifecycle::onForeground, onStop = controller.lifecycle::onBackground)
     BackHandler(enabled = layer != GuideLayer.Grid && !settingsOpen) { controller.onKey(GuideKey.BACK) }
+    // "Confirm exit by second press Back", decided at press time so a fresh
+    // toggle applies immediately: OFF (default) finishes on the first BACK —
+    // exactly the exit-with-no-confirmation the e2e suite pins — while ON
+    // warns first and exits on a second BACK inside the window.
+    val activity = LocalContext.current as? Activity
+    BackHandler(enabled = layer == GuideLayer.Grid && !settingsOpen) {
+        if (!deps.confirmExit() || controller.exit.onBack()) activity?.finish()
+    }
     // Returning from the settings sheet lands back on the grid, whose key
     // anchor re-grabs focus when it recomposes.
     LaunchedEffect(settingsOpen) { if (!settingsOpen) controller.menu.reset() }
@@ -68,6 +78,7 @@ fun GuideScreen(
             }
         }
         GuideScreenHintToast(controller, Modifier.align(Alignment.BottomEnd))
+        GuideScreenExitToast(controller, Modifier.align(Alignment.BottomCenter))
         // The dim behind the sheet lives outside the layer switch so it can
         // fade back out (~300 ms) after the sheet's instant cut (ref-round6);
         // the originating row is punched out undimmed (round7 P2).

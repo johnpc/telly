@@ -3,6 +3,7 @@ package com.johncorser.telly.features.panel
 import com.johncorser.telly.core.settings.InMemoryKeyValueStore
 import com.johncorser.telly.core.settings.ParentalControls
 import com.johncorser.telly.core.settings.SettingsRepository
+import com.johncorser.telly.features.playback.ClockStyle
 import com.johncorser.telly.testutil.FakeChannelDao
 import com.johncorser.telly.testutil.FakeProgramDao
 import com.johncorser.telly.testutil.asFavorite
@@ -56,7 +57,7 @@ class PanelViewModelTest {
             epgRepository = testEpgRepository(programs),
             clock = clock,
             scope = CoroutineScope(SupervisorJob() + UnconfinedTestDispatcher(testScheduler)),
-            zone = utc,
+            style = ClockStyle(utc),
             lock = lock,
         )
 

@@ -18,6 +18,9 @@ fun aboutRows(
     versionName: String,
 ): List<SettingsRow> =
     listOf(
+        // Honest no-op by design: telly has no backend and never sends any
+        // statistics anywhere, regardless of this captured toggle's state
+        // ("no dead settings" audit, 2026-09; nothing pretends otherwise).
         SettingsRow.Toggle(
             id = RowIds.ABOUT_STATISTICS,
             title = "Send anonymous statistics to improve the app",

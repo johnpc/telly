@@ -129,3 +129,18 @@ Feature: TV guide
   Scenario: BACK at the guide root exits the app without confirmation
     When I press back
     Then telly exits to the launcher
+
+  Scenario: Confirm exit by second press Back warns first, then exits
+    Given confirm exit on second BACK is enabled
+    When I press back
+    Then I see "Press BACK again to exit"
+    And telly is still running
+    When I press back
+    Then telly exits to the launcher
+
+  Scenario: The 24-hour clock format drives the guide clocks and persists across relaunch
+    Given the clock format is "24-hour"
+    When I relaunch telly
+    And I press back
+    Then the header clock shows today's date and a 24-hour time
+    And the timeline shows 24-hour labels every 30 minutes

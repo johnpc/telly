@@ -66,13 +66,22 @@ class SettingsViewModel(
         mutableState.update { it.copy(panes = listOf(SettingsPane.Section(section))) }
     }
 
+    /** Section entry, gated: "Require PIN for Settings | Playlists" prompts. */
+    private fun openSection(section: SettingsSection) {
+        if (section == SettingsSection.PLAYLISTS && parental.isPlaylistsLocked()) {
+            showOverlay(SettingsOverlay.PinVerify(section))
+        } else {
+            selectSection(section)
+        }
+    }
+
     /** OK on a row. Locked rows are unfocusable and never reach this. */
     fun activate(rowId: String) {
         val toggle = SettingsToggles.byRowId[rowId]
         val picker = SettingsPickers.byRowId[rowId]
         when {
             rowId.startsWith(RowIds.SECTION_PREFIX) ->
-                selectSection(SettingsSection.valueOf(rowId.removePrefix(RowIds.SECTION_PREFIX)))
+                openSection(SettingsSection.valueOf(rowId.removePrefix(RowIds.SECTION_PREFIX)))
             rowId == RowIds.PARENTAL_MASTER -> toggleParentalMaster()
             toggle != null -> flip(toggle)
             picker != null ->

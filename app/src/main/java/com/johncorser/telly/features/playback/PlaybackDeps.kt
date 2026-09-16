@@ -11,13 +11,15 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
 import java.util.TimeZone
 
-/** The injected wall clock + zone (no wall-clock reads in logic). */
+/** The injected wall clock + clock style (no wall-clock reads in logic). */
 class PlaybackTime(
     val clock: () -> Long,
-    val zone: TimeZone = TimeZone.getDefault(),
+    val style: ClockStyle = ClockStyle(),
     /** Fires just past each minute boundary of [clock]; tests inject their own. */
     val minuteTicks: Flow<Unit> = minuteBoundaryTicks(clock),
 ) {
+    val zone: TimeZone get() = style.zone
+
     companion object {
         const val MINUTE_MS = 60_000L
 
@@ -40,6 +42,19 @@ class PlaybackSources(
 )
 
 /**
+ * The settings-driven playback behaviors, read live from the store:
+ * the UDP-proxy stream rewrite and the 12/24-hour clock format. Defaults
+ * (identity, 12-hour) preserve the previous behavior exactly.
+ */
+class PlaybackTuning(
+    val resolveUrl: (String) -> String = { it },
+    val is24h: () -> Boolean = { false },
+) {
+    /** The clock style the playback/guide/history clocks render with. */
+    fun clockStyle(): ClockStyle = ClockStyle(h24 = is24h)
+}
+
+/**
  * Everything the playback screen needs from the composition root. The engine
  * comes as a factory so each visit to the playback route gets a fresh
  * ExoPlayer that is released when the screen leaves composition.
@@ -50,4 +65,5 @@ class PlaybackDeps(
     val engineFactory: () -> Media3PlayerEngine,
     val clock: () -> Long,
     val parental: ParentalControls? = null,
+    val tuning: PlaybackTuning = PlaybackTuning(),
 )

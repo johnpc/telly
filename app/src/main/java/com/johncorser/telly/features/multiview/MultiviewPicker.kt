@@ -3,6 +3,7 @@ package com.johncorser.telly.features.multiview
 import com.johncorser.telly.features.epg.EpgRepository
 import com.johncorser.telly.features.panel.PanelRow
 import com.johncorser.telly.features.panel.PanelViewModel
+import com.johncorser.telly.features.playback.ClockStyle
 import com.johncorser.telly.features.playlist.db.ChannelDao
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -30,8 +31,10 @@ class MultiviewPicker(
     scope: CoroutineScope,
     private val zone: TimeZone,
 ) {
-    /** Channel rows + focus machinery, shared 1:1 with the channel panel. */
-    val panel = PanelViewModel(channelDao, epgRepository, clock, scope, zone)
+    // Mechanical follow-up to the shared PanelViewModel signature change
+    // only; multiview keeps its 12-hour rendering (slice owned elsewhere).
+    // Channel rows + focus machinery, shared 1:1 with the channel panel.
+    val panel = PanelViewModel(channelDao, epgRepository, clock, scope, ClockStyle(zone))
 
     /** The focused row feeds the schedule pane and the detail card. */
     val focusedRow: StateFlow<PanelRow?> =

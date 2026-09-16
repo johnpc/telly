@@ -3,9 +3,9 @@ package com.johncorser.telly.features.history
 import com.johncorser.telly.features.epg.ProgramTitle
 import com.johncorser.telly.features.epg.db.ProgramEntity
 import com.johncorser.telly.features.history.db.WatchHistoryEntity
+import com.johncorser.telly.features.playback.ClockStyle
 import com.johncorser.telly.features.playback.ProgramTimes
 import com.johncorser.telly.features.playlist.db.ChannelEntity
-import java.util.TimeZone
 
 /** One History-screen row: the channel + what/when it was last watched. */
 data class HistoryRow(
@@ -35,14 +35,14 @@ object HistoryRows {
         events: List<WatchHistoryEntity>,
         channels: List<ChannelEntity>,
         programs: List<ProgramEntity>,
-        zone: TimeZone,
+        style: ClockStyle,
     ): List<HistoryRow> {
         val byKey = channels.associateBy(WatchHistory::identityOf)
         return events.mapNotNull { event ->
             byKey[event.channelKey]?.let { channel ->
                 HistoryRow(
                     channel = channel,
-                    watchedText = ProgramTimes.clock(event.watchedAtMs, zone),
+                    watchedText = ProgramTimes.clock(event.watchedAtMs, style),
                     programmeTitle = titleAiringOn(channel, event.watchedAtMs, programs),
                 )
             }

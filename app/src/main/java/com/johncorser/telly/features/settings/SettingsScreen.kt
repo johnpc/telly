@@ -48,7 +48,8 @@ fun SettingsScreen(
     val sheetOverlay =
         state.overlay is SettingsOverlay.Picker ||
             state.overlay is SettingsOverlay.TextEdit ||
-            state.overlay is SettingsOverlay.PinSetup
+            state.overlay is SettingsOverlay.PinSetup ||
+            state.overlay is SettingsOverlay.PinVerify
     Box(Modifier.fillMaxSize().focusProperties { exit = { FocusRequester.Cancel } }) {
         if (!sheetOverlay) {
             // Pushing/popping a section cross-fades the sheet content in

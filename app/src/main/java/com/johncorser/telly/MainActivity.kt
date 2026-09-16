@@ -19,12 +19,19 @@ import com.johncorser.telly.features.settings.PlaylistUpdater
 import com.johncorser.telly.features.settings.SettingsActions
 import com.johncorser.telly.features.settings.SettingsBackupManager
 import com.johncorser.telly.features.settings.SettingsGraph
+import kotlinx.coroutines.flow.collectIndexed
 import kotlinx.coroutines.launch
 
 /** Single-activity entry point; all UI is Compose for TV. */
 class MainActivity : ComponentActivity() {
     private val navigator = Navigator(start = Route.Boot)
     private val fetcher = M3uFetcher()
+    private val startRoute =
+        StartRoute(
+            lastChannelOnStart = {
+                ServiceLocator.settingsRepository(this).get(TellySettings.LAST_CHANNEL_ON_START)
+            },
+        )
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -37,7 +44,7 @@ class MainActivity : ComponentActivity() {
                 repository = repository,
                 fetchPlaylist = fetcher::fetch,
                 playbackDeps = ServiceLocator.playbackDeps(this),
-                guideDeps = ServiceLocator.guideDeps(this),
+                guideDeps = ServiceLocator.guideDeps(this) { !startRoute.consumeUntunedStart() },
                 settingsGraph = settingsGraph(),
                 searchDeps = ServiceLocator.searchDeps(this),
                 multiviewDeps = ServiceLocator.multiviewDeps(this),
@@ -68,22 +75,31 @@ class MainActivity : ComponentActivity() {
         runCatching { packageManager.getPackageInfo(packageName, 0).versionName }
             .getOrNull() ?: "unknown"
 
-    /** Boot stays blank until Room answers; then playback or onboarding. */
+    /** Boot stays blank until Room answers; then playback/guide/onboarding. */
     private fun restoreStartRoute() {
         lifecycleScope.launch {
             val channelCount = ServiceLocator.database(this@MainActivity).channelDao().totalCount()
-            navigator.replaceAll(StartRoute.forChannelCount(channelCount))
+            navigator.replaceAll(startRoute.forChannelCount(channelCount))
         }
     }
 
-    /** Refresh due EPG sources on start and whenever the playlists change. */
+    /**
+     * Refresh due EPG sources on start; when the playlists change, "Update
+     * EPG on playlists change" decides between a forced full refresh (ON)
+     * and the due-only policy (OFF, the captured default — never-fetched
+     * sources such as a freshly added playlist's EPG are always due).
+     */
     private fun keepEpgFresh() {
         val refresher = ServiceLocator.epgRefresher(this)
         val settings = ServiceLocator.settingsRepository(this)
         lifecycleScope.launch {
             if (settings.get(TellySettings.EPG_UPDATE_ON_APP_START)) refresher.refreshAllNow()
-            ServiceLocator.database(this@MainActivity).playlistDao().observeAll().collect {
-                refresher.refreshDue()
+            ServiceLocator.database(this@MainActivity).playlistDao().observeAll().collectIndexed { index, _ ->
+                if (index == 0) {
+                    refresher.refreshDue()
+                } else {
+                    refresher.onPlaylistsChanged(settings.get(TellySettings.EPG_UPDATE_ON_PLAYLISTS_CHANGE))
+                }
             }
         }
     }

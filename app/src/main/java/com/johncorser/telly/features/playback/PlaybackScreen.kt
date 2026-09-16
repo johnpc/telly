@@ -13,9 +13,11 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.key.onPreviewKeyEvent
 import com.johncorser.telly.core.input.HoldKeyDetector
+import com.johncorser.telly.core.ui.LocalResizeModeRaw
 import com.johncorser.telly.core.ui.ScreenLifecycleStartStop
 import com.johncorser.telly.features.panel.PanelLock
 import com.johncorser.telly.features.player.PlayerScreenSurface
+import com.johncorser.telly.features.player.ResizeModes
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -50,12 +52,13 @@ fun PlaybackScreen(
                         epgRepository = deps.sources.epgRepository,
                         engine = engine,
                         store = deps.keyValueStore,
-                        time = PlaybackTime(deps.clock),
+                        time = PlaybackTime(deps.clock, deps.tuning.clockStyle()),
                         hooks =
                             PlaybackHooks(
                                 panelLock = PanelLock(deps.parental),
                                 onOpenSettings = onOpenSettings,
                                 onOpenMultiview = onOpenMultiview,
+                                resolveUrl = deps.tuning.resolveUrl,
                             ),
                     ),
                 history = deps.sources.history,
@@ -83,7 +86,7 @@ fun PlaybackScreen(
             .background(Color.Black)
             .onPreviewKeyEvent { event -> onPreviewKey(event, overlay, viewModel, previewDetector) },
     ) {
-        PlayerScreenSurface(engine, Modifier.fillMaxSize())
+        PlayerScreenSurface(engine, Modifier.fillMaxSize(), resizeMode = ResizeModes.of(LocalResizeModeRaw.current))
         if (overlay == PlaybackOverlay.None || overlay == PlaybackOverlay.ZapInfo) {
             PlaybackScreenKeyAnchor(onKey = viewModel::onKey)
         }

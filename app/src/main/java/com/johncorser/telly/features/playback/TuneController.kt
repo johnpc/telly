@@ -25,6 +25,8 @@ class TuneController(
     private val scope: CoroutineScope,
     channelDao: ChannelDao,
     private val history: WatchHistory,
+    /** Stream-URL resolution seam (UDP-proxy rewrite); identity by default. */
+    private val resolveUrl: (String) -> String = { it },
 ) {
     /** All visible channels in TiviMate "All channels" order. */
     val channels: StateFlow<List<ChannelEntity>> =
@@ -55,7 +57,7 @@ class TuneController(
     fun tune(channel: ChannelEntity) {
         mutableCurrent.value = channel
         suspended = false
-        engine.load(channel.source.streamUrl)
+        engine.load(resolveUrl(channel.source.streamUrl))
         store.putLong(LAST_CHANNEL_KEY, channel.id)
         scope.launch { history.record(channel) }
     }
@@ -78,7 +80,7 @@ class TuneController(
 
     /** Re-loads the current channel's stream after a background stop. */
     fun retune() {
-        mutableCurrent.value?.let { engine.load(it.source.streamUrl) }
+        mutableCurrent.value?.let { engine.load(resolveUrl(it.source.streamUrl)) }
     }
 
     /** Tunes the channel [delta] steps away (wraps); false when impossible. */

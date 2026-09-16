@@ -1,6 +1,7 @@
 package com.johncorser.telly.features.history
 
 import com.johncorser.telly.features.history.db.WatchHistoryEntity
+import com.johncorser.telly.features.playback.ClockStyle
 import com.johncorser.telly.features.playback.PlaybackSources
 import com.johncorser.telly.features.playback.TuneController
 import com.johncorser.telly.testutil.FakeChannelDao
@@ -46,7 +47,7 @@ class HistoryViewModelTest {
                     history = WatchHistory(historyDao) { 0L },
                 ),
             store = store,
-            zone = TimeZone.getTimeZone("UTC"),
+            style = ClockStyle(TimeZone.getTimeZone("UTC")),
             scope = CoroutineScope(SupervisorJob() + UnconfinedTestDispatcher(testScheduler)),
         )
 

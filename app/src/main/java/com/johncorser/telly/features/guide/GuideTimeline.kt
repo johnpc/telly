@@ -1,9 +1,9 @@
 package com.johncorser.telly.features.guide
 
+import com.johncorser.telly.features.playback.ClockStyle
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
-import java.util.TimeZone
 
 /** One 30-min timeline label, positioned relative to the grid's left edge. */
 data class GuideTick(
@@ -20,7 +20,7 @@ object GuideTimeline {
         originMs: Long,
         scrollXDp: Float,
         viewportDp: Float,
-        zone: TimeZone,
+        style: ClockStyle,
     ): List<GuideTick> {
         val windowStartMs = GuideGeometry.timeAt(scrollXDp, originMs)
         var tickMs = GuideWindowMath.quantizeDown(windowStartMs, originMs)
@@ -28,7 +28,7 @@ object GuideTimeline {
         val windowEndMs = GuideGeometry.timeAt(scrollXDp + viewportDp, originMs)
         val ticks = mutableListOf<GuideTick>()
         while (tickMs < windowEndMs) {
-            ticks += GuideTick(GuideGeometry.xOf(tickMs, originMs) - scrollXDp, timeLabel(tickMs, zone))
+            ticks += GuideTick(GuideGeometry.xOf(tickMs, originMs) - scrollXDp, timeLabel(tickMs, style))
             tickMs += GuideGeometry.HALF_HOUR_MS
         }
         return ticks
@@ -45,9 +45,12 @@ object GuideTimeline {
         return offset.takeIf { it in 0f..viewportDp }
     }
 
-    /** "02:30 PM" — the captured 12-hour label format. */
+    /** "02:30 PM" (the captured default) or "14:30" in 24-hour format. */
     fun timeLabel(
         atMs: Long,
-        zone: TimeZone,
-    ): String = SimpleDateFormat("hh:mm a", Locale.US).apply { timeZone = zone }.format(Date(atMs))
+        style: ClockStyle,
+    ): String =
+        SimpleDateFormat(if (style.is24h) "HH:mm" else "hh:mm a", Locale.US)
+            .apply { timeZone = style.zone }
+            .format(Date(atMs))
 }

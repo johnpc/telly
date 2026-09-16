@@ -16,6 +16,7 @@ import com.johncorser.telly.core.design.TELLY_ONBOARDING_BACKGROUND
 import com.johncorser.telly.core.navigation.Navigator
 import com.johncorser.telly.core.navigation.Route
 import com.johncorser.telly.core.ui.ProvideAccentColor
+import com.johncorser.telly.core.ui.ProvideResizeMode
 import com.johncorser.telly.features.guide.GuideDeps
 import com.johncorser.telly.features.multiview.MultiviewDeps
 import com.johncorser.telly.features.playback.PlaybackDeps
@@ -44,32 +45,34 @@ fun RootScreen(
     val baseRoute = stack.lastOrNull { it != Route.Settings } ?: route
     BackHandler(enabled = stack.size > 1 && route != Route.AddPlaylistWizard) { navigator.pop() }
     ProvideAccentColor(settingsGraph.settings) { accent ->
-        MaterialTheme(
-            colorScheme =
-                darkColorScheme(
-                    primary = accent,
-                    background = Color(TELLY_ONBOARDING_BACKGROUND),
-                    surface = Color(TELLY_GUIDANCE_PANE),
-                ),
-        ) {
-            Box(Modifier.fillMaxSize()) {
-                RootScreenRoutes(
-                    baseRoute,
-                    settingsOpen,
-                    navigator,
-                    repository,
-                    fetchPlaylist,
-                    playbackDeps,
-                    guideDeps,
-                    searchDeps,
-                    multiviewDeps,
-                )
-                if (settingsOpen) {
-                    SettingsScreenHost(
-                        graph = settingsGraph,
-                        onAddPlaylist = { navigator.push(Route.AddPlaylistWizard) },
-                        onClose = { navigator.pop() },
+        ProvideResizeMode(settingsGraph.settings) {
+            MaterialTheme(
+                colorScheme =
+                    darkColorScheme(
+                        primary = accent,
+                        background = Color(TELLY_ONBOARDING_BACKGROUND),
+                        surface = Color(TELLY_GUIDANCE_PANE),
+                    ),
+            ) {
+                Box(Modifier.fillMaxSize()) {
+                    RootScreenRoutes(
+                        baseRoute,
+                        settingsOpen,
+                        navigator,
+                        repository,
+                        fetchPlaylist,
+                        playbackDeps,
+                        guideDeps,
+                        searchDeps,
+                        multiviewDeps,
                     )
+                    if (settingsOpen) {
+                        SettingsScreenHost(
+                            graph = settingsGraph,
+                            onAddPlaylist = { navigator.push(Route.AddPlaylistWizard) },
+                            onClose = { navigator.pop() },
+                        )
+                    }
                 }
             }
         }

@@ -2,9 +2,9 @@ package com.johncorser.telly.features.panel
 
 import com.johncorser.telly.features.epg.NowNext
 import com.johncorser.telly.features.epg.ProgramTitle
+import com.johncorser.telly.features.playback.ClockStyle
 import com.johncorser.telly.features.playback.ProgramTimes
 import com.johncorser.telly.features.playlist.db.ChannelEntity
-import java.util.TimeZone
 
 /** Pure row assembly for the channel panel: filtering, renumbering, formatting. */
 object PanelRows {
@@ -28,7 +28,7 @@ object PanelRows {
         group: String,
         guide: Map<String, NowNext>,
         atMs: Long,
-        zone: TimeZone,
+        style: ClockStyle,
     ): List<PanelRow> =
         groupChannels.mapIndexed { index, channel ->
             val nowNext = guide[channel.source.tvgId] ?: NowNext()
@@ -37,7 +37,7 @@ object PanelRows {
                 channel = channel,
                 displayNumber = if (group == PanelViewModel.ALL_CHANNELS) channel.number else index + 1,
                 nowTitle = now?.details?.let(ProgramTitle::of),
-                nowRange = now?.let { ProgramTimes.range(it.startMs, it.endMs, zone) },
+                nowRange = now?.let { ProgramTimes.range(it.startMs, it.endMs, style) },
                 remaining = now?.let { "${ProgramTimes.remainingMinutes(it.endMs, atMs)} min" },
                 description = now?.details?.description,
                 nextTitle = nowNext.next?.details?.let(ProgramTitle::of),

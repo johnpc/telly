@@ -18,6 +18,9 @@ class PanelLock(
     /** The group awaiting a PIN, or null when no prompt is open. */
     val pinPrompt: StateFlow<String?> = pending.asStateFlow()
 
+    /** PIN input method: true = masked keyboard entry, false = digit wheels. */
+    val keyboardPin: Boolean get() = parental?.usesKeyboardPin == true
+
     /** True when [group] is gated; the prompt opens instead of switching. */
     fun intercept(group: String): Boolean {
         val locked = parental?.isGroupLocked(group) == true

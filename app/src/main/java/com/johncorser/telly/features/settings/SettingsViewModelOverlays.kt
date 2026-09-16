@@ -39,6 +39,17 @@ fun SettingsViewModel.submitPin(pin: String) {
     dismissOverlay()
 }
 
+/**
+ * The "Require PIN for" gate: a verified PIN opens the pending section, a
+ * wrong one keeps prompting (blocked-channels precedent; BACK dismisses).
+ */
+fun SettingsViewModel.submitVerifyPin(pin: String) {
+    val verify = state.value.overlay as? SettingsOverlay.PinVerify ?: return
+    if (!parental.verifyPin(pin)) return
+    dismissOverlay()
+    selectSection(verify.section)
+}
+
 /** Restores a backup JSON picked via SAF; no-op for foreign files. */
 fun SettingsViewModel.importBackup(json: String) {
     launch { backup.importJson(json) }

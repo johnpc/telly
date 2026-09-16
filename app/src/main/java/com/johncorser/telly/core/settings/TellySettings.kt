@@ -9,7 +9,12 @@ object TellySettings {
     // General (catalogue 54–56).
     val AUTOSTART_ON_BOOT = boolSetting("general_autostart_boot", false)
     val AUTOSTART_ON_WAKE = boolSetting("general_autostart_wake", false)
-    val LAST_CHANNEL_ON_START = boolSetting("general_last_channel_on_start", false)
+
+    // DELIBERATE default flip vs the captured TiviMate default (false):
+    // telly has always cold-started into fullscreen playback of the last
+    // channel (a documented stance), so the default preserves that shipped
+    // behavior exactly; OFF now starts at the guide untuned.
+    val LAST_CHANNEL_ON_START = boolSetting("general_last_channel_on_start", true)
     val PIP_ON_HOME = boolSetting("general_pip_on_home", false)
     val CONFIRM_EXIT = boolSetting("general_confirm_exit", false)
     val USER_AGENT = stringSetting("general_user_agent", "")

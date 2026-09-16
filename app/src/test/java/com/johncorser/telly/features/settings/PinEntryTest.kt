@@ -40,4 +40,19 @@ class PinEntryTest {
                 .down()
         assertEquals("2139", entry.value)
     }
+
+    @Test
+    fun `keyboard entry keeps digits only, capped at four`() {
+        assertEquals("2468", PinKeyboard.sanitize("2468"))
+        assertEquals("2468", PinKeyboard.sanitize("24-68x9"))
+        assertEquals("1234", PinKeyboard.sanitize("123456"))
+        assertEquals("", PinKeyboard.sanitize("abc"))
+    }
+
+    @Test
+    fun `keyboard entry commits exactly at the fourth digit`() {
+        assertEquals(false, PinKeyboard.isComplete(""))
+        assertEquals(false, PinKeyboard.isComplete("246"))
+        assertEquals(true, PinKeyboard.isComplete("2468"))
+    }
 }

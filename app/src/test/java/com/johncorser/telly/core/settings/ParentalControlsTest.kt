@@ -59,4 +59,45 @@ class ParentalControlsTest {
         parental.setEnabled(true)
         assertTrue(parental.isSettingsLocked())
     }
+
+    @Test
+    fun `don't require for channels only exempts watching from the PIN`() {
+        parental.setEnabled(true)
+        parental.setGroupLocked("Movies", locked = true)
+        assertTrue(parental.isGroupLocked("Movies"))
+
+        settings.set(TellySettings.PARENTAL_CHANNELS_ONLY, true)
+
+        assertFalse("watching is exempt", parental.isGroupLocked("Movies"))
+    }
+
+    @Test
+    fun `channels-only leaves the settings gates untouched`() {
+        parental.setEnabled(true)
+        settings.set(TellySettings.PARENTAL_CHANNELS_ONLY, true)
+        settings.set(TellySettings.PARENTAL_REQUIRE_FOR_SETTINGS, true)
+        settings.set(TellySettings.PARENTAL_REQUIRE_FOR_PLAYLISTS, true)
+
+        assertTrue(parental.isSettingsLocked())
+        assertTrue(parental.isPlaylistsLocked())
+    }
+
+    @Test
+    fun `playlists gate follows its Require PIN for toggle and the master`() {
+        settings.set(TellySettings.PARENTAL_REQUIRE_FOR_PLAYLISTS, true)
+        assertFalse(parental.isPlaylistsLocked())
+        parental.setEnabled(true)
+        assertTrue(parental.isPlaylistsLocked())
+        settings.set(TellySettings.PARENTAL_REQUIRE_FOR_PLAYLISTS, false)
+        assertFalse(parental.isPlaylistsLocked())
+    }
+
+    @Test
+    fun `the PIN input method picks the keyboard entry`() {
+        assertFalse("captured default is the Picker wheels", parental.usesKeyboardPin)
+        settings.set(TellySettings.PARENTAL_PIN_INPUT_METHOD, "Keyboard")
+        assertTrue(parental.usesKeyboardPin)
+        settings.set(TellySettings.PARENTAL_PIN_INPUT_METHOD, "Picker")
+        assertFalse(parental.usesKeyboardPin)
+    }
 }

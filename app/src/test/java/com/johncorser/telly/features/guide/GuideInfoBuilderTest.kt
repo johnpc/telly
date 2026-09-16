@@ -3,6 +3,7 @@ package com.johncorser.telly.features.guide
 import com.johncorser.telly.features.guide.GuideTestData.at
 import com.johncorser.telly.features.guide.GuideTestData.nowMs
 import com.johncorser.telly.features.guide.GuideTestData.utc
+import com.johncorser.telly.features.playback.ClockStyle
 import com.johncorser.telly.testutil.asFavorite
 import com.johncorser.telly.testutil.describedAs
 import com.johncorser.telly.testutil.testChannel
@@ -20,7 +21,7 @@ class GuideInfoBuilderTest {
 
     @Test
     fun `an airing cell shows title, range, remaining, progress and description`() {
-        val info = GuideInfoBuilder.build(row, airing, nowMs, utc)
+        val info = GuideInfoBuilder.build(row, airing, nowMs, ClockStyle(utc))
 
         assertEquals("Business Hour. S1 E7", info.title)
         assertEquals("02:30 — 03:45 PM", info.range)
@@ -36,7 +37,7 @@ class GuideInfoBuilderTest {
         val next = testProgram("tvg-1", at(15, 45), at(17, 15), "Newsroom Live")
         val cell = GuideCell(next.startMs, next.endMs, next)
 
-        val info = GuideInfoBuilder.build(row, cell, nowMs, utc)
+        val info = GuideInfoBuilder.build(row, cell, nowMs, ClockStyle(utc))
 
         assertEquals("Newsroom Live", info.title)
         assertEquals("03:45 — 05:15 PM", info.range)
@@ -48,7 +49,7 @@ class GuideInfoBuilderTest {
     fun `a filler cell reads no information`() {
         val filler = GuideCell(at(15, 45), at(16, 15), program = null)
 
-        val info = GuideInfoBuilder.build(row, filler, nowMs, utc)
+        val info = GuideInfoBuilder.build(row, filler, nowMs, ClockStyle(utc))
 
         assertEquals(GuideInfoBuilder.NO_INFORMATION, info.title)
         assertNull(info.description)
@@ -58,6 +59,6 @@ class GuideInfoBuilderTest {
     fun `the favorite star follows the channel flag`() {
         val favoriteRow = row.copy(channel = row.channel.asFavorite())
 
-        assertEquals(true, GuideInfoBuilder.build(favoriteRow, airing, nowMs, utc).favorite)
+        assertEquals(true, GuideInfoBuilder.build(favoriteRow, airing, nowMs, ClockStyle(utc)).favorite)
     }
 }

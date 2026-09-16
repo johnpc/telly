@@ -41,6 +41,11 @@ sealed interface SettingsOverlay {
     ) : SettingsOverlay
 
     data object PinSetup : SettingsOverlay
+
+    /** "Require PIN for" gate: verifying opens the pending [section]. */
+    data class PinVerify(
+        val section: SettingsSection,
+    ) : SettingsOverlay
 }
 
 /**

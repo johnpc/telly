@@ -7,6 +7,8 @@ import androidx.compose.ui.test.isEnabled
 import androidx.compose.ui.test.isFocused
 import androidx.compose.ui.test.isNotEnabled
 import androidx.compose.ui.test.isOn
+import androidx.compose.ui.test.onFirst
+import androidx.compose.ui.test.performTextReplacement
 import com.johncorser.telly.core.ServiceLocator
 import com.johncorser.telly.core.settings.ParentalControls
 import com.johncorser.telly.core.settings.TellySettings
@@ -79,6 +81,29 @@ class SettingsSteps(
     fun setPin(pin: String) {
         world.waitForText("Change PIN")
         spinPinWheels(pin)
+    }
+
+    /** Masked keyboard entry ("PIN input method" = Keyboard): 4 digits commit. */
+    @When("I type the PIN {string} on the keyboard")
+    fun typePinOnKeyboard(pin: String) {
+        world.waitFor(hasTestTag("pin-keyboard"))
+        world.compose
+            .onAllNodes(hasTestTag("pin-keyboard"))
+            .onFirst()
+            .performTextReplacement(pin)
+        world.compose.waitForIdle()
+    }
+
+    /** Arranged through the real store, like group locking below. */
+    @Given("confirm exit on second BACK is enabled")
+    fun enableConfirmExit() {
+        ServiceLocator.settingsRepository(world.targetContext).set(TellySettings.CONFIRM_EXIT, true)
+    }
+
+    /** The clock format is a store-only key (no captured settings row). */
+    @Given("the clock format is {string}")
+    fun setClockFormat(raw: String) {
+        ServiceLocator.settingsRepository(world.targetContext).set(TellySettings.CLOCK_FORMAT, raw)
     }
 
     /** BACKs out of the settings shell to fullscreen playback. */

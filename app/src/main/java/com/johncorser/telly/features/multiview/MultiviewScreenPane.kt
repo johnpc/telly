@@ -26,10 +26,12 @@ import androidx.tv.material3.Surface
 import androidx.tv.material3.Text
 import com.johncorser.telly.core.design.TELLY_ERROR_TEXT
 import com.johncorser.telly.core.ui.FocusScreenDefaults
+import com.johncorser.telly.core.ui.LocalResizeModeRaw
 import com.johncorser.telly.core.ui.TellyScreenWhiteText
 import com.johncorser.telly.features.player.Media3PlayerEngine
 import com.johncorser.telly.features.player.PlayerScreenSurface
 import com.johncorser.telly.features.player.PlayerState
+import com.johncorser.telly.features.player.ResizeModes
 
 /**
  * One 16:9 pane of the multiview grid: its own engine's video letterboxed
@@ -70,7 +72,11 @@ internal fun MultiviewScreenPane(
             ),
     ) {
         Box(Modifier.fillMaxSize()) {
-            (pane.engine as? Media3PlayerEngine)?.let { PlayerScreenSurface(it, Modifier.fillMaxSize()) }
+            (pane.engine as? Media3PlayerEngine)?.let {
+                // The panes honor the persisted resize mode like fullscreen
+                // playback does (default Fit = the previous hardcoded value).
+                PlayerScreenSurface(it, Modifier.fillMaxSize(), resizeMode = ResizeModes.of(LocalResizeModeRaw.current))
+            }
             (state as? PlayerState.Error)?.let { MultiviewScreenPaneError(pane.channel.source.name, it.message) }
         }
     }

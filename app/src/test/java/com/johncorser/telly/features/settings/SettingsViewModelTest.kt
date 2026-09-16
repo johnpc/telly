@@ -372,6 +372,57 @@ class SettingsViewModelTest {
         }
 
     @Test
+    fun `require PIN for playlists gates the section behind a verify prompt`() =
+        runTest {
+            val model = model()
+            model.activate(RowIds.PARENTAL_MASTER)
+            model.submitPin("2468")
+            settings.set(TellySettings.PARENTAL_REQUIRE_FOR_PLAYLISTS, true)
+
+            model.activate(RowIds.SECTION_PREFIX + SettingsSection.PLAYLISTS.name)
+
+            assertEquals(SettingsOverlay.PinVerify(SettingsSection.PLAYLISTS), model.state.value.overlay)
+            assertNull("the section did not open", model.state.value.activePane)
+
+            model.submitVerifyPin("1111")
+            assertEquals(
+                "a wrong PIN keeps prompting",
+                SettingsOverlay.PinVerify(SettingsSection.PLAYLISTS),
+                model.state.value.overlay,
+            )
+
+            model.submitVerifyPin("2468")
+            assertNull(model.state.value.overlay)
+            assertEquals(SettingsPane.Section(SettingsSection.PLAYLISTS), model.state.value.activePane)
+        }
+
+    @Test
+    fun `the playlists gate is off by default and while parental is off`() =
+        runTest {
+            val model = model()
+            settings.set(TellySettings.PARENTAL_REQUIRE_FOR_PLAYLISTS, true)
+
+            model.activate(RowIds.SECTION_PREFIX + SettingsSection.PLAYLISTS.name)
+
+            assertNull(model.state.value.overlay)
+            assertEquals(SettingsPane.Section(SettingsSection.PLAYLISTS), model.state.value.activePane)
+        }
+
+    @Test
+    fun `other sections never prompt for the playlists PIN`() =
+        runTest {
+            val model = model()
+            model.activate(RowIds.PARENTAL_MASTER)
+            model.submitPin("2468")
+            settings.set(TellySettings.PARENTAL_REQUIRE_FOR_PLAYLISTS, true)
+
+            model.activate(RowIds.SECTION_PREFIX + SettingsSection.GENERAL.name)
+
+            assertNull(model.state.value.overlay)
+            assertEquals(SettingsPane.Section(SettingsSection.GENERAL), model.state.value.activePane)
+        }
+
+    @Test
     fun `back up data exports json and restore requests the picker`() =
         runTest {
             val model = model()

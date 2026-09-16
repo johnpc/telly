@@ -1,6 +1,7 @@
 package com.johncorser.telly.features.panel
 
 import com.johncorser.telly.features.epg.EpgRepository
+import com.johncorser.telly.features.playback.ClockStyle
 import com.johncorser.telly.features.playback.ProgramTimes
 import com.johncorser.telly.features.playlist.db.ChannelDao
 import kotlinx.coroutines.CoroutineScope
@@ -14,7 +15,6 @@ import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
-import java.util.TimeZone
 
 /** A focus move the row list must execute (scroll + focus the index). */
 data class PanelFocusCommand(
@@ -33,7 +33,7 @@ class PanelViewModel(
     private val epgRepository: EpgRepository,
     private val clock: () -> Long,
     scope: CoroutineScope,
-    private val zone: TimeZone = TimeZone.getDefault(),
+    private val style: ClockStyle = ClockStyle(),
     private val lock: PanelLock = PanelLock(),
 ) {
     private val channels = channelDao.observeVisible().stateIn(scope, SharingStarted.Eagerly, emptyList())
@@ -50,10 +50,13 @@ class PanelViewModel(
     /** The group awaiting a parental PIN, or null when no prompt is open. */
     val pinPrompt: StateFlow<String?> = lock.pinPrompt
 
+    /** True when PIN prompts use the masked keyboard entry, not the wheels. */
+    val keyboardPin: Boolean get() = lock.keyboardPin
+
     /** Panel header clock, "Sun, Sep 13, 2:53 PM" in blue (capture 47). */
     val clockText: StateFlow<String> =
         instant
-            .map { ProgramTimes.clock(it, zone) }
+            .map { ProgramTimes.clock(it, style) }
             .stateIn(scope, SharingStarted.Eagerly, "")
 
     val groups: StateFlow<List<String>> =
@@ -67,7 +70,7 @@ class PanelViewModel(
             .flatMapLatest { (groupChannels, group, at) ->
                 epgRepository
                     .nowNext(groupChannels.mapNotNull { it.source.tvgId }, at)
-                    .map { guide -> PanelRows.build(groupChannels, group, guide, at, zone) }
+                    .map { guide -> PanelRows.build(groupChannels, group, guide, at, style) }
             }.stateIn(scope, SharingStarted.Eagerly, emptyList())
 
     /** The airing programme title of a row — the channel menu's blue header. */

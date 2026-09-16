@@ -1,9 +1,14 @@
 package com.johncorser.telly.features.player
 
 import android.content.Context
+import androidx.media3.common.C
 import androidx.media3.common.Format
+import androidx.media3.common.MimeTypes
 import androidx.media3.common.PlaybackException
 import androidx.media3.common.Player
+import androidx.media3.common.TrackGroup
+import androidx.media3.common.TrackSelectionParameters
+import androidx.media3.common.Tracks
 import androidx.media3.exoplayer.ExoPlayer
 import androidx.media3.exoplayer.video.VideoFrameMetadataListener
 import androidx.test.core.app.ApplicationProvider
@@ -153,6 +158,54 @@ class Media3PlayerEngineTest {
             Media3PlayerEngine.create(
                 ApplicationProvider.getApplicationContext<Context>(),
                 handleAudioFocus = false,
+            )
+
+        assertNotNull(engine.player)
+        engine.release()
+    }
+
+    @Test
+    fun `surround-by-default overrides onto the widest audio track`() {
+        every { player.addListener(capture(listener)) } just Runs
+        every { player.setVideoFrameMetadataListener(capture(frameListener)) } just Runs
+        Media3PlayerEngine(player, preferSurround = { true })
+        val stereoSelected =
+            Tracks.Group(
+                TrackGroup(
+                    Format.Builder().setSampleMimeType(MimeTypes.AUDIO_AAC).setChannelCount(2).build(),
+                    Format.Builder().setSampleMimeType(MimeTypes.AUDIO_AAC).setChannelCount(6).build(),
+                ),
+                false,
+                intArrayOf(C.FORMAT_HANDLED, C.FORMAT_HANDLED),
+                booleanArrayOf(true, false),
+            )
+        every { player.trackSelectionParameters } returns TrackSelectionParameters.DEFAULT
+        val applied = slot<TrackSelectionParameters>()
+        every { player.trackSelectionParameters = capture(applied) } just Runs
+
+        listener.captured.onTracksChanged(Tracks(listOf(stereoSelected)))
+
+        val override = applied.captured.overrides.values.single()
+        assertEquals(6, override.mediaTrackGroup.getFormat(override.trackIndices.single()).channelCount)
+    }
+
+    @Test
+    fun `surround off leaves the track selection alone`() {
+        val engine = engine()
+        every { player.trackSelectionParameters } returns TrackSelectionParameters.DEFAULT
+
+        listener.captured.onTracksChanged(Tracks.EMPTY)
+
+        verify(exactly = 0) { player.trackSelectionParameters = any() }
+        assertNotNull(engine)
+    }
+
+    @Test
+    fun `create with passthrough forced builds a player too`() {
+        val engine =
+            Media3PlayerEngine.create(
+                ApplicationProvider.getApplicationContext<Context>(),
+                audio = PlayerAudioPrefs(passthrough = { true }),
             )
 
         assertNotNull(engine.player)
