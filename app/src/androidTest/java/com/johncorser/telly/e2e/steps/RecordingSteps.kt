@@ -31,6 +31,11 @@ class RecordingSteps(
 ) {
     @When("I open the recordings library")
     fun openLibrary() {
+        // A completed DVR action from the panel-row sheet deliberately lands
+        // back on the PANEL (PlaybackRecordingPrompts.doneTarget), where
+        // long-OK would reopen the row sheet instead of the quick bar —
+        // BACK the chrome away first so long-OK opens the quick bar.
+        driver.dismissChrome()
         world.longPressOk()
         world.select("Recordings")
     }

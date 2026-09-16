@@ -47,8 +47,21 @@ class PlaybackDriver(
         world.select("Next")
         world.waitForText("Playlist is processed")
         world.select("Next")
-        // EPG step (capture 13): the url-tvg source is pre-filled; Done keeps it.
-        world.waitForText("EPG URL")
+        // EPG step (capture 13): the url-tvg source is pre-filled; Done keeps
+        // it. The OK above was once eaten by an emulator-wide system_server
+        // input-dispatch stall, so self-heal like assertPlaybackOn does:
+        // focus is still on the processed step's Next, re-press while that
+        // step is visibly up — bounded and inert once the EPG step appears.
+        awaitCondition("EPG step reached") {
+            if (world.nodeCount(hasText("EPG URL")) > 0) {
+                true
+            } else {
+                if (world.nodeCount(hasText("Playlist is processed")) > 0) {
+                    world.pressKey(KeyEvent.KEYCODE_DPAD_CENTER)
+                }
+                false
+            }
+        }
         world.select("Done")
         assertPlaybackOn(1, "News One")
     }
