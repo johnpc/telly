@@ -53,10 +53,14 @@ fun WelcomeScreen(
                     modifier = Modifier.focusOnAppear(),
                 )
             }
+            // Appear-grab only while no restore pill is offered, so the two
+            // grabs never compete; the reclaim target covers the pill
+            // disappearing after a re-probe.
+            val addPlaylistGrab = if (offer == RestoreOffer.None) Modifier.focusOnAppear() else Modifier
             WelcomeScreenPill(
                 text = stringResource(R.string.welcome_add_playlist),
                 onClick = onAddPlaylist,
-                modifier = addPlaylistReclaim.target(),
+                modifier = addPlaylistGrab.then(addPlaylistReclaim.target()),
             )
             WelcomeScreenPill(
                 text = stringResource(R.string.welcome_settings),
