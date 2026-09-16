@@ -1,6 +1,7 @@
 package com.johncorser.telly.features.guide
 
 import com.johncorser.telly.features.catchup.GuideCatchup
+import com.johncorser.telly.features.groups.GroupToolLauncher
 import com.johncorser.telly.features.history.WatchHistory
 import com.johncorser.telly.features.mylist.MyListMenu
 import com.johncorser.telly.features.panel.PanelViewModel
@@ -8,6 +9,7 @@ import com.johncorser.telly.features.playback.PlaybackEnv
 import com.johncorser.telly.features.playback.PlaybackLifecycle
 import com.johncorser.telly.features.playback.TuneBlockPrompt
 import com.johncorser.telly.features.playback.gatedTuner
+import com.johncorser.telly.features.playback.groupTools
 import com.johncorser.telly.features.playlist.db.ChannelEntity
 import com.johncorser.telly.features.recording.RecordingMenu
 import kotlinx.coroutines.CoroutineScope
@@ -57,14 +59,12 @@ class GuideController(
     private val selected = MutableStateFlow(PanelViewModel.ALL_CHANNELS)
     private val focusEngine =
         GuideFocusEngine(originMs, { GuideWindowMath.scrollFloorDp(pastDays()) }, visibleRows = seams.visibleRows)
-    private val feed =
-        GuideRowsFeed(
-            GuideRowsSources(tuner.channels, selected.asStateFlow()),
-            focusEngine.scrollX,
-            env.epgRepository::programsFor,
-            originMs,
-            scope,
-        )
+
+    /** The shared factory behind the sheet's six group/bulk tool rows. */
+    private val groupTools = env.groupTools(scope)
+    private val toolLauncher = GroupToolLauncher(groupTools) { selected.value }
+    private val sources = GuideRowsSources(tuner.channels, selected.asStateFlow(), groupTools.groups)
+    private val feed = guideRowsFeed(env, sources, focusEngine.scrollX, originMs, scope)
 
     val rows: StateFlow<List<GuideRow>> = feed.rows
 
@@ -87,7 +87,7 @@ class GuideController(
     /** Layers + the long-OK row context sheet (catalogue §3 38-42). */
     val menu =
         GuideMenuController(
-            channelActions = guideSheetActions(env, scope, sheetMyList, tuner::zapAwayFrom),
+            channelActions = guideSheetActions(env, scope, sheetMyList, tuner::zapAwayFrom, toolLauncher),
             focusedRow = ::focusedRow,
             info = { info.value },
             callbacks = callbacks,

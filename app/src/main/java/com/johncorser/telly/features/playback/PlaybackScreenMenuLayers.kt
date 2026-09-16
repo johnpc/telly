@@ -6,6 +6,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.res.stringResource
 import com.johncorser.telly.R
 import com.johncorser.telly.core.ui.OnboardingScreenMessage
+import com.johncorser.telly.features.groups.GroupToolScreen
 import com.johncorser.telly.features.guide.GuideScreenChannelOptionsPane
 import com.johncorser.telly.features.playback.tracks.PlaybackScreenTrackPicker
 import com.johncorser.telly.features.playlist.db.displayName
@@ -36,6 +37,7 @@ internal fun PlaybackScreenMenuLayers(
                     onRow = viewModel.menu::onChannelOption,
                 )
             is PlaybackOverlay.TrackPicker -> PlaybackScreenTrackPicker(viewModel.trackPickers, active.kind)
+            is PlaybackOverlay.GroupTool -> GroupToolScreen(active.session)
             is PlaybackOverlay.ComingSoon ->
                 OnboardingScreenMessage(
                     headline = active.feature,

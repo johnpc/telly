@@ -138,6 +138,21 @@ class SettingsSteps(
         ParentalControls(ServiceLocator.settingsRepository(world.targetContext)).setGroupLocked(group, true)
     }
 
+    @Given("parental controls protect telly with the PIN {string}")
+    fun parentalPinArranged(pin: String) {
+        // Arranged through the real policy over the real store, like the
+        // locked-group step: the PIN-setup UI has its own scenario.
+        val parental = ParentalControls(ServiceLocator.settingsRepository(world.targetContext))
+        parental.setEnabled(true)
+        parental.setPin(pin)
+    }
+
+    @Then("the sheet asks for the PIN")
+    fun sheetAsksForPin() = world.waitFor(hasTestTag("pin-wheel"))
+
+    // "I enter the PIN {string}" lives in BlockSteps (shared with the
+    // block-channel scenarios) — one definition serves every PIN prompt.
+
     @Then("opening the group {string} requires the PIN")
     fun groupRequiresPin(group: String) {
         leaveSettings()

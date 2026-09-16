@@ -1,6 +1,7 @@
 package com.johncorser.telly.features.playback
 
 import com.johncorser.telly.core.settings.ParentalControls
+import com.johncorser.telly.features.groups.GroupToolLauncher
 import com.johncorser.telly.features.guide.ChannelOptionsController
 import com.johncorser.telly.features.guide.ChannelOptionsStore
 import com.johncorser.telly.features.mylist.MyListMenuHost
@@ -61,6 +62,8 @@ class SheetActions(
     val blocker: ChannelBlocker = ChannelBlocker(channels),
     /** The §41 Channel-options pane's live rows/dialogs (shared machine). */
     val options: ChannelOptionsController,
+    /** The launcher behind the six group/bulk tool rows (null in bare tests). */
+    val groupTools: GroupToolLauncher? = null,
 ) {
     /** The host's My-list context; the sheet's My-list/management rows. */
     val myList: MyListMenuHost? get() = channels.myList
@@ -71,6 +74,7 @@ class SheetActions(
             env: PlaybackEnv,
             scope: CoroutineScope,
             myList: MyListMenuHost? = null,
+            groupTools: GroupToolLauncher? = null,
         ): SheetActions {
             val actions = ChannelActions(env.channelDao, scope, myList)
             val external = env.hooks.platform.external
@@ -81,6 +85,7 @@ class SheetActions(
                     ChannelOptionsController(ChannelOptionsStore(env.channelDao, scope)) {
                         external.enabledByDefault
                     },
+                groupTools = groupTools,
             )
         }
     }

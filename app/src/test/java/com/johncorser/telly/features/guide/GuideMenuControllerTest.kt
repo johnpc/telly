@@ -3,6 +3,9 @@ package com.johncorser.telly.features.guide
 import com.johncorser.telly.core.settings.InMemoryKeyValueStore
 import com.johncorser.telly.core.settings.ParentalControls
 import com.johncorser.telly.core.settings.SettingsRepository
+import com.johncorser.telly.features.groups.GroupToolLauncher
+import com.johncorser.telly.features.groups.GroupTools
+import com.johncorser.telly.features.groups.InMemoryCustomGroupStore
 import com.johncorser.telly.features.mylist.InMemoryMyListStore
 import com.johncorser.telly.features.mylist.MyListMenu
 import com.johncorser.telly.features.mylist.MyListMenuHost
@@ -12,6 +15,7 @@ import com.johncorser.telly.features.playback.ChannelActions
 import com.johncorser.telly.features.playback.ChannelBlocker
 import com.johncorser.telly.features.playback.PlayerMenuItem
 import com.johncorser.telly.features.player.external.ExternalPlayer
+import com.johncorser.telly.features.settings.SettingsRow
 import com.johncorser.telly.testutil.FakeChannelDao
 import com.johncorser.telly.testutil.testChannel
 import com.johncorser.telly.testutil.testProgram
@@ -21,6 +25,7 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import kotlinx.coroutines.test.runTest
@@ -49,6 +54,7 @@ class GuideMenuControllerTest {
             favorite = false,
         )
 
+    private val groupStore = InMemoryCustomGroupStore()
     private val myListStore = InMemoryMyListStore()
     private var manageOpens = 0
     private val reorderGroups = mutableListOf<String>()
@@ -70,6 +76,7 @@ class GuideMenuControllerTest {
                 openReorderChannels = { reorderGroups += it },
             )
         val actions = ChannelActions(dao, scope, myList = host)
+        val launcher = GroupToolLauncher(GroupTools(groupStore, dao, flowOf(emptyList()), parental, scope)) { "News" }
         return GuideMenuController(
             channelActions =
                 GuideSheetChannelActions(
@@ -77,6 +84,7 @@ class GuideMenuControllerTest {
                     zapAway = { zapped += it.id },
                     blocker = ChannelBlocker(actions, parental),
                     options = ChannelOptionsController(ChannelOptionsStore(dao, scope)) { false },
+                    groupTools = launcher,
                 ),
             focusedRow = { row },
             info = { infoData },
@@ -222,33 +230,6 @@ class GuideMenuControllerTest {
     }
 
     @Test
-    fun `every unbuilt row lands on coming-soon and back pops to the sheet`() {
-        runTest {
-            // The remaining formerly-premium reference rows and the
-            // uncaptured rows share one fate: telly has no paywall, so both
-            // open the branded coming-soon placeholder backing to the sheet
-            // (the My-list/favorites-management rows are real now).
-            val unbuilt =
-                listOf(
-                    PlayerMenuItem.ASSIGN_EPG,
-                    PlayerMenuItem.MANAGE_BLOCKING,
-                    PlayerMenuItem.MANAGE_VISIBILITY,
-                    PlayerMenuItem.COPY_CHANNELS,
-                    PlayerMenuItem.CREATE_GROUP,
-                    PlayerMenuItem.GROUP_OPTIONS,
-                )
-            val menu = buildOpenSheet()
-
-            unbuilt.forEach { item ->
-                menu.onMenuItem(item)
-                assertEquals(GuideLayer.ComingSoon(item.label, back = GuideLayer.RowMenu), menu.layer.value)
-                menu.close()
-                assertEquals(GuideLayer.RowMenu, menu.layer.value)
-            }
-        }
-    }
-
-    @Test
     fun `block channel without a pin opens the setup dialog and a set pin blocks`() {
         runTest {
             val menu = buildOpenSheet()
@@ -302,6 +283,46 @@ class GuideMenuControllerTest {
             menu.onMenuItem(PlayerMenuItem.BLOCK_CHANNEL)
             menu.submitBlockPin("1234")
             assertTrue(dao.channels.value.none { it.flags.blocked })
+        }
+    }
+
+    @Test
+    fun `group tool rows push their screen over the sheet and back pops to it`() {
+        runTest {
+            val menu = buildOpenSheet()
+
+            menu.onMenuItem(PlayerMenuItem.ASSIGN_EPG)
+
+            val tool = menu.layer.value as GuideLayer.GroupTool
+            assertEquals("Assign EPG", tool.session.ui.value.title)
+            menu.close()
+            assertEquals(GuideLayer.RowMenu, menu.layer.value)
+        }
+    }
+
+    @Test
+    fun `create group commits a custom group and returns to the grid`() {
+        runTest {
+            val menu = buildOpenSheet()
+
+            menu.onMenuItem(PlayerMenuItem.CREATE_GROUP)
+            (menu.layer.value as GuideLayer.GroupTool).session.submitText("My Picks")
+
+            assertEquals(GuideLayer.Grid, menu.layer.value)
+            assertEquals(listOf("My Picks"), groupStore.groups.value.map { it.name })
+        }
+    }
+
+    @Test
+    fun `group options on a playlist group offers rename and delete locked`() {
+        runTest {
+            val menu = buildOpenSheet()
+
+            menu.onMenuItem(PlayerMenuItem.GROUP_OPTIONS)
+
+            val ui = (menu.layer.value as GuideLayer.GroupTool).session.ui.value
+            assertEquals("News", ui.title)
+            assertTrue(ui.rows.filterIsInstance<SettingsRow.Action>().all { it.locked })
         }
     }
 

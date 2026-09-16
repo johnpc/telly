@@ -31,7 +31,7 @@ class SearchRepository(
             searchDao
                 .channels(SearchQuery.nameLike(query), SearchQuery.numberLike(query))
                 .filter { it.id in visibleIds }
-        val guide = epgRepository.nowNext(channels.mapNotNull { it.source.tvgId }, atMs).first()
+        val guide = epgRepository.nowNext(channels.mapNotNull { it.epgId }, atMs).first()
         val programs = searchDao.programs(SearchQuery.nameLike(query), atMs, PROGRAM_LIMIT)
         return SearchResults(
             query = query,

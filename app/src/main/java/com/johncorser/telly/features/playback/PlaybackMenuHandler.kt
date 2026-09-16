@@ -67,7 +67,24 @@ class PlaybackMenuHandler(
                 runMyList(route, channel)
             PlayerMenuRoute.RECORD -> record { it.onRecord(channel) }
             PlayerMenuRoute.CUSTOM_RECORDING -> record { it.onCustomRecording(channel) }
-            PlayerMenuRoute.COMING_SOON -> push { back -> PlaybackOverlay.ComingSoon(item.label, back) }
+            PlayerMenuRoute.CREATE_GROUP, PlayerMenuRoute.GROUP_OPTIONS, PlayerMenuRoute.COPY_CHANNELS,
+            PlayerMenuRoute.ASSIGN_EPG, PlayerMenuRoute.MANAGE_BLOCKING, PlayerMenuRoute.MANAGE_VISIBILITY,
+            -> openGroupTool(item, route, channel)
+        }
+    }
+
+    /** A pushed group/bulk tool; a finished action lands on the panel. */
+    private fun openGroupTool(
+        item: PlayerMenuItem,
+        route: PlayerMenuRoute,
+        channel: ChannelEntity,
+    ) {
+        val exit = afterAction(overlays.value)
+        val session = actions.groupTools?.session(route, channel, onDone = { overlays.set(exit) })
+        if (session == null) {
+            push { back -> PlaybackOverlay.ComingSoon(item.label, back) }
+        } else {
+            push { back -> PlaybackOverlay.GroupTool(session, back) }
         }
     }
 

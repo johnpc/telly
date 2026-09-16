@@ -6,11 +6,10 @@ import org.junit.Test
 /**
  * The single routing table both sheets consume (catalogue §3 38-42):
  * pinning every row here means a drift in either the guide's or the panel's
- * sheet can only come from a change to this table. telly has no premium
- * tier, so every not-yet-built row routes to the branded coming-soon
- * placeholder — while the formerly-premium My-list/favorites-management
- * rows (Add to My list, Manage Favorites, Reorder channels) and the
- * recording slice's Record / Custom recording rows are real.
+ * sheet can only come from a change to this table. Every sheet row is LIVE:
+ * the table is total, so no row can reach a coming-soon placeholder through
+ * routing anymore (the last six — the group/bulk tools — shipped with the
+ * custom-groups slice).
  */
 class PlayerMenuRoutingTest {
     @Test
@@ -27,17 +26,32 @@ class PlayerMenuRoutingTest {
                 PlayerMenuItem.ADD_TO_FAVORITES to PlayerMenuRoute.TOGGLE_FAVORITE,
                 PlayerMenuItem.BLOCK_CHANNEL to PlayerMenuRoute.TOGGLE_BLOCK,
                 PlayerMenuItem.HIDE_CHANNEL to PlayerMenuRoute.HIDE_CHANNEL,
-                PlayerMenuItem.ASSIGN_EPG to PlayerMenuRoute.COMING_SOON,
+                PlayerMenuItem.ASSIGN_EPG to PlayerMenuRoute.ASSIGN_EPG,
                 PlayerMenuItem.CHANNEL_OPTIONS to PlayerMenuRoute.CHANNEL_OPTIONS,
                 PlayerMenuItem.MANAGE_FAVORITES to PlayerMenuRoute.MANAGE_FAVORITES,
-                PlayerMenuItem.MANAGE_BLOCKING to PlayerMenuRoute.COMING_SOON,
-                PlayerMenuItem.MANAGE_VISIBILITY to PlayerMenuRoute.COMING_SOON,
+                PlayerMenuItem.MANAGE_BLOCKING to PlayerMenuRoute.MANAGE_BLOCKING,
+                PlayerMenuItem.MANAGE_VISIBILITY to PlayerMenuRoute.MANAGE_VISIBILITY,
                 PlayerMenuItem.REORDER_CHANNELS to PlayerMenuRoute.REORDER_CHANNELS,
-                PlayerMenuItem.COPY_CHANNELS to PlayerMenuRoute.COMING_SOON,
-                PlayerMenuItem.CREATE_GROUP to PlayerMenuRoute.COMING_SOON,
-                PlayerMenuItem.GROUP_OPTIONS to PlayerMenuRoute.COMING_SOON,
+                PlayerMenuItem.COPY_CHANNELS to PlayerMenuRoute.COPY_CHANNELS,
+                PlayerMenuItem.CREATE_GROUP to PlayerMenuRoute.CREATE_GROUP,
+                PlayerMenuItem.GROUP_OPTIONS to PlayerMenuRoute.GROUP_OPTIONS,
             )
 
         assertEquals(expected, PlayerMenuItem.entries.associateWith(PlayerMenuRouting::routeOf))
+    }
+
+    @Test
+    fun `the six group and bulk rows route through the group-tool set`() {
+        val expected =
+            setOf(
+                PlayerMenuRoute.CREATE_GROUP,
+                PlayerMenuRoute.GROUP_OPTIONS,
+                PlayerMenuRoute.COPY_CHANNELS,
+                PlayerMenuRoute.ASSIGN_EPG,
+                PlayerMenuRoute.MANAGE_BLOCKING,
+                PlayerMenuRoute.MANAGE_VISIBILITY,
+            )
+
+        assertEquals(expected, PlayerMenuRouting.GROUP_TOOL_ROUTES)
     }
 }

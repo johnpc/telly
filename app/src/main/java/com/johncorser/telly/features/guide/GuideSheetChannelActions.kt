@@ -1,9 +1,12 @@
 package com.johncorser.telly.features.guide
 
+import com.johncorser.telly.features.groups.GroupToolLauncher
 import com.johncorser.telly.features.mylist.MyListMenuHost
 import com.johncorser.telly.features.playback.ChannelActions
 import com.johncorser.telly.features.playback.ChannelBlocker
 import com.johncorser.telly.features.playback.PlaybackEnv
+import com.johncorser.telly.features.playback.PlayerMenuItem
+import com.johncorser.telly.features.playback.PlayerMenuRoute
 import com.johncorser.telly.features.playlist.db.ChannelEntity
 import kotlinx.coroutines.CoroutineScope
 
@@ -20,6 +23,8 @@ class GuideSheetChannelActions(
     val blocker: ChannelBlocker = ChannelBlocker(actions),
     /** The §41 Channel-options pane's live rows/dialogs (shared machine). */
     val options: ChannelOptionsController,
+    /** The launcher behind the six group/bulk tool rows (null in bare tests). */
+    val groupTools: GroupToolLauncher? = null,
 ) {
     /** The host's My-list context; the sheet's My-list rows act through it. */
     val myList: MyListMenuHost? get() = actions.myList
@@ -38,6 +43,7 @@ internal fun guideSheetActions(
     scope: CoroutineScope,
     myList: MyListMenuHost?,
     zapAway: (ChannelEntity) -> Unit,
+    groupTools: GroupToolLauncher? = null,
 ): GuideSheetChannelActions {
     val actions = ChannelActions(env.channelDao, scope, myList)
     val external = env.hooks.platform.external
@@ -49,7 +55,18 @@ internal fun guideSheetActions(
             ChannelOptionsController(ChannelOptionsStore(env.channelDao, scope)) {
                 external.enabledByDefault
             },
+        groupTools = groupTools,
     )
+}
+
+/** A group/bulk tool pushed over the sheet; a finished action → grid. */
+internal fun GuideMenuController.openGroupTool(
+    route: PlayerMenuRoute,
+    item: PlayerMenuItem,
+    channel: ChannelEntity,
+) {
+    val session = channelActions.groupTools?.session(route, channel, onDone = ::reset)
+    show(session?.let { GuideLayer.GroupTool(it) } ?: GuideLayer.ComingSoon(item.label, back = GuideLayer.RowMenu))
 }
 
 /**

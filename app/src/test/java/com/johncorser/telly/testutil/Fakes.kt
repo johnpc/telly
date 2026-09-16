@@ -57,9 +57,9 @@ class FakeChannelDao(
             list.filter { !it.flags.hidden }.sortedWith(compareBy({ it.sortIndex }, { it.number }))
         }
 
-    override suspend fun totalCount(): Int = channels.value.size
+    override fun observeAll(): Flow<List<ChannelEntity>> = channels.map { list -> list.sortedBy { it.number } }
 
-    override suspend fun totalGroupCount(): Int = channels.value.mapNotNull { it.source.groupTitle }.distinct().size
+    override suspend fun totalCount(): Int = channels.value.size
 
     override suspend fun forPlaylist(playlistId: Long): List<ChannelEntity> =
         channels.value.filter { it.playlistId == playlistId }.sortedBy { it.sortIndex }
@@ -83,8 +83,8 @@ class FakeChannelDao(
     override fun observeEpgOffsets(): Flow<List<TvgOffset>> =
         channels.map { list ->
             list
-                .filter { it.overrides.epgOffsetMinutes != 0 && it.source.tvgId != null }
-                .map { TvgOffset(it.source.tvgId, it.overrides.epgOffsetMinutes) }
+                .filter { it.overrides.epgOffsetMinutes != 0 && it.epgId != null }
+                .map { TvgOffset(it.epgId, it.overrides.epgOffsetMinutes) }
         }
 }
 
@@ -128,6 +128,9 @@ class FakeProgramDao(
     }
 
     override suspend fun count(): Int = programs.value.size
+
+    override fun observeChannelIds(): Flow<List<String>> =
+        programs.map { list -> list.map { it.channelTvgId }.distinct().sorted() }
 }
 
 /** In-memory [SearchDao] over the channel/programme fakes. */

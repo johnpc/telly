@@ -58,7 +58,7 @@ class PanelViewModelTest {
             clock = clock,
             scope = CoroutineScope(SupervisorJob() + UnconfinedTestDispatcher(testScheduler)),
             style = ClockStyle(utc),
-            lock = lock,
+            hooks = PanelHooks(lock = lock),
         )
 
     private fun lockedMusic(): PanelLock {

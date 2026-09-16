@@ -14,10 +14,9 @@ import kotlinx.coroutines.flow.asStateFlow
 /**
  * The guide's overlay-layer state machine plus the long-OK row context
  * sheet (catalogue §3 38-42 + round3-ref 05), routed through the shared
- * [PlayerMenuRouting] table: genuinely supported rows act (Search,
- * Settings, favorites toggle, hide, the programme description); every
- * unbuilt row lands on the branded coming-soon placeholder until its
- * slice ships.
+ * [PlayerMenuRouting] table. Every sheet row is live — the six group/bulk
+ * tool rows push the shared [com.johncorser.telly.features.groups.GroupToolScreen]
+ * as [GuideLayer.GroupTool].
  */
 class GuideMenuController(
     internal val channelActions: GuideSheetChannelActions,
@@ -101,24 +100,12 @@ class GuideMenuController(
         val row = focusedRow() ?: return
         sheetFocus.onActivated(item)
         when (val route = PlayerMenuRouting.routeOf(item)) {
-            PlayerMenuRoute.SEARCH -> {
-                reset()
-                callbacks.onOpenSearch()
-            }
+            PlayerMenuRoute.SEARCH -> actThenReset(callbacks.onOpenSearch)
             PlayerMenuRoute.SETTINGS -> callbacks.onOpenSettings()
-            PlayerMenuRoute.TOGGLE_FAVORITE -> {
-                channelActions.toggleFavorite(row.channel)
-                reset()
-            }
-            PlayerMenuRoute.HIDE_CHANNEL -> {
-                channelActions.hide(row.channel)
-                reset()
-            }
+            PlayerMenuRoute.TOGGLE_FAVORITE -> actThenReset { channelActions.toggleFavorite(row.channel) }
+            PlayerMenuRoute.HIDE_CHANNEL -> actThenReset { channelActions.hide(row.channel) }
             // The row fires the chooser regardless of the tune-time setting.
-            PlayerMenuRoute.EXTERNAL_PLAYER -> {
-                callbacks.external.open(row.channel.source.streamUrl)
-                reset()
-            }
+            PlayerMenuRoute.EXTERNAL_PLAYER -> actThenReset { callbacks.external.open(row.channel.source.streamUrl) }
             PlayerMenuRoute.TOGGLE_BLOCK -> show(GuideLayer.BlockPin(row.channel, channelActions.blocker.mode()))
             PlayerMenuRoute.DESCRIPTION -> show(descriptionLayer(info()))
             PlayerMenuRoute.CHANNEL_OPTIONS -> show(GuideLayer.ChannelOptions(row.channel))
@@ -133,7 +120,15 @@ class GuideMenuController(
             }
             PlayerMenuRoute.RECORD -> recordingActions.record(row.channel)
             PlayerMenuRoute.CUSTOM_RECORDING -> recordingActions.customRecording()
-            PlayerMenuRoute.COMING_SOON -> show(GuideLayer.ComingSoon(item.label, back = GuideLayer.RowMenu))
+            PlayerMenuRoute.CREATE_GROUP, PlayerMenuRoute.GROUP_OPTIONS, PlayerMenuRoute.COPY_CHANNELS,
+            PlayerMenuRoute.ASSIGN_EPG, PlayerMenuRoute.MANAGE_BLOCKING, PlayerMenuRoute.MANAGE_VISIBILITY,
+            -> openGroupTool(route, item, row.channel)
         }
+    }
+
+    /** A sheet row that acts and lands back on the grid (round3-ref 05). */
+    private fun actThenReset(action: () -> Unit) {
+        action()
+        reset()
     }
 }

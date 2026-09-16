@@ -55,7 +55,7 @@ class RecordingCenter(
 
     private suspend fun startInstant(channel: ChannelEntity): RecordingPrompt {
         val now = clock()
-        val airing = channel.source.tvgId?.let { programmes.airingOn(it, now) }
+        val airing = channel.epgId?.let { programmes.airingOn(it, now) }
         val endMs = airing?.endMs ?: (now + RecordingSupport.FALLBACK_DURATION_MS)
         store.schedule(newEntry(channel, airing?.title, now, endMs))?.let(engine::start)
         return RecordingPrompt.Done

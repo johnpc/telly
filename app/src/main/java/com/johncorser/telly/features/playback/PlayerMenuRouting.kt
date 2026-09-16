@@ -41,8 +41,23 @@ enum class PlayerMenuRoute {
     /** The custom-recording form (channel prefilled, start + duration). */
     CUSTOM_RECORDING,
 
-    /** Unbuilt row: the branded coming-soon placeholder. */
-    COMING_SOON,
+    /** Name editor that creates an empty custom group. */
+    CREATE_GROUP,
+
+    /** Rename/Delete of the selected group (locked on playlist groups). */
+    GROUP_OPTIONS,
+
+    /** Multi-select channel list copying into a custom group. */
+    COPY_CHANNELS,
+
+    /** Per-channel EPG-id picker persisting the epgOverride column. */
+    ASSIGN_EPG,
+
+    /** Bulk blocked-flag editor, PIN-gated when parental controls are on. */
+    MANAGE_BLOCKING,
+
+    /** Bulk hidden-flag editor over every channel. */
+    MANAGE_VISIBILITY,
 }
 
 /**
@@ -52,6 +67,18 @@ enum class PlayerMenuRoute {
  * sheets can never drift.
  */
 object PlayerMenuRouting {
+    /** The six routes [com.johncorser.telly.features.groups.GroupTools] serves. */
+    val GROUP_TOOL_ROUTES: Set<PlayerMenuRoute> =
+        setOf(
+            PlayerMenuRoute.CREATE_GROUP,
+            PlayerMenuRoute.GROUP_OPTIONS,
+            PlayerMenuRoute.COPY_CHANNELS,
+            PlayerMenuRoute.ASSIGN_EPG,
+            PlayerMenuRoute.MANAGE_BLOCKING,
+            PlayerMenuRoute.MANAGE_VISIBILITY,
+        )
+
+    /** Every sheet row is live: the table is TOTAL (no coming-soon fallback). */
     private val routes: Map<PlayerMenuItem, PlayerMenuRoute> =
         mapOf(
             PlayerMenuItem.SEARCH to PlayerMenuRoute.SEARCH,
@@ -67,7 +94,13 @@ object PlayerMenuRouting {
             PlayerMenuItem.REORDER_CHANNELS to PlayerMenuRoute.REORDER_CHANNELS,
             PlayerMenuItem.RECORD to PlayerMenuRoute.RECORD,
             PlayerMenuItem.CUSTOM_RECORDING to PlayerMenuRoute.CUSTOM_RECORDING,
+            PlayerMenuItem.CREATE_GROUP to PlayerMenuRoute.CREATE_GROUP,
+            PlayerMenuItem.GROUP_OPTIONS to PlayerMenuRoute.GROUP_OPTIONS,
+            PlayerMenuItem.COPY_CHANNELS to PlayerMenuRoute.COPY_CHANNELS,
+            PlayerMenuItem.ASSIGN_EPG to PlayerMenuRoute.ASSIGN_EPG,
+            PlayerMenuItem.MANAGE_BLOCKING to PlayerMenuRoute.MANAGE_BLOCKING,
+            PlayerMenuItem.MANAGE_VISIBILITY to PlayerMenuRoute.MANAGE_VISIBILITY,
         )
 
-    fun routeOf(item: PlayerMenuItem): PlayerMenuRoute = routes[item] ?: PlayerMenuRoute.COMING_SOON
+    fun routeOf(item: PlayerMenuItem): PlayerMenuRoute = routes.getValue(item)
 }

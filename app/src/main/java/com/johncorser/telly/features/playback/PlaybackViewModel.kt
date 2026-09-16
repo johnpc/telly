@@ -4,7 +4,6 @@ import com.johncorser.telly.features.catchup.CatchupPlayback
 import com.johncorser.telly.features.history.WatchHistory
 import com.johncorser.telly.features.mylist.MyListMenu
 import com.johncorser.telly.features.mylist.panelMyListHost
-import com.johncorser.telly.features.panel.PanelViewModel
 import com.johncorser.telly.features.pip.PipEnterAction
 import com.johncorser.telly.features.playback.tracks.TrackPickerController
 import com.johncorser.telly.features.player.PlayerState
@@ -41,7 +40,10 @@ class PlaybackViewModel(
      */
     val openMultiview: () -> Unit = env.hooks.onOpenMultiview
 
-    val panel = PanelViewModel(env.channelDao, env.epgRepository, clock, scope, env.time.style, env.hooks.panelLock)
+    /** The shared factory behind the sheet's six group/bulk tool rows. */
+    private val groupTools = env.groupTools(scope)
+
+    val panel = playbackPanel(env, groupTools, scope)
 
     private val tuner = gatedTuner(env, history, scope, external = hooks.platform.external)
     private val overlays = OverlayState(scope)
@@ -53,7 +55,10 @@ class PlaybackViewModel(
     /** Executes context-menu rows; also resolves the channel they act on. */
     val menu: PlaybackMenuHandler =
         PlaybackMenuHandler(
-            actions = SheetActions.over(env, scope, myList = panelMyListHost(myList, panel, env.hooks)),
+            actions =
+                sheetActionsFor(env, scope, panelMyListHost(myList, panel, env.hooks), groupTools) {
+                    panel.selectedGroup.value
+                },
             overlays = overlays,
             tuner = tuner,
             hooks = hooks.copy(onOpenSearch = openSearch),

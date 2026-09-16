@@ -2,6 +2,8 @@ package com.johncorser.telly.features.playback
 
 import com.johncorser.telly.core.settings.ParentalControls
 import com.johncorser.telly.features.catchup.CatchupDeps
+import com.johncorser.telly.features.groups.CustomGroupStore
+import com.johncorser.telly.features.groups.InMemoryCustomGroupStore
 import com.johncorser.telly.features.mylist.MyListHooks
 import com.johncorser.telly.features.panel.PanelLock
 import com.johncorser.telly.features.pip.PipState
@@ -48,4 +50,6 @@ data class PlaybackHooks(
      * hands a LIVE URL to the engine; identity by default.
      */
     val resolveUrl: (String) -> String = { it },
+    /** Custom-group persistence behind the sheet's group tools (Room on device). */
+    val customGroups: CustomGroupStore = InMemoryCustomGroupStore(),
 )

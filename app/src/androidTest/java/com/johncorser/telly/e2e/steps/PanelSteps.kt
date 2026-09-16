@@ -204,6 +204,19 @@ class PanelSteps(
     @Then("the channels column no longer lists {string}")
     fun channelsWithout(name: String) = world.waitForGone(driver.rowMatcher(name))
 
+    /** Rows inside a group/bulk tool sheet reuse channel names: scope by tag. */
+    @When("I select {string} in the tool sheet")
+    fun selectInToolSheet(text: String) = world.selectWithin("group-tool", text)
+
+    @Then("the row {string} shows the current programme of EPG id {string}")
+    fun rowShowsEpgProgramme(
+        name: String,
+        tvgId: String,
+    ) {
+        val programme = FixtureServer.nowProgramme(tvgId, System.currentTimeMillis())
+        world.waitFor(driver.rowMatcher(name) and hasText(programme.displayTitle))
+    }
+
     private var menuChannelName: String? = null
 
     private fun quotedNames(raw: String): List<String> =

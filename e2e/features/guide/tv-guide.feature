@@ -137,6 +137,22 @@ Feature: TV guide
     When I press ok
     Then focus returns to the groups column
 
+  Scenario: Create group adds a custom group to the guide's groups column
+    When I long-press ok
+    And I select "Create group"
+    And I type "My Picks"
+    Then the programme grid is focused again
+    When I press dpad left
+    Then the groups column lists "Favorites", "All channels", "News", "Sports", "Movies", "Kids", "Music", "My Picks"
+
+  Scenario: Assign EPG fills an EPG-less guide row from the picked id
+    When I press dpad down 6 times
+    And I long-press ok
+    And I select "Assign EPG"
+    Then I see "Auto (tvg-id)"
+    When I select "news-one-1.fixture" in the tool sheet
+    Then the guide row of "Sports Arena" shows the current programme of EPG id "news-one-1.fixture"
+
   Scenario: BACK at the guide root exits the app without confirmation
     When I press back
     Then telly exits to the launcher

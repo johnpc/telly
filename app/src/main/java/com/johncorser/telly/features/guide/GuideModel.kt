@@ -1,6 +1,7 @@
 package com.johncorser.telly.features.guide
 
 import com.johncorser.telly.features.epg.db.ProgramEntity
+import com.johncorser.telly.features.groups.GroupToolSession
 import com.johncorser.telly.features.playback.BlockPinMode
 import com.johncorser.telly.features.playlist.db.ChannelEntity
 
@@ -87,6 +88,11 @@ sealed interface GuideLayer {
         val mode: BlockPinMode,
         val back: GuideLayer = RowMenu,
     ) : GuideLayer
+
+    /** A pushed group/bulk tool screen (Create group, Assign EPG, …); BACK → sheet. */
+    data class GroupTool(
+        val session: GroupToolSession,
+    ) : GuideLayer
 }
 
 /** The sheet's Program-description layer from the focused programme. */
@@ -110,6 +116,7 @@ internal fun backOf(layer: GuideLayer): GuideLayer =
         is GuideLayer.RecordingStop -> layer.back
         is GuideLayer.CustomRecording -> layer.back
         is GuideLayer.BlockPin -> layer.back
+        is GuideLayer.GroupTool -> GuideLayer.RowMenu
         else -> GuideLayer.Grid
     }
 

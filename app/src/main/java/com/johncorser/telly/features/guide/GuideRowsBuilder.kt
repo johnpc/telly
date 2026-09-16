@@ -15,11 +15,11 @@ object GuideRowsBuilder {
         programs: List<ProgramEntity>,
     ): List<GuideRow> {
         val byTvgId = programs.groupBy { it.channelTvgId }
-        return PanelRows.channelsIn(input.channels, input.group).mapIndexed { index, channel ->
+        return PanelRows.channelsIn(input.channels, input.group, input.custom).mapIndexed { index, channel ->
             GuideRow(
                 channel = channel,
                 displayNumber = if (input.group == PanelViewModel.ALL_CHANNELS) channel.number else index + 1,
-                cells = GuideCellsBuilder.build(byTvgId[channel.source.tvgId].orEmpty(), input.span),
+                cells = GuideCellsBuilder.build(byTvgId[channel.epgId].orEmpty(), input.span),
             )
         }
     }

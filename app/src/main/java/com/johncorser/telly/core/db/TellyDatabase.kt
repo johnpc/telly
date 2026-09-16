@@ -8,6 +8,9 @@ import com.johncorser.telly.features.epg.db.EpgSourceDao
 import com.johncorser.telly.features.epg.db.EpgSourceEntity
 import com.johncorser.telly.features.epg.db.ProgramDao
 import com.johncorser.telly.features.epg.db.ProgramEntity
+import com.johncorser.telly.features.groups.db.CustomGroupDao
+import com.johncorser.telly.features.groups.db.CustomGroupEntity
+import com.johncorser.telly.features.groups.db.CustomGroupMemberEntity
 import com.johncorser.telly.features.history.db.WatchHistoryDao
 import com.johncorser.telly.features.history.db.WatchHistoryEntity
 import com.johncorser.telly.features.mylist.db.MyListDao
@@ -32,9 +35,9 @@ import com.johncorser.telly.features.vod.db.VodPositionEntity
         PlaylistEntity::class, ChannelEntity::class, ProgramEntity::class,
         WatchHistoryEntity::class, EpgSourceEntity::class, ReminderEntity::class,
         MyListEntity::class, VodItemEntity::class, VodPositionEntity::class,
-        RecordingEntity::class,
+        RecordingEntity::class, CustomGroupEntity::class, CustomGroupMemberEntity::class,
     ],
-    version = 11,
+    version = 12,
     exportSchema = true,
 )
 abstract class TellyDatabase : RoomDatabase() {
@@ -47,6 +50,9 @@ abstract class TellyDatabase : RoomDatabase() {
     abstract fun epgSourceDao(): EpgSourceDao
 
     abstract fun searchDao(): SearchDao
+
+    /** v12: custom groups + membership (migration in CustomGroupsMigration). */
+    abstract val customGroupDao: CustomGroupDao
 
     abstract fun watchHistoryDao(): WatchHistoryDao
 

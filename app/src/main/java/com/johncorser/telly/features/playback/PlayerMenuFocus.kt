@@ -30,8 +30,7 @@ class PlayerMenuFocus {
         val PUSHED =
             setOf(
                 PlayerMenuRoute.DESCRIPTION,
-                PlayerMenuRoute.COMING_SOON,
                 PlayerMenuRoute.TOGGLE_BLOCK,
-            )
+            ) + PlayerMenuRouting.GROUP_TOOL_ROUTES
     }
 }

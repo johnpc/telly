@@ -1,11 +1,14 @@
 package com.johncorser.telly.features.guide
 
 import com.johncorser.telly.features.epg.db.ProgramEntity
+import com.johncorser.telly.features.groups.CustomGroup
 import com.johncorser.telly.features.panel.PanelRows
+import com.johncorser.telly.features.playback.PlaybackEnv
 import com.johncorser.telly.features.playlist.db.ChannelEntity
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
@@ -34,25 +37,34 @@ class GuideRowsFeed(
 
     @OptIn(ExperimentalCoroutinesApi::class)
     val rows: StateFlow<List<GuideRow>> =
-        combine(sources.channels, sources.selectedGroup, span) { list, group, window ->
-            GuideRowsInput(list, group, window)
+        combine(sources.channels, sources.customGroups, sources.selectedGroup, span) { list, custom, group, window ->
+            GuideRowsInput(list, group, window, custom)
         }.flatMapLatest { input ->
-            val tvgIds = input.channels.mapNotNull { it.source.tvgId }
-            programsFor(tvgIds, input.span.fromMs, input.span.toMs)
+            val epgIds = input.channels.mapNotNull { it.epgId }
+            programsFor(epgIds, input.span.fromMs, input.span.toMs)
                 .map { programs -> GuideRowsBuilder.build(input, programs) }
         }.stateIn(scope, SharingStarted.Eagerly, emptyList())
 
-    /** The groups column (capture 25). */
+    /** The groups column (capture 25): playlist groups then custom groups. */
     val groups: StateFlow<List<String>> =
-        sources.channels
-            .map(PanelRows::groupNames)
+        combine(sources.channels, sources.customGroups, PanelRows::groupNames)
             .stateIn(scope, SharingStarted.Eagerly, PanelRows.groupNames(emptyList()))
 }
+
+/** [GuideRowsFeed] over the env's EPG lookup — the controller's one-liner. */
+internal fun guideRowsFeed(
+    env: PlaybackEnv,
+    sources: GuideRowsSources,
+    scrollX: StateFlow<Float>,
+    originMs: Long,
+    scope: CoroutineScope,
+): GuideRowsFeed = GuideRowsFeed(sources, scrollX, env.epgRepository::programsFor, originMs, scope)
 
 /** The live inputs the grid rows are derived from. */
 class GuideRowsSources(
     val channels: StateFlow<List<ChannelEntity>>,
     val selectedGroup: StateFlow<String>,
+    val customGroups: StateFlow<List<CustomGroup>> = MutableStateFlow(emptyList()),
 )
 
 /** One (channels, group, span) snapshot the rows build from. */
@@ -60,4 +72,5 @@ data class GuideRowsInput(
     val channels: List<ChannelEntity>,
     val group: String,
     val span: GuideSpan,
+    val custom: List<CustomGroup> = emptyList(),
 )

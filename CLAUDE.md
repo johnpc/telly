@@ -185,6 +185,48 @@ Local SDK note: `local.properties` must contain
   One + News One HD (generated BACKWARDS so now/next phases never shift),
   so a −24 h day jump lands on real playable/non-playable past cells.
   Verified locally (quality.sh); on-device acceptance legs pending.
+- **2026-09-15** Custom groups + bulk channel managers: the context sheet's
+  last six rows are real — NO sheet row routes to coming-soon anymore (the
+  `PlayerMenuRouting` table is total; `routeOf` has no fallback). **Create
+  group** = name editor (creates an EMPTY custom group — the ux-spec never
+  specifies seeding it with the sheet's channel; Copy channels populates),
+  **Copy channels** = target picker (skipped at exactly one group) +
+  multi-select toggle list with an explicit Done, **Group options** =
+  Rename/Delete of the SELECTED group (locked on playlist groups/Favorites/
+  All channels — only custom groups are editable), **Assign EPG** =
+  per-channel picker of every EPG id with stored data + "Auto (tvg-id)"
+  default, **Manage blocking / Manage visibility** = bulk toggle editors
+  over EVERY channel. Manage blocking is gated ONCE per screen entry behind
+  the parental PIN (PanelLock precedent, honoring the persisted keyboard-PIN
+  input method) and writes the SAME `channels.blocked` flag the Block-channel
+  slice owns (v9) — the branch's duplicate blocked column was dropped at
+  merge; bulk visibility deliberately does NOT zap away the tuned channel
+  (the single-row Hide flow still does). Storage (Room **v12**,
+  `CustomGroupsMigration.MIGRATION_11_12` — renumbered from the branch's 4→5):
+  `custom_groups` + `custom_group_members` join table keyed by
+  `ChannelImporter.keyOf` (identityOf over a row) so membership survives
+  playlist refreshes with zero importer changes, plus `channels.epgOverride`
+  living INSIDE the `ChannelOverrides` embed (next to customName/decoders/
+  epgOffsetMinutes — the importer carries it automatically).
+  `ChannelEntity.epgId` (= overrides.epgOverride ?: tvg-id) is the ONE lookup
+  key every EPG path uses — guide/panel/playback-info/recents/history AND
+  (extended at merge, since main owns them now) search + multiview — and the
+  Channel-options "EPG time offset" composes ON TOP: `EpgRepository` shifts
+  per channel keyed by the REMAPPED id (remap first, then offset). Custom
+  groups append after the playlist groups in BOTH group columns
+  (PanelRows.groupNames/channelsIn grew custom-group parameters; a name
+  collision resolves to the playlist group; GroupVisibility still only
+  filters the synthetic Favorites/All-channels — custom groups always show
+  unless empty). Architecture: one `GroupTools` factory per host (fed by
+  `CustomGroupStore` — Room + in-memory impls — via `PlaybackHooks.
+  customGroups`) builds a `GroupToolSession` per row (`CreateGroup`/
+  `GroupOptions`/`CopyChannels`/`AssignEpg`/`BulkFlag` sessions, pure
+  JVM-tested state machines emitting `GroupToolUi` = SettingsRow lists /
+  text editor / PIN entry), rendered by the single shared `GroupToolScreen`
+  sheet; hosts push it as `GuideLayer.GroupTool` / `PlaybackOverlay.
+  GroupTool` (BACK pops to the sheet, a completed action lands on the
+  grid/panel). The sheet bundles stay main's shapes with a
+  `GroupToolLauncher` folded in (`GuideSheetChannelActions` / `SheetActions`).
 - **2026-09-15** Multiview (multiview-round captures + `multiview-spec.md`).
   **Captured facts, matched exactly:** the quick-bar Multiview slot opens
   `Route.Multiview` — a single centered half-size 16:9 pane on black

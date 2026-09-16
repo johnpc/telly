@@ -17,7 +17,7 @@ class CatchupLiveEdge(
 ) {
     suspend fun requestFor(channel: ChannelEntity): CatchupRequest? {
         val attributes = channel.catchupAttributes() ?: return null
-        val tvgId = channel.source.tvgId ?: return null
+        val tvgId = channel.epgId ?: return null
         val now = clock()
         return epg.nowNext(listOf(tvgId), now).first()[tvgId]?.now?.let { airing ->
             CatchupUrlBuilder

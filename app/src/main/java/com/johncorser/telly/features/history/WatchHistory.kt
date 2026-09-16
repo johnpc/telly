@@ -38,7 +38,6 @@ class WatchHistory(
         const val CAP = 30
 
         /** Playlist-refresh-stable channel identity, same key as user flags. */
-        fun identityOf(channel: ChannelEntity): String =
-            ChannelImporter.identityOf(channel.source.tvgId, channel.source.streamUrl, channel.source.name)
+        fun identityOf(channel: ChannelEntity): String = ChannelImporter.keyOf(channel)
     }
 }

@@ -13,6 +13,7 @@ import com.johncorser.telly.features.epg.EpgOffsets
 import com.johncorser.telly.features.epg.EpgRepository
 import com.johncorser.telly.features.epg.EpgSourceStore
 import com.johncorser.telly.features.epg.RoomEpgSourceStore
+import com.johncorser.telly.features.groups.db.CustomGroupsMigration
 import com.johncorser.telly.features.mylist.MyListStore
 import com.johncorser.telly.features.mylist.RoomMyListStore
 import com.johncorser.telly.features.mylist.db.MyListMigration
@@ -56,6 +57,7 @@ object ServiceLocator {
                     BlockedMigration.MIGRATION_8_9,
                     CatchupMigration.MIGRATION_9_10,
                     ChannelOptionsMigration.MIGRATION_10_11,
+                    CustomGroupsMigration.MIGRATION_11_12,
                 )
                 .build()
                 .also { database = it }

@@ -25,7 +25,7 @@ object SearchResultsBuilder {
         atMs: Long,
     ): List<SearchChannelHit> =
         matches.map { channel ->
-            val now = guide[channel.source.tvgId]?.now
+            val now = guide[channel.epgId]?.now
             SearchChannelHit(
                 channel = channel,
                 nowTitle = now?.details?.let(ProgramTitle::of),
@@ -98,11 +98,11 @@ object SearchResultsBuilder {
         return "${format("EEE, MMM d", program.startMs, style.zone)}, $range"
     }
 
-    /** First visible channel wins when several share a tvg-id. */
+    /** First visible channel wins when several share an EPG id (remap-aware). */
     private fun channelByTvgId(channels: List<ChannelEntity>): Map<String, ChannelEntity> {
         val map = mutableMapOf<String, ChannelEntity>()
         for (channel in channels) {
-            channel.source.tvgId?.let { map.putIfAbsent(it, channel) }
+            channel.epgId?.let { map.putIfAbsent(it, channel) }
         }
         return map
     }

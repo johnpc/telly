@@ -473,23 +473,6 @@ class PlaybackViewModelTest : PlaybackVmHarness() {
         }
 
     @Test
-    fun `uncaptured menu rows keep the placeholder and back pops to the sheet`() =
-        runTest {
-            val vm = buildVm()
-            vm.openPanel()
-            vm.showChannelMenu(channels[0])
-
-            vm.menu.onMenuItem(PlayerMenuItem.ASSIGN_EPG)
-
-            val sheet = PlaybackOverlay.ChannelMenu(1L)
-            assertEquals(PlaybackOverlay.ComingSoon("Assign EPG", back = sheet), vm.overlay.value)
-            vm.onKey(PlaybackKey.BACK)
-            assertEquals(sheet, vm.overlay.value)
-            vm.onKey(PlaybackKey.BACK)
-            assertEquals(PlaybackOverlay.Panel, vm.overlay.value)
-        }
-
-    @Test
     fun `unbuilt menu rows open coming-soon and back pops to the sheet`() =
         runTest {
             // telly has no premium tier: the reference's paywall rows now
@@ -505,6 +488,75 @@ class PlaybackViewModelTest : PlaybackVmHarness() {
             assertEquals(PlaybackOverlay.ComingSoon("Record", back = sheet), vm.overlay.value)
             vm.onKey(PlaybackKey.BACK)
             assertEquals(sheet, vm.overlay.value)
+        }
+
+    @Test
+    fun `a group tool row pushes its screen and back pops to the sheet`() =
+        runTest {
+            val vm = buildVm()
+            vm.openPanel()
+            vm.showChannelMenu(channels[0])
+
+            vm.menu.onMenuItem(PlayerMenuItem.ASSIGN_EPG)
+
+            val sheet = PlaybackOverlay.ChannelMenu(1L)
+            val tool = vm.overlay.value as PlaybackOverlay.GroupTool
+            assertEquals("Assign EPG", tool.session.ui.value.title)
+            assertEquals(sheet, tool.back)
+            vm.onKey(PlaybackKey.BACK)
+            assertEquals(sheet, vm.overlay.value)
+        }
+
+    @Test
+    fun `create group commits a custom group and lands back on the panel`() =
+        runTest {
+            val vm = buildVm()
+            vm.openPanel()
+            vm.showChannelMenu(channels[0])
+
+            vm.menu.onMenuItem(PlayerMenuItem.CREATE_GROUP)
+            (vm.overlay.value as PlaybackOverlay.GroupTool).session.submitText("My Picks")
+
+            assertEquals(PlaybackOverlay.Panel, vm.overlay.value)
+            assertTrue("My Picks" in vm.panel.groups.value)
+            assertEquals(vm.panel.groups.value.last(), "My Picks")
+        }
+
+    @Test
+    fun `copy channels fills a custom group the panel can select`() =
+        runTest {
+            val vm = buildVm()
+            vm.openPanel()
+            vm.showChannelMenu(channels[0])
+            vm.menu.onMenuItem(PlayerMenuItem.CREATE_GROUP)
+            (vm.overlay.value as PlaybackOverlay.GroupTool).session.submitText("My Picks")
+            vm.showChannelMenu(channels[0])
+
+            vm.menu.onMenuItem(PlayerMenuItem.COPY_CHANNELS)
+            val session = (vm.overlay.value as PlaybackOverlay.GroupTool).session
+            session.activate("channel:2")
+            session.activate("done")
+
+            assertEquals(PlaybackOverlay.Panel, vm.overlay.value)
+            vm.panel.selectGroup("My Picks")
+            assertEquals(listOf(2L), vm.panel.rows.value.map { it.channel.id })
+        }
+
+    @Test
+    fun `manage visibility hides a channel from the panel in bulk`() =
+        runTest {
+            val vm = buildVm()
+            vm.openPanel()
+            vm.showChannelMenu(channels[0])
+
+            vm.menu.onMenuItem(PlayerMenuItem.MANAGE_VISIBILITY)
+            (vm.overlay.value as PlaybackOverlay.GroupTool).session.activate("channel:2")
+
+            assertTrue(dao.channels.value.first { it.id == 2L }.flags.hidden)
+            vm.onKey(PlaybackKey.BACK)
+            vm.onKey(PlaybackKey.BACK)
+            assertEquals(PlaybackOverlay.Panel, vm.overlay.value)
+            assertFalse(vm.panel.rows.value.any { it.channel.id == 2L })
         }
 
     @Test

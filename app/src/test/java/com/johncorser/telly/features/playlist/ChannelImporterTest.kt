@@ -111,6 +111,7 @@ class ChannelImporterTest {
                 videoDecoder = "Hardware",
                 epgOffsetMinutes = 60,
                 externalPlayer = "On",
+                epgOverride = "alt-epg-id",
             )
         val previous =
             ChannelEntity(
@@ -130,6 +131,8 @@ class ChannelImporterTest {
             )
 
         assertEquals(overrides, rows.single().overrides)
+        // The Assign-EPG remap wins over the playlist's tvg-id.
+        assertEquals("alt-epg-id", rows.single().epgId)
         // An unmatched channel starts with no overrides at all.
         val fresh =
             ChannelImporter.import(

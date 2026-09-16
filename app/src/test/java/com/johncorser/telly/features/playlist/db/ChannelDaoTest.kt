@@ -48,11 +48,14 @@ class ChannelDaoTest {
     }
 
     @Test
-    fun `total group count is distinct visible groups`() =
+    fun `observeAll includes hidden channels for the bulk editors`() =
         runTest {
             seed()
-            // "News" + "Sports" (the null group and hidden channels don't count).
-            assertEquals(2, channelDao.totalGroupCount())
+
+            assertEquals(
+                listOf("News One", "News Two", "Sports Arena", "Loose Channel"),
+                channelDao.observeAll().first().map { it.source.name },
+            )
         }
 
     @Test

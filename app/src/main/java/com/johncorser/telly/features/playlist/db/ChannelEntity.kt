@@ -41,6 +41,8 @@ data class ChannelOverrides(
     @ColumnInfo(defaultValue = "0") val epgOffsetMinutes: Int = 0,
     /** "On"/"Off"; null = the global "Use external player" setting. */
     val externalPlayer: String? = null,
+    /** Per-channel EPG id override (Assign EPG); null = auto (tvg-id), v12. */
+    val epgOverride: String? = null,
 )
 
 /** What every channel-facing surface renders: the custom name when set. */
@@ -84,4 +86,7 @@ data class ChannelEntity(
     @Embedded val flags: ChannelFlags = ChannelFlags(),
     @Embedded val catchup: ChannelCatchup = ChannelCatchup(),
     @Embedded val overrides: ChannelOverrides = ChannelOverrides(),
-)
+) {
+    /** The EPG channel id guide lookups use: the override, else the tvg-id. */
+    val epgId: String? get() = overrides.epgOverride ?: source.tvgId
+}

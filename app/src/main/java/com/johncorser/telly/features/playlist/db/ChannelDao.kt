@@ -45,11 +45,12 @@ interface ChannelDao : ChannelOptionsDao {
     @Query("SELECT * FROM channels WHERE hidden = 0 ORDER BY sortIndex, number")
     fun observeVisible(): Flow<List<ChannelEntity>>
 
+    /** EVERY channel, hidden included — the bulk visibility/blocking editors. */
+    @Query("SELECT * FROM channels ORDER BY number")
+    fun observeAll(): Flow<List<ChannelEntity>>
+
     @Query("SELECT COUNT(*) FROM channels")
     suspend fun totalCount(): Int
-
-    @Query("SELECT COUNT(DISTINCT groupTitle) FROM channels WHERE hidden = 0")
-    suspend fun totalGroupCount(): Int
 
     @Query("SELECT * FROM channels WHERE playlistId = :playlistId ORDER BY sortIndex")
     suspend fun forPlaylist(playlistId: Long): List<ChannelEntity>

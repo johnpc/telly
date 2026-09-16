@@ -43,7 +43,7 @@ class PlaybackInfoFeed(
         channel: ChannelEntity?,
         atMs: Long,
     ): Flow<NowNext> {
-        val tvgId = channel?.source?.tvgId ?: return flowOf(NowNext())
+        val tvgId = channel?.epgId ?: return flowOf(NowNext())
         return epgRepository.nowNext(listOf(tvgId), atMs).map { it[tvgId] ?: NowNext() }
     }
 }

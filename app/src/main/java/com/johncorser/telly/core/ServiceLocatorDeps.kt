@@ -7,6 +7,7 @@ import com.johncorser.telly.core.settings.TellySettings
 import com.johncorser.telly.features.catchup.CatchupDeps
 import com.johncorser.telly.features.catchup.CatchupSession
 import com.johncorser.telly.features.catchup.CatchupToggles
+import com.johncorser.telly.features.groups.RoomCustomGroupStore
 import com.johncorser.telly.features.guide.GuideDeps
 import com.johncorser.telly.features.guide.GuideKeymap
 import com.johncorser.telly.features.guide.GuideStartPolicies
@@ -75,6 +76,7 @@ fun ServiceLocator.playbackDeps(
                         skipSteps = { SkipSteps.of(settingsRepository(context)) },
                     ),
                 resolveUrl = proxyResolve(settingsRepository(context)),
+                customGroups = RoomCustomGroupStore(database(context).customGroupDao),
             ),
     )
 

@@ -49,7 +49,7 @@ class CatchupNeighbours(
         fromMs: Long,
         toMs: Long,
     ): List<ProgramEntity> {
-        val tvgId = request.channel.source.tvgId ?: return emptyList()
+        val tvgId = request.channel.epgId ?: return emptyList()
         return epg.programsFor(listOf(tvgId), fromMs, toMs).first()
     }
 

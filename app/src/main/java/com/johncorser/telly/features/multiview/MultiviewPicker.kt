@@ -42,7 +42,7 @@ class MultiviewPicker(
     @OptIn(ExperimentalCoroutinesApi::class)
     val schedule: StateFlow<List<MultiviewScheduleRow>> =
         focusedRow
-            .map { it?.channel?.source?.tvgId }
+            .map { it?.channel?.epgId }
             .distinctUntilChanged()
             .flatMapLatest(::scheduleFor)
             .stateIn(scope, SharingStarted.Eagerly, emptyList())

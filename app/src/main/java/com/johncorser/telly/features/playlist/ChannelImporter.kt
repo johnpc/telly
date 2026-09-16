@@ -21,6 +21,10 @@ object ChannelImporter {
         name: String,
     ): String = tvgId?.takeIf { it.isNotBlank() } ?: "$streamUrl|$name"
 
+    /** [identityOf] for a stored row — custom-group membership keys use it. */
+    fun keyOf(channel: ChannelEntity): String =
+        identityOf(channel.source.tvgId, channel.source.streamUrl, channel.source.name)
+
     /** Builds the replacement rows for [playlistId] from a fresh parse. */
     fun import(
         playlistId: Long,

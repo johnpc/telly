@@ -117,5 +117,6 @@ private fun guideMenuSurface(layer: GuideLayer): PlayerMenuSurface =
         is GuideLayer.ChannelOptions -> PlayerMenuSurface.CHANNEL_OPTIONS
         is GuideLayer.Description, is GuideLayer.ComingSoon, is GuideLayer.BlockPin -> PlayerMenuSurface.PUSHED
         is GuideLayer.RecordingStop, is GuideLayer.CustomRecording -> PlayerMenuSurface.PUSHED
+        is GuideLayer.GroupTool -> PlayerMenuSurface.PUSHED
         else -> PlayerMenuSurface.NONE
     }

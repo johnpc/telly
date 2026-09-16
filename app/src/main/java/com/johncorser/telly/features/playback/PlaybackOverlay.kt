@@ -1,5 +1,6 @@
 package com.johncorser.telly.features.playback
 
+import com.johncorser.telly.features.groups.GroupToolSession
 import com.johncorser.telly.features.playback.tracks.TrackPickerKind
 import com.johncorser.telly.features.playlist.db.ChannelEntity
 
@@ -80,6 +81,12 @@ sealed interface PlaybackOverlay {
      */
     data class TrackPicker(
         val kind: TrackPickerKind,
+        override val back: PlaybackOverlay = None,
+    ) : Pushed
+
+    /** A pushed group/bulk tool screen (Create group, Assign EPG, …). */
+    data class GroupTool(
+        val session: GroupToolSession,
         override val back: PlaybackOverlay = None,
     ) : Pushed
 }
