@@ -22,6 +22,7 @@ class Media3PlayerEngine(
     val player: ExoPlayer,
     private val userAgent: StreamUserAgent? = null,
     override val tracks: TrackFacade = ExoTrackFacade(player),
+    override val decoders: DecoderPreferences = DecoderPreferences.NONE,
 ) : PlayerEngine,
     Player.Listener {
     private val mutableState = MutableStateFlow<PlayerState>(PlayerState.Idle)
@@ -101,13 +102,15 @@ class Media3PlayerEngine(
          * pool's engines share the app's focus and the focused pane owns
          * audio by mute state instead. Single fullscreen keeps the default.
          * [audio] carries the persisted surround-by-default + passthrough
-         * choices (defaults off = the previous behavior).
+         * choices (defaults off = the previous behavior); [tuning] the
+         * Playback buffer-size + decoder rows read at build time.
          */
         fun create(
             context: Context,
             handleAudioFocus: Boolean = true,
             userAgentFor: (streamUrl: String) -> String = { STREAM_USER_AGENT },
             audio: PlayerAudioPrefs = PlayerAudioPrefs(),
-        ): Media3PlayerEngine = buildMedia3PlayerEngine(context, handleAudioFocus, userAgentFor, audio)
+            tuning: PlayerTuning = PlayerTuning(),
+        ): Media3PlayerEngine = buildMedia3PlayerEngine(context, handleAudioFocus, userAgentFor, audio, tuning)
     }
 }

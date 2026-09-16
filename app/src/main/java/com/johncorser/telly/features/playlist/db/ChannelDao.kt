@@ -3,7 +3,6 @@ package com.johncorser.telly.features.playlist.db
 import androidx.room.Dao
 import androidx.room.Insert
 import androidx.room.Query
-import androidx.room.Update
 import kotlinx.coroutines.flow.Flow
 
 /** One row of the guide's group list: a group name plus its channel count. */
@@ -12,9 +11,13 @@ data class ChannelGroupCount(
     val channelCount: Int,
 )
 
-/** Persistence for channels; queries shaped for the guide/group UI slices. */
+/**
+ * Persistence for channels; queries shaped for the guide/group UI slices.
+ * The per-channel Channel-options queries (fresh-row reads, EPG offsets,
+ * the row update) are inherited from [ChannelOptionsDao].
+ */
 @Dao
-interface ChannelDao {
+interface ChannelDao : ChannelOptionsDao {
     @Query("SELECT * FROM channels WHERE playlistId = :playlistId ORDER BY number")
     fun observeForPlaylist(playlistId: Long): Flow<List<ChannelEntity>>
 
@@ -56,8 +59,4 @@ interface ChannelDao {
 
     @Insert
     suspend fun insertAll(channels: List<ChannelEntity>)
-
-    /** Persists user edits (favorite/hidden) to one channel row. */
-    @Update
-    suspend fun update(channel: ChannelEntity)
 }

@@ -21,6 +21,7 @@ import com.johncorser.telly.core.ui.TellyScreenLogoTile
 import com.johncorser.telly.core.ui.TellyScreenMutedText
 import com.johncorser.telly.core.ui.TellyScreenProgramTitle
 import com.johncorser.telly.core.ui.TellyScreenTimesLine
+import com.johncorser.telly.features.playlist.db.displayName
 
 /**
  * The focused row's inline expansion (round3-ref 04, capture 47): 70 dp
@@ -36,7 +37,7 @@ internal fun ChannelPanelScreenDetail(row: PanelRow) {
     ) {
         TellyScreenLogoTile(
             logoUrl = row.channel.source.logoUrl,
-            name = row.channel.source.name,
+            name = row.channel.displayName,
             size = 70.dp,
         )
         Spacer(Modifier.width(16.dp))

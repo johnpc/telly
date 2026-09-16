@@ -1,6 +1,8 @@
 package com.johncorser.telly.features.playback
 
 import com.johncorser.telly.core.settings.ParentalControls
+import com.johncorser.telly.features.guide.ChannelOptionsController
+import com.johncorser.telly.features.guide.ChannelOptionsStore
 import com.johncorser.telly.features.mylist.MyListMenuHost
 import com.johncorser.telly.features.playlist.db.ChannelEntity
 import kotlinx.coroutines.CoroutineScope
@@ -57,6 +59,8 @@ class ChannelBlocker(
 class SheetActions(
     val channels: ChannelActions,
     val blocker: ChannelBlocker = ChannelBlocker(channels),
+    /** The §41 Channel-options pane's live rows/dialogs (shared machine). */
+    val options: ChannelOptionsController,
 ) {
     /** The host's My-list context; the sheet's My-list/management rows. */
     val myList: MyListMenuHost? get() = channels.myList
@@ -69,7 +73,15 @@ class SheetActions(
             myList: MyListMenuHost? = null,
         ): SheetActions {
             val actions = ChannelActions(env.channelDao, scope, myList)
-            return SheetActions(actions, ChannelBlocker(actions, env.hooks.parental))
+            val external = env.hooks.platform.external
+            return SheetActions(
+                channels = actions,
+                blocker = ChannelBlocker(actions, env.hooks.parental),
+                options =
+                    ChannelOptionsController(ChannelOptionsStore(env.channelDao, scope)) {
+                        external.enabledByDefault
+                    },
+            )
         }
     }
 }

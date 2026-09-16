@@ -4,7 +4,6 @@ import android.content.Context
 import com.johncorser.telly.core.settings.TellySettings
 import com.johncorser.telly.features.multiview.MultiviewDeps
 import com.johncorser.telly.features.playback.PlaybackTime
-import com.johncorser.telly.features.player.Media3PlayerEngine
 import com.johncorser.telly.features.vod.VodDeps
 
 /**
@@ -16,13 +15,7 @@ fun ServiceLocator.multiviewDeps(context: Context): MultiviewDeps =
     MultiviewDeps(
         channelDao = visibleChannelDao(context),
         epgRepository = epgRepository(context),
-        engines = {
-            Media3PlayerEngine.create(
-                context.applicationContext,
-                handleAudioFocus = false,
-                userAgentFor = streamUserAgentFor(context),
-            )
-        },
+        engines = { tunedEngine(context, handleAudioFocus = false) },
         store = keyValueStore(context),
         time = PlaybackTime(clock = clock, style = clockStyleOf(settingsRepository(context))),
         resolveUrl = proxyResolve(settingsRepository(context)),
@@ -33,9 +26,7 @@ fun ServiceLocator.vodDeps(context: Context): VodDeps =
     VodDeps(
         items = database(context).vodItemDao(),
         positions = database(context).vodPositionDao(),
-        engineFactory = {
-            Media3PlayerEngine.create(context.applicationContext, userAgentFor = streamUserAgentFor(context))
-        },
+        engineFactory = { tunedEngine(context) },
         rememberPosition = { settingsRepository(context).get(TellySettings.VOD_REMEMBER_POSITION) },
         clock = clock,
     )

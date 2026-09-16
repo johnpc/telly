@@ -126,7 +126,8 @@ class PlaybackViewModel(
      * a fork — everything it declines falls through to the live keymap).
      */
     fun onKey(key: PlaybackKey): Boolean {
-        if (catchup.keys.onKey(overlays.value, key)) return true
+        // Catch-up seeks first, then a pane dialog's BACK, then the key map.
+        if (catchup.keys.onKey(overlays.value, key) || menu.interceptBack(overlays.value, key)) return true
         return PlaybackKeyPolicy.commandFor(overlays.value, key, playerKeymap())?.also(commands::execute) != null
     }
 

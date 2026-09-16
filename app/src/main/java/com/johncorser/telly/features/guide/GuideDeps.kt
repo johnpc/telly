@@ -34,11 +34,13 @@ class GuideDeps(
 }
 
 /** Actions the guide triggers outside itself: navigation + external player. */
-class GuideCallbacks(
+data class GuideCallbacks(
     val onFullscreen: () -> Unit,
     val onOpenSearch: () -> Unit,
     val onOpenSettings: () -> Unit,
     val onOpenManageFavorites: () -> Unit = {},
     val onOpenReorderChannels: (String) -> Unit = {},
+    /** The Channel-options pane's "Channel names editor" route. */
+    val onOpenNamesEditor: () -> Unit = {},
     val external: ExternalPlayer = ExternalPlayer.OFF,
 )

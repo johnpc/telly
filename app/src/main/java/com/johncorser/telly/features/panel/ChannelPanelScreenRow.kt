@@ -15,6 +15,7 @@ import com.johncorser.telly.core.ui.TellyScreenBlockedLock
 import com.johncorser.telly.core.ui.TellyScreenChannelRow
 import com.johncorser.telly.core.ui.TellyScreenLogoTile
 import com.johncorser.telly.core.ui.TellyScreenProgressBar
+import com.johncorser.telly.features.playlist.db.displayName
 
 /**
  * One 39 dp channel row (78 px pitch in the 1080p captures): number, logo,
@@ -43,12 +44,12 @@ internal fun ChannelPanelScreenRow(
         )
         TellyScreenLogoTile(
             logoUrl = row.channel.source.logoUrl,
-            name = row.channel.source.name,
+            name = row.channel.displayName,
             size = 24.dp,
         )
         Spacer(Modifier.width(10.dp))
         Text(
-            text = row.channel.source.name,
+            text = row.channel.displayName,
             modifier = Modifier.width(130.dp),
             color = rowColor(playing),
             fontSize = 15.sp,

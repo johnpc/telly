@@ -84,6 +84,19 @@ class PanelSteps(
         name: String,
     ) = world.waitFor(driver.rowMatcher(name) and hasText(number.toString()) and isFocused())
 
+    @Then("the {string} row shows the programme airing {int} minutes earlier")
+    fun rowShowsEarlierProgramme(
+        name: String,
+        minutes: Int,
+    ) {
+        // A +offset shifts the channel's EPG forward: the programme the
+        // panel now labels "current" is the one that REALLY aired `offset`
+        // ago in the deterministic fixture schedule.
+        val channel = FixturePlan.channelNamed(name)
+        val programme = FixtureServer.nowProgramme(channel.tvgId, System.currentTimeMillis() - minutes * MS_PER_MINUTE)
+        world.waitFor(driver.rowMatcher(name) and hasText(programme.displayTitle))
+    }
+
     @Then("the {string} row shows number {int}")
     fun rowShowsNumber(
         name: String,
@@ -198,5 +211,6 @@ class PanelSteps(
 
     private companion object {
         const val VISIBLE_ROW_SAMPLE = 5
+        const val MS_PER_MINUTE = 60_000L
     }
 }

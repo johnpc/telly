@@ -3,11 +3,10 @@ package com.johncorser.telly.features.recording
 import android.content.Context
 import com.johncorser.telly.core.ServiceLocator
 import com.johncorser.telly.core.db.TellyDatabase
-import com.johncorser.telly.core.streamUserAgentFor
+import com.johncorser.telly.core.tunedEngine
 import com.johncorser.telly.features.epg.EpgRepository
 import com.johncorser.telly.features.epg.ProgramTitle
 import com.johncorser.telly.features.playback.PlaybackTime
-import com.johncorser.telly.features.player.Media3PlayerEngine
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -49,9 +48,7 @@ fun ServiceLocator.recordingCenter(context: Context): RecordingCenter {
 fun ServiceLocator.recordingDeps(context: Context): RecordingDeps =
     RecordingDeps(
         center = recordingCenter(context),
-        engineFactory = {
-            Media3PlayerEngine.create(context.applicationContext, userAgentFor = streamUserAgentFor(context))
-        },
+        engineFactory = { tunedEngine(context) },
         clock = ServiceLocator.clock,
     )
 

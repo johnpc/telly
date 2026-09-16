@@ -1,6 +1,7 @@
 package com.johncorser.telly.core.ui
 
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
@@ -41,6 +42,24 @@ fun TellyScreenWhiteText(
         maxLines = 1,
         softWrap = false,
         overflow = TextOverflow.Clip,
+    )
+}
+
+/** Single-line ellipsized row label with a caller-picked color. */
+@Composable
+fun TellyScreenRowLabel(
+    text: String,
+    color: Color,
+    fontSize: TextUnit,
+    modifier: Modifier = Modifier,
+) {
+    Text(
+        text = text,
+        modifier = modifier,
+        color = color,
+        fontSize = fontSize,
+        maxLines = 1,
+        overflow = TextOverflow.Ellipsis,
     )
 }
 

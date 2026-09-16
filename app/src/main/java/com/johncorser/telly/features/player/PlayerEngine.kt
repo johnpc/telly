@@ -62,4 +62,7 @@ interface PlayerEngine {
 
     /** Track selection + audio-sync seam (quick-bar pickers); inert by default. */
     val tracks: TrackFacade get() = TrackFacade.NONE
+
+    /** Live Hardware/Software decoder preference; tunes apply per-channel overrides. */
+    val decoders: DecoderPreferences get() = DecoderPreferences.NONE
 }

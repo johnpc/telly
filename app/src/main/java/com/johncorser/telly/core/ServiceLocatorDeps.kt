@@ -20,8 +20,6 @@ import com.johncorser.telly.features.playback.PlaybackSources
 import com.johncorser.telly.features.playback.PlaybackTime
 import com.johncorser.telly.features.playback.PlayerKeymap
 import com.johncorser.telly.features.playback.UdpProxy
-import com.johncorser.telly.features.player.Media3PlayerEngine
-import com.johncorser.telly.features.player.PlayerAudioPrefs
 import com.johncorser.telly.features.player.skip.SkipSteps
 import com.johncorser.telly.features.recording.recordingCenter
 import com.johncorser.telly.features.reminders.remindersHub
@@ -40,13 +38,6 @@ internal fun proxyResolve(settings: SettingsRepository): (String) -> String =
 internal fun clockStyleOf(settings: SettingsRepository): ClockStyle =
     ClockStyle(h24 = { ClockStyle.is24Raw(settings.get(TellySettings.CLOCK_FORMAT)) })
 
-/** Surround-by-default + passthrough, read from the store per engine. */
-private fun audioPrefs(settings: SettingsRepository): PlayerAudioPrefs =
-    PlayerAudioPrefs(
-        surroundByDefault = { settings.get(TellySettings.SURROUND_BY_DEFAULT) },
-        passthrough = { settings.get(TellySettings.AUDIO_PASSTHROUGH) },
-    )
-
 /** Playback slice bundle over [ServiceLocator]'s app-scoped singletons. */
 fun ServiceLocator.playbackDeps(
     context: Context,
@@ -61,13 +52,7 @@ fun ServiceLocator.playbackDeps(
                 myList = myListStore(context),
             ),
         keyValueStore = keyValueStore(context),
-        engineFactory = {
-            Media3PlayerEngine.create(
-                context.applicationContext,
-                userAgentFor = streamUserAgentFor(context),
-                audio = audioPrefs(settingsRepository(context)),
-            )
-        },
+        engineFactory = { tunedEngine(context) },
         time =
             PlaybackTime(
                 clock = clock,

@@ -2,25 +2,14 @@ package com.johncorser.telly.features.guide
 
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.width
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clipToBounds
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
-import androidx.tv.material3.Text
-import com.johncorser.telly.core.design.TELLY_TEXT_MUTED
-import com.johncorser.telly.core.ui.LocalAccentColor
-import com.johncorser.telly.core.ui.TellyScreenBlockedLock
-import com.johncorser.telly.core.ui.TellyScreenLogoTile
 
 /**
  * One 39 dp grid row (uidump 24, 78 px pitch): number, 45×30 dp logo tile
@@ -66,48 +55,5 @@ internal fun GuideScreenRow(
                 }
             }
         }
-    }
-}
-
-@Composable
-private fun GuideScreenChannelColumn(
-    row: GuideRow,
-    playing: Boolean,
-) {
-    val nameColor = if (playing) LocalAccentColor.current else Color.White
-    Row(
-        Modifier
-            .width(GuideGeometry.CHANNEL_COLUMN_DP.dp)
-            .fillMaxHeight()
-            .padding(start = 16.dp, end = 10.dp),
-        verticalAlignment = Alignment.CenterVertically,
-    ) {
-        // Appearance -> TV guide -> Show channel numbers (on = today).
-        if (LocalGuideStyle.current.showChannelNumbers) {
-            Text(
-                text = row.displayNumber.toString(),
-                modifier = Modifier.width(28.dp),
-                color = if (playing) LocalAccentColor.current else Color(TELLY_TEXT_MUTED),
-                fontSize = 17.sp,
-            )
-            Spacer(Modifier.width(8.dp))
-        }
-        TellyScreenLogoTile(
-            logoUrl = row.channel.source.logoUrl,
-            name = row.channel.source.name,
-            size = 30.dp,
-            width = 45.dp,
-        )
-        Spacer(Modifier.width(10.dp))
-        Text(
-            text = row.channel.source.name,
-            modifier = Modifier.weight(1f),
-            color = nameColor,
-            fontSize = 16.sp,
-            maxLines = 1,
-            overflow = TextOverflow.Ellipsis,
-        )
-        if (row.channel.flags.blocked) TellyScreenBlockedLock()
-        if (playing) Text(text = "▶", color = LocalAccentColor.current, fontSize = 10.sp)
     }
 }

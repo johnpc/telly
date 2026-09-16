@@ -64,9 +64,9 @@ sealed interface GuideLayer {
         val back: GuideLayer = RowMenu,
     ) : GuideLayer
 
-    /** "Channel options" pane, every row premium-locked (captures 41-42); it REPLACES the sheet, BACK → grid. */
+    /** "Channel options" pane, live rows (captures 41-42); it REPLACES the sheet, BACK → grid. */
     data class ChannelOptions(
-        val channelName: String,
+        val channel: ChannelEntity,
     ) : GuideLayer
 
     /** "Stop recording?" GuidedStep from a second Record (recording slice). */
@@ -81,10 +81,11 @@ sealed interface GuideLayer {
         val back: GuideLayer = Grid,
     ) : GuideLayer
 
-    /** The sheet's Block/Unblock PIN dialog; BACK cancels back to the sheet. */
+    /** The sheet's Block/Unblock PIN dialog; BACK cancels back to [back]. */
     data class BlockPin(
         val channel: ChannelEntity,
         val mode: BlockPinMode,
+        val back: GuideLayer = RowMenu,
     ) : GuideLayer
 }
 
@@ -108,7 +109,7 @@ internal fun backOf(layer: GuideLayer): GuideLayer =
         is GuideLayer.Description -> layer.back
         is GuideLayer.RecordingStop -> layer.back
         is GuideLayer.CustomRecording -> layer.back
-        is GuideLayer.BlockPin -> GuideLayer.RowMenu
+        is GuideLayer.BlockPin -> layer.back
         else -> GuideLayer.Grid
     }
 

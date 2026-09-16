@@ -43,6 +43,9 @@ sealed interface Route {
         val group: String,
     ) : Route
 
+    /** The Channel-options pane's bulk "Channel names editor" list. */
+    data object ChannelNamesEditor : Route
+
     /** The VOD "Movies" browser behind the guide rail's film icon. */
     data object Vod : Route
 

@@ -7,14 +7,11 @@ import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.unit.dp
 import com.johncorser.telly.core.design.TELLY_GUIDANCE_PANE
 import com.johncorser.telly.features.reminders.ReminderScreenConfirmDelete
 import com.johncorser.telly.features.vod.VodSettingsScreenConfirm
@@ -71,24 +68,11 @@ private fun SettingsScreenPicker(
     picker: SettingsOverlay.Picker,
 ) {
     SettingsScreenSheet(title = picker.spec.title) {
-        LazyColumn(
-            Modifier
-                .fillMaxSize()
-                .padding(vertical = 12.dp),
-        ) {
-            items(picker.spec.options, key = { it.raw }) { option ->
-                SettingsScreenRow(
-                    row =
-                        SettingsRow.Value(
-                            id = "picker:${option.raw}",
-                            title = option.label,
-                            selected = option.raw == picker.current,
-                        ),
-                    onActivate = { model.choosePickerOption(option.raw) },
-                    modifier = Modifier.padding(horizontal = SettingsScreenDims.rowMargin),
-                )
-            }
-        }
+        SettingsScreenChoiceList(
+            options = picker.spec.options,
+            current = picker.current,
+            onChoose = model::choosePickerOption,
+        )
     }
 }
 

@@ -31,6 +31,7 @@ import com.johncorser.telly.features.player.Media3PlayerEngine
 import com.johncorser.telly.features.player.PlayerScreenSurface
 import com.johncorser.telly.features.player.PlayerState
 import com.johncorser.telly.features.player.ResizeModes
+import com.johncorser.telly.features.playlist.db.displayName
 
 /**
  * One 16:9 pane of the multiview grid: its own engine's video letterboxed
@@ -56,7 +57,7 @@ internal fun MultiviewScreenPane(
                 .focusRequester(focusRequester)
                 .onFocusChanged { if (it.isFocused) onFocused() }
                 .testTag("multiview-pane")
-                .semantics { contentDescription = "Screen ${pane.id}: ${pane.channel.source.name}, $audioState" },
+                .semantics { contentDescription = "Screen ${pane.id}: ${pane.channel.displayName}, $audioState" },
         // Slightly rounded pane corners, same radius as the pane menu (round8 P3).
         shape = FocusScreenDefaults.shape(),
         scale = FocusScreenDefaults.scale(),
@@ -77,7 +78,7 @@ internal fun MultiviewScreenPane(
                 // playback does (default Fit = the previous hardcoded value).
                 PlayerScreenSurface(it, Modifier.fillMaxSize(), resizeMode = ResizeModes.of(LocalResizeModeRaw.current))
             }
-            (state as? PlayerState.Error)?.let { MultiviewScreenPaneError(pane.channel.source.name, it.message) }
+            (state as? PlayerState.Error)?.let { MultiviewScreenPaneError(pane.channel.displayName, it.message) }
         }
     }
 }

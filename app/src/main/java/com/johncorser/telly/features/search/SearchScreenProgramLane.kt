@@ -19,6 +19,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.sp
 import androidx.tv.material3.Text
 import com.johncorser.telly.core.ui.TellyScreenLogoTile
+import com.johncorser.telly.features.playlist.db.displayName
 import com.johncorser.telly.features.search.SearchScreenDims as Dims
 
 /**
@@ -87,13 +88,13 @@ private fun SearchScreenProgramChannelCard(
         ) {
             TellyScreenLogoTile(
                 logoUrl = group.channel.source.logoUrl,
-                name = group.channel.source.name,
+                name = group.channel.displayName,
                 size = Dims.rowLogoHeight,
                 modifier = Modifier.width(Dims.rowLogoWidth),
             )
             Spacer(Modifier.height(Dims.masterNameGap))
             Text(
-                text = group.channel.source.name,
+                text = group.channel.displayName,
                 color = Color.White,
                 fontSize = 14.sp,
                 maxLines = 1,

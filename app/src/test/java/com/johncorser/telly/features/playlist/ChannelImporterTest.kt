@@ -2,6 +2,7 @@ package com.johncorser.telly.features.playlist
 
 import com.johncorser.telly.features.playlist.db.ChannelEntity
 import com.johncorser.telly.features.playlist.db.ChannelFlags
+import com.johncorser.telly.features.playlist.db.ChannelOverrides
 import com.johncorser.telly.features.playlist.db.ChannelSource
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
@@ -99,6 +100,44 @@ class ChannelImporterTest {
             )
 
         assertEquals(ChannelFlags(blocked = true), rows.single().flags)
+    }
+
+    @Test
+    fun `the channel-options overrides survive a refresh like the flags`() {
+        val overrides =
+            ChannelOverrides(
+                customName = "News Uno",
+                audioDecoder = "Software",
+                videoDecoder = "Hardware",
+                epgOffsetMinutes = 60,
+                externalPlayer = "On",
+            )
+        val previous =
+            ChannelEntity(
+                id = 9,
+                playlistId = 1,
+                number = 5,
+                sortIndex = 4,
+                source = ChannelSource(name = "Old Name", streamUrl = "http://old/x.ts", tvgId = "keep-1"),
+                overrides = overrides,
+            )
+
+        val rows =
+            ChannelImporter.import(
+                playlistId = 1,
+                parsed = listOf(channel("New Name", streamUrl = "http://new/y.ts", tvgId = "keep-1")),
+                previous = listOf(previous),
+            )
+
+        assertEquals(overrides, rows.single().overrides)
+        // An unmatched channel starts with no overrides at all.
+        val fresh =
+            ChannelImporter.import(
+                playlistId = 1,
+                parsed = listOf(channel("Other", streamUrl = "http://new/z.ts", tvgId = "other-1")),
+                previous = listOf(previous),
+            )
+        assertEquals(ChannelOverrides(), fresh.single().overrides)
     }
 
     @Test

@@ -10,10 +10,9 @@ import com.johncorser.telly.features.mylist.MyListKeys
 import com.johncorser.telly.features.panel.ChannelPanelScreenPin
 import com.johncorser.telly.features.playback.PlaybackScreenMenu
 import com.johncorser.telly.features.playback.PlayerMenu
+import com.johncorser.telly.features.playlist.db.displayName
 import com.johncorser.telly.features.recording.RecordingScreenForm
 import com.johncorser.telly.features.recording.RecordingScreenStopConfirm
-import com.johncorser.telly.features.settings.SettingsScreenRows
-import com.johncorser.telly.features.settings.SettingsScreenSheet
 
 /**
  * Long-OK/MENU on a guide row: the full right-side context sheet with the
@@ -33,7 +32,7 @@ internal fun GuideScreenRowMenu(
     val myListKeys by controller.myList.keys.collectAsState()
     val row = focus?.let { rows.getOrNull(it.rowIndex) } ?: return
     PlaybackScreenMenu(
-        sections = PlayerMenu.sections(info?.title, row.channel.source.name),
+        sections = PlayerMenu.sections(info?.title, row.channel.displayName),
         favorite = row.channel.flags.favorite,
         onItem = controller.menu::onMenuItem,
         restore = controller.menu.sheetFocus.restore,
@@ -54,7 +53,11 @@ internal fun GuideScreenRowMenuLayers(
 ) {
     when (layer) {
         is GuideLayer.ChannelOptions ->
-            GuideScreenChannelOptionsPane(layer.channelName, controller.menu::onChannelOption)
+            GuideScreenChannelOptionsPane(
+                channel = layer.channel,
+                options = controller.menu.channelActions.options,
+                onRow = controller.menu::onChannelOption,
+            )
         is GuideLayer.Description -> OnboardingScreenMessage(headline = layer.title, subtitle = layer.text)
         is GuideLayer.ComingSoon ->
             OnboardingScreenMessage(
@@ -75,23 +78,5 @@ internal fun GuideScreenRowMenuLayers(
                 keyboard = controller.chrome.keyboardPin,
             )
         else -> Unit
-    }
-}
-
-/**
- * The §41 "Channel options" pane (captures 41-42): a settings-shell sheet
- * titled with the channel name, every row locked. Shared verbatim with the
- * playback panel's sheet.
- */
-@Composable
-internal fun GuideScreenChannelOptionsPane(
-    channelName: String,
-    onActivate: (String) -> Unit,
-) {
-    SettingsScreenSheet(title = channelName) {
-        SettingsScreenRows(
-            rows = GuideChannelOptions.rows(channelName),
-            onActivate = onActivate,
-        )
     }
 }

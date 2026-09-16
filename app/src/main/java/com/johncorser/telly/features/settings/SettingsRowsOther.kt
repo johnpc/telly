@@ -3,6 +3,7 @@ package com.johncorser.telly.features.settings
 import com.johncorser.telly.core.settings.SettingsRepository
 import com.johncorser.telly.core.settings.TellySettings
 import com.johncorser.telly.features.playlist.db.ChannelEntity
+import com.johncorser.telly.features.playlist.db.displayName
 
 /**
  * Other -> Search sub-pane: the save-history toggle (default on; off stops
@@ -30,7 +31,7 @@ fun blockedChannelRows(blocked: List<ChannelEntity>): List<SettingsRow> =
         blocked.map { channel ->
             SettingsRow.Value(
                 id = BlockRowIds.CHANNEL_PREFIX + channel.id,
-                title = channel.source.name,
+                title = channel.displayName,
                 summary = "OK unblocks",
             )
         }

@@ -5,8 +5,8 @@ import androidx.compose.ui.test.hasAnyDescendant
 import androidx.compose.ui.test.hasContentDescription
 import androidx.compose.ui.test.hasTestTag
 import androidx.compose.ui.test.hasText
+import androidx.compose.ui.test.isEnabled
 import androidx.compose.ui.test.isFocused
-import androidx.compose.ui.test.isNotEnabled
 import androidx.compose.ui.test.isRoot
 import com.johncorser.telly.e2e.PlaybackDriver
 import com.johncorser.telly.e2e.TellyWorld
@@ -230,12 +230,12 @@ class GuideSteps(
         }
     }
 
-    @Then("^the locked rows list (.+)$")
-    fun lockedRowsList(rawList: String) {
+    @Then("^the pane lists the rows (.+)$")
+    fun paneRowsList(rawList: String) {
         Regex("\"([^\"]+)\"")
             .findAll(rawList)
             .map { it.groupValues[1] }
-            .forEach { world.waitFor(hasText(it) and isNotEnabled()) }
+            .forEach { world.waitFor(hasText(it) and isEnabled()) }
     }
 
     private fun rootCenterX(): Float = world.boundsOf(isRoot()).maxOf { it.right } / 2

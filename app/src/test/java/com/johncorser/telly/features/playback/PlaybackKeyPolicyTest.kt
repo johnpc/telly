@@ -1,5 +1,6 @@
 package com.johncorser.telly.features.playback
 
+import com.johncorser.telly.testutil.testChannel
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
 import org.junit.Test
@@ -94,10 +95,10 @@ class PlaybackKeyPolicyTest {
         }
         // Channel options replaced the sheet (ref-round6 §A): its back is
         // the panel, so BACK lands there directly, never on the sheet.
-        val pane = PlaybackOverlay.ChannelOptions("News One", back = PlaybackOverlay.Panel)
+        val pane = PlaybackOverlay.ChannelOptions(testChannel(1, 1, "News One"), back = PlaybackOverlay.Panel)
         assertEquals(PlaybackCommand.PopTo(PlaybackOverlay.Panel), at(pane, PlaybackKey.BACK))
         assertNull(at(pane, PlaybackKey.OK))
-        // A locked pane row opens the coming-soon placeholder over the pane.
+        // A screen pushed over the pane (block PIN etc.) pops back to it.
         val comingSoonOverPane = PlaybackOverlay.ComingSoon("Channel options", back = pane)
         assertEquals(PlaybackCommand.PopTo(pane), at(comingSoonOverPane, PlaybackKey.BACK))
     }

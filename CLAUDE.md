@@ -734,3 +734,35 @@ Local SDK note: `local.properties` must contain
   picks forced-vs-due refresh on playlist changes; the minute-tick due-retry
   loop stays. Resize mode (`ResizeModes`/`ProvideResizeMode`) reaches the
   fullscreen surface and multiview panes.
+- **2026-09-15** Channel options pane live + engine honors buffer/decoder
+  settings. **Per-channel overrides** = `ChannelOverrides` embed on
+  `channels` (customName / audioDecoder / videoDecoder / epgOffsetMinutes /
+  externalPlayer; schema v11, `ChannelOptionsMigration.MIGRATION_10_11`),
+  carried over playlist refreshes by identity like `ChannelFlags`. The §41
+  pane's rows are LIVE in both hosts (guide + panel sheet, shared
+  `ChannelOptionsController`): rename/Restore channel name (blank = playlist
+  name), the decoder pickers, "Use external player" (per-channel wins over
+  the global setting at tune — `ExternalPlayer.maybeLaunch(url, override)`,
+  the UDP-proxy-resolved live URL), "EPG time offset, h:min", and Block/Hide
+  reusing the sheet's PIN-gate/zap-away flows verbatim; "Channel names
+  editor" pushes `Route.ChannelNames` (bulk rename list). **displayName**
+  (`overrides.customName` else `source.name`) is what every channel-facing
+  surface renders — guide, panel, playback info, history, my-list,
+  recordings, settings-blocked, and (extended at merge, since main owns them
+  now) search result rendering + multiview pane labels; search SQL keeps
+  matching the PLAYLIST name (display-only rename). **EPG offset** =
+  `EpgOffsets`: `EpgRepository.programsFor` AND `nowNext` shift each
+  channel's programme times by its offset (padded window query, shift, trim),
+  so grid/overlays/now-next move together and catch-up
+  (`CatchupNeighbours`/guide archive math) inherits the shifted times via
+  `programsFor`. **Engine honors Playback settings** at build time:
+  `PlayerTuning` (Buffer size → `DefaultLoadControl` durations; Small = stock
+  Media3, Medium/Large ×2/×4 target) + `DecoderPreferences`/
+  `PreferenceMediaCodecSelector` (SOFTWARE re-ranks the MediaCodec list
+  software-first per mime type — re-ranked, never filtered, so missing
+  software codecs fall back to hardware); a tune applies the channel's
+  decoder overrides via `engine.decoders.overrideWith(...)` BEFORE load.
+  ONE engine builder — `ServiceLocatorEngines.tunedEngine` — composes
+  user-agent + `PlayerAudioPrefs` (passthrough/surround) + `PlayerTuning`
+  into `Media3PlayerEngine.create`; playback, guide, multiview panes, VOD
+  and recordings all build through it.

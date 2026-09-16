@@ -3,6 +3,7 @@ package com.johncorser.telly
 import androidx.compose.runtime.Composable
 import com.johncorser.telly.core.navigation.Navigator
 import com.johncorser.telly.core.navigation.Route
+import com.johncorser.telly.features.mylist.ChannelNamesEditorScreen
 import com.johncorser.telly.features.mylist.ManageFavoritesScreen
 import com.johncorser.telly.features.mylist.MyListScreen
 import com.johncorser.telly.features.mylist.ReorderChannelsScreen
@@ -31,6 +32,7 @@ internal fun RootScreenMyListRoutes(
             )
         Route.ManageFavorites -> ManageFavoritesScreen(deps = playbackDeps)
         is Route.ReorderChannels -> ReorderChannelsScreen(deps = playbackDeps, group = target.group)
+        Route.ChannelNamesEditor -> ChannelNamesEditorScreen(deps = playbackDeps)
         else -> Unit
     }
 }

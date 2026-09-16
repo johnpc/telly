@@ -27,6 +27,27 @@ data class ChannelFlags(
 )
 
 /**
+ * Per-channel "Channel options" overrides (§41 pane): all default to
+ * "follow the playlist/global" and survive playlist refreshes like
+ * [ChannelFlags] (carried over by [com.johncorser.telly.features.playlist.ChannelImporter]).
+ */
+data class ChannelOverrides(
+    /** Custom display name; null/blank = the playlist name. */
+    val customName: String? = null,
+    /** "Hardware"/"Software"; null = the global Playback setting. */
+    val audioDecoder: String? = null,
+    val videoDecoder: String? = null,
+    /** Shifts this channel's EPG programme times for display. */
+    @ColumnInfo(defaultValue = "0") val epgOffsetMinutes: Int = 0,
+    /** "On"/"Off"; null = the global "Use external player" setting. */
+    val externalPlayer: String? = null,
+)
+
+/** What every channel-facing surface renders: the custom name when set. */
+val ChannelEntity.displayName: String
+    get() = overrides.customName?.takeIf { it.isNotBlank() } ?: source.name
+
+/**
  * Catch-up capability as declared on the channel's `#EXTINF` line
  * (`catchup` / `catchup-source` / `catchup-days`); re-imported from the
  * playlist on every refresh like the rest of [ChannelSource].
@@ -62,4 +83,5 @@ data class ChannelEntity(
     @Embedded val source: ChannelSource,
     @Embedded val flags: ChannelFlags = ChannelFlags(),
     @Embedded val catchup: ChannelCatchup = ChannelCatchup(),
+    @Embedded val overrides: ChannelOverrides = ChannelOverrides(),
 )

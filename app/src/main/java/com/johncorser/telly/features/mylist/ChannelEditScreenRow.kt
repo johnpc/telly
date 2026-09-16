@@ -25,6 +25,7 @@ import com.johncorser.telly.core.ui.TellyScreenChannelRow
 import com.johncorser.telly.core.ui.TellyScreenLogoTile
 import com.johncorser.telly.core.ui.focusOnAppear
 import com.johncorser.telly.features.playlist.db.ChannelEntity
+import com.johncorser.telly.features.playlist.db.displayName
 
 /**
  * One editor row: logo + name, and (Manage Favorites only) the star that
@@ -47,10 +48,10 @@ internal fun ChannelEditScreenRow(
                 .focusOnAppear(requestFocus)
                 .onPreviewKeyEvent { event -> moveKey(event)?.let { onMove(channel, it) } != null },
     ) {
-        TellyScreenLogoTile(logoUrl = channel.source.logoUrl, name = channel.source.name, size = 24.dp)
+        TellyScreenLogoTile(logoUrl = channel.source.logoUrl, name = channel.displayName, size = 24.dp)
         Spacer(Modifier.width(12.dp))
         Text(
-            text = channel.source.name,
+            text = channel.displayName,
             modifier = Modifier.weight(1f),
             fontSize = 15.sp,
             maxLines = 1,

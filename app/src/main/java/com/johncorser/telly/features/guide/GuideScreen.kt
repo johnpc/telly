@@ -40,6 +40,7 @@ fun GuideScreen(
     onOpenMyList: () -> Unit = {},
     onOpenManageFavorites: () -> Unit = {},
     onOpenReorderChannels: (String) -> Unit = {},
+    onOpenNamesEditor: () -> Unit = {},
 ) {
     val engine = remember { deps.playback.engineFactory() }
     val callbacks =
@@ -50,6 +51,7 @@ fun GuideScreen(
                 onOpenSettings = onOpenSettings,
                 onOpenManageFavorites = onOpenManageFavorites,
                 onOpenReorderChannels = onOpenReorderChannels,
+                onOpenNamesEditor = onOpenNamesEditor,
                 external = deps.playback.hooks.platform.external,
             )
         }

@@ -2,6 +2,7 @@ package com.johncorser.telly.features.guide
 
 import com.johncorser.telly.features.guide.GuideTestData.at
 import com.johncorser.telly.features.guide.GuideTestData.cell
+import com.johncorser.telly.testutil.testChannel
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
 import org.junit.Test
@@ -97,7 +98,7 @@ class GuideKeyPolicyTest {
                 GuideLayer.RowMenu,
                 GuideLayer.ComingSoon("Assign EPG"),
                 GuideLayer.Description("Title", "Text"),
-                GuideLayer.ChannelOptions("News One"),
+                GuideLayer.ChannelOptions(testChannel(1, 1, "News One")),
             )
         layers.forEach { layer ->
             assertEquals(GuideCommand.CloseLayer, at(layer, GuideKey.BACK))

@@ -9,6 +9,7 @@ import com.johncorser.telly.core.kv.SharedPrefsKeyValueStore
 import com.johncorser.telly.core.settings.SettingsRepository
 import com.johncorser.telly.core.settings.TellySettings
 import com.johncorser.telly.features.catchup.db.CatchupMigration
+import com.johncorser.telly.features.epg.EpgOffsets
 import com.johncorser.telly.features.epg.EpgRepository
 import com.johncorser.telly.features.epg.EpgSourceStore
 import com.johncorser.telly.features.epg.RoomEpgSourceStore
@@ -18,9 +19,11 @@ import com.johncorser.telly.features.mylist.db.MyListMigration
 import com.johncorser.telly.features.playlist.PlaylistRepository
 import com.johncorser.telly.features.playlist.RoomPlaylistRepository
 import com.johncorser.telly.features.playlist.db.BlockedMigration
+import com.johncorser.telly.features.playlist.db.ChannelOptionsMigration
 import com.johncorser.telly.features.recording.db.RecordingMigration
 import com.johncorser.telly.features.reminders.db.ReminderMigration
 import com.johncorser.telly.features.vod.db.VodMigrations
+import kotlinx.coroutines.flow.map
 import com.johncorser.telly.core.settings.SharedPrefsKeyValueStore as SettingsPrefsStore
 
 /**
@@ -52,6 +55,7 @@ object ServiceLocator {
                     RecordingMigration.MIGRATION_7_8,
                     BlockedMigration.MIGRATION_8_9,
                     CatchupMigration.MIGRATION_9_10,
+                    ChannelOptionsMigration.MIGRATION_10_11,
                 )
                 .build()
                 .also { database = it }
@@ -76,9 +80,9 @@ object ServiceLocator {
         EpgRepository(
             programDao = database(context).programDao(),
             newParser = { Xml.newPullParser() },
-            storeDescriptions = {
-                settingsRepository(context).get(TellySettings.EPG_STORE_DESCRIPTIONS)
-            },
+            storeDescriptions = { settingsRepository(context).get(TellySettings.EPG_STORE_DESCRIPTIONS) },
+            // Channel-options "EPG time offset": lookups shift per channel.
+            offsets = database(context).channelDao().observeEpgOffsets().map(EpgOffsets::ofMinutes),
         )
 
     fun keyValueStore(context: Context): KeyValueStore =

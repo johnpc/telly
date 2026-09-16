@@ -55,6 +55,30 @@ class ExternalPlayerTest {
     }
 
     @Test
+    fun `a per-channel override wins over the global setting in both directions`() {
+        // Channel says On while the global is Off: the tune hands off.
+        assertTrue(player.maybeLaunch("http://s/1.ts", channelOverride = true))
+        assertEquals(listOf("http://s/1.ts"), launched)
+
+        // Channel says Off while the global is On: the tune stays internal.
+        enabled = true
+        assertFalse(player.maybeLaunch("http://s/1.ts", channelOverride = false))
+        assertEquals(1, launched.size)
+
+        // No override: the global decides (surfaced via enabledByDefault too).
+        assertTrue(player.maybeLaunch("http://s/1.ts", channelOverride = null))
+        assertTrue(player.enabledByDefault)
+    }
+
+    @Test
+    fun `the override parser maps On-Off raws and follows the global otherwise`() {
+        assertEquals(true, ExternalPlayerSetting.overrideOf("On"))
+        assertEquals(false, ExternalPlayerSetting.overrideOf("Off"))
+        assertEquals(null, ExternalPlayerSetting.overrideOf(null))
+        assertEquals(null, ExternalPlayerSetting.overrideOf("Always"))
+    }
+
+    @Test
     fun `the setting parser knows On from everything else`() {
         assertEquals(listOf("Off", "On"), ExternalPlayerSetting.options)
         assertTrue(ExternalPlayerSetting.isOn("On"))

@@ -55,6 +55,7 @@ internal fun RootScreenRoutes(
                     onOpenManageFavorites = { navigator.push(Route.ManageFavorites) },
                     onOpenReorderChannels = { group -> navigator.push(Route.ReorderChannels(group)) },
                     onOpenRecordings = { navigator.push(Route.Recordings) },
+                    onOpenNamesEditor = { navigator.push(Route.ChannelNamesEditor) },
                 )
             // BACK at the pane grid exits to fullscreen playback of the
             // focused pane's channel (multiview-spec: exit chain).
@@ -71,6 +72,7 @@ internal fun RootScreenRoutes(
                     onOpenMyList = { navigator.push(Route.MyList) },
                     onOpenManageFavorites = { navigator.push(Route.ManageFavorites) },
                     onOpenReorderChannels = { group -> navigator.push(Route.ReorderChannels(group)) },
+                    onOpenNamesEditor = { navigator.push(Route.ChannelNamesEditor) },
                 )
             Route.Vod, is Route.VodPlayback -> RootScreenVodRoutes(target, navigator, vodDeps)
             // Tuning from search adopts the guide-root BACK chain: the
@@ -91,7 +93,7 @@ internal fun RootScreenRoutes(
                     deps = playbackDeps,
                     onTuned = { navigator.pop() },
                 )
-            Route.MyList, Route.ManageFavorites, is Route.ReorderChannels ->
+            Route.MyList, Route.ManageFavorites, is Route.ReorderChannels, Route.ChannelNamesEditor ->
                 RootScreenMyListRoutes(target, navigator, playbackDeps)
             // The DVR library (recording slice): BACK pops back to wherever
             // it was opened from (quick-bar slot or the guide rail's icon).

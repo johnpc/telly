@@ -23,6 +23,7 @@ import com.johncorser.telly.R
 import com.johncorser.telly.core.ui.LocalAccentColor
 import com.johncorser.telly.core.ui.TellyScreenLogoTile
 import com.johncorser.telly.core.ui.TellyScreenProgressBar
+import com.johncorser.telly.features.playlist.db.displayName
 import com.johncorser.telly.features.search.SearchScreenDims as Dims
 
 /**
@@ -78,13 +79,13 @@ private fun SearchScreenChannelCard(
         Column(Modifier.padding(Dims.cardPad), horizontalAlignment = Alignment.CenterHorizontally) {
             TellyScreenLogoTile(
                 logoUrl = hit.channel.source.logoUrl,
-                name = hit.channel.source.name,
+                name = hit.channel.displayName,
                 size = Dims.logoHeight,
                 modifier = Modifier.width(Dims.logoWidth),
             )
             Spacer(Modifier.height(6.dp))
             Text(
-                text = hit.channel.source.name,
+                text = hit.channel.displayName,
                 fontSize = 14.sp,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,

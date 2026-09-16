@@ -3,7 +3,6 @@ package com.johncorser.telly.features.playback
 import com.johncorser.telly.core.kv.KeyValueStore
 import com.johncorser.telly.features.history.WatchHistory
 import com.johncorser.telly.features.player.PlayerEngine
-import com.johncorser.telly.features.player.external.ExternalPlayer
 import com.johncorser.telly.features.playlist.db.ChannelDao
 import com.johncorser.telly.features.playlist.db.ChannelEntity
 import kotlinx.coroutines.CoroutineScope
@@ -32,8 +31,6 @@ class TuneController(
 
     /** The blocked-channel gate; [TuneBlockPrompt] drives its PIN prompt. */
     val gate: BlockGate get() = policies.gate
-
-    private val external: ExternalPlayer get() = policies.external
 
     /** All visible channels in TiviMate "All channels" order. */
     val channels: StateFlow<List<ChannelEntity>> =
@@ -66,8 +63,9 @@ class TuneController(
      * (the gate fires FIRST — a blocked channel never reaches the external
      * app either, and a blocked channel's archive needs the PIN too; the
      * verified PIN's re-tune replays the intercepted catch-up URL). While
-     * "Use external player" is On, a user-initiated tune opens the stream
-     * in the external app instead of the internal engine (ux-spec §3.18);
+     * "Use external player" is On — per-channel Channel-options override
+     * first, the global setting otherwise — a user-initiated tune opens the
+     * stream in the external app instead of the internal engine (ux-spec §3.18);
      * with no handler installed it falls back to internal playback. Restore
      * paths (cold start, guide resume) pass [allowExternal] = false so app
      * start never bounces to another app. A non-null [catchupUrl] plays
@@ -86,13 +84,15 @@ class TuneController(
         mutableCurrent.value = channel
         suspended = false
         store.putLong(LAST_CHANNEL_KEY, channel.id)
+        // Channel-options decoder overrides apply to this tune's prepare.
+        engine.applyDecoderOverridesOf(channel)
         if (archiveUrl != null) {
             engine.load(archiveUrl)
             return
         }
         scope.launch { history.record(channel) }
         val liveUrl = resolveUrl(channel.source.streamUrl)
-        if (!(allowExternal && external.maybeLaunch(liveUrl))) {
+        if (!(allowExternal && policies.external.handsOff(channel, liveUrl))) {
             engine.load(liveUrl)
         }
     }
