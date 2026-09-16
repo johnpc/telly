@@ -23,7 +23,7 @@ class GuideMenuController(
     internal val channelActions: GuideSheetChannelActions,
     private val focusedRow: () -> GuideRow?,
     private val info: () -> GuideInfoData?,
-    private val callbacks: GuideCallbacks,
+    internal val callbacks: GuideCallbacks,
     private val focusMemory: GuideFocusMemory? = null,
     private val recording: () -> RecordingMenu? = { null },
 ) {
@@ -50,10 +50,12 @@ class GuideMenuController(
     /**
      * BACK pops one level: pushed screens return to the sheet, the sheet to
      * the grid — except Channel options, which REPLACED the sheet, so its
-     * BACK lands directly on the grid (ref-round6 §A).
+     * BACK lands directly on the grid (ref-round6 §A); an open in-pane
+     * dialog (rename/picker) closes first, keeping the pane up.
      */
     fun close() {
         val current = mutable.value
+        if (current is GuideLayer.ChannelOptions && channelActions.options.closeDialog()) return
         if (current is GuideLayer.CustomRecording) recording()?.dismissForm()
         show(backOf(current))
     }
@@ -95,9 +97,6 @@ class GuideMenuController(
     /** The DVR menu's outcomes, mapped onto guide layers. */
     fun onRecordingPrompt(prompt: RecordingPrompt) = show(GuideRecordingPrompts.layerFor(prompt, mutable.value))
 
-    /** All §41 pane rows are locked; any activation lands on coming-soon. */
-    fun onChannelOption(rowId: String) = show(GuideLayer.ComingSoon(rowId, back = mutable.value))
-
     fun onMenuItem(item: PlayerMenuItem) {
         val row = focusedRow() ?: return
         sheetFocus.onActivated(item)
@@ -122,7 +121,7 @@ class GuideMenuController(
             }
             PlayerMenuRoute.TOGGLE_BLOCK -> show(GuideLayer.BlockPin(row.channel, channelActions.blocker.mode()))
             PlayerMenuRoute.DESCRIPTION -> show(descriptionLayer(info()))
-            PlayerMenuRoute.CHANNEL_OPTIONS -> show(GuideLayer.ChannelOptions(row.channel.source.name))
+            PlayerMenuRoute.CHANNEL_OPTIONS -> show(GuideLayer.ChannelOptions(row.channel))
             // My-list rows act (or push their route) and land on the grid,
             // the management screens closing the sheet first like Search.
             PlayerMenuRoute.MY_LIST_TOGGLE,

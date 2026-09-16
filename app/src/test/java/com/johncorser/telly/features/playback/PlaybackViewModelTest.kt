@@ -3,6 +3,8 @@ package com.johncorser.telly.features.playback
 import com.johncorser.telly.core.settings.InMemoryKeyValueStore
 import com.johncorser.telly.core.settings.ParentalControls
 import com.johncorser.telly.core.settings.SettingsRepository
+import com.johncorser.telly.features.guide.ChannelOptionsDialog
+import com.johncorser.telly.features.guide.GuideChannelOptions
 import com.johncorser.telly.features.playback.tracks.TrackPickerKind
 import com.johncorser.telly.features.player.VideoDetails
 import com.johncorser.telly.testutil.testProgram
@@ -548,7 +550,7 @@ class PlaybackViewModelTest : PlaybackVmHarness() {
         }
 
     @Test
-    fun `channel options replaces the sheet and its locked rows open coming-soon`() =
+    fun `channel options replaces the sheet and its rows act in place`() =
         runTest {
             val vm = buildVm()
             vm.openPanel()
@@ -558,15 +560,19 @@ class PlaybackViewModelTest : PlaybackVmHarness() {
 
             // The pane REPLACES the sheet (ref-round6 §A): BACK targets the
             // panel directly, never the channel menu.
-            val pane = PlaybackOverlay.ChannelOptions("News One", back = PlaybackOverlay.Panel)
+            val pane = PlaybackOverlay.ChannelOptions(channels[0], back = PlaybackOverlay.Panel)
             assertEquals(pane, vm.overlay.value)
 
-            // Every §41 row is locked; activating one opens coming-soon over the pane.
-            vm.menu.onChannelOption("channel_options.name")
-            assertEquals(PlaybackOverlay.ComingSoon("channel_options.name", back = pane), vm.overlay.value)
-
+            // The Channel-name row opens the rename dialog over the pane;
+            // BACK closes it first, then the pane pops to the panel.
+            vm.menu.onChannelOption(channels[0], GuideChannelOptions.NAME)
+            assertEquals(
+                ChannelOptionsDialog.Rename(channels[0].id, "News One"),
+                vm.menu.actions.options.dialog.value,
+            )
             vm.onKey(PlaybackKey.BACK)
             assertEquals(pane, vm.overlay.value)
+            assertNull(vm.menu.actions.options.dialog.value)
             vm.onKey(PlaybackKey.BACK)
             assertEquals(PlaybackOverlay.Panel, vm.overlay.value)
         }

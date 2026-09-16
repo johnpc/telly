@@ -12,6 +12,7 @@ import androidx.tv.material3.Text
 import com.johncorser.telly.core.ui.TellyScreenChannelRow
 import com.johncorser.telly.core.ui.TellyScreenLogoTile
 import com.johncorser.telly.core.ui.focusOnAppear
+import com.johncorser.telly.features.playlist.db.displayName
 
 /**
  * One History row, following the app's 39 dp channel-row idiom (the
@@ -32,12 +33,12 @@ internal fun HistoryScreenRow(
     ) {
         TellyScreenLogoTile(
             logoUrl = row.channel.source.logoUrl,
-            name = row.channel.source.name,
+            name = row.channel.displayName,
             size = 24.dp,
         )
         Spacer(Modifier.width(10.dp))
         Text(
-            text = row.channel.source.name,
+            text = row.channel.displayName,
             modifier = Modifier.width(180.dp),
             fontSize = 15.sp,
             maxLines = 1,

@@ -68,4 +68,6 @@
     <string name="manage_favorites_title">Manage Favorites</string>
     <string name="reorder_channels_title">Reorder channels</string>
     <string name="channel_edit_move_hint">Press LEFT/RIGHT to move the focused channel</string>
+    <string name="channel_names_editor_title">Channel names editor</string>
+    <string name="channel_names_editor_hint">Press OK to rename a channel</string>
 </resources>

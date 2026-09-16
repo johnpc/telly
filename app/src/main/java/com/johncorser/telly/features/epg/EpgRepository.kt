@@ -3,7 +3,11 @@ package com.johncorser.telly.features.epg
 import com.johncorser.telly.features.epg.db.ProgramDao
 import com.johncorser.telly.features.epg.db.ProgramEntity
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.flatMapLatest
+import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.withContext
 import okhttp3.OkHttpClient
@@ -23,6 +27,8 @@ class EpgRepository(
     private val newParser: () -> XmlPullParser,
     private val client: OkHttpClient = OkHttpClient(),
     private val storeDescriptions: () -> Boolean = { true },
+    /** Per-channel "EPG time offset" (tvgId -> ms); lookups shift by it. */
+    private val offsets: Flow<Map<String, Long>> = flowOf(emptyMap()),
 ) {
     /** Downloads + stores the EPG at [epgUrl]; returns the programme count. */
     suspend fun refresh(epgUrl: String): Int =
@@ -36,21 +42,34 @@ class EpgRepository(
             }
         }
 
-    /** Programmes overlapping [fromMs, toMs) for [tvgIds] — the guide window. */
+    /**
+     * Programmes overlapping [fromMs, toMs) for [tvgIds] — the guide window.
+     * Times come back SHIFTED by each channel's "EPG time offset" (Channel
+     * options), so the grid, info pane and overlays all move consistently.
+     */
+    @OptIn(ExperimentalCoroutinesApi::class)
     fun programsFor(
         tvgIds: List<String>,
         fromMs: Long,
         toMs: Long,
-    ): Flow<List<ProgramEntity>> = programDao.observeWindow(tvgIds, fromMs, toMs)
+    ): Flow<List<ProgramEntity>> =
+        offsets.distinctUntilChanged().flatMapLatest { shift ->
+            programDao
+                .observeWindow(tvgIds, EpgOffsets.queryFrom(fromMs, shift), EpgOffsets.queryTo(toMs, shift))
+                .map { EpgOffsets.windowed(it, shift, fromMs, toMs) }
+        }
 
-    /** Per-channel now/next at the injected instant [atMs]. */
+    /** Per-channel now/next at the injected instant [atMs], offsets applied. */
+    @OptIn(ExperimentalCoroutinesApi::class)
     fun nowNext(
         tvgIds: List<String>,
         atMs: Long,
     ): Flow<Map<String, NowNext>> =
-        programDao
-            .observeAiringOrUpcoming(tvgIds, atMs)
-            .map { NowNextResolver.resolve(it, atMs) }
+        offsets.distinctUntilChanged().flatMapLatest { shift ->
+            programDao
+                .observeAiringOrUpcoming(tvgIds, EpgOffsets.queryFrom(atMs, shift))
+                .map { NowNextResolver.resolve(EpgOffsets.shifted(it, shift), atMs) }
+        }
 
     /** Trims history; honors Settings -> EPG -> "Past days to keep EPG". */
     suspend fun trimEndedBefore(cutoffMs: Long) = programDao.deleteEndedBefore(cutoffMs)

@@ -7,6 +7,7 @@ import com.johncorser.telly.features.epg.db.ProgramDetails
 import com.johncorser.telly.features.epg.db.ProgramEntity
 import com.johncorser.telly.features.history.db.WatchHistoryDao
 import com.johncorser.telly.features.history.db.WatchHistoryEntity
+import com.johncorser.telly.features.player.DecoderPreferences
 import com.johncorser.telly.features.player.PlayerEngine
 import com.johncorser.telly.features.player.PlayerState
 import com.johncorser.telly.features.player.VideoDetails
@@ -15,7 +16,9 @@ import com.johncorser.telly.features.playlist.db.ChannelDao
 import com.johncorser.telly.features.playlist.db.ChannelEntity
 import com.johncorser.telly.features.playlist.db.ChannelFlags
 import com.johncorser.telly.features.playlist.db.ChannelGroupCount
+import com.johncorser.telly.features.playlist.db.ChannelOverrides
 import com.johncorser.telly.features.playlist.db.ChannelSource
+import com.johncorser.telly.features.playlist.db.TvgOffset
 import com.johncorser.telly.features.search.db.SearchDao
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -72,6 +75,17 @@ class FakeChannelDao(
     override suspend fun update(channel: ChannelEntity) {
         channels.update { list -> list.map { if (it.id == channel.id) channel else it } }
     }
+
+    override suspend fun byId(id: Long): ChannelEntity? = channels.value.firstOrNull { it.id == id }
+
+    override fun observeById(id: Long): Flow<ChannelEntity?> = channels.map { list -> list.firstOrNull { it.id == id } }
+
+    override fun observeEpgOffsets(): Flow<List<TvgOffset>> =
+        channels.map { list ->
+            list
+                .filter { it.overrides.epgOffsetMinutes != 0 && it.source.tvgId != null }
+                .map { TvgOffset(it.source.tvgId, it.overrides.epgOffsetMinutes) }
+        }
 }
 
 /** In-memory [ProgramDao]; only the observing queries matter to these tests. */
@@ -171,6 +185,7 @@ class FakePlayerEngine : PlayerEngine {
     override val state = MutableStateFlow<PlayerState>(PlayerState.Idle)
     override val video = MutableStateFlow<VideoDetails?>(null)
     override val tracks = FakeTrackFacade()
+    override val decoders = DecoderPreferences()
     val loaded = mutableListOf<String>()
     var stops = 0
     var released = false
@@ -269,6 +284,8 @@ fun testChannel(
     )
 
 fun ChannelEntity.asFavorite(): ChannelEntity = copy(flags = flags.copy(favorite = true))
+
+fun ChannelEntity.withOverrides(overrides: ChannelOverrides): ChannelEntity = copy(overrides = overrides)
 
 fun ChannelEntity.withCatchup(
     type: String? = "default",

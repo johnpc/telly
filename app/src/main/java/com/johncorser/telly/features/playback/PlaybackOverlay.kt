@@ -47,12 +47,11 @@ sealed interface PlaybackOverlay {
     ) : Pushed
 
     /**
-     * "Channel options" pane, every §41 row locked (capture 41). It
-     * replaces the sheet (ref-round6 §A), so [back] is the panel, not
-     * the channel menu.
+     * "Channel options" pane, live §41 rows (capture 41). It replaces the
+     * sheet (ref-round6 §A), so [back] is the panel, not the channel menu.
      */
     data class ChannelOptions(
-        val channelName: String,
+        val channel: ChannelEntity,
         override val back: PlaybackOverlay = None,
     ) : Pushed
 

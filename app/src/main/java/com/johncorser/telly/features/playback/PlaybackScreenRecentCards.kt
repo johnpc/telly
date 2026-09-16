@@ -24,6 +24,7 @@ import androidx.tv.material3.Text
 import com.johncorser.telly.R
 import com.johncorser.telly.core.ui.LocalAccentColor
 import com.johncorser.telly.core.ui.TellyScreenLogoTile
+import com.johncorser.telly.features.playlist.db.displayName
 
 /**
  * One recent-channel card (history-round2 §1, uidump 02 at 2 px = 1 dp):
@@ -53,7 +54,7 @@ internal fun PlaybackScreenRecentCard(
         ) {
             TellyScreenLogoTile(
                 logoUrl = card.channel.source.logoUrl,
-                name = card.channel.source.name,
+                name = card.channel.displayName,
                 size = 49.dp,
                 width = 100.dp,
             )

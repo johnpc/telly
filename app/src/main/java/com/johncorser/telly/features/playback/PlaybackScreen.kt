@@ -41,6 +41,7 @@ fun PlaybackScreen(
     onOpenManageFavorites: () -> Unit = {},
     onOpenReorderChannels: (String) -> Unit = {},
     onOpenRecordings: () -> Unit = {},
+    onOpenNamesEditor: () -> Unit = {},
 ) {
     // A dedicated main-thread scope instead of rememberCoroutineScope(): the
     // ViewModel drives ExoPlayer (main-thread-affine) and wall-clock overlay
@@ -72,6 +73,7 @@ fun PlaybackScreen(
                                         store = deps.myList,
                                     ),
                                 onOpenRecordings = onOpenRecordings,
+                                onOpenNamesEditor = onOpenNamesEditor,
                                 parental = deps.parental,
                             ),
                     ),

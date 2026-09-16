@@ -2,6 +2,7 @@ package com.johncorser.telly.features.recording
 
 import com.johncorser.telly.features.history.WatchHistory
 import com.johncorser.telly.features.playlist.db.ChannelEntity
+import com.johncorser.telly.features.playlist.db.displayName
 import com.johncorser.telly.features.recording.db.RecordingEntity
 import kotlinx.coroutines.flow.Flow
 
@@ -46,8 +47,8 @@ class RecordingCenter(
     suspend fun toggleInstant(channel: ChannelEntity): RecordingPrompt {
         val active = store.activeFor(keyOf(channel))
         return when {
-            !RecordingSupport.isRecordable(channel.source.streamUrl) -> RecordingPrompt.Unsupported(channel.source.name)
-            active != null -> RecordingPrompt.StopConfirm(active.id, channel.source.name)
+            !RecordingSupport.isRecordable(channel.source.streamUrl) -> RecordingPrompt.Unsupported(channel.displayName)
+            active != null -> RecordingPrompt.StopConfirm(active.id, channel.displayName)
             else -> startInstant(channel)
         }
     }
@@ -68,7 +69,7 @@ class RecordingCenter(
         endMs: Long,
     ): RecordingPrompt {
         if (!RecordingSupport.isRecordable(channel.source.streamUrl)) {
-            return RecordingPrompt.Unsupported(channel.source.name)
+            return RecordingPrompt.Unsupported(channel.displayName)
         }
         store.schedule(newEntry(channel, title, startMs, endMs))
         return RecordingPrompt.Done
@@ -102,10 +103,10 @@ class RecordingCenter(
     ): RecordingEntity =
         RecordingEntity(
             channelKey = keyOf(channel),
-            channelName = channel.source.name,
+            channelName = channel.displayName,
             streamUrl = channel.source.streamUrl,
-            title = title ?: channel.source.name,
-            filePath = files.newFile(channel.source.name, startMs).path,
+            title = title ?: channel.displayName,
+            filePath = files.newFile(channel.displayName, startMs).path,
             startMs = startMs,
             plannedEndMs = endMs,
             endMs = null,

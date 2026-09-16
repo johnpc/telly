@@ -33,6 +33,8 @@ data class PlaybackHooks(
     val playerKeymap: () -> PlayerKeymap = { PlayerKeymap() },
     /** Opens the Recordings library (quick-bar RECORDINGS slot + guide rail). */
     val onOpenRecordings: () -> Unit = {},
+    /** The Channel-options pane's "Channel names editor" route. */
+    val onOpenNamesEditor: () -> Unit = {},
     /** The DVR facade behind the sheet's Record rows (null in JVM tests). */
     val recording: RecordingCenter? = null,
     /** Parental PIN policy behind Block channel + the tune gate. */

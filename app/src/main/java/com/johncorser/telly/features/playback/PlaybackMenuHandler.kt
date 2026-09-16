@@ -19,7 +19,7 @@ class PlaybackMenuHandler(
     internal val actions: SheetActions,
     internal val overlays: OverlayState,
     internal val tuner: TuneController,
-    private val hooks: PlaybackHooks = PlaybackHooks(),
+    internal val hooks: PlaybackHooks = PlaybackHooks(),
     private val rowOf: (Long) -> PanelRow? = { null },
     private val recording: () -> RecordingMenu? = { null },
 ) {
@@ -62,7 +62,7 @@ class PlaybackMenuHandler(
                 push { back -> PlaybackOverlay.BlockPin(channel, actions.blocker.mode(), back) }
             PlayerMenuRoute.DESCRIPTION -> push { back -> description(rowOf(channel.id), back) }
             PlayerMenuRoute.CHANNEL_OPTIONS ->
-                overlays.set(PlaybackOverlay.ChannelOptions(channel.source.name, back = afterAction(overlays.value)))
+                overlays.set(PlaybackOverlay.ChannelOptions(channel, back = afterAction(overlays.value)))
             PlayerMenuRoute.MY_LIST_TOGGLE, PlayerMenuRoute.MANAGE_FAVORITES, PlayerMenuRoute.REORDER_CHANNELS ->
                 runMyList(route, channel)
             PlayerMenuRoute.RECORD -> record { it.onRecord(channel) }
@@ -88,9 +88,6 @@ class PlaybackMenuHandler(
     fun onRecordingPrompt(prompt: RecordingPrompt) {
         overlays.set(PlaybackRecordingPrompts.overlayFor(prompt, overlays.value))
     }
-
-    /** All §41 pane rows are locked; any activation lands on coming-soon. */
-    fun onChannelOption(rowId: String) = push { back -> PlaybackOverlay.ComingSoon(rowId, back) }
 
     /** Pushed screens remember the overlay behind them; BACK pops to it. */
     internal fun push(next: (back: PlaybackOverlay) -> PlaybackOverlay) = overlays.set(next(overlays.value))

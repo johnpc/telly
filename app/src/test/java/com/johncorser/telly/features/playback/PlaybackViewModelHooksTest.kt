@@ -1,6 +1,7 @@
 package com.johncorser.telly.features.playback
 
 import com.johncorser.telly.features.pip.PipState
+import com.johncorser.telly.features.player.DecoderMode
 import com.johncorser.telly.features.player.PlayerPlatformHooks
 import com.johncorser.telly.features.player.VideoDetails
 import com.johncorser.telly.features.player.external.ExternalPlayer
@@ -106,6 +107,70 @@ class PlaybackViewModelHooksTest : PlaybackVmHarness() {
             assertEquals(listOf("http://s/1.ts"), engine.loaded)
             assertEquals(2L, vm.current.value?.id)
             assertEquals(2L, store.getLong(TuneController.LAST_CHANNEL_KEY))
+        }
+
+    @Test
+    fun `a per-channel external override beats the global setting at tune time`() =
+        runTest {
+            val opened = mutableListOf<String>()
+            dao.channels.value =
+                channels.map {
+                    when (it.id) {
+                        // Channel 2 opts OUT while the global is On.
+                        2L -> it.copy(overrides = it.overrides.copy(externalPlayer = "Off"))
+                        // Channel 3 opts IN regardless of the global.
+                        3L -> it.copy(overrides = it.overrides.copy(externalPlayer = "On"))
+                        else -> it
+                    }
+                }
+            val vm =
+                buildVm(
+                    hooks =
+                        PlaybackHooks(
+                            platform =
+                                PlayerPlatformHooks(
+                                    external =
+                                        ExternalPlayer(enabledForTuning = { true }, launch = { url ->
+                                            opened += url
+                                            true
+                                        }),
+                                ),
+                        ),
+                )
+
+            vm.onKey(PlaybackKey.CHANNEL_UP)
+            // Channel 2's Off override keeps the tune on the internal engine.
+            assertEquals(listOf("http://s/1.ts", "http://s/2.ts"), engine.loaded)
+            assertTrue(opened.isEmpty())
+
+            vm.onKey(PlaybackKey.CHANNEL_UP)
+            // Channel 3's On override hands off (the global agrees here).
+            assertEquals(listOf("http://s/3.ts"), opened)
+            assertEquals(listOf("http://s/1.ts", "http://s/2.ts"), engine.loaded)
+        }
+
+    @Test
+    fun `tunes apply the channel's decoder overrides before the stream loads`() =
+        runTest {
+            dao.channels.value =
+                channels.map {
+                    if (it.id == 2L) {
+                        it.copy(overrides = it.overrides.copy(audioDecoder = "Software", videoDecoder = "Software"))
+                    } else {
+                        it
+                    }
+                }
+            val vm = buildVm()
+            assertEquals(DecoderMode.HARDWARE, engine.decoders.audio)
+
+            vm.onKey(PlaybackKey.CHANNEL_UP)
+            assertEquals(DecoderMode.SOFTWARE, engine.decoders.audio)
+            assertEquals(DecoderMode.SOFTWARE, engine.decoders.video)
+
+            // The next channel has no override: back to the engine's base.
+            vm.onKey(PlaybackKey.CHANNEL_UP)
+            assertEquals(DecoderMode.HARDWARE, engine.decoders.audio)
+            assertEquals(DecoderMode.HARDWARE, engine.decoders.video)
         }
 
     @Test

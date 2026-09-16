@@ -11,6 +11,7 @@ import com.johncorser.telly.core.design.TELLY_MENU_SHEET
 import com.johncorser.telly.core.ui.TellyScreenDialog
 import com.johncorser.telly.core.ui.TellyScreenMenuRow
 import com.johncorser.telly.features.playback.ProgramTimes
+import com.johncorser.telly.features.playlist.db.displayName
 import java.util.TimeZone
 
 /**
@@ -37,7 +38,7 @@ fun RecordingScreenForm(
         titleSize = 18.sp,
         titlePadding = PaddingValues(horizontal = 16.dp, vertical = 4.dp),
     ) {
-        RecordingScreenFormValue(label = "Channel", value = form.channel.source.name)
+        RecordingScreenFormValue(label = "Channel", value = form.channel.displayName)
         RecordingScreenFormStepperRow(
             label = "Start time",
             value = ProgramTimes.clock(startMs, zone),

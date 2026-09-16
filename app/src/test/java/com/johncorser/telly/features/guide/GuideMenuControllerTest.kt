@@ -57,6 +57,7 @@ class GuideMenuControllerTest {
 
     private val parentalStore = InMemoryKeyValueStore()
     private val parental = ParentalControls(SettingsRepository(parentalStore))
+    private var namesEditor: () -> Unit = {}
 
     private fun TestScope.build(focusMemory: GuideFocusMemory? = null): GuideMenuController {
         val scope = CoroutineScope(SupervisorJob() + UnconfinedTestDispatcher(testScheduler))
@@ -75,6 +76,7 @@ class GuideMenuControllerTest {
                     actions,
                     zapAway = { zapped += it.id },
                     blocker = ChannelBlocker(actions, parental),
+                    options = ChannelOptionsController(ChannelOptionsStore(dao, scope)) { false },
                 ),
             focusedRow = { row },
             info = { infoData },
@@ -83,6 +85,7 @@ class GuideMenuControllerTest {
                     onFullscreen = {},
                     onOpenSearch = { searches += 1 },
                     onOpenSettings = { settingsOpens += 1 },
+                    onOpenNamesEditor = { namesEditor() },
                     external =
                         ExternalPlayer(enabledForTuning = { false }, launch = { url ->
                             externalOpens += url
@@ -308,7 +311,7 @@ class GuideMenuControllerTest {
             val menu = buildOpenSheet()
 
             menu.onMenuItem(PlayerMenuItem.CHANNEL_OPTIONS)
-            assertEquals(GuideLayer.ChannelOptions("News One"), menu.layer.value)
+            assertEquals(GuideLayer.ChannelOptions(row!!.channel), menu.layer.value)
 
             // ref-round6 §A: the pane replaced the sheet — one BACK → grid.
             menu.close()
@@ -332,21 +335,78 @@ class GuideMenuControllerTest {
     }
 
     @Test
-    fun `channel-options rows are all locked and open coming-soon over the pane`() {
+    fun `the channel-name row opens the rename dialog over the still-open pane`() {
+        runTest {
+            val menu = buildOpenSheet()
+            menu.onMenuItem(PlayerMenuItem.CHANNEL_OPTIONS)
+            val channel = row!!.channel
+
+            menu.onChannelOption(channel, GuideChannelOptions.NAME)
+
+            assertEquals(GuideLayer.ChannelOptions(channel), menu.layer.value)
+            assertEquals(
+                ChannelOptionsDialog.Rename(channel.id, "News One"),
+                menu.channelActions.options.dialog.value,
+            )
+
+            // BACK closes the dialog first, keeping the pane; the next
+            // BACK pops the pane straight to the grid (ref-round6 §A).
+            menu.close()
+            assertEquals(GuideLayer.ChannelOptions(channel), menu.layer.value)
+            assertNull(menu.channelActions.options.dialog.value)
+            menu.close()
+            assertEquals(GuideLayer.Grid, menu.layer.value)
+        }
+    }
+
+    @Test
+    fun `the pane's block row reuses the pin-gated flow and cancels back to the pane`() {
+        runTest {
+            val menu = buildOpenSheet()
+            menu.onMenuItem(PlayerMenuItem.CHANNEL_OPTIONS)
+            val channel = row!!.channel
+            val pane = menu.layer.value
+
+            menu.onChannelOption(channel, GuideChannelOptions.BLOCK)
+            val dialog = menu.layer.value as GuideLayer.BlockPin
+            assertEquals(BlockPinMode.SETUP, dialog.mode)
+
+            menu.close()
+            assertEquals(pane, menu.layer.value)
+
+            menu.onChannelOption(channel, GuideChannelOptions.BLOCK)
+            menu.submitBlockPin("2468")
+            assertTrue(dao.channels.value.single().flags.blocked)
+            assertEquals(GuideLayer.Grid, menu.layer.value)
+        }
+    }
+
+    @Test
+    fun `the pane's hide row zaps away and lands on the grid like the sheet's`() {
         runTest {
             val menu = buildOpenSheet()
             menu.onMenuItem(PlayerMenuItem.CHANNEL_OPTIONS)
 
-            // Every §41 row is locked; activating one opens the branded
-            // coming-soon placeholder that backs to the pane (no paywall).
-            menu.onChannelOption("channel_options.name")
-            assertEquals(
-                GuideLayer.ComingSoon("channel_options.name", back = GuideLayer.ChannelOptions("News One")),
-                menu.layer.value,
-            )
+            menu.onChannelOption(row!!.channel, GuideChannelOptions.HIDE)
 
-            menu.close()
-            assertEquals(GuideLayer.ChannelOptions("News One"), menu.layer.value)
+            assertEquals(listOf(1L), zapped)
+            assertTrue(dao.channels.value.single().flags.hidden)
+            assertEquals(GuideLayer.Grid, menu.layer.value)
+        }
+    }
+
+    @Test
+    fun `the names-editor row clears the chrome and opens its route`() {
+        runTest {
+            var editorOpens = 0
+            namesEditor = { editorOpens += 1 }
+            val menu = buildOpenSheet()
+            menu.onMenuItem(PlayerMenuItem.CHANNEL_OPTIONS)
+
+            menu.onChannelOption(row!!.channel, GuideChannelOptions.NAMES_EDITOR)
+
+            assertEquals(1, editorOpens)
+            assertEquals(GuideLayer.Grid, menu.layer.value)
         }
     }
 

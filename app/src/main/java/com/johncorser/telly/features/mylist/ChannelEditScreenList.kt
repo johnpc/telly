@@ -11,7 +11,7 @@ import androidx.compose.ui.unit.dp
 import com.johncorser.telly.R
 import com.johncorser.telly.features.playlist.db.ChannelEntity
 
-/** The shared Manage-Favorites / Reorder-channels list chrome. */
+/** The shared Manage-Favorites / Reorder-channels / names-editor list chrome. */
 @Composable
 internal fun ChannelEditScreenList(
     title: String,
@@ -19,8 +19,9 @@ internal fun ChannelEditScreenList(
     showStars: Boolean,
     onToggle: (ChannelEntity) -> Unit,
     onMove: (ChannelEntity, Int) -> Unit,
+    hint: String = stringResource(R.string.channel_edit_move_hint),
 ) {
-    MyListScreenScaffold(title = title, hint = stringResource(R.string.channel_edit_move_hint)) {
+    MyListScreenScaffold(title = title, hint = hint) {
         LazyColumn(
             Modifier
                 .fillMaxSize()

@@ -4,6 +4,7 @@ import com.johncorser.telly.features.epg.NowNext
 import com.johncorser.telly.features.epg.ProgramTitle
 import com.johncorser.telly.features.player.VideoDetails
 import com.johncorser.telly.features.playlist.db.ChannelEntity
+import com.johncorser.telly.features.playlist.db.displayName
 import java.util.TimeZone
 
 /** Everything the bottom info overlay renders, pre-formatted (capture 34). */
@@ -36,7 +37,7 @@ object PlaybackInfoBuilder {
         val next = nowNext.next
         return PlaybackInfoData(
             number = channel.number,
-            name = channel.source.name,
+            name = channel.displayName,
             logoUrl = channel.source.logoUrl,
             group = channel.source.groupTitle,
             clockText = ProgramTimes.clock(atMs, zone),

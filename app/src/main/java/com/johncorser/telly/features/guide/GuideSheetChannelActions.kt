@@ -1,11 +1,9 @@
 package com.johncorser.telly.features.guide
 
-import com.johncorser.telly.core.settings.ParentalControls
 import com.johncorser.telly.features.mylist.MyListMenuHost
 import com.johncorser.telly.features.playback.ChannelActions
 import com.johncorser.telly.features.playback.ChannelBlocker
 import com.johncorser.telly.features.playback.PlaybackEnv
-import com.johncorser.telly.features.playlist.db.ChannelDao
 import com.johncorser.telly.features.playlist.db.ChannelEntity
 import kotlinx.coroutines.CoroutineScope
 
@@ -20,6 +18,8 @@ class GuideSheetChannelActions(
     private val zapAway: (ChannelEntity) -> Unit,
     /** The PIN-gated Block/Unblock policy behind the sheet's block row. */
     val blocker: ChannelBlocker = ChannelBlocker(actions),
+    /** The §41 Channel-options pane's live rows/dialogs (shared machine). */
+    val options: ChannelOptionsController,
 ) {
     /** The host's My-list context; the sheet's My-list rows act through it. */
     val myList: MyListMenuHost? get() = actions.myList
@@ -32,25 +32,25 @@ class GuideSheetChannelActions(
     }
 }
 
-/** The guide controller's bundle assembly (kept here for its file gate). */
-internal fun guideSheetChannelActions(
-    dao: ChannelDao,
-    scope: CoroutineScope,
-    myList: MyListMenuHost?,
-    zapAway: (ChannelEntity) -> Unit,
-    parental: ParentalControls? = null,
-): GuideSheetChannelActions {
-    val actions = ChannelActions(dao, scope, myList)
-    return GuideSheetChannelActions(actions, zapAway, ChannelBlocker(actions, parental))
-}
-
-/** The same bundle over a [PlaybackEnv]: dao + parental from its hooks. */
+/** The guide's bundle over a [PlaybackEnv]: dao + policies from its hooks. */
 internal fun guideSheetActions(
     env: PlaybackEnv,
     scope: CoroutineScope,
     myList: MyListMenuHost?,
     zapAway: (ChannelEntity) -> Unit,
-): GuideSheetChannelActions = guideSheetChannelActions(env.channelDao, scope, myList, zapAway, env.hooks.parental)
+): GuideSheetChannelActions {
+    val actions = ChannelActions(env.channelDao, scope, myList)
+    val external = env.hooks.platform.external
+    return GuideSheetChannelActions(
+        actions = actions,
+        zapAway = zapAway,
+        blocker = ChannelBlocker(actions, env.hooks.parental),
+        options =
+            ChannelOptionsController(ChannelOptionsStore(env.channelDao, scope)) {
+                external.enabledByDefault
+            },
+    )
+}
 
 /**
  * The guide sheet's Block/Unblock PIN commit: a verified (or freshly set)

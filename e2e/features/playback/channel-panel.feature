@@ -64,10 +64,74 @@ Feature: Channel list panel
     When I long-press ok on the row "News One"
     And I select "Channel options"
     Then a right pane titled "News One" opens
-    And the locked rows list "Channel name", "Restore channel name", "Channel names editor", "Audio decoder", "Video decoder", "Use external player", "EPG time offset, h:min", "Block channel" and "Hide channel"
+    And the pane lists the rows "Channel name", "Channel names editor", "Audio decoder", "Video decoder", "Use external player", "EPG time offset, h:min", "Block channel" and "Hide channel"
     When I press back
     Then the groups column lists "Favorites", "All channels", "News", "Sports", "Movies", "Kids", "Music"
     And "All channels" is the selected group
+
+  Scenario: Renaming a channel from the pane shows everywhere and survives a restart
+    When I long-press ok on the row "News One"
+    And I select "Channel options"
+    And I select "Channel name"
+    And I type "News Uno"
+    Then a right pane titled "News Uno" opens
+    And the pane lists the rows "Restore channel name"
+    When I press back
+    Then the "News Uno" row shows number 1
+    When I relaunch telly
+    And I open the channel panel
+    Then the "News Uno" row shows number 1
+
+  Scenario: Restore channel name brings the playlist name back
+    When I long-press ok on the row "News One"
+    And I select "Channel options"
+    And I select "Channel name"
+    And I type "News Uno"
+    And I select "Restore channel name"
+    Then a right pane titled "News One" opens
+    When I press back
+    Then the "News One" row shows number 1
+
+  Scenario: The channel names editor renames from the bulk list
+    When I long-press ok on the row "News One"
+    And I select "Channel options"
+    And I select "Channel names editor"
+    Then I see "Press OK to rename a channel"
+    When I select "News One HD"
+    And I type "News One Deluxe"
+    Then I see "News One Deluxe"
+
+  Scenario: An EPG time offset shifts the channel's programmes in the panel
+    When I long-press ok on the row "News One"
+    And I select "Channel options"
+    And I select "EPG time offset, h:min"
+    And I select "1:00"
+    Then the "EPG time offset, h:min" row shows "1:00"
+    When I press back
+    Then the "News One" row shows the programme airing 60 minutes earlier
+
+  Scenario: The decoder pickers persist a per-channel override
+    When I long-press ok on the row "News One"
+    And I select "Channel options"
+    And I select "Audio decoder"
+    And I select "Software"
+    Then the "Audio decoder" row shows "Software"
+
+  Scenario: Block channel from the pane walks the same PIN gate as the sheet row
+    When I long-press ok on the row "News One HD"
+    And I select "Channel options"
+    And I select "Block channel"
+    Then I see "Set a PIN"
+    When I enter the PIN "2468"
+    And I open the channel panel
+    Then the "News One HD" row shows a lock indicator
+
+  Scenario: Hide channel from the pane removes the row like the sheet's
+    When I long-press ok on the row "News One HD"
+    And I select "Channel options"
+    And I select "Hide channel"
+    And I open the channel panel
+    Then the channels column no longer lists "News One HD"
 
   Scenario: Uncaptured sheet rows stay on the branded placeholder
     When I long-press ok on the row "News One"

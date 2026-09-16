@@ -23,6 +23,7 @@ class Media3PlayerEngine(
     val player: ExoPlayer,
     private val userAgent: StreamUserAgent? = null,
     override val tracks: TrackFacade = ExoTrackFacade(player),
+    override val decoders: DecoderPreferences = DecoderPreferences.NONE,
 ) : PlayerEngine,
     Player.Listener {
     private val mutableState = MutableStateFlow<PlayerState>(PlayerState.Idle)
@@ -108,6 +109,7 @@ class Media3PlayerEngine(
             context: Context,
             handleAudioFocus: Boolean = true,
             userAgentFor: (streamUrl: String) -> String = { STREAM_USER_AGENT },
-        ): Media3PlayerEngine = buildMedia3PlayerEngine(context, handleAudioFocus, userAgentFor)
+            tuning: PlayerTuning = PlayerTuning(),
+        ): Media3PlayerEngine = buildMedia3PlayerEngine(context, handleAudioFocus, userAgentFor, tuning)
     }
 }

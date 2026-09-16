@@ -3,13 +3,15 @@ package com.johncorser.telly.features.playlist
 import com.johncorser.telly.features.playlist.db.ChannelCatchup
 import com.johncorser.telly.features.playlist.db.ChannelEntity
 import com.johncorser.telly.features.playlist.db.ChannelFlags
+import com.johncorser.telly.features.playlist.db.ChannelOverrides
 import com.johncorser.telly.features.playlist.db.ChannelSource
 
 /**
  * Turns parsed M3U channels into channel rows. Channel numbers are assigned
- * sequentially from playlist order (TiviMate default, ux-spec §5). Favorite
- * and hidden flags survive refreshes via [identityOf]: a channel is "the
- * same" when its tvg-id matches, falling back to stream URL + name.
+ * sequentially from playlist order (TiviMate default, ux-spec §5). User
+ * flags (favorite/hidden/blocked) and the Channel-options overrides survive
+ * refreshes via [identityOf]: a channel is "the same" when its tvg-id
+ * matches, falling back to stream URL + name.
  */
 object ChannelImporter {
     /** Stable identity used to carry user flags across playlist refreshes. */
@@ -25,10 +27,9 @@ object ChannelImporter {
         parsed: List<M3uChannel>,
         previous: List<ChannelEntity>,
     ): List<ChannelEntity> {
-        val previousFlags =
-            previous.associate { channel ->
-                identityOf(channel.source.tvgId, channel.source.streamUrl, channel.source.name) to
-                    channel.flags
+        val carried =
+            previous.associateBy { channel ->
+                identityOf(channel.source.tvgId, channel.source.streamUrl, channel.source.name)
             }
         return parsed.mapIndexed { index, channel ->
             ChannelEntity(
@@ -44,8 +45,11 @@ object ChannelImporter {
                         tvgId = channel.tvgId,
                     ),
                 flags =
-                    previousFlags[identityOf(channel.tvgId, channel.streamUrl, channel.title)]
+                    carried[identityOf(channel.tvgId, channel.streamUrl, channel.title)]?.flags
                         ?: ChannelFlags(),
+                overrides =
+                    carried[identityOf(channel.tvgId, channel.streamUrl, channel.title)]?.overrides
+                        ?: ChannelOverrides(),
                 catchup =
                     ChannelCatchup(
                         catchupType = channel.catchup,

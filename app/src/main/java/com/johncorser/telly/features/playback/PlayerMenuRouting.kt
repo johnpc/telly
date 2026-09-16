@@ -23,7 +23,7 @@ enum class PlayerMenuRoute {
     /** Fires the external-player chooser with the channel's stream URL. */
     EXTERNAL_PLAYER,
 
-    /** Pushes the §41 "Channel options" pane, every row locked. */
+    /** Replaces the sheet with the live §41 "Channel options" pane. */
     CHANNEL_OPTIONS,
 
     /** Saves/removes the focused programme; the row label flips (mylist). */

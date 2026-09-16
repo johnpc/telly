@@ -8,6 +8,7 @@ import com.johncorser.telly.R
 import com.johncorser.telly.core.ui.OnboardingScreenMessage
 import com.johncorser.telly.features.guide.GuideScreenChannelOptionsPane
 import com.johncorser.telly.features.playback.tracks.PlaybackScreenTrackPicker
+import com.johncorser.telly.features.playlist.db.displayName
 import com.johncorser.telly.features.recording.RecordingScreenForm
 import com.johncorser.telly.features.recording.RecordingScreenStopConfirm
 
@@ -29,7 +30,11 @@ internal fun PlaybackScreenMenuLayers(
             is PlaybackOverlay.Description ->
                 OnboardingScreenMessage(headline = active.title, subtitle = active.text)
             is PlaybackOverlay.ChannelOptions ->
-                GuideScreenChannelOptionsPane(active.channelName, viewModel.menu::onChannelOption)
+                GuideScreenChannelOptionsPane(
+                    channel = active.channel,
+                    options = viewModel.menu.actions.options,
+                    onRow = viewModel.menu::onChannelOption,
+                )
             is PlaybackOverlay.TrackPicker -> PlaybackScreenTrackPicker(viewModel.trackPickers, active.kind)
             is PlaybackOverlay.ComingSoon ->
                 OnboardingScreenMessage(
@@ -66,7 +71,7 @@ private fun PlaybackScreenChannelMenu(
     val channel = viewModel.menu.menuChannel()
     val myListKeys by viewModel.myList.keys.collectAsState()
     PlaybackScreenMenu(
-        sections = PlayerMenu.sections(viewModel.panel.nowTitleOf(channelId), channel?.source?.name.orEmpty()),
+        sections = PlayerMenu.sections(viewModel.panel.nowTitleOf(channelId), channel?.displayName.orEmpty()),
         favorite = channel?.flags?.favorite == true,
         onItem = viewModel.menu::onMenuItem,
         restore = viewModel.menu.sheetFocus.restore,

@@ -123,7 +123,7 @@ Feature: TV guide
     When I long-press ok
     And I select "Channel options"
     Then a right pane titled "News One" opens
-    And the locked rows list "Channel name", "Restore channel name", "Channel names editor", "Audio decoder", "Video decoder", "Use external player", "EPG time offset, h:min", "Block channel" and "Hide channel"
+    And the pane lists the rows "Channel name", "Channel names editor", "Audio decoder", "Video decoder", "Use external player", "EPG time offset, h:min", "Block channel" and "Hide channel"
     When I press back
     Then the programme grid is focused again
     And the focused cell is on channel 1 at roughly the same time
