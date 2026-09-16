@@ -59,7 +59,7 @@ open class PlaybackVmHarness {
                     epgRepository = testEpgRepository(programs),
                     engine = engine,
                     store = store,
-                    time = PlaybackTime(clock, TimeZone.getTimeZone("UTC")),
+                    time = PlaybackTime(clock, ClockStyle(TimeZone.getTimeZone("UTC"))),
                     hooks =
                         hooks.copy(
                             onEnterPip = onEnterPip,

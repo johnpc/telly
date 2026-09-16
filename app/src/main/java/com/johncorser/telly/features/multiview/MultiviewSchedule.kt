@@ -2,8 +2,8 @@ package com.johncorser.telly.features.multiview
 
 import com.johncorser.telly.features.epg.ProgramTitle
 import com.johncorser.telly.features.epg.db.ProgramEntity
+import com.johncorser.telly.features.playback.ClockStyle
 import com.johncorser.telly.features.playback.ProgramTimes
-import java.util.TimeZone
 
 /** One schedule row of the picker's middle pane: "12:45 AM  Title: Sub". */
 data class MultiviewScheduleRow(
@@ -26,11 +26,11 @@ object MultiviewSchedule {
     fun build(
         programs: List<ProgramEntity>,
         atMs: Long,
-        zone: TimeZone,
+        style: ClockStyle,
     ): List<MultiviewScheduleRow> =
         programs.sortedBy { it.startMs }.map { program ->
             MultiviewScheduleRow(
-                timeText = ProgramTimes.startTime(program.startMs, zone),
+                timeText = ProgramTimes.startTime(program.startMs, style),
                 title = ProgramTitle.of(program.details),
                 airing = atMs >= program.startMs && atMs < program.endMs,
             )

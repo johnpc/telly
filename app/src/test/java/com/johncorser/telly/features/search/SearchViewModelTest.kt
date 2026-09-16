@@ -1,6 +1,7 @@
 package com.johncorser.telly.features.search
 
 import com.johncorser.telly.core.settings.InMemoryKeyValueStore
+import com.johncorser.telly.features.playback.ClockStyle
 import com.johncorser.telly.features.playback.TuneController
 import com.johncorser.telly.testutil.FakeChannelDao
 import com.johncorser.telly.testutil.FakeKeyValueStore
@@ -53,7 +54,7 @@ class SearchViewModelTest {
                     historyStore = historyStore,
                     lastChannelStore = lastChannelStore,
                     clock = { now },
-                    zone = TimeZone.getTimeZone("UTC"),
+                    style = ClockStyle(TimeZone.getTimeZone("UTC")),
                 ),
             scope = CoroutineScope(SupervisorJob() + UnconfinedTestDispatcher(testScheduler)),
         )

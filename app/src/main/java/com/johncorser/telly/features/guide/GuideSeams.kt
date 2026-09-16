@@ -12,4 +12,6 @@ class GuideSeams(
     val visibleRows: () -> Int = { GuideGeometry.VISIBLE_ROWS },
     /** Settings → Remote control → TV guide key remaps, read per key press. */
     val keymap: () -> GuideKeymap = { GuideKeymap() },
+    /** False exactly once after a cold start with "last channel on start" off. */
+    val resumePreview: () -> Boolean = { true },
 )

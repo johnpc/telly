@@ -38,7 +38,7 @@ fun recentRowFeed(
     RecentRowFeed(
         RecentRowSources(tuner.channels, history.events, tuner.current, instant),
         env.epgRepository,
-        env.time.zone,
+        env.time.style,
         scope,
     )
 

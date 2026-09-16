@@ -72,6 +72,18 @@ fun SettingsViewModel.submitPin(pin: String) {
     dismissOverlay()
 }
 
+/**
+ * The ONE PIN-verify commit: a verified PIN opens the pending section
+ * ("Require PIN for Settings | Playlists") or, with no section, the
+ * blocked-channels pane. A wrong PIN keeps prompting; BACK dismisses.
+ */
+fun SettingsViewModel.submitVerifyPin(pin: String) {
+    val verify = state.value.overlay as? SettingsOverlay.PinVerify ?: return
+    if (!parental.verifyPin(pin)) return
+    dismissOverlay()
+    verify.section?.let(::selectSection) ?: push(SettingsPane.BlockedChannels)
+}
+
 /** Restores a backup JSON picked via SAF; no-op for foreign files. */
 fun SettingsViewModel.importBackup(json: String) {
     launch { backup.importJson(json) }

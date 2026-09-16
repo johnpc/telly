@@ -53,3 +53,26 @@ private fun androidx.compose.ui.text.AnnotatedString.Builder.appendHintLine(
     withStyle(SpanStyle(fontWeight = FontWeight.Bold)) { append("$key:") }
     append(rest)
 }
+
+/**
+ * The "Confirm exit by second press Back" warning, bottom-center in the
+ * hint-toast treatment (the reference's own is premium-locked/uncapturable).
+ */
+@Composable
+internal fun GuideScreenExitToast(
+    controller: GuideController,
+    modifier: Modifier = Modifier,
+) {
+    val visible by controller.chrome.exit.warning.collectAsState()
+    if (!visible) return
+    Text(
+        text = ExitConfirm.MESSAGE,
+        modifier =
+            modifier
+                .padding(bottom = 24.dp)
+                .background(Color(TELLY_GUIDE_TOAST), RoundedCornerShape(4.dp))
+                .padding(horizontal = 12.dp, vertical = 8.dp),
+        color = Color.Black,
+        fontSize = 15.sp,
+    )
+}

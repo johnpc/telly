@@ -1,5 +1,6 @@
 package com.johncorser.telly.features.multiview
 
+import com.johncorser.telly.features.playback.ClockStyle
 import com.johncorser.telly.testutil.FakeChannelDao
 import com.johncorser.telly.testutil.FakeProgramDao
 import com.johncorser.telly.testutil.testChannel
@@ -53,7 +54,7 @@ class MultiviewPickerTest {
             epgRepository = testEpgRepository(programs),
             clock = { at(14, 45) },
             scope = CoroutineScope(SupervisorJob() + UnconfinedTestDispatcher(testScheduler)),
-            zone = utc,
+            style = ClockStyle(utc),
         )
 
     @Test

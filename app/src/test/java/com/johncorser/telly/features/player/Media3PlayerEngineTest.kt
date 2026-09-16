@@ -225,6 +225,21 @@ class Media3PlayerEngineTest {
         engine.release()
     }
 
+    // Surround-by-default (and its precedence under an explicit user audio
+    // pick) lives in ExoTrackFacade; see ExoTrackFacadeTest.
+
+    @Test
+    fun `create with passthrough forced builds a player too`() {
+        val engine =
+            Media3PlayerEngine.create(
+                ApplicationProvider.getApplicationContext<Context>(),
+                audio = PlayerAudioPrefs(passthrough = { true }),
+            )
+
+        assertNotNull(engine.player)
+        engine.release()
+    }
+
     @Test
     fun `mute drops the volume to zero and unmute restores it`() {
         val engine = engine()

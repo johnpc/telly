@@ -5,6 +5,7 @@ import com.johncorser.telly.features.guide.GuideTestData.nowMs
 import com.johncorser.telly.features.guide.GuideTestData.utc
 import com.johncorser.telly.features.history.WatchHistory
 import com.johncorser.telly.features.panel.PanelViewModel
+import com.johncorser.telly.features.playback.ClockStyle
 import com.johncorser.telly.features.playback.PlaybackEnv
 import com.johncorser.telly.features.playback.PlaybackTime
 import com.johncorser.telly.features.playback.PlayerMenuItem
@@ -66,7 +67,7 @@ class GuideControllerTest {
     private val ticks = MutableSharedFlow<Unit>()
     private val historyDao = FakeWatchHistoryDao()
 
-    private fun TestScope.buildController(): GuideController =
+    private fun TestScope.buildController(resumePreview: () -> Boolean = { true }): GuideController =
         GuideController(
             env =
                 PlaybackEnv(
@@ -74,7 +75,7 @@ class GuideControllerTest {
                     epgRepository = testEpgRepository(programs),
                     engine = engine,
                     store = store,
-                    time = PlaybackTime({ clockNow }, utc, ticks),
+                    time = PlaybackTime({ clockNow }, ClockStyle(utc), ticks),
                 ),
             history = WatchHistory(historyDao) { clockNow },
             pastDays = { pastDays },
@@ -85,7 +86,7 @@ class GuideControllerTest {
                     onOpenSearch = {},
                     onOpenSettings = {},
                 ),
-            seams = GuideSeams(keymap = { keymap }),
+            seams = GuideSeams(keymap = { keymap }, resumePreview = resumePreview),
         )
 
     private fun focusedTitle(controller: GuideController): String? =
@@ -342,6 +343,22 @@ class GuideControllerTest {
 
             assertEquals(3L, controller.preview.value?.id)
             assertEquals(listOf("http://s/3.ts"), engine.loaded)
+        }
+    }
+
+    @Test
+    fun `an untuned cold start leaves the preview dark until OK tunes a cell`() {
+        runTest {
+            store.putLong(TuneController.LAST_CHANNEL_KEY, 3L)
+
+            val controller = buildController(resumePreview = { false })
+
+            assertNull("no tune on entry", controller.preview.value)
+            assertEquals(emptyList<String>(), engine.loaded)
+
+            controller.onKey(GuideKey.OK)
+            assertEquals("News One", controller.preview.value?.source?.name)
+            assertEquals(listOf("http://s/1.ts"), engine.loaded)
         }
     }
 

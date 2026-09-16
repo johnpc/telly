@@ -34,8 +34,8 @@ internal fun SettingsScreenOverlay(
         is SettingsOverlay.ConfirmDeleteReminder -> ReminderScreenConfirmDelete(model, overlay)
         SettingsOverlay.ConfirmClearVodPositions -> VodSettingsScreenConfirm(model)
         SettingsOverlay.ConfirmDeleteRecordings -> SettingsScreenConfirmDeleteRecordings(model)
-        SettingsOverlay.PinSetup -> SettingsScreenPinDialog(title = "Change PIN", onSubmit = model::submitPin)
-        SettingsOverlay.PinVerify -> SettingsScreenPinDialog(title = "Enter PIN", onSubmit = model::submitVerifyPin)
+        SettingsOverlay.PinSetup -> SettingsScreenPinDialog(model, "Change PIN", model::submitPin)
+        is SettingsOverlay.PinVerify -> SettingsScreenPinDialog(model, "Enter PIN", model::submitVerifyPin)
         SettingsOverlay.ConfirmClearHistory -> SettingsScreenConfirmClearHistory(model)
     }
 }

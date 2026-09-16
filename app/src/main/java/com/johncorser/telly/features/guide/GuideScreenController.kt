@@ -43,6 +43,7 @@ internal fun rememberGuideController(
                         myList = deps.myList,
                         visibleRows = deps.visibleRows,
                         keymap = deps.keymap,
+                        resumePreview = deps.start.resumePreview,
                     ),
             )
         }

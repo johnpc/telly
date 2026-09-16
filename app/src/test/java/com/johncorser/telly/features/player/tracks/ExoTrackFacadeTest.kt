@@ -28,11 +28,11 @@ class ExoTrackFacadeTest {
     private val listener = slot<Player.Listener>()
     private val holder = AudioOffsetHolder()
 
-    private fun facade(): ExoTrackFacade {
+    private fun facade(preferSurround: () -> Boolean = { false }): ExoTrackFacade {
         every { player.addListener(capture(listener)) } just Runs
         every { player.trackSelectionParameters } returns
             TrackSelectionParameters.getDefaults(ApplicationProvider.getApplicationContext())
-        return ExoTrackFacade(player, holder)
+        return ExoTrackFacade(player, holder, preferSurround)
     }
 
     private fun group(
@@ -153,5 +153,62 @@ class ExoTrackFacadeTest {
 
         assertEquals(150L, holder.offsetMs)
         assertEquals(150L, facade.audioOffsetMs.value)
+    }
+
+    /** Stereo selected, 6-channel available — the surround-by-default bait. */
+    private fun surroundChoice(language: String = "en"): Tracks.Group =
+        Tracks.Group(
+            TrackGroup(
+                Format.Builder().setSampleMimeType(
+                    MimeTypes.AUDIO_AAC,
+                ).setLanguage(language).setChannelCount(2).build(),
+                Format.Builder().setSampleMimeType(
+                    MimeTypes.AUDIO_AAC,
+                ).setLanguage(language).setChannelCount(6).build(),
+            ),
+            false,
+            intArrayOf(C.FORMAT_HANDLED, C.FORMAT_HANDLED),
+            booleanArrayOf(true, false),
+        )
+
+    @Test
+    fun `surround-by-default overrides onto the widest audio track`() {
+        facade(preferSurround = { true })
+        val applied = slot<TrackSelectionParameters>()
+        every { player.trackSelectionParameters = capture(applied) } just Runs
+
+        listener.captured.onTracksChanged(Tracks(listOf(surroundChoice())))
+
+        val override = applied.captured.overrides.values.single()
+        assertEquals(6, override.mediaTrackGroup.getFormat(override.trackIndices.single()).channelCount)
+    }
+
+    @Test
+    fun `surround off leaves the track selection alone`() {
+        facade()
+
+        listener.captured.onTracksChanged(Tracks(listOf(surroundChoice())))
+
+        verify(exactly = 0) { player.trackSelectionParameters = any() }
+    }
+
+    @Test
+    fun `an explicit audio pick beats surround-by-default until a zap replaces the stream`() {
+        val facade = facade(preferSurround = { true })
+        val applied = mutableListOf<TrackSelectionParameters>()
+        every { player.trackSelectionParameters = capture(applied) } just Runs
+        listener.captured.onTracksChanged(Tracks(listOf(surroundChoice())))
+        assertEquals(1, applied.size) // surround applied
+
+        facade.selectAudio("0:0") // the user explicitly picks stereo
+        assertEquals(2, applied.size)
+        listener.captured.onTracksChanged(Tracks(listOf(surroundChoice())))
+        assertEquals("the same stream re-reporting must not stomp the pick", 2, applied.size)
+
+        // A zap replaces the groups: the pick lapses, surround re-applies.
+        listener.captured.onTracksChanged(Tracks(listOf(surroundChoice(language = "fr"))))
+        assertEquals(3, applied.size)
+        val override = applied.last().overrides.values.single()
+        assertEquals(6, override.mediaTrackGroup.getFormat(override.trackIndices.single()).channelCount)
     }
 }

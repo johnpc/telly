@@ -100,11 +100,14 @@ class Media3PlayerEngine(
          * N players each grabbing focus would pause one another, so the
          * pool's engines share the app's focus and the focused pane owns
          * audio by mute state instead. Single fullscreen keeps the default.
+         * [audio] carries the persisted surround-by-default + passthrough
+         * choices (defaults off = the previous behavior).
          */
         fun create(
             context: Context,
             handleAudioFocus: Boolean = true,
             userAgentFor: (streamUrl: String) -> String = { STREAM_USER_AGENT },
-        ): Media3PlayerEngine = buildMedia3PlayerEngine(context, handleAudioFocus, userAgentFor)
+            audio: PlayerAudioPrefs = PlayerAudioPrefs(),
+        ): Media3PlayerEngine = buildMedia3PlayerEngine(context, handleAudioFocus, userAgentFor, audio)
     }
 }

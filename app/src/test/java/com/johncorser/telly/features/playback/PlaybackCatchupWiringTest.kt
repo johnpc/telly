@@ -56,7 +56,7 @@ class PlaybackCatchupWiringTest {
                     epgRepository = testEpgRepository(FakeProgramDao()),
                     engine = engine,
                     store = store,
-                    time = PlaybackTime({ now }, TimeZone.getTimeZone("UTC")),
+                    time = PlaybackTime({ now }, ClockStyle(TimeZone.getTimeZone("UTC"))),
                     hooks = PlaybackHooks(catchup = CatchupDeps(session = session)),
                 ),
             history = WatchHistory(FakeWatchHistoryDao()) { now },

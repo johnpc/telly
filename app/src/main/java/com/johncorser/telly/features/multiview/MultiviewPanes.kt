@@ -25,6 +25,8 @@ data class MultiviewPane(
  */
 class MultiviewPanes(
     private val pool: PlayerEnginePool,
+    /** Stream-URL resolution (UDP-proxy rewrite), same seam as live tunes. */
+    private val resolveUrl: (String) -> String = { it },
 ) {
     private val mutablePanes = MutableStateFlow<List<MultiviewPane>>(emptyList())
     private val mutableFocusedId = MutableStateFlow(0)
@@ -39,7 +41,7 @@ class MultiviewPanes(
     fun add(channel: ChannelEntity): Boolean {
         if (mutablePanes.value.size >= MultiviewGrid.MAX_PANES) return false
         val pane = MultiviewPane(nextId++, channel, pool.acquire())
-        pane.engine.load(channel.source.streamUrl)
+        pane.engine.load(resolveUrl(channel.source.streamUrl))
         mutablePanes.update { it + pane }
         focus(pane.id)
         return true
@@ -48,7 +50,7 @@ class MultiviewPanes(
     /** Change channel: the focused pane retunes in place. */
     fun change(channel: ChannelEntity) {
         val pane = focused ?: return
-        pane.engine.load(channel.source.streamUrl)
+        pane.engine.load(resolveUrl(channel.source.streamUrl))
         mutablePanes.update { list -> list.map { if (it.id == pane.id) it.copy(channel = channel) else it } }
     }
 

@@ -23,7 +23,6 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.cancel
-import java.util.TimeZone
 
 /**
  * The full-screen History list (history-round2 §3): title "History" +
@@ -40,7 +39,7 @@ fun HistoryScreen(
 ) {
     val scope = remember { CoroutineScope(SupervisorJob() + Dispatchers.Main.immediate) }
     val viewModel =
-        remember { HistoryViewModel(deps.sources, deps.keyValueStore, TimeZone.getDefault(), scope) }
+        remember { HistoryViewModel(deps.sources, deps.keyValueStore, deps.time.style, scope) }
     DisposableEffect(Unit) { onDispose { scope.cancel() } }
     val rows by viewModel.rows.collectAsState()
     Box(

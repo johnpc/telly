@@ -21,17 +21,40 @@ class ProgramTimesTest {
 
     @Test
     fun `range shares the meridiem when both ends match`() {
-        assertEquals("02:30 — 03:45 PM", ProgramTimes.range(at(14, 30), at(15, 45), utc))
+        assertEquals("02:30 — 03:45 PM", ProgramTimes.range(at(14, 30), at(15, 45), ClockStyle(utc)))
     }
 
     @Test
     fun `range spells out both meridiems when they differ`() {
-        assertEquals("11:30 AM — 12:45 PM", ProgramTimes.range(at(11, 30), at(12, 45), utc))
+        assertEquals("11:30 AM — 12:45 PM", ProgramTimes.range(at(11, 30), at(12, 45), ClockStyle(utc)))
     }
 
     @Test
     fun `clock renders the TiviMate header format`() {
-        assertEquals("Sun, Sep 13, 2:45 PM", ProgramTimes.clock(at(14, 45), utc))
+        assertEquals("Sun, Sep 13, 2:45 PM", ProgramTimes.clock(at(14, 45), ClockStyle(utc)))
+    }
+
+    @Test
+    fun `the 24-hour clock format drops the meridiem everywhere`() {
+        val h24 = ClockStyle(utc) { true }
+        assertEquals("14:30 — 15:45", ProgramTimes.range(at(14, 30), at(15, 45), h24))
+        assertEquals("11:30 — 12:45", ProgramTimes.range(at(11, 30), at(12, 45), h24))
+        assertEquals("Sun, Sep 13, 14:45", ProgramTimes.clock(at(14, 45), h24))
+        assertEquals("00:45", ProgramTimes.startTime(at(0, 45), h24))
+    }
+
+    @Test
+    fun `the bare-zone overloads keep the 12-hour rendering`() {
+        assertEquals("12:45 AM", ProgramTimes.startTime(at(0, 45), utc))
+        assertEquals("02:30 — 03:45 PM", ProgramTimes.range(at(14, 30), at(15, 45), ClockStyle(utc)))
+    }
+
+    @Test
+    fun `is24Raw recognizes only the 24-hour raw value`() {
+        org.junit.Assert.assertTrue(ClockStyle.is24Raw("24-hour"))
+        org.junit.Assert.assertTrue(ClockStyle.is24Raw(" 24-hour "))
+        org.junit.Assert.assertFalse(ClockStyle.is24Raw("12-hour"))
+        org.junit.Assert.assertFalse(ClockStyle.is24Raw(""))
     }
 
     @Test

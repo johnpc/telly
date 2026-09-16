@@ -23,8 +23,8 @@ class MultiviewViewModel(
     private val scope: CoroutineScope,
     private val onExit: () -> Unit = {},
 ) {
-    val panes = MultiviewPanes(PlayerEnginePool(deps.engines))
-    val picker = MultiviewPicker(deps.channelDao, deps.epgRepository, deps.clock, scope, deps.zone)
+    val panes = MultiviewPanes(PlayerEnginePool(deps.engines), deps.resolveUrl)
+    val picker = MultiviewPicker(deps.channelDao, deps.epgRepository, deps.time.clock, scope, deps.time.style)
 
     private val mutableLayer = MutableStateFlow<MultiviewLayer>(MultiviewLayer.Panes)
     val layer: StateFlow<MultiviewLayer> get() = mutableLayer

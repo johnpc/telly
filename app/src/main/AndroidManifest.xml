@@ -16,6 +16,7 @@
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_DATA_SYNC" />
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+    <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
 
     <!-- Package visibility (API 30+): resolving external video players. -->
     <queries>
@@ -26,6 +27,7 @@
     </queries>
 
     <application
+        android:name=".TellyApplication"
         android:allowBackup="true"
         android:banner="@drawable/banner"
         android:icon="@mipmap/ic_launcher"
@@ -48,6 +50,18 @@
             android:name=".features.recording.RecordingService"
             android:exported="false"
             android:foregroundServiceType="dataSync" />
+
+        <!-- "Auto start app on boot": launches MainActivity when the toggle
+             is on (Autostart policy). SCREEN_ON is registered at runtime by
+             TellyApplication — it is never deliverable via the manifest. -->
+        <receiver
+            android:name=".BootReceiver"
+            android:enabled="true"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.intent.action.BOOT_COMPLETED" />
+            </intent-filter>
+        </receiver>
     </application>
 
 </manifest>

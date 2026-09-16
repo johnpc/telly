@@ -1,5 +1,6 @@
 package com.johncorser.telly.features.catchup
 
+import com.johncorser.telly.features.playback.ClockStyle
 import com.johncorser.telly.features.playback.PlaybackInfoData
 import com.johncorser.telly.features.playback.ProgramTimes
 import kotlinx.coroutines.CoroutineScope
@@ -8,7 +9,6 @@ import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.stateIn
-import java.util.TimeZone
 
 /**
  * Minimal honest adaptation of the info overlay during catch-up: the
@@ -20,22 +20,22 @@ object CatchupInfo {
         live: Flow<PlaybackInfoData?>,
         state: Flow<CatchupState?>,
         position: Flow<Long>,
-        zone: TimeZone,
+        style: ClockStyle,
         scope: CoroutineScope,
     ): StateFlow<PlaybackInfoData?> =
         combine(live, state, position) { data, catchup, positionMs ->
-            if (catchup == null) data else data?.let { adapt(it, catchup.request, positionMs, zone) }
+            if (catchup == null) data else data?.let { adapt(it, catchup.request, positionMs, style) }
         }.stateIn(scope, SharingStarted.Eagerly, null)
 
     private fun adapt(
         data: PlaybackInfoData,
         request: CatchupRequest,
         positionMs: Long,
-        zone: TimeZone,
+        style: ClockStyle,
     ): PlaybackInfoData =
         data.copy(
             title = request.title ?: data.title,
-            timeRange = ProgramTimes.range(request.startMs, request.endMs, zone),
+            timeRange = ProgramTimes.range(request.startMs, request.endMs, style),
             remaining = null,
             progressPermille = ProgramTimes.progressPermille(0L, request.durationMs, positionMs),
             description = null,

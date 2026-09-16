@@ -31,6 +31,14 @@ class EpgRefresher(
     /** Settings -> "Update EPG": refreshes every source regardless of age. */
     suspend fun refreshAllNow(): List<Long> = refreshWhere { true }
 
+    /**
+     * A playlists change: "Update EPG on playlists change" ON forces a full
+     * refresh; OFF keeps the due policy only (never-fetched sources — e.g. a
+     * freshly added playlist's EPG — are always due), the previous behavior.
+     */
+    suspend fun onPlaylistsChanged(updateOnChange: Boolean): List<Long> =
+        if (updateOnChange) refreshAllNow() else refreshDue()
+
     private suspend fun refreshWhere(due: (lastUpdatedMs: Long) -> Boolean): List<Long> {
         val updated =
             playlistDao

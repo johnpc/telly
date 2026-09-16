@@ -18,7 +18,6 @@ import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
-import kotlinx.coroutines.flow.update
 
 /**
  * Plain JVM-testable state holder for the right-sheet settings stack. Rows
@@ -91,18 +90,13 @@ class SettingsViewModel(
             SettingsFeeds(sources, reminders, blockedChannels)
         }
 
-    /** OK on a section row pushes its sheet over the root list. */
-    fun selectSection(section: SettingsSection) {
-        mutableState.update { it.copy(panes = listOf(SettingsPane.Section(section))) }
-    }
-
     /** OK on a row. Locked rows are unfocusable and never reach this. */
     fun activate(rowId: String) {
         val toggle = SettingsToggles.byRowId[rowId]
         val picker = SettingsPickers.byRowId[rowId]
         when {
             rowId.startsWith(RowIds.SECTION_PREFIX) ->
-                selectSection(SettingsSection.valueOf(rowId.removePrefix(RowIds.SECTION_PREFIX)))
+                openSection(SettingsSection.valueOf(rowId.removePrefix(RowIds.SECTION_PREFIX)))
             rowId == RowIds.PARENTAL_MASTER -> toggleParentalMaster()
             toggle != null -> flip(toggle)
             picker != null ->

@@ -15,13 +15,6 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 
-/** The tune-time policies: the external-player handoff + the blocked-PIN gate. */
-data class TunePolicies(
-    val external: ExternalPlayer = ExternalPlayer.OFF,
-    /** Owns the PIN prompt for blocked channels ([TuneBlockPrompt] drives it). */
-    val gate: BlockGate = BlockGate(),
-)
-
 /**
  * Owns which channel is tuned: restores the last-watched channel on start,
  * pushes streams into the [PlayerEngine], persists the last channel id plus
@@ -35,6 +28,8 @@ class TuneController(
     private val history: WatchHistory,
     private val policies: TunePolicies = TunePolicies(),
 ) {
+    private val resolveUrl: (String) -> String get() = policies.resolveUrl
+
     /** The blocked-channel gate; [TuneBlockPrompt] drives its PIN prompt. */
     val gate: BlockGate get() = policies.gate
 
@@ -96,8 +91,9 @@ class TuneController(
             return
         }
         scope.launch { history.record(channel) }
-        if (!(allowExternal && external.maybeLaunch(channel.source.streamUrl))) {
-            engine.load(channel.source.streamUrl)
+        val liveUrl = resolveUrl(channel.source.streamUrl)
+        if (!(allowExternal && external.maybeLaunch(liveUrl))) {
+            engine.load(liveUrl)
         }
     }
 
@@ -122,7 +118,7 @@ class TuneController(
 
     /** Re-loads the current channel's stream after a background stop. */
     fun retune() {
-        mutableCurrent.value?.let { engine.load(it.source.streamUrl) }
+        mutableCurrent.value?.let { engine.load(resolveUrl(it.source.streamUrl)) }
     }
 
     /** Tunes the channel [delta] steps away (wraps); false when impossible or PIN-gated. */

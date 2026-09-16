@@ -33,9 +33,15 @@ class ParentalControls(
             expectedHash = settings.get(TellySettings.PARENTAL_PIN_HASH),
         )
 
-    /** True when entering [groupTitle] must be gated behind the PIN. */
+    /**
+     * True when entering [groupTitle] to WATCH must be gated behind the PIN.
+     * "Don't require for channels only" exempts watching from the PIN (the
+     * settings gates below still apply) — TiviMate's captured semantics.
+     */
     fun isGroupLocked(groupTitle: String): Boolean =
-        isEnabled && groupTitle in settings.get(TellySettings.PARENTAL_LOCKED_GROUPS)
+        isEnabled &&
+            !settings.get(TellySettings.PARENTAL_CHANNELS_ONLY) &&
+            groupTitle in settings.get(TellySettings.PARENTAL_LOCKED_GROUPS)
 
     fun setGroupLocked(
         groupTitle: String,
@@ -47,6 +53,13 @@ class ParentalControls(
 
     /** True when opening Settings must be gated behind the PIN. */
     fun isSettingsLocked(): Boolean = isEnabled && settings.get(TellySettings.PARENTAL_REQUIRE_FOR_SETTINGS)
+
+    /** True when opening Settings -> Playlists must be gated behind the PIN. */
+    fun isPlaylistsLocked(): Boolean = isEnabled && settings.get(TellySettings.PARENTAL_REQUIRE_FOR_PLAYLISTS)
+
+    /** True when PIN prompts use the masked keyboard entry, not the wheels. */
+    val usesKeyboardPin: Boolean
+        get() = settings.get(TellySettings.PARENTAL_PIN_INPUT_METHOD).equals("Keyboard", ignoreCase = true)
 
     /**
      * True when every gated surface must re-prompt after an unlock — the

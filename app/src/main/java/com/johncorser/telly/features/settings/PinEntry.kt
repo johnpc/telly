@@ -28,3 +28,15 @@ data class PinEntry(
         private const val BASE = 10
     }
 }
+
+/**
+ * Pure rules for the keyboard-style PIN entry (PIN input method
+ * "Keyboard"): a masked IME text field that accepts digits only and
+ * commits as soon as the fourth digit lands. Same verify semantics as the
+ * wheel — the committed 4-digit string goes through the same PIN check.
+ */
+object PinKeyboard {
+    fun sanitize(raw: String): String = raw.filter(Char::isDigit).take(PinEntry.LENGTH)
+
+    fun isComplete(value: String): Boolean = value.length == PinEntry.LENGTH
+}

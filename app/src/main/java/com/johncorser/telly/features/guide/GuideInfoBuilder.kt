@@ -1,6 +1,7 @@
 package com.johncorser.telly.features.guide
 
 import com.johncorser.telly.features.epg.ProgramTitle
+import com.johncorser.telly.features.playback.ClockStyle
 import com.johncorser.telly.features.playback.ProgramTimes
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.Flow
@@ -8,7 +9,6 @@ import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.stateIn
-import java.util.TimeZone
 
 /** Everything the guide's top-right info pane renders (uidump 24). */
 data class GuideInfoData(
@@ -30,10 +30,10 @@ object GuideInfoBuilder {
         rows: Flow<List<GuideRow>>,
         focus: Flow<GuideFocus?>,
         now: Flow<Long>,
-        zone: TimeZone,
+        style: ClockStyle,
         scope: CoroutineScope,
     ): StateFlow<GuideInfoData?> =
-        combine(rows, focus, now) { list, focused, at -> buildFor(list, focused, at, zone) }
+        combine(rows, focus, now) { list, focused, at -> buildFor(list, focused, at, style) }
             .stateIn(scope, SharingStarted.Eagerly, null)
 
     /** The pane for the focused cell of [rows]; null with nothing focused. */
@@ -41,10 +41,10 @@ object GuideInfoBuilder {
         rows: List<GuideRow>,
         focused: GuideFocus?,
         nowMs: Long,
-        zone: TimeZone,
+        style: ClockStyle,
     ): GuideInfoData? {
         val row = focused?.let { rows.getOrNull(it.rowIndex) } ?: return null
-        return build(row, focused.cell, nowMs, zone)
+        return build(row, focused.cell, nowMs, style)
     }
 
     /**
@@ -55,12 +55,12 @@ object GuideInfoBuilder {
         row: GuideRow,
         cell: GuideCell,
         nowMs: Long,
-        zone: TimeZone,
+        style: ClockStyle,
     ): GuideInfoData {
         val airing = cell.contains(nowMs)
         return GuideInfoData(
             title = cell.program?.details?.let(ProgramTitle::of) ?: NO_INFORMATION,
-            range = ProgramTimes.range(cell.startMs, cell.endMs, zone),
+            range = ProgramTimes.range(cell.startMs, cell.endMs, style),
             remaining = if (airing) "${ProgramTimes.remainingMinutes(cell.endMs, nowMs)} min" else null,
             progressPermille = if (airing) ProgramTimes.progressPermille(cell.startMs, cell.endMs, nowMs) else null,
             description = cell.program?.details?.description,

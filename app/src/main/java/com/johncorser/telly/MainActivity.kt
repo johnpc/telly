@@ -31,6 +31,12 @@ class MainActivity : ComponentActivity() {
     private val fetcher by lazy {
         M3uFetcher(userAgentFor = ServiceLocator.playlistFetchUserAgentFor(this))
     }
+    private val startRoute =
+        StartRoute(
+            lastChannelOnStart = {
+                ServiceLocator.settingsRepository(this).get(TellySettings.LAST_CHANNEL_ON_START)
+            },
+        )
     private val pip = PipActivityBridge(this, PipState.shared, ::pipOnHome, ::playbackIsFullscreen)
     private val afr by lazy { afrController() }
 
@@ -76,7 +82,7 @@ class MainActivity : ComponentActivity() {
                 repository = repository,
                 fetchPlaylist = fetcher::fetch,
                 playbackDeps = ServiceLocator.playbackDeps(this, hooks),
-                guideDeps = ServiceLocator.guideDeps(this, hooks),
+                guideDeps = ServiceLocator.guideDeps(this, hooks) { !startRoute.consumeUntunedStart() },
                 settingsGraph = settingsGraph(fetcher),
                 searchDeps = ServiceLocator.searchDeps(this),
                 multiviewDeps = ServiceLocator.multiviewDeps(this),
@@ -94,11 +100,11 @@ class MainActivity : ComponentActivity() {
         super.onStop()
     }
 
-    /** Boot stays blank until Room answers; then playback or onboarding. */
+    /** Boot stays blank until Room answers; then playback/guide/onboarding. */
     private fun restoreStartRoute() {
         lifecycleScope.launch {
             val channelCount = ServiceLocator.database(this@MainActivity).channelDao().totalCount()
-            navigator.replaceAll(StartRoute.forChannelCount(channelCount))
+            navigator.replaceAll(startRoute.forChannelCount(channelCount))
         }
     }
 }

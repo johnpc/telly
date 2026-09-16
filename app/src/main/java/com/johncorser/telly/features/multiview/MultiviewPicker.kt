@@ -3,6 +3,7 @@ package com.johncorser.telly.features.multiview
 import com.johncorser.telly.features.epg.EpgRepository
 import com.johncorser.telly.features.panel.PanelRow
 import com.johncorser.telly.features.panel.PanelViewModel
+import com.johncorser.telly.features.playback.ClockStyle
 import com.johncorser.telly.features.playlist.db.ChannelDao
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -15,7 +16,6 @@ import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
-import java.util.TimeZone
 
 /**
  * The channel picker every pane-menu row opens (multiview-round 05/08/10):
@@ -28,10 +28,11 @@ class MultiviewPicker(
     private val epgRepository: EpgRepository,
     private val clock: () -> Long,
     scope: CoroutineScope,
-    private val zone: TimeZone,
+    private val style: ClockStyle,
 ) {
-    /** Channel rows + focus machinery, shared 1:1 with the channel panel. */
-    val panel = PanelViewModel(channelDao, epgRepository, clock, scope, zone)
+    // Channel rows + focus machinery, shared 1:1 with the channel panel;
+    // the injected style carries the persisted 12/24-hour clock choice.
+    val panel = PanelViewModel(channelDao, epgRepository, clock, scope, style)
 
     /** The focused row feeds the schedule pane and the detail card. */
     val focusedRow: StateFlow<PanelRow?> =
@@ -54,6 +55,6 @@ class MultiviewPicker(
         val at = clock()
         return epgRepository
             .programsFor(listOf(tvgId), at - MultiviewSchedule.PAST_MS, at + MultiviewSchedule.FUTURE_MS)
-            .map { MultiviewSchedule.build(it, at, zone) }
+            .map { MultiviewSchedule.build(it, at, style) }
     }
 }

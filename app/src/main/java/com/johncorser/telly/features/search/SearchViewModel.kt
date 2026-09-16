@@ -53,7 +53,7 @@ class SearchViewModel(
     @OptIn(ExperimentalCoroutinesApi::class)
     val results: StateFlow<SearchResults> =
         mutableQuery
-            .mapLatest { deps.repository.search(it, deps.clock(), deps.zone) }
+            .mapLatest { deps.repository.search(it, deps.clock(), deps.style) }
             .onEach {
                 // A new batch also forgets the DOWN-from-bar focus memory:
                 // what the reference does when the results change under it

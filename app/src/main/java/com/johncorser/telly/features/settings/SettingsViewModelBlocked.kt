@@ -16,17 +16,10 @@ internal fun SettingsViewModel.runBlockedOrSearchAction(rowId: String) {
 /** "Blocked channels" row: confirm the PIN once, then push the pane. */
 private fun SettingsViewModel.openBlockedChannels() {
     if (parental.hasPin) {
-        showOverlay(SettingsOverlay.PinVerify)
+        showOverlay(SettingsOverlay.PinVerify())
     } else {
         push(SettingsPane.BlockedChannels)
     }
-}
-
-/** The pane-entry PIN dialog's commit; wrong PINs keep prompting. */
-fun SettingsViewModel.submitVerifyPin(pin: String) {
-    if (state.value.overlay != SettingsOverlay.PinVerify || !parental.verifyPin(pin)) return
-    dismissOverlay()
-    push(SettingsPane.BlockedChannels)
 }
 
 /** OK on a blocked-channel row unblocks it (pane entry already PIN-gated). */

@@ -41,4 +41,9 @@ data class PlaybackHooks(
     val blockSession: BlockSession = BlockSession(),
     /** Catch-up hand-off session + the Remote-control seek toggles + steps. */
     val catchup: CatchupDeps = CatchupDeps(),
+    /**
+     * Stream-URL resolution (the UDP-proxy rewrite), applied where a tuner
+     * hands a LIVE URL to the engine; identity by default.
+     */
+    val resolveUrl: (String) -> String = { it },
 )

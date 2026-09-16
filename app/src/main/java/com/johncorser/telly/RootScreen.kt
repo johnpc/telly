@@ -17,6 +17,7 @@ import com.johncorser.telly.core.design.TELLY_ONBOARDING_BACKGROUND
 import com.johncorser.telly.core.navigation.Navigator
 import com.johncorser.telly.core.navigation.Route
 import com.johncorser.telly.core.ui.ProvideAccentColor
+import com.johncorser.telly.core.ui.ProvideResizeMode
 import com.johncorser.telly.features.guide.GuideDeps
 import com.johncorser.telly.features.multiview.MultiviewDeps
 import com.johncorser.telly.features.playback.PlaybackDeps
@@ -53,43 +54,45 @@ fun RootScreen(
     val baseRoute = stack.lastOrNull { it != Route.Settings } ?: route
     BackHandler(enabled = stack.size > 1 && route != Route.AddPlaylistWizard) { navigator.pop() }
     ProvideAccentColor(settingsGraph.settings) { accent ->
-        MaterialTheme(
-            colorScheme =
-                darkColorScheme(
-                    primary = accent,
-                    background = Color(TELLY_ONBOARDING_BACKGROUND),
-                    surface = Color(TELLY_GUIDANCE_PANE),
-                ),
-        ) {
-            ProvideAppearanceSettings(settingsGraph.settings) {
-                Box(Modifier.fillMaxSize()) {
-                    // A reminder "Watch" bumps the epoch so a same-route tune
-                    // still recreates the playback screen (cold-start path).
-                    val reminderEpoch = reminders?.popup?.tuneEpoch?.collectAsState()?.value ?: 0
-                    key(reminderEpoch) {
-                        RootScreenRoutes(
-                            baseRoute,
-                            settingsOpen,
-                            navigator,
-                            repository,
-                            fetchPlaylist,
-                            playbackDeps,
-                            guideDeps,
-                            searchDeps,
-                            multiviewDeps,
-                            vodDeps,
-                            onEnterPip,
-                            recordingDeps,
-                        )
+        ProvideResizeMode(settingsGraph.settings) {
+            MaterialTheme(
+                colorScheme =
+                    darkColorScheme(
+                        primary = accent,
+                        background = Color(TELLY_ONBOARDING_BACKGROUND),
+                        surface = Color(TELLY_GUIDANCE_PANE),
+                    ),
+            ) {
+                ProvideAppearanceSettings(settingsGraph.settings) {
+                    Box(Modifier.fillMaxSize()) {
+                        // A reminder "Watch" bumps the epoch so a same-route tune
+                        // still recreates the playback screen (cold-start path).
+                        val reminderEpoch = reminders?.popup?.tuneEpoch?.collectAsState()?.value ?: 0
+                        key(reminderEpoch) {
+                            RootScreenRoutes(
+                                baseRoute,
+                                settingsOpen,
+                                navigator,
+                                repository,
+                                fetchPlaylist,
+                                playbackDeps,
+                                guideDeps,
+                                searchDeps,
+                                multiviewDeps,
+                                vodDeps,
+                                onEnterPip,
+                                recordingDeps,
+                            )
+                        }
+                        if (settingsOpen) {
+                            SettingsScreenHost(
+                                graph = settingsGraph,
+                                onAddPlaylist = { navigator.push(Route.AddPlaylistWizard) },
+                                onClose = { navigator.pop() },
+                            )
+                        }
+                        if (reminders != null) ReminderScreenPopupHost(reminders, navigator)
                     }
-                    if (settingsOpen) {
-                        SettingsScreenHost(
-                            graph = settingsGraph,
-                            onAddPlaylist = { navigator.push(Route.AddPlaylistWizard) },
-                            onClose = { navigator.pop() },
-                        )
-                    }
-                    if (reminders != null) ReminderScreenPopupHost(reminders, navigator)
                 }
             }
         }

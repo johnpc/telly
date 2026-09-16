@@ -13,11 +13,13 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.key.onPreviewKeyEvent
 import com.johncorser.telly.core.input.HoldKeyDetector
+import com.johncorser.telly.core.ui.LocalResizeModeRaw
 import com.johncorser.telly.core.ui.ScreenLifecycleStartStop
 import com.johncorser.telly.features.mylist.MyListHooks
 import com.johncorser.telly.features.panel.PanelLock
 import com.johncorser.telly.features.pip.PipState
 import com.johncorser.telly.features.player.PlayerScreenSurface
+import com.johncorser.telly.features.player.ResizeModes
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -102,7 +104,7 @@ fun PlaybackScreen(
             .background(Color.Black)
             .onPreviewKeyEvent { event -> onPreviewKey(event, overlay, viewModel, previewDetector) },
     ) {
-        PlayerScreenSurface(engine, Modifier.fillMaxSize())
+        PlayerScreenSurface(engine, Modifier.fillMaxSize(), resizeMode = ResizeModes.of(LocalResizeModeRaw.current))
         // In the tiny PIP window every piece of chrome hides: clean video only.
         if (!inPip) PlaybackScreenChrome(viewModel, overlay, blockPromptOpen = blockPrompt != null)
     }

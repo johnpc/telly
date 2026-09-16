@@ -30,7 +30,8 @@ class GuideController(
     private val callbacks: GuideCallbacks,
     seams: GuideSeams = GuideSeams(),
 ) {
-    val zone = env.time.zone
+    /** 12/24-hour rendering (+ zone) for the header clock and timeline ticks. */
+    val clockStyle = env.time.style
 
     /** OK on a playable past cell hands the archive to fullscreen playback. */
     private val catchup = GuideCatchup(env.hooks.catchup.session, env.time.clock, callbacks.onFullscreen)
@@ -41,12 +42,15 @@ class GuideController(
     /** Minute-ticked "now" (header clock, now-line); origin stays anchored. */
     private val ticker = GuideNow(env.time.clock, scope, env.time.minuteTicks)
     val now: StateFlow<Long> = ticker.now
-    val originMs = GuideGeometry.halfHourFloor(now.value, zone)
+    val originMs = GuideGeometry.halfHourFloor(now.value, clockStyle.zone)
 
     private val tuner = gatedTuner(env, history, scope, external = callbacks.external)
 
     /** The blocked-channel tune gate's prompt (guide OK / preview restore). */
     val blockPrompt = TuneBlockPrompt(tuner)
+
+    /** Exit-confirm state + the persisted PIN input method (screen chrome). */
+    val chrome = GuideChrome(env, scope)
 
     /** Background stop + foreground re-seed/re-tune (round7 resume P2). */
     val lifecycle = PlaybackLifecycle(tuner, onForegrounded = ticker::reseed, recover = tuner::retune)
@@ -73,7 +77,7 @@ class GuideController(
 
     val hint: StateFlow<Boolean> = GuideHint(env.store).startIn(scope)
 
-    val info: StateFlow<GuideInfoData?> = GuideInfoBuilder.feed(rows, focusEngine.focus, now, zone, scope)
+    val info: StateFlow<GuideInfoData?> = GuideInfoBuilder.feed(rows, focusEngine.focus, now, clockStyle, scope)
 
     /** My-list toggle state: the dropdown/sheet labels flip on its keys. */
     val myList = MyListMenu(seams.myList, env.time.clock, scope)
@@ -107,9 +111,10 @@ class GuideController(
         menu.remind.reminders = seams.reminders
         scope.launch { rows.collect { focusEngine.ensureFocus(it, now.value) } }
         // The guide is reached from playback (BACK / the TV-guide card), where
-        // the last channel keeps playing in the preview window; cold starts
-        // land on fullscreen playback instead, so nothing double-tunes.
-        tuner.resumeStored()
+        // the last channel keeps playing in the preview window; a cold start
+        // with "Turn on last channel on app start" OFF instead lands here
+        // untuned — the preview stays dark until OK tunes a cell.
+        if (seams.resumePreview()) tuner.resumeStored()
     }
 
     /** Routes a key through the layer map; true = consumed. */

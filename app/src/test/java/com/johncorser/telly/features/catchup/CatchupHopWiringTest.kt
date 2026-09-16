@@ -1,6 +1,7 @@
 package com.johncorser.telly.features.catchup
 
 import com.johncorser.telly.features.history.WatchHistory
+import com.johncorser.telly.features.playback.ClockStyle
 import com.johncorser.telly.features.playback.PlaybackEnv
 import com.johncorser.telly.features.playback.PlaybackHooks
 import com.johncorser.telly.features.playback.PlaybackKey
@@ -62,7 +63,7 @@ class CatchupHopWiringTest {
                 epgRepository = testEpgRepository(programs),
                 engine = engine,
                 store = store,
-                time = PlaybackTime({ now }, TimeZone.getTimeZone("UTC")),
+                time = PlaybackTime({ now }, ClockStyle(TimeZone.getTimeZone("UTC"))),
                 hooks = PlaybackHooks(catchup = CatchupDeps(session = session)),
             )
         val tuner = TuneController(engine, store, scope, dao, WatchHistory(FakeWatchHistoryDao()) { now })

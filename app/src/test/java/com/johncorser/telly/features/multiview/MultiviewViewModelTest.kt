@@ -1,5 +1,7 @@
 package com.johncorser.telly.features.multiview
 
+import com.johncorser.telly.features.playback.ClockStyle
+import com.johncorser.telly.features.playback.PlaybackTime
 import com.johncorser.telly.features.playback.TuneController
 import com.johncorser.telly.testutil.FakeChannelDao
 import com.johncorser.telly.testutil.FakeKeyValueStore
@@ -35,8 +37,7 @@ class MultiviewViewModelTest {
                     epgRepository = testEpgRepository(FakeProgramDao()),
                     engines = { FakePlayerEngine().also { engines += it } },
                     store = store,
-                    clock = { 0L },
-                    zone = TimeZone.getTimeZone("UTC"),
+                    time = PlaybackTime({ 0L }, ClockStyle(TimeZone.getTimeZone("UTC"))),
                 ),
             scope = CoroutineScope(SupervisorJob() + UnconfinedTestDispatcher(testScheduler)),
             onExit = { exits += 1 },

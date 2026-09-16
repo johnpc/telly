@@ -18,18 +18,20 @@ import com.johncorser.telly.core.ui.FocusScreenDefaults
 import com.johncorser.telly.core.ui.LocalAccentColor
 
 /**
- * Picker-style PIN entry (PIN input method "Picker"): four digit wheels,
- * UP/DOWN spins, LEFT/RIGHT moves, OK commits. The reference dialog is
+ * PIN setup/change dialog: the entry style follows the persisted "PIN input
+ * method" (wheels or masked keyboard). The reference dialog is
  * premium-locked and uncapturable — minimal matching style, VERIFY-ON-DEVICE.
  * Shared by "Change PIN" and the blocked-channels pane-entry verification.
  */
 @Composable
 internal fun SettingsScreenPinDialog(
+    model: SettingsViewModel,
     title: String,
     onSubmit: (String) -> Unit,
 ) {
     SettingsScreenSheet(title = title) {
-        SettingsScreenPinWheel(
+        SettingsScreenPinEntry(
+            keyboard = model.parental.usesKeyboardPin,
             onSubmit = onSubmit,
             modifier = Modifier.padding(SettingsScreenDims.panePadding),
         )

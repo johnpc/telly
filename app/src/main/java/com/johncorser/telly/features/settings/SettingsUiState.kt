@@ -87,8 +87,13 @@ sealed interface SettingsOverlay {
 
     data object PinSetup : SettingsOverlay
 
-    /** Entering the blocked-channels pane confirms the parental PIN once. */
-    data object PinVerify : SettingsOverlay
+    /**
+     * The ONE PIN-verify overlay: the "Require PIN for" gates carry the
+     * pending [section] to open; null = the blocked-channels pane entry.
+     */
+    data class PinVerify(
+        val section: SettingsSection? = null,
+    ) : SettingsOverlay
 
     /** GuidedStep confirm for Other -> Search -> Clear search history. */
     data object ConfirmClearHistory : SettingsOverlay

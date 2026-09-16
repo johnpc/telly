@@ -63,7 +63,11 @@ class SettingsRowsTest {
             ),
             titles(rows),
         )
-        rows.filterIsInstance<SettingsRow.Toggle>().forEach { assertFalse(it.checked) }
+        // "Turn on last channel on app start" defaults ON — the documented
+        // default flip preserving telly's shipped cold-start-to-playback.
+        rows
+            .filterIsInstance<SettingsRow.Toggle>()
+            .forEach { assertEquals(it.title == "Turn on last channel on app start", it.checked) }
         assertEquals("May not work on all devices", (rows[1] as SettingsRow.Toggle).summary)
         assertEquals("Not set", (rows[5] as SettingsRow.Value).summary)
         assertEquals("Not set", (rows[6] as SettingsRow.Value).summary)

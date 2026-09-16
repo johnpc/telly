@@ -1,10 +1,10 @@
 package com.johncorser.telly.features.search
 
 import com.johncorser.telly.features.epg.EpgRepository
+import com.johncorser.telly.features.playback.ClockStyle
 import com.johncorser.telly.features.playlist.db.ChannelDao
 import com.johncorser.telly.features.search.db.SearchDao
 import kotlinx.coroutines.flow.first
-import java.util.TimeZone
 
 /**
  * Runs one search over Room: channels by name substring or number prefix
@@ -20,7 +20,7 @@ class SearchRepository(
     suspend fun search(
         raw: String,
         atMs: Long,
-        zone: TimeZone,
+        style: ClockStyle,
     ): SearchResults {
         val query = SearchQuery.normalize(raw)
         if (query.isEmpty()) return SearchResults()
@@ -36,7 +36,7 @@ class SearchRepository(
         return SearchResults(
             query = query,
             channels = SearchResultsBuilder.channels(channels, guide, atMs),
-            programs = SearchResultsBuilder.programs(programs, visible, atMs, zone),
+            programs = SearchResultsBuilder.programs(programs, visible, atMs, style),
         )
     }
 

@@ -6,6 +6,7 @@ import com.johncorser.telly.features.guide.GuideTestData.at
 import com.johncorser.telly.features.guide.GuideTestData.nowMs
 import com.johncorser.telly.features.guide.GuideTestData.utc
 import com.johncorser.telly.features.history.WatchHistory
+import com.johncorser.telly.features.playback.ClockStyle
 import com.johncorser.telly.features.playback.PlaybackEnv
 import com.johncorser.telly.features.playback.PlaybackHooks
 import com.johncorser.telly.features.playback.PlaybackTime
@@ -60,7 +61,7 @@ class GuideCatchupWiringTest {
                     epgRepository = testEpgRepository(programs),
                     engine = engine,
                     store = store,
-                    time = PlaybackTime({ nowMs }, utc, MutableSharedFlow()),
+                    time = PlaybackTime({ nowMs }, ClockStyle(utc), MutableSharedFlow()),
                     hooks = PlaybackHooks(catchup = CatchupDeps(session = session)),
                 ),
             history = WatchHistory(FakeWatchHistoryDao()) { nowMs },

@@ -1,6 +1,7 @@
 package com.johncorser.telly.features.search
 
 import com.johncorser.telly.features.epg.NowNext
+import com.johncorser.telly.features.playback.ClockStyle
 import com.johncorser.telly.testutil.testChannel
 import com.johncorser.telly.testutil.testProgram
 import org.junit.Assert.assertEquals
@@ -9,7 +10,7 @@ import org.junit.Test
 import java.util.TimeZone
 
 class SearchResultsBuilderTest {
-    private val zone = TimeZone.getTimeZone("UTC")
+    private val style = ClockStyle(TimeZone.getTimeZone("UTC"))
 
     // Sun Sep 13 2026 15:00:00 UTC
     private val now = 1_789_311_600_000L
@@ -45,7 +46,7 @@ class SearchResultsBuilderTest {
                 matches = listOf(known, unknown),
                 channels = listOf(newsOne),
                 atMs = now,
-                zone = zone,
+                style = style,
             )
 
         assertEquals(1, groups.size)
@@ -68,7 +69,7 @@ class SearchResultsBuilderTest {
                 matches = matches,
                 channels = listOf(newsOne, newsTwo, alpha),
                 atMs = now,
-                zone = zone,
+                style = style,
             )
 
         assertEquals(listOf("alpha news", "News One", "News Two"), groups.map { it.channel.source.name })
@@ -86,7 +87,7 @@ class SearchResultsBuilderTest {
                     ),
                 channels = listOf(newsOne),
                 atMs = now,
-                zone = zone,
+                style = style,
             )
 
         assertEquals(1, groups.size)
@@ -106,7 +107,7 @@ class SearchResultsBuilderTest {
                     ),
                 channels = listOf(newsOne, newsTwo),
                 atMs = now,
-                zone = zone,
+                style = style,
             )
 
         assertEquals(2, groups.size)
@@ -121,7 +122,7 @@ class SearchResultsBuilderTest {
                 matches = listOf(testProgram("one", now - hour, now + hour, "Newsroom Live")),
                 channels = listOf(newsOne),
                 atMs = now,
-                zone = zone,
+                style = style,
             )
 
         assertEquals(500, groups[0].airings[0].progressPermille)
@@ -135,7 +136,7 @@ class SearchResultsBuilderTest {
                 matches = listOf(testProgram("one", now + hour, now + 2 * hour, "Newsroom Live")),
                 channels = listOf(newsOne),
                 atMs = now,
-                zone = zone,
+                style = style,
             )
 
         assertEquals(0, groups[0].airings[0].progressPermille)
@@ -146,7 +147,7 @@ class SearchResultsBuilderTest {
     fun `todays programmes show a bare time range`() {
         val program = testProgram("one", now + hour, now + 2 * hour, "A")
 
-        assertEquals("04:00 — 05:00 PM", SearchResultsBuilder.airTime(program, now, zone))
+        assertEquals("04:00 — 05:00 PM", SearchResultsBuilder.airTime(program, now, style))
     }
 
     @Test
@@ -154,7 +155,7 @@ class SearchResultsBuilderTest {
         val start = now + 10 * hour // Mon Sep 14, 01:00 AM UTC
         val program = testProgram("one", start, start + hour, "A")
 
-        assertEquals("Mon, Sep 14, 01:00 — 02:00 AM", SearchResultsBuilder.airTime(program, now, zone))
+        assertEquals("Mon, Sep 14, 01:00 — 02:00 AM", SearchResultsBuilder.airTime(program, now, style))
     }
 
     @Test
@@ -162,7 +163,7 @@ class SearchResultsBuilderTest {
         val start = now + 8 * hour // 11:00 PM, still today
         val program = testProgram("one", start, start + 2 * hour, "A")
 
-        assertEquals("11:00 PM — 01:00 AM", SearchResultsBuilder.airTime(program, now, zone))
+        assertEquals("11:00 PM — 01:00 AM", SearchResultsBuilder.airTime(program, now, style))
     }
 
     @Test
@@ -174,7 +175,7 @@ class SearchResultsBuilderTest {
                 matches = listOf(testProgram("one", now, now + hour, "A")),
                 channels = listOf(newsOne, duplicate),
                 atMs = now,
-                zone = zone,
+                style = style,
             )
 
         assertEquals("News One", groups[0].channel.source.name)

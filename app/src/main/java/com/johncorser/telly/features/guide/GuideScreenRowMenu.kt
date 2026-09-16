@@ -69,7 +69,11 @@ internal fun GuideScreenRowMenuLayers(
             )
         is GuideLayer.CustomRecording -> controller.recordingMenu?.let { RecordingScreenForm(it) }
         is GuideLayer.BlockPin ->
-            ChannelPanelScreenPin(onSubmit = controller.menu::submitBlockPin, title = layer.mode.title)
+            ChannelPanelScreenPin(
+                onSubmit = controller.menu::submitBlockPin,
+                title = layer.mode.title,
+                keyboard = controller.chrome.keyboardPin,
+            )
         else -> Unit
     }
 }

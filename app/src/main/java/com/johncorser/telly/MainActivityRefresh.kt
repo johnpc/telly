@@ -7,6 +7,7 @@ import com.johncorser.telly.core.playlistRefresher
 import com.johncorser.telly.core.settings.TellySettings
 import com.johncorser.telly.features.playback.PlaybackTime
 import com.johncorser.telly.features.playlist.M3uFetcher
+import kotlinx.coroutines.flow.collectIndexed
 import kotlinx.coroutines.launch
 
 // MainActivity's background refresh loops (kept out of MainActivity.kt for
@@ -19,14 +20,24 @@ internal fun MainActivity.keepPlaylistsFresh(fetcher: M3uFetcher) {
     lifecycleScope.launch { refresher.run(PlaybackTime.minuteBoundaryTicks(ServiceLocator.clock)) }
 }
 
-/** Refresh due EPG on start, playlist changes and per-minute ticks. */
+/**
+ * Refresh due EPG on start, playlist changes and per-minute ticks. When
+ * the playlists CHANGE (any emission after the first), "Update EPG on
+ * playlists change" decides between a forced full refresh (ON) and the
+ * due-only policy (OFF, the captured default — never-fetched sources such
+ * as a freshly added playlist's EPG are always due).
+ */
 internal fun MainActivity.keepEpgFresh() {
     val refresher = ServiceLocator.epgRefresher(this)
     val settings = ServiceLocator.settingsRepository(this)
     lifecycleScope.launch {
         if (settings.get(TellySettings.EPG_UPDATE_ON_APP_START)) refresher.refreshAllNow()
-        ServiceLocator.database(this@keepEpgFresh).playlistDao().observeAll().collect {
-            refresher.refreshDue()
+        ServiceLocator.database(this@keepEpgFresh).playlistDao().observeAll().collectIndexed { index, _ ->
+            if (index == 0) {
+                refresher.refreshDue()
+            } else {
+                refresher.onPlaylistsChanged(settings.get(TellySettings.EPG_UPDATE_ON_PLAYLISTS_CHANGE))
+            }
         }
     }
     // A failed source is never stamped (epgLastUpdatedMs stays 0), so the

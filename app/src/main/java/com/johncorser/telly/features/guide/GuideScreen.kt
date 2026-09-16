@@ -1,6 +1,5 @@
 package com.johncorser.telly.features.guide
 
-import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -25,9 +24,9 @@ import com.johncorser.telly.features.playback.PlayerMenuSurface
  * The TV guide (capture 24): preview window + info pane on top, the
  * virtualized programme grid below. The grid layer routes D-pad keys
  * through the controller's pure engine; overlaid layers (groups column,
- * cell dropdown, coming-soon) use regular Compose focus. BACK on the grid is
- * deliberately unhandled: at guide root the app exits, the
- * device-verified free-tier behavior.
+ * cell dropdown, coming-soon) use regular Compose focus. BACK on the grid
+ * exits the app at the guide root (the device-verified free-tier behavior),
+ * gated by "Confirm exit by second press Back" when that toggle is on.
  */
 @Composable
 fun GuideScreen(
@@ -61,7 +60,7 @@ fun GuideScreen(
     // Background/resume: stop the preview stream on STOP, re-seed the clock
     // and re-tune on the START after it (round7 resume P2).
     ScreenLifecycleStartStop(onStart = controller.lifecycle::onForeground, onStop = controller.lifecycle::onBackground)
-    BackHandler(enabled = layer != GuideLayer.Grid && !settingsOpen) { controller.onKey(GuideKey.BACK) }
+    GuideScreenBackHandlers(deps, controller, layer, settingsOpen)
     // Returning from the settings sheet lands back on the grid, whose key
     // anchor re-grabs focus when it recomposes.
     LaunchedEffect(settingsOpen) { if (!settingsOpen) controller.menu.reset() }
@@ -88,6 +87,7 @@ fun GuideScreen(
             }
         }
         GuideScreenHintToast(controller, Modifier.align(Alignment.BottomEnd))
+        GuideScreenExitToast(controller, Modifier.align(Alignment.BottomCenter))
         // The dim behind the sheet lives outside the layer switch so it can
         // fade back out (~300 ms) after the sheet's instant cut (ref-round6);
         // the originating row is punched out undimmed (round7 P2).
@@ -103,6 +103,7 @@ fun GuideScreen(
             PlaybackScreenBlockGate(
                 onSubmit = controller.blockPrompt::submit,
                 onDismiss = controller.blockPrompt::dismiss,
+                keyboard = controller.chrome.keyboardPin,
             )
         }
     }

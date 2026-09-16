@@ -1,6 +1,7 @@
 package com.johncorser.telly.features.history
 
 import com.johncorser.telly.core.kv.KeyValueStore
+import com.johncorser.telly.features.playback.ClockStyle
 import com.johncorser.telly.features.playback.PlaybackSources
 import com.johncorser.telly.features.playback.TuneController
 import kotlinx.coroutines.CoroutineScope
@@ -11,7 +12,6 @@ import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
-import java.util.TimeZone
 
 /**
  * The History screen's state (history-round2 §3): the full capped watch
@@ -22,7 +22,7 @@ import java.util.TimeZone
 class HistoryViewModel(
     private val sources: PlaybackSources,
     private val store: KeyValueStore,
-    zone: TimeZone,
+    style: ClockStyle,
     private val scope: CoroutineScope,
 ) {
     @OptIn(ExperimentalCoroutinesApi::class)
@@ -34,7 +34,7 @@ class HistoryViewModel(
                 val span = HistoryRows.programmeSpan(events)
                 sources.epgRepository
                     .programsFor(list.mapNotNull { it.source.tvgId }, span.first, span.last)
-                    .map { programs -> HistoryRows.rows(events, list, programs, zone) }
+                    .map { programs -> HistoryRows.rows(events, list, programs, style) }
             }.stateIn(scope, SharingStarted.Eagerly, emptyList())
 
     /** The clear-all trash icon empties the one watch_history table. */

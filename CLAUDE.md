@@ -700,3 +700,37 @@ Local SDK note: `local.properties` must contain
   retunes live, and prev/next hop programmes via `CatchupNeighbours`; the live
   transport shows a red record dot (instant-record toggle), finishing a VOD
   clears its resume position, and recordings stop at programme end.
+- **2026-09-15** Every persisted-but-dead setting is honored (settings-real
+  merge). **Start/exit:** `StartRoute` is a policy class — "Turn on last
+  channel on app start" **default flipped to ON** (telly previously always
+  restored; OFF cold-starts on an untuned guide via the one-shot
+  `consumeUntunedStart` → `GuideStartPolicies.resumePreview`), and "Confirm
+  exit by second press Back" (`ExitConfirm`, 5 s window + "Press BACK again
+  to exit" toast) gates the guide-root BACK only when ON — the default-off
+  first-BACK exit the e2e suite pins is unchanged. "Auto start app on boot"
+  = manifest `BootReceiver` (BOOT_COMPLETED) + `TellyApplication`'s runtime
+  SCREEN_ON receiver, both through the `Autostart` policy. **Audio:**
+  `PlayerAudioPrefs` feeds `Media3PlayerEngine.create` — passthrough (read
+  once per engine build) swaps the capability-forcing `PassthroughAudioSink`
+  INTO the shared `OffsetRenderersFactory` (ONE factory composes passthrough
+  + the audio-sync offset sink), and "Select surround audio track by
+  default" lives in `ExoTrackFacade.onTracksChanged` (`SurroundAudio.pick`,
+  most channels wins) where it COMPOSES with the quick-bar picker: an
+  explicit user audio pick always beats surround, and a zap (track groups
+  replaced) lapses the pick and re-arms the default. **Streams:** "Use proxy
+  for UDP streams" = `UdpProxy.resolve` in `TunePolicies.resolveUrl` —
+  applied to LIVE tunes/retunes and multiview pane tunes (`MultiviewPanes`),
+  never to catch-up archive URLs (template-built http(s), never udp).
+  **Clock:** `ClockStyle` (zone + live 12/24h provider) threads through
+  guide header/timeline, playback info, panel, history, catch-up readouts
+  AND — beyond the branch — search air-times and the multiview picker;
+  reminders/recordings/My-list keep the bare-zone 12-hour overloads.
+  **Parental:** "Don't require PIN for channels only" exempts watching,
+  "Require PIN for Playlists" gates the section via the ONE unified
+  `SettingsOverlay.PinVerify(section?)` (null = blocked-channels pane), and
+  "PIN input method" = Keyboard swaps every PIN prompt (settings dialogs +
+  panel/guide/playback block gates) to the masked 4-digit IME entry
+  (`SettingsScreenPinEntry`). **EPG:** "Update EPG on playlists change"
+  picks forced-vs-due refresh on playlist changes; the minute-tick due-retry
+  loop stays. Resize mode (`ResizeModes`/`ProvideResizeMode`) reaches the
+  fullscreen surface and multiview panes.

@@ -1,5 +1,6 @@
 package com.johncorser.telly.features.catchup
 
+import com.johncorser.telly.features.playback.ClockStyle
 import com.johncorser.telly.features.playback.PlaybackInfoData
 import com.johncorser.telly.testutil.testChannel
 import kotlinx.coroutines.CoroutineScope
@@ -62,7 +63,7 @@ class CatchupInfoTest {
             val state = MutableStateFlow<CatchupState?>(CatchupState(request, fromLive = false))
             val position = MutableStateFlow(27 * 60_000L)
 
-            val merged = CatchupInfo.merged(MutableStateFlow(liveData), state, position, utc, scope)
+            val merged = CatchupInfo.merged(MutableStateFlow(liveData), state, position, ClockStyle(utc), scope)
             val data = merged.value
 
             assertEquals("Morning Report", data?.title)
@@ -83,7 +84,13 @@ class CatchupInfoTest {
             val scope = CoroutineScope(SupervisorJob() + UnconfinedTestDispatcher(testScheduler))
 
             val merged =
-                CatchupInfo.merged(MutableStateFlow(liveData), MutableStateFlow(null), MutableStateFlow(0L), utc, scope)
+                CatchupInfo.merged(
+                    MutableStateFlow(liveData),
+                    MutableStateFlow(null),
+                    MutableStateFlow(0L),
+                    ClockStyle(utc),
+                    scope,
+                )
 
             assertEquals(liveData, merged.value)
         }

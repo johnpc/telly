@@ -19,6 +19,7 @@ internal fun buildMedia3PlayerEngine(
     context: Context,
     handleAudioFocus: Boolean,
     userAgentFor: (streamUrl: String) -> String,
+    audio: PlayerAudioPrefs = PlayerAudioPrefs(),
 ): Media3PlayerEngine {
     val audioAttributes =
         AudioAttributes
@@ -28,12 +29,14 @@ internal fun buildMedia3PlayerEngine(
             .build()
     val offsets = AudioOffsetHolder()
     val userAgent = StreamUserAgent(userAgentFor)
+    // Passthrough is read once per engine build; each visit to a playback
+    // surface constructs a fresh player, so a toggle applies on next tune.
     val player =
         ExoPlayer
-            .Builder(context, OffsetRenderersFactory(context, offsets))
+            .Builder(context, OffsetRenderersFactory(context, offsets, passthrough = audio.passthrough()))
             .setMediaSourceFactory(streamMediaSourceFactory(context, userAgent::current))
             .setAudioAttributes(audioAttributes, handleAudioFocus)
             .build()
     player.disableCaptionsByDefault()
-    return Media3PlayerEngine(player, userAgent, ExoTrackFacade(player, offsets))
+    return Media3PlayerEngine(player, userAgent, ExoTrackFacade(player, offsets, audio.surroundByDefault))
 }

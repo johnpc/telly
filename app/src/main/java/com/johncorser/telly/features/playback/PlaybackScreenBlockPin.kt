@@ -12,8 +12,9 @@ import com.johncorser.telly.features.panel.ChannelPanelScreenPin
 internal fun PlaybackScreenBlockGate(
     onSubmit: (String) -> Unit,
     onDismiss: () -> Unit,
+    keyboard: Boolean = false,
 ) {
-    ChannelPanelScreenPin(onSubmit = onSubmit, onDismiss = onDismiss)
+    ChannelPanelScreenPin(onSubmit = onSubmit, onDismiss = onDismiss, keyboard = keyboard)
 }
 
 /** The sheet's Block/Unblock PIN dialog; BACK pops back like any pushed screen. */
@@ -25,6 +26,7 @@ internal fun PlaybackScreenBlockPinDialog(
     ChannelPanelScreenPin(
         onSubmit = viewModel.menu::submitBlockPin,
         title = dialog.mode.title,
+        keyboard = viewModel.panel.keyboardPin,
     )
 }
 
@@ -48,6 +50,7 @@ internal fun PlaybackScreenChrome(
         PlaybackScreenBlockGate(
             onSubmit = viewModel.blockPrompt::submit,
             onDismiss = viewModel.blockPrompt::dismiss,
+            keyboard = viewModel.panel.keyboardPin,
         )
     }
 }

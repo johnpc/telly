@@ -28,6 +28,7 @@ fun gatedTuner(
             TunePolicies(
                 external = external,
                 gate = BlockGate(env.hooks.parental, env.hooks.blockSession),
+                resolveUrl = env.hooks.resolveUrl,
             ),
     )
 
@@ -70,8 +71,8 @@ internal fun catchupInfoFeed(
     catchup: CatchupPlayback,
     scope: CoroutineScope,
 ): StateFlow<PlaybackInfoData?> {
-    val live = PlaybackInfoFeed(tuner.current, instant, env.engine.video, env.epgRepository, env.time.zone, scope).info
-    return CatchupInfo.merged(live, catchup.state, catchup.position, env.time.zone, scope)
+    val live = PlaybackInfoFeed(tuner.current, instant, env.engine.video, env.epgRepository, env.time.style, scope).info
+    return CatchupInfo.merged(live, catchup.state, catchup.position, env.time.style, scope)
 }
 
 /**

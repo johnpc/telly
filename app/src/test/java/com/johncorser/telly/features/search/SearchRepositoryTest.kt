@@ -1,5 +1,6 @@
 package com.johncorser.telly.features.search
 
+import com.johncorser.telly.features.playback.ClockStyle
 import com.johncorser.telly.testutil.FakeChannelDao
 import com.johncorser.telly.testutil.FakeProgramDao
 import com.johncorser.telly.testutil.FakeSearchDao
@@ -13,7 +14,7 @@ import org.junit.Test
 import java.util.TimeZone
 
 class SearchRepositoryTest {
-    private val zone = TimeZone.getTimeZone("UTC")
+    private val style = ClockStyle(TimeZone.getTimeZone("UTC"))
     private val now = 1_789_311_600_000L
     private val hour = 3_600_000L
 
@@ -40,13 +41,13 @@ class SearchRepositoryTest {
     @Test
     fun `a blank query returns empty shelves`() =
         runTest {
-            assertTrue(repository.search("   ", now, zone).isEmpty)
+            assertTrue(repository.search("   ", now, style).isEmpty)
         }
 
     @Test
     fun `channels match by name word-prefix in name order with airing programme`() =
         runTest {
-            val results = repository.search("news", now, zone)
+            val results = repository.search("news", now, style)
 
             assertEquals(listOf("News One", "News One HD"), results.channels.map { it.channel.source.name })
             assertEquals("Newsroom Live. S1 E8", results.channels[0].nowTitle)
@@ -56,7 +57,7 @@ class SearchRepositoryTest {
     @Test
     fun `a digits-only query also matches channel numbers by prefix`() =
         runTest {
-            val results = repository.search("2", now, zone)
+            val results = repository.search("2", now, style)
 
             // Name order like every channel shelf (tm-02): Music Box (24) < News One HD (2).
             assertEquals(listOf(24, 2), results.channels.map { it.channel.number })
@@ -65,7 +66,7 @@ class SearchRepositoryTest {
     @Test
     fun `programmes match by title word-prefix per channel and skip ended ones`() =
         runTest {
-            val results = repository.search("news", now, zone)
+            val results = repository.search("news", now, style)
 
             assertEquals(listOf("News One", "Sports Arena"), results.programs.map { it.channel.source.name })
             assertEquals(listOf("Newsroom Live. S1 E8"), results.programs[0].airings.map { it.title })
@@ -78,7 +79,7 @@ class SearchRepositoryTest {
             val hidden = channels[0].copy(flags = channels[0].flags.copy(hidden = true))
             channelDao.update(hidden)
 
-            val results = repository.search("newsroom", now, zone)
+            val results = repository.search("newsroom", now, style)
 
             assertTrue(results.channels.isEmpty())
             assertTrue(results.programs.isEmpty())

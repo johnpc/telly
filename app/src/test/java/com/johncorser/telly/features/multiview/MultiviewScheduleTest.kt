@@ -1,5 +1,6 @@
 package com.johncorser.telly.features.multiview
 
+import com.johncorser.telly.features.playback.ClockStyle
 import com.johncorser.telly.testutil.testProgram
 import org.junit.Assert.assertEquals
 import org.junit.Test
@@ -19,7 +20,7 @@ class MultiviewScheduleTest {
                         testProgram("tvg-1", 4 * hour, 5 * hour, "Morning Report", episode = "S1 E20"),
                     ),
                 atMs = 4 * hour + 30 * 60_000L,
-                zone = utc,
+                style = ClockStyle(utc),
             )
 
         assertEquals(listOf("04:00 AM", "05:00 AM"), rows.map { it.timeText })
@@ -29,7 +30,12 @@ class MultiviewScheduleTest {
 
     @Test
     fun `a programme ending exactly now is no longer airing`() {
-        val rows = MultiviewSchedule.build(listOf(testProgram("tvg-1", 0, hour, "Done")), atMs = hour, zone = utc)
+        val rows =
+            MultiviewSchedule.build(
+                listOf(testProgram("tvg-1", 0, hour, "Done")),
+                atMs = hour,
+                style = ClockStyle(utc),
+            )
 
         assertEquals(false, rows.single().airing)
     }

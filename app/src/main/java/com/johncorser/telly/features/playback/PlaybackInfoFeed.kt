@@ -14,7 +14,6 @@ import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
-import java.util.TimeZone
 
 /**
  * Streams the ready-to-render info-overlay model for the tuned channel.
@@ -27,7 +26,7 @@ class PlaybackInfoFeed(
     instant: Flow<Long>,
     video: Flow<VideoDetails?>,
     private val epgRepository: EpgRepository,
-    private val zone: TimeZone,
+    private val style: ClockStyle,
     scope: CoroutineScope,
 ) {
     @OptIn(ExperimentalCoroutinesApi::class)
@@ -37,7 +36,7 @@ class PlaybackInfoFeed(
 
     val info: StateFlow<PlaybackInfoData?> =
         combine(current, nowNext, video) { channel, (guide, at), videoDetails ->
-            channel?.let { PlaybackInfoBuilder.build(it, guide, videoDetails, at, zone) }
+            channel?.let { PlaybackInfoBuilder.build(it, guide, videoDetails, at, style) }
         }.stateIn(scope, SharingStarted.Eagerly, null)
 
     private fun nowNextOf(

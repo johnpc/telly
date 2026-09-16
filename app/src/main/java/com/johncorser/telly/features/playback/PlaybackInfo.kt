@@ -4,7 +4,6 @@ import com.johncorser.telly.features.epg.NowNext
 import com.johncorser.telly.features.epg.ProgramTitle
 import com.johncorser.telly.features.player.VideoDetails
 import com.johncorser.telly.features.playlist.db.ChannelEntity
-import java.util.TimeZone
 
 /** Everything the bottom info overlay renders, pre-formatted (capture 34). */
 data class PlaybackInfoData(
@@ -30,7 +29,7 @@ object PlaybackInfoBuilder {
         nowNext: NowNext,
         video: VideoDetails?,
         atMs: Long,
-        zone: TimeZone,
+        style: ClockStyle,
     ): PlaybackInfoData {
         val now = nowNext.now
         val next = nowNext.next
@@ -39,15 +38,15 @@ object PlaybackInfoBuilder {
             name = channel.source.name,
             logoUrl = channel.source.logoUrl,
             group = channel.source.groupTitle,
-            clockText = ProgramTimes.clock(atMs, zone),
+            clockText = ProgramTimes.clock(atMs, style),
             title = now?.details?.let(ProgramTitle::of),
-            timeRange = now?.let { ProgramTimes.range(it.startMs, it.endMs, zone) },
+            timeRange = now?.let { ProgramTimes.range(it.startMs, it.endMs, style) },
             remaining = now?.let { "${ProgramTimes.remainingMinutes(it.endMs, atMs)} min" },
             progressPermille = now?.let { ProgramTimes.progressPermille(it.startMs, it.endMs, atMs) } ?: 0,
             description = now?.details?.description,
             nextLine =
                 next?.let {
-                    "${ProgramTimes.range(it.startMs, it.endMs, zone)}  ${ProgramTitle.of(it.details)}"
+                    "${ProgramTimes.range(it.startMs, it.endMs, style)}  ${ProgramTitle.of(it.details)}"
                 },
             badges = PlaybackBadges.badges(video),
             elapsed = now?.let { ProgramTimes.span(atMs - it.startMs) },

@@ -21,6 +21,7 @@ fun ServiceLocator.searchDeps(context: Context): SearchDeps =
         historyStore = searchHistoryStore(context),
         lastChannelStore = keyValueStore(context),
         clock = clock,
+        style = clockStyleOf(settingsRepository(context)),
         saveHistory = { settingsRepository(context).get(TellySettings.SEARCH_SAVE_HISTORY) },
     )
 

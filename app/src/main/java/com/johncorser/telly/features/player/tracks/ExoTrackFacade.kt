@@ -5,6 +5,7 @@ import androidx.media3.common.Player
 import androidx.media3.common.TrackSelectionOverride
 import androidx.media3.common.TrackSelectionParameters
 import androidx.media3.common.Tracks
+import com.johncorser.telly.features.player.SurroundAudio
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -17,10 +18,17 @@ import kotlinx.coroutines.flow.update
  * offset lands in the shared [AudioOffsetHolder] the engine's audio sink
  * reads — an engine built without the offset renderers keeps the picker
  * state but the shift never reaches an audio clock.
+ *
+ * [preferSurround] = "Select surround audio track by default": on each
+ * tracks change with NO explicit user audio pick in effect, the selection
+ * is overridden onto the audio track with the most channels. An explicit
+ * pick (the quick-bar audio picker) always wins; a zap replaces the track
+ * groups, which lapses the pick and re-arms the surround default.
  */
 class ExoTrackFacade(
     private val player: Player,
     private val offsets: AudioOffsetHolder = AudioOffsetHolder(),
+    private val preferSurround: () -> Boolean = { false },
 ) : TrackFacade,
     Player.Listener {
     private val mutableSnapshot = MutableStateFlow(TrackSnapshot())
@@ -28,6 +36,8 @@ class ExoTrackFacade(
     private var handles: Map<String, TrackHandle> = emptyMap()
     private var videoOverrideId: String? = null
     private var videoOverride: TrackHandle? = null
+    private var audioPickId: String? = null
+    private var audioPick: TrackHandle? = null
 
     override val snapshot: StateFlow<TrackSnapshot> = mutableSnapshot.asStateFlow()
     override val audioOffsetMs: StateFlow<Long> = mutableOffset.asStateFlow()
@@ -43,7 +53,17 @@ class ExoTrackFacade(
         // the overridden group itself is compared): a stale override must not
         // stay "checked" while the new stream really plays adaptively.
         if (videoOverrideId != null && handles[videoOverrideId] != videoOverride) selectNoVideoOverride()
+        if (audioPickId != null && handles[audioPickId] != audioPick) selectNoAudioPick()
+        maybePreferSurround(tracks)
         mutableSnapshot.value = mapped.snapshot.copy(videoOverrideId = videoOverrideId)
+    }
+
+    /** Surround-by-default, applied only while no user pick is in effect. */
+    private fun maybePreferSurround(tracks: Tracks) {
+        if (audioPickId != null || !preferSurround()) return
+        // The pick is null when the selection already has the most channels,
+        // so applying the returned override never loops onTracksChanged.
+        SurroundAudio.pick(tracks)?.let { override -> apply { setOverrideForType(override) } }
     }
 
     override fun selectVideo(id: String?) {
@@ -58,8 +78,15 @@ class ExoTrackFacade(
         videoOverride = null
     }
 
+    private fun selectNoAudioPick() {
+        audioPickId = null
+        audioPick = null
+    }
+
     override fun selectAudio(id: String) {
         if (id !in handles) return
+        audioPickId = id
+        audioPick = handles[id]
         apply { withOverride(C.TRACK_TYPE_AUDIO, id) }
         mutableSnapshot.update { it.copy(selectedAudioId = id) }
     }

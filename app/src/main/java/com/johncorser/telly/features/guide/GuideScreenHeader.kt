@@ -33,7 +33,7 @@ internal fun GuideScreenHeader(controller: GuideController) {
                 .height(27.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
-            GuideScreenClock(nowMs = now, zone = controller.zone)
+            GuideScreenClock(nowMs = now, style = controller.clockStyle)
             GuideScreenTimelineTicks(
                 controller = controller,
                 scrollX = scrollX,

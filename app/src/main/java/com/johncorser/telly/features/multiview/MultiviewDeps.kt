@@ -2,9 +2,9 @@ package com.johncorser.telly.features.multiview
 
 import com.johncorser.telly.core.kv.KeyValueStore
 import com.johncorser.telly.features.epg.EpgRepository
+import com.johncorser.telly.features.playback.PlaybackTime
 import com.johncorser.telly.features.player.PlayerEngineFactory
 import com.johncorser.telly.features.playlist.db.ChannelDao
-import java.util.TimeZone
 
 /**
  * Everything the multiview screen needs from the composition root. The
@@ -17,6 +17,8 @@ class MultiviewDeps(
     val epgRepository: EpgRepository,
     val engines: PlayerEngineFactory,
     val store: KeyValueStore,
-    val clock: () -> Long,
-    val zone: TimeZone = TimeZone.getDefault(),
+    /** Injected clock + zone + the persisted 12/24-hour choice (picker times). */
+    val time: PlaybackTime,
+    /** Stream-URL resolution (UDP-proxy rewrite) applied at pane tunes. */
+    val resolveUrl: (String) -> String = { it },
 )

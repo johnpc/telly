@@ -1,6 +1,7 @@
 package com.johncorser.telly.features.history
 
 import com.johncorser.telly.features.history.db.WatchHistoryEntity
+import com.johncorser.telly.features.playback.ClockStyle
 import com.johncorser.telly.testutil.testChannel
 import com.johncorser.telly.testutil.testProgram
 import org.junit.Assert.assertEquals
@@ -47,7 +48,7 @@ class HistoryRowsTest {
                 testProgram("tvg-1", 2_000L, 3_000L, "Newsroom Live"),
             )
 
-        val rows = HistoryRows.rows(events, channels, programs, utc)
+        val rows = HistoryRows.rows(events, channels, programs, ClockStyle(utc))
 
         assertEquals(listOf(2L, 1L), rows.map { it.channel.id })
         assertNull(rows[0].programmeTitle)
@@ -59,7 +60,7 @@ class HistoryRowsTest {
     fun `a programme ending exactly at the watch time does not match`() {
         val programs = listOf(testProgram("tvg-1", 1_000L, 1_500L, "Business Hour"))
 
-        val rows = HistoryRows.rows(events, channels, programs, utc)
+        val rows = HistoryRows.rows(events, channels, programs, ClockStyle(utc))
 
         assertNull(rows[1].programmeTitle)
     }
@@ -74,7 +75,7 @@ class HistoryRowsTest {
     fun `the identity key falls back to stream and name without a tvg id`() {
         val silent = listOf(WatchHistoryEntity("http://s/4.ts|Silent FM", 9_000L))
 
-        val rows = HistoryRows.rows(silent, channels, emptyList(), utc)
+        val rows = HistoryRows.rows(silent, channels, emptyList(), ClockStyle(utc))
 
         assertEquals(listOf(4L), rows.map { it.channel.id })
     }

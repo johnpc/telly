@@ -41,7 +41,7 @@ class PlaybackViewModel(
      */
     val openMultiview: () -> Unit = env.hooks.onOpenMultiview
 
-    val panel = PanelViewModel(env.channelDao, env.epgRepository, clock, scope, env.time.zone, env.hooks.panelLock)
+    val panel = PanelViewModel(env.channelDao, env.epgRepository, clock, scope, env.time.style, env.hooks.panelLock)
 
     private val tuner = gatedTuner(env, history, scope, external = hooks.platform.external)
     private val overlays = OverlayState(scope)

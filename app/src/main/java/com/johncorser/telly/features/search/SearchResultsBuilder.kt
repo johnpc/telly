@@ -3,6 +3,7 @@ package com.johncorser.telly.features.search
 import com.johncorser.telly.features.epg.NowNext
 import com.johncorser.telly.features.epg.ProgramTitle
 import com.johncorser.telly.features.epg.db.ProgramEntity
+import com.johncorser.telly.features.playback.ClockStyle
 import com.johncorser.telly.features.playback.ProgramTimes
 import com.johncorser.telly.features.playlist.db.ChannelEntity
 import java.text.SimpleDateFormat
@@ -42,12 +43,12 @@ object SearchResultsBuilder {
         matches: List<ProgramEntity>,
         channels: List<ChannelEntity>,
         atMs: Long,
-        zone: TimeZone,
+        style: ClockStyle,
     ): List<SearchProgramChannel> {
         val byTvgId = channelByTvgId(channels)
         return matches
             .groupBy { it.channelTvgId }
-            .mapNotNull { (tvgId, airings) -> byTvgId[tvgId]?.let { group(it, airings, atMs, zone) } }
+            .mapNotNull { (tvgId, airings) -> byTvgId[tvgId]?.let { group(it, airings, atMs, style) } }
             .sortedWith(
                 compareBy<SearchProgramChannel, String>(String.CASE_INSENSITIVE_ORDER) { it.channel.source.name }
                     .thenBy { it.channel.number },
@@ -58,11 +59,11 @@ object SearchResultsBuilder {
         channel: ChannelEntity,
         airings: List<ProgramEntity>,
         atMs: Long,
-        zone: TimeZone,
+        style: ClockStyle,
     ): SearchProgramChannel =
         SearchProgramChannel(
             channel = channel,
-            airings = airings.sortedBy { it.startMs }.map { hit(it, channel, atMs, zone) },
+            airings = airings.sortedBy { it.startMs }.map { hit(it, channel, atMs, style) },
         )
 
     /** Airing rows add dash progress + remaining minutes (live tm-03). */
@@ -70,14 +71,14 @@ object SearchResultsBuilder {
         program: ProgramEntity,
         channel: ChannelEntity,
         atMs: Long,
-        zone: TimeZone,
+        style: ClockStyle,
     ): SearchProgramHit {
         val airing = program.startMs <= atMs
         return SearchProgramHit(
             program = program,
             channel = channel,
             title = ProgramTitle.of(program.details),
-            timeText = airTime(program, atMs, zone),
+            timeText = airTime(program, atMs, style),
             progressPermille = if (airing) ProgramTimes.progressPermille(program.startMs, program.endMs, atMs) else 0,
             remaining = if (airing) "${ProgramTimes.remainingMinutes(program.endMs, atMs)} min" else null,
         )
@@ -90,11 +91,11 @@ object SearchResultsBuilder {
     fun airTime(
         program: ProgramEntity,
         atMs: Long,
-        zone: TimeZone,
+        style: ClockStyle,
     ): String {
-        val range = ProgramTimes.range(program.startMs, program.endMs, zone)
-        if (localDay(program.startMs, zone) == localDay(atMs, zone)) return range
-        return "${format("EEE, MMM d", program.startMs, zone)}, $range"
+        val range = ProgramTimes.range(program.startMs, program.endMs, style)
+        if (localDay(program.startMs, style.zone) == localDay(atMs, style.zone)) return range
+        return "${format("EEE, MMM d", program.startMs, style.zone)}, $range"
     }
 
     /** First visible channel wins when several share a tvg-id. */

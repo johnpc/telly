@@ -57,6 +57,6 @@ fun ChannelPanelScreen(
         }
     }
     if (pinPrompt != null) {
-        ChannelPanelScreenPin(onSubmit = panel::submitPin)
+        ChannelPanelScreenPin(onSubmit = panel::submitPin, keyboard = panel.keyboardPin)
     }
 }

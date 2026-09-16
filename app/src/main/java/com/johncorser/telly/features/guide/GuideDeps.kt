@@ -5,6 +5,14 @@ import com.johncorser.telly.features.playback.PlaybackDeps
 import com.johncorser.telly.features.player.external.ExternalPlayer
 import com.johncorser.telly.features.reminders.GuideReminders
 
+/** The root BACK/cold-start policies the guide honors (settings-driven). */
+class GuideStartPolicies(
+    /** "Confirm exit by second press Back" (default off = exit immediately). */
+    val confirmExit: () -> Boolean = { false },
+    /** False exactly once after a cold start with "last channel on start" off. */
+    val resumePreview: () -> Boolean = { true },
+)
+
 /**
  * Everything the guide screen needs from the composition root: the
  * playback bundle (channels, EPG, engine factory, store, clock) plus the
@@ -18,6 +26,8 @@ class GuideDeps(
     val visibleRows: () -> Int = { GuideGeometry.VISIBLE_ROWS },
     /** Settings → Remote control → TV guide key remaps, read per key press. */
     val keymap: () -> GuideKeymap = { GuideKeymap() },
+    /** Confirm-exit + the one-shot untuned cold start (StartRoute policy). */
+    val start: GuideStartPolicies = GuideStartPolicies(),
 ) {
     /** Saved My-list programmes; the guide shares the playback store. */
     val myList: MyListStore get() = playback.myList
