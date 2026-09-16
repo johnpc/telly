@@ -88,6 +88,23 @@ Local SDK note: `local.properties` must contain
 
 ## Decisions log
 
+- **2026-09-16** Live-stream resilience + compressed EPG (Android "done" sweep).
+  **(1) Auto-reconnect.** A dropped live stream used to surface `PlayerState.Error`
+  on the first `onPlayerError`; it now retries with exponential backoff. New pure
+  `ReconnectPolicy` (1s→2s→4s…30s cap, 6 attempts, JVM-testable — no clock/Android
+  types) hands `Media3PlayerEngine` the next delay; the engine posts the re-`prepare()`
+  through an injected `schedule` seam (a `Handler` on `player.applicationLooper` in
+  prod, a capturing list in tests). A new transient `PlayerState.Reconnecting` shows
+  a corner "Reconnecting…" pill (`PlaybackScreenReconnecting`, rendered from
+  `PlaybackScreenOverlays` so it inherits the `!inPip` gate); STATE_READY resets the
+  budget (a stream that drops hours later gets a fresh one) and `ERROR_CODE_BEHIND_LIVE_WINDOW`
+  `seekToDefaultPosition()`s back to the edge before re-preparing. **(2) gzip/xz EPG.**
+  Providers commonly serve `guide.xml.gz`/`.xz`, and OkHttp only auto-inflates
+  `Content-Encoding: gzip` (not `application/gzip`), so `CompressedXmltv` sniffs the
+  leading magic bytes (gzip `1f 8b`, xz `FD 37 7A 58 5A 00`) off the response
+  `byteStream()` and wraps it in `GZIPInputStream`/`XZInputStream` (org.tukaani:xz)
+  or passes plain XMLTV through — replacing `EpgRepository`'s old `charStream()` path.
+  All emulator/JVM-tested + quality.sh; not yet device-verified on the Shield.
 - **2026-09-16** Two Shield-verified parity fixes. **(1) Multiview panes render
   on a TextureView.** Media3's `PlayerView` defaults to a `SurfaceView`, which
   punches a hardware video-overlay hole; real TV hardware (Shield/mdarcy) has

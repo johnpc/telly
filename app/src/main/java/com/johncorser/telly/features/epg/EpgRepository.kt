@@ -14,8 +14,6 @@ import okhttp3.OkHttpClient
 import okhttp3.Request
 import org.xmlpull.v1.XmlPullParser
 import java.io.IOException
-import java.io.Reader
-import java.io.StringReader
 
 /**
  * Fetches XMLTV over HTTP (the playlist's url-tvg), streams it through
@@ -38,7 +36,7 @@ class EpgRepository(
                 if (!response.isSuccessful) {
                     throw IOException("HTTP ${response.code} while downloading EPG")
                 }
-                store(XmltvParser.parse(newParser(), bodyReader(response.body?.charStream())))
+                store(XmltvParser.parse(newParser(), CompressedXmltv.reader(response.body?.byteStream())))
             }
         }
 
@@ -93,6 +91,4 @@ class EpgRepository(
         programDao.upsertAll(entities)
         return entities.size
     }
-
-    private fun bodyReader(reader: Reader?): Reader = reader ?: StringReader("")
 }

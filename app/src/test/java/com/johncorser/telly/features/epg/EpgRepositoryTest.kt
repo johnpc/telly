@@ -13,7 +13,9 @@ import org.junit.Assert.fail
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
+import java.io.ByteArrayOutputStream
 import java.io.IOException
+import java.util.zip.GZIPOutputStream
 
 @RunWith(RobolectricTestRunner::class)
 class EpgRepositoryTest {
@@ -49,6 +51,25 @@ class EpgRepositoryTest {
             assertEquals(917, database.programDao().count())
             assertEquals("/epg.xml", server.takeRequest().path)
         }
+
+    @Test
+    fun `refresh inflates a gzipped epg body`() =
+        runTest {
+            // application/gzip is NOT auto-inflated by OkHttp (no Content-Encoding),
+            // so the repository must sniff the magic bytes itself.
+            server.enqueue(MockResponse().setBody(okio.Buffer().write(gzip(fixtureXml))))
+
+            val stored = repository.refresh(epgUrl())
+
+            assertEquals(917, stored)
+            assertEquals(917, database.programDao().count())
+        }
+
+    private fun gzip(text: String): ByteArray {
+        val out = ByteArrayOutputStream()
+        GZIPOutputStream(out).use { it.write(text.toByteArray()) }
+        return out.toByteArray()
+    }
 
     @Test
     fun `a second refresh replaces programmes instead of duplicating them`() =
