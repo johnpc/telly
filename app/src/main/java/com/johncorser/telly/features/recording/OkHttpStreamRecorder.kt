@@ -20,7 +20,7 @@ import java.io.InputStream
  * StreamMediaSourceFactory gives the same URLs.
  */
 class OkHttpStreamRecorder(
-    private val client: OkHttpClient = defaultClient(),
+    private val client: OkHttpClient = recordingHttpClient(),
     private val dispatcher: CoroutineDispatcher = Dispatchers.IO,
     private val userAgentFor: (streamUrl: String) -> String = { STREAM_USER_AGENT },
 ) : StreamRecorder {
@@ -30,13 +30,28 @@ class OkHttpStreamRecorder(
         shouldStop: () -> Boolean,
     ): Long =
         withContext(dispatcher) {
-            val request = Request.Builder().url(url).header("User-Agent", userAgentFor(url)).build()
-            client.newCall(request).execute().use { response ->
+            val calls = RecordingCalls()
+            cancellingOnStop(calls, shouldStop) { attempt(url, sink, shouldStop, calls) }
+        }
+
+    private fun attempt(
+        url: String,
+        sink: File,
+        shouldStop: () -> Boolean,
+        calls: RecordingCalls,
+    ): Long {
+        val request = Request.Builder().url(url).header("User-Agent", userAgentFor(url)).build()
+        return try {
+            calls.track(client.newCall(request)).execute().use { response ->
                 if (!response.isSuccessful) throw IOException("HTTP ${response.code} while recording")
                 val body = response.body ?: return@use 0L
                 body.byteStream().use { stream -> drain(stream, sink, shouldStop) }
             }
+        } catch (e: IOException) {
+            // A stop-cancelled call ends the attempt normally, not as a failure.
+            if (shouldStop()) 0L else throw e
         }
+    }
 
     private fun drain(
         stream: InputStream,
@@ -58,12 +73,5 @@ class OkHttpStreamRecorder(
 
     companion object {
         private const val CHUNK_BYTES = 64 * 1024
-
-        private fun defaultClient(): OkHttpClient =
-            OkHttpClient
-                .Builder()
-                .followRedirects(true)
-                .followSslRedirects(true)
-                .build()
     }
 }

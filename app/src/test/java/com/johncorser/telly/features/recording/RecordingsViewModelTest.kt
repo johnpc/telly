@@ -71,6 +71,26 @@ class RecordingsViewModelTest {
         }
 
     @Test
+    fun `OK right after confirming Stop plays the capture instead of re-confirming`() =
+        runTest(UnconfinedTestDispatcher()) {
+            seed(RecordingStatus.RECORDING)
+            val vm = viewModel()
+            advanceUntilIdle()
+            val recording = vm.rows.value.single()
+            vm.onRowClick(recording)
+            assertTrue(vm.confirm.value is RecordingsConfirm.Stop)
+
+            vm.onConfirmAccepted()
+            // The capture winds down asynchronously: the row snapshot still
+            // says RECORDING when the user immediately presses OK again —
+            // the UI truth is stopped, so OK must play, not re-confirm.
+            vm.onRowClick(recording)
+
+            assertNull(vm.confirm.value)
+            assertEquals(recording.entry.id, vm.playing.value?.entry?.id)
+        }
+
+    @Test
     fun `long-OK on any row confirms delete and accepting removes it`() =
         runTest(UnconfinedTestDispatcher()) {
             seed(RecordingStatus.DONE)

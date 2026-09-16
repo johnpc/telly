@@ -12,6 +12,8 @@ import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Test
 import java.io.IOException
+import java.util.concurrent.TimeUnit
+import kotlin.system.measureTimeMillis
 
 @OptIn(ExperimentalCoroutinesApi::class)
 class HlsStreamRecorderTest {
@@ -171,6 +173,38 @@ class HlsStreamRecorderTest {
 
             assertEquals(0L, recorder.copy(url("/live/index.m3u8"), sink) { true })
             assertEquals(0L, sink.length())
+        }
+
+    @Test
+    fun `a user stop cancels a trickling segment fetch instead of waiting it out`() =
+        runTest {
+            server.dispatcher =
+                object : Dispatcher() {
+                    override fun dispatch(request: RecordedRequest): MockResponse =
+                        when {
+                            request.path!!.endsWith(".m3u8") ->
+                                MockResponse().setBody(
+                                    "#EXTM3U\n#EXT-X-TARGETDURATION:2\n#EXTINF:2.0,\nseg0.ts\n#EXTINF:2.0,\nslow.ts\n",
+                                )
+                            request.path!!.endsWith("seg0.ts") -> MockResponse().setBody("AA")
+                            // One byte per 3 s: the trickle keeps resetting
+                            // the read timeout and the segment copy has no
+                            // between-read stop check at all — only the
+                            // stop-cancel can unblock the copy loop.
+                            else -> MockResponse().setBody("XXXX").throttleBody(1, 3, TimeUnit.SECONDS)
+                        }
+                }
+            server.start()
+            val (recorder, _) = recorder()
+            val stopAtMs = System.currentTimeMillis() + 500
+
+            val elapsedMs =
+                measureTimeMillis {
+                    recorder.copy(url("/live/index.m3u8"), sink) { System.currentTimeMillis() >= stopAtMs }
+                }
+
+            assertTrue("stop took ${elapsedMs}ms to land", elapsedMs < 5_000)
+            assertTrue(sink.readText().startsWith("AA"))
         }
 
     @Test
