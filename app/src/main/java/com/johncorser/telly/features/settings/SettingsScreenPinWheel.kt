@@ -64,7 +64,7 @@ private fun handleWheelKey(
             Key.DirectionDown -> update(entry.down())
             Key.DirectionLeft -> update(entry.left())
             Key.DirectionRight -> update(entry.right())
-            else -> onSubmit(entry.value)
+            else -> update(entry.commit(onSubmit))
         }
     }
     return true

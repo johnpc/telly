@@ -42,6 +42,31 @@ class PinEntryTest {
     }
 
     @Test
+    fun `commit submits the dialed pin and blanks the wheels for a kept-open prompt`() {
+        val submitted = mutableListOf<String>()
+        val wrongPin = PinEntry(digits = listOf(1, 1, 1, 1), cursor = 3)
+
+        val after = wrongPin.commit { submitted += it }
+
+        assertEquals(listOf("1111"), submitted)
+        // A rejected PIN keeps the prompt open: the next entry must dial
+        // from 0000 with the first wheel active, not from the stale digits.
+        assertEquals(PinEntry(), after)
+    }
+
+    @Test
+    fun `keyboard commit hands the pin over and clears the field`() {
+        val submitted = mutableListOf<String>()
+
+        val after = PinKeyboard.commit("1111") { submitted += it }
+
+        assertEquals(listOf("1111"), submitted)
+        assertEquals("", after)
+        // A cleared field can complete again; a stale full one never could.
+        assertEquals(false, PinKeyboard.isComplete(after))
+    }
+
+    @Test
     fun `keyboard entry keeps digits only, capped at four`() {
         assertEquals("2468", PinKeyboard.sanitize("2468"))
         assertEquals("2468", PinKeyboard.sanitize("24-68x9"))

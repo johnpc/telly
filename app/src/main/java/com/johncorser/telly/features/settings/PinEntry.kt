@@ -20,6 +20,17 @@ data class PinEntry(
 
     fun right(): PinEntry = copy(cursor = (cursor + 1).coerceAtMost(LENGTH - 1))
 
+    /**
+     * OK: hands the dialed PIN to [submit] and blanks the wheels — a
+     * prompt kept open by a rejected PIN must start over from 0000 with
+     * the first wheel active, not from the stale wrong digits with the
+     * cursor parked on the last wheel.
+     */
+    fun commit(submit: (String) -> Unit): PinEntry {
+        submit(value)
+        return PinEntry()
+    }
+
     private fun spin(delta: Int): PinEntry =
         copy(digits = digits.mapIndexed { i, d -> if (i == cursor) (d + delta + BASE) % BASE else d })
 
@@ -39,4 +50,17 @@ object PinKeyboard {
     fun sanitize(raw: String): String = raw.filter(Char::isDigit).take(PinEntry.LENGTH)
 
     fun isComplete(value: String): Boolean = value.length == PinEntry.LENGTH
+
+    /**
+     * Commit hands the PIN to [submit] and clears the field — a full field
+     * left behind by a rejected PIN could never complete again (sanitize
+     * caps at four digits), wedging a kept-open prompt for good.
+     */
+    fun commit(
+        value: String,
+        submit: (String) -> Unit,
+    ): String {
+        submit(value)
+        return ""
+    }
 }

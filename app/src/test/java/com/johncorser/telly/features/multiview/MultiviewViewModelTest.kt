@@ -315,6 +315,32 @@ class MultiviewViewModelTest {
         }
 
     @Test
+    fun `a wrong then right PIN on a picker pick replays the stashed pane add exactly once`() =
+        runTest {
+            parental.setPin("2468")
+            val vm = startedVm(lastChannelId = 1L)
+            vm.onMenuAction(MultiviewMenuAction.ADD_SCREEN)
+            vm.onPick(channels[3])
+            assertEquals(4L, vm.gate.pinPrompt.value?.id)
+
+            // The wrong PIN never tunes and keeps the SAME prompt (and its
+            // stashed pane action) open — the acceptance scenario's exact leg.
+            vm.gate.submit("1111")
+            assertEquals(listOf(1L), vm.panes.panes.value.map { it.channel.id })
+            assertEquals(4L, vm.gate.pinPrompt.value?.id)
+
+            vm.gate.submit("2468")
+            assertEquals(listOf(1L, 4L), vm.panes.panes.value.map { it.channel.id })
+            assertEquals(MultiviewLayer.Panes, vm.layer.value)
+            assertNull(vm.gate.pinPrompt.value)
+
+            // The one-shot pass and the stashed action are both consumed:
+            // a stray re-submit adds nothing.
+            vm.gate.submit("2468")
+            assertEquals(listOf(1L, 4L), vm.panes.panes.value.map { it.channel.id })
+        }
+
+    @Test
     fun `zapping onto a blocked channel prompts and further zaps wait for the PIN`() =
         runTest {
             parental.setPin("2468")

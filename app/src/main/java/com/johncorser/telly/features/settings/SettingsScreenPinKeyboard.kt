@@ -63,8 +63,7 @@ internal fun SettingsScreenPinKeyboard(
             value = value,
             onValueChange = { raw ->
                 val digits = PinKeyboard.sanitize(raw)
-                value = digits
-                if (PinKeyboard.isComplete(digits)) onSubmit(digits)
+                value = if (PinKeyboard.isComplete(digits)) PinKeyboard.commit(digits, onSubmit) else digits
             },
             singleLine = true,
             textStyle =
@@ -77,7 +76,7 @@ internal fun SettingsScreenPinKeyboard(
             visualTransformation = PasswordVisualTransformation(),
             cursorBrush = SolidColor(LocalAccentColor.current),
             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.NumberPassword, imeAction = ImeAction.Done),
-            keyboardActions = KeyboardActions(onDone = { onSubmit(value) }),
+            keyboardActions = KeyboardActions(onDone = { value = PinKeyboard.commit(value, onSubmit) }),
             modifier =
                 Modifier
                     .testTag("pin-keyboard")

@@ -1,5 +1,7 @@
 package com.johncorser.telly.features.recording
 
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.test.currentTime
 import kotlinx.coroutines.test.runTest
 import okhttp3.mockwebserver.Dispatcher
 import okhttp3.mockwebserver.MockResponse
@@ -11,6 +13,7 @@ import org.junit.Assert.assertTrue
 import org.junit.Test
 import java.io.IOException
 
+@OptIn(ExperimentalCoroutinesApi::class)
 class HlsStreamRecorderTest {
     private val server = MockWebServer()
     private val sink = tempRecordingFiles().second.newFile("HLS Live", 0L)
@@ -21,7 +24,7 @@ class HlsStreamRecorderTest {
         val recorder =
             HlsStreamRecorder(
                 http = HlsClient(),
-                pollDelay = { polls += it },
+                pollDelay = { ms, _ -> polls += ms },
                 log = { logs += it },
             )
         return recorder to { polls.size >= stopAfterPolls }
@@ -168,5 +171,25 @@ class HlsStreamRecorderTest {
 
             assertEquals(0L, recorder.copy(url("/live/index.m3u8"), sink) { true })
             assertEquals(0L, sink.length())
+        }
+
+    @Test
+    fun `the default poll wait re-checks stop between slices instead of sleeping it out`() =
+        runTest {
+            var checks = 0
+
+            awaitNextHlsPoll(6_000L) { ++checks >= 3 }
+
+            // Two 250 ms slices elapsed before the third check said stop —
+            // nowhere near the 6 s target duration.
+            assertEquals(2 * HLS_STOP_CHECK_SLICE_MS, currentTime)
+        }
+
+    @Test
+    fun `the default poll wait sleeps the full target duration when never stopped`() =
+        runTest {
+            awaitNextHlsPoll(600L) { false }
+
+            assertEquals(600L, currentTime)
         }
 }
