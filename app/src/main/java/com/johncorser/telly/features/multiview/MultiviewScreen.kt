@@ -20,6 +20,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.tv.material3.Text
 import com.johncorser.telly.core.design.TELLY_TEXT_MUTED
+import com.johncorser.telly.features.playback.PlaybackScreenBlockGate
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -49,6 +50,7 @@ fun MultiviewScreen(
     val panes by viewModel.panes.panes.collectAsState()
     val focusedId by viewModel.panes.focusedId.collectAsState()
     val layer by viewModel.layer.collectAsState()
+    val pinChannel by viewModel.gate.pinPrompt.collectAsState()
     BackHandler { viewModel.onBack() }
     Box(
         Modifier
@@ -56,12 +58,26 @@ fun MultiviewScreen(
             .background(Color.Black)
             .onPreviewKeyEvent { event -> onChannelZapKey(event, viewModel) },
     ) {
-        MultiviewScreenGrid(viewModel, panes, focusedId, panesFocusable = layer == MultiviewLayer.Panes)
+        MultiviewScreenGrid(
+            viewModel,
+            panes,
+            focusedId,
+            panesFocusable = layer == MultiviewLayer.Panes && pinChannel == null,
+        )
         if (panes.size == 1) MultiviewScreenHint(Modifier.align(Alignment.BottomCenter))
         when (layer) {
             MultiviewLayer.Panes -> Unit
             MultiviewLayer.Menu -> MultiviewScreenMenu(viewModel, panes, focusedId)
             is MultiviewLayer.Picker -> MultiviewScreenPicker(viewModel)
+        }
+        // The blocked-channel tune gate, over every multiview layer: the
+        // shared centered PIN card; wrong or cancelled PINs never tune.
+        if (pinChannel != null) {
+            PlaybackScreenBlockGate(
+                onSubmit = viewModel.gate::submit,
+                onDismiss = viewModel::onBack,
+                keyboard = viewModel.gate.keyboardPin,
+            )
         }
     }
 }

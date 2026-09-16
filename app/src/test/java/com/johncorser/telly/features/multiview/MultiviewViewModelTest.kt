@@ -1,5 +1,11 @@
 package com.johncorser.telly.features.multiview
 
+import com.johncorser.telly.core.settings.InMemoryKeyValueStore
+import com.johncorser.telly.core.settings.ParentalControls
+import com.johncorser.telly.core.settings.SettingsRepository
+import com.johncorser.telly.core.settings.TellySettings
+import com.johncorser.telly.features.playback.BlockGate
+import com.johncorser.telly.features.playback.BlockSession
 import com.johncorser.telly.features.playback.ClockStyle
 import com.johncorser.telly.features.playback.PlaybackTime
 import com.johncorser.telly.features.playback.TuneController
@@ -17,17 +23,26 @@ import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
+import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
 import java.util.TimeZone
 
 @OptIn(ExperimentalCoroutinesApi::class)
 class MultiviewViewModelTest {
-    private val channels = (1L..5L).map { testChannel(it, it.toInt(), "Channel $it") }
+    // Channels 2 and 4 carry the blocked flag: inert until a PIN exists,
+    // so every pre-gate scenario below is untouched by it.
+    private val channels =
+        (1L..5L).map { id ->
+            val channel = testChannel(id, id.toInt(), "Channel $id")
+            if (id == 2L || id == 4L) channel.copy(flags = channel.flags.copy(blocked = true)) else channel
+        }
     private val dao = FakeChannelDao(channels)
     private val store = FakeKeyValueStore()
     private val engines = mutableListOf<FakePlayerEngine>()
     private var exits = 0
+    private val settings = SettingsRepository(InMemoryKeyValueStore())
+    private val parental = ParentalControls(settings)
 
     private fun TestScope.buildVm(): MultiviewViewModel =
         MultiviewViewModel(
@@ -35,9 +50,13 @@ class MultiviewViewModelTest {
                 MultiviewDeps(
                     channelDao = dao,
                     epgRepository = testEpgRepository(FakeProgramDao()),
-                    engines = { FakePlayerEngine().also { engines += it } },
                     store = store,
                     time = PlaybackTime({ 0L }, ClockStyle(TimeZone.getTimeZone("UTC"))),
+                    tune =
+                        MultiviewTune(
+                            engines = { FakePlayerEngine().also { engines += it } },
+                            gate = BlockGate(parental, BlockSession()),
+                        ),
                 ),
             scope = CoroutineScope(SupervisorJob() + UnconfinedTestDispatcher(testScheduler)),
             onExit = { exits += 1 },
@@ -236,5 +255,107 @@ class MultiviewViewModelTest {
             vm.close()
 
             assertTrue(engines.all { it.released })
+        }
+
+    // ---- Blocked-channel PIN gate (every multiview tune path) ----
+
+    @Test
+    fun `a blocked entry channel prompts and only the right PIN builds the pane`() =
+        runTest {
+            parental.setPin("2468")
+            val vm = startedVm(lastChannelId = 2L)
+
+            assertTrue(vm.panes.panes.value.isEmpty())
+            assertEquals(2L, vm.gate.pinPrompt.value?.id)
+
+            vm.gate.submit("1111")
+            assertTrue(vm.panes.panes.value.isEmpty())
+            assertEquals(2L, vm.gate.pinPrompt.value?.id)
+
+            vm.gate.submit("2468")
+            assertEquals(listOf(2L), vm.panes.panes.value.map { it.channel.id })
+            assertNull(vm.gate.pinPrompt.value)
+        }
+
+    @Test
+    fun `cancelling the entry prompt never tunes and exits multiview`() =
+        runTest {
+            parental.setPin("2468")
+            val vm = startedVm(lastChannelId = 2L)
+
+            vm.onBack()
+
+            assertTrue(vm.panes.panes.value.isEmpty())
+            assertNull(vm.gate.pinPrompt.value)
+            assertEquals(1, exits)
+        }
+
+    @Test
+    fun `picking a blocked channel stays on the picker until the PIN verifies`() =
+        runTest {
+            parental.setPin("2468")
+            val vm = startedVm(lastChannelId = 1L)
+            vm.onMenuAction(MultiviewMenuAction.ADD_SCREEN)
+
+            vm.onPick(channels[3])
+            assertEquals(MultiviewLayer.Picker(MultiviewPickerMode.ADD), vm.layer.value)
+            assertEquals(listOf(1L), vm.panes.panes.value.map { it.channel.id })
+            assertEquals(4L, vm.gate.pinPrompt.value?.id)
+
+            // BACK cancels the prompt only; the picker stays put, untuned.
+            vm.onBack()
+            assertEquals(MultiviewLayer.Picker(MultiviewPickerMode.ADD), vm.layer.value)
+            assertEquals(listOf(1L), vm.panes.panes.value.map { it.channel.id })
+            assertNull(vm.gate.pinPrompt.value)
+
+            vm.onPick(channels[3])
+            vm.gate.submit("2468")
+            assertEquals(listOf(1L, 4L), vm.panes.panes.value.map { it.channel.id })
+            assertEquals(MultiviewLayer.Panes, vm.layer.value)
+        }
+
+    @Test
+    fun `zapping onto a blocked channel prompts and further zaps wait for the PIN`() =
+        runTest {
+            parental.setPin("2468")
+            val vm = startedVm(lastChannelId = 1L)
+
+            vm.onChannelKey(+1)
+            assertEquals(listOf(1L), vm.panes.panes.value.map { it.channel.id })
+            assertEquals(2L, vm.gate.pinPrompt.value?.id)
+
+            vm.onChannelKey(+1)
+            assertEquals(2L, vm.gate.pinPrompt.value?.id)
+
+            vm.gate.submit("2468")
+            assertEquals(listOf(2L), vm.panes.panes.value.map { it.channel.id })
+            assertNull(vm.gate.pinPrompt.value)
+        }
+
+    @Test
+    fun `an ungated zap still wraps around the visible list`() =
+        runTest {
+            val vm = startedVm(lastChannelId = 1L)
+
+            vm.onChannelKey(-1)
+
+            assertEquals(listOf(5L), vm.panes.panes.value.map { it.channel.id })
+        }
+
+    @Test
+    fun `until-app-restart keeps one unlock for later blocked tunes`() =
+        runTest {
+            settings.set(TellySettings.PARENTAL_RELOCK, ParentalControls.RELOCK_UNTIL_RESTART)
+            parental.setPin("2468")
+            val vm = startedVm(lastChannelId = 1L)
+
+            vm.onChannelKey(+1)
+            vm.gate.submit("2468")
+            assertEquals(listOf(2L), vm.panes.panes.value.map { it.channel.id })
+
+            // Channel 4 is blocked too; the session unlock carries over.
+            vm.onChannelKey(+2)
+            assertEquals(listOf(4L), vm.panes.panes.value.map { it.channel.id })
+            assertNull(vm.gate.pinPrompt.value)
         }
 }

@@ -11,6 +11,7 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.mapLatest
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.launch
 
 /**
  * Search-screen state machine (catalogue §4): live results per keystroke,
@@ -21,7 +22,7 @@ class SearchViewModel(
     private val deps: SearchDeps,
     scope: CoroutineScope,
 ) {
-    private val searchHistory = SearchHistory(deps.historyStore, deps.saveHistory)
+    private val searchHistory = deps.history
 
     private val mutableQuery = MutableStateFlow("")
     private val mutableHistory = MutableStateFlow(searchHistory.list())
@@ -34,8 +35,24 @@ class SearchViewModel(
     /** The dropdown / coming-soon layer over the screen. */
     val overlays = SearchOverlays()
 
+    /** The dropdown's live actions (reminders / DVR / My list, guide parity). */
+    val programMenu = SearchProgramMenu(deps.hooks, overlays, deps.clock, scope)
+
     /** Last results-area node D-pad focus visited (round7 §C4 focus memory). */
     val focusMemory = SearchFocusMemory()
+
+    /** The mic orb's seam: the top bar launches it, the query follows it. */
+    val voice: VoiceSearch = deps.hooks.voice
+
+    init {
+        // A recognized voice transcript becomes the typed query (TiviMate
+        // hands Android voice-search results straight into the bar).
+        scope.launch {
+            voice.transcripts.collect { text ->
+                if (text != null) onQueryChange(voice.consume() ?: text)
+            }
+        }
+    }
 
     /** Feeds the right-side detail card (captures 50/51). */
     val focusedProgram: StateFlow<SearchProgramHit?> = mutableFocusedProgram.asStateFlow()

@@ -4,7 +4,6 @@ import android.view.KeyEvent
 import androidx.compose.ui.test.hasTestTag
 import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.isEnabled
-import androidx.compose.ui.test.isNotEnabled
 import androidx.compose.ui.test.isOff
 import androidx.compose.ui.test.isOn
 import androidx.compose.ui.test.onFirst
@@ -32,7 +31,9 @@ class SettingsSteps(
         driver.openPanel()
         driver.longPressRow(driver.currentChannel.name)
         world.select("Settings")
-        world.waitForText("All features are available in Premium version")
+        // The sheet's test tag is the shell sentinel — present on every
+        // pane at any depth (the premium footer text is gone for good).
+        world.waitFor(hasTestTag("settings-sheet"))
     }
 
     @Then("I see the sections {string} in order")
@@ -122,7 +123,7 @@ class SettingsSteps(
     /** BACKs out of the settings shell to fullscreen playback. */
     private fun leaveSettings() {
         driver.awaitCondition("left the settings shell") {
-            if (world.nodeCount(hasText("All features are available in Premium version")) == 0) {
+            if (world.nodeCount(hasTestTag("settings-sheet")) == 0) {
                 true
             } else {
                 world.pressKey(KeyEvent.KEYCODE_BACK)
@@ -201,9 +202,8 @@ class SettingsSteps(
         assertEquals(0, world.nodeCount(hasText(group)))
     }
 
-    @Then("the row {string} is locked")
-    fun rowLocked(title: String) = world.waitFor(hasText(title) and isNotEnabled())
-
+    // "the row ... is locked" is gone with the premium tier: no settings
+    // row anywhere renders locked any more, so the step went with it.
     @Then("the row {string} is not locked")
     fun rowNotLocked(title: String) = world.waitFor(hasText(title) and isEnabled())
 

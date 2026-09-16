@@ -20,7 +20,7 @@ class OkHttpStreamRecorderTest {
     }
 
     @Test
-    fun `copies the response body onto the sink with the stream user-agent`() =
+    fun `copies the response body onto the sink with the default stream user-agent`() =
         runTest {
             server.enqueue(MockResponse().setBody("tsbytes-tsbytes"))
             server.start()
@@ -31,6 +31,30 @@ class OkHttpStreamRecorderTest {
             assertEquals("tsbytes-tsbytes", sink.readText())
             val request = server.takeRequest()
             assertTrue(request.getHeader("User-Agent")!!.contains("SHIELD Android TV"))
+        }
+
+    @Test
+    fun `sends the user-agent the injected resolver picks for the stream url`() =
+        runTest {
+            // The locator injects streamUserAgentFor (per-playlist > global >
+            // default) — the recorder must send whatever it resolves for the
+            // EXACT url being captured, exactly like the player does.
+            server.enqueue(MockResponse().setBody("ts"))
+            server.start()
+            val url = server.url("/streams/news.ts").toString()
+            val resolved = mutableListOf<String>()
+            val recorder =
+                OkHttpStreamRecorder(
+                    userAgentFor = { streamUrl ->
+                        resolved += streamUrl
+                        "playlist-ua/1.0"
+                    },
+                )
+
+            recorder.copy(url, sink) { false }
+
+            assertEquals(listOf(url), resolved)
+            assertEquals("playlist-ua/1.0", server.takeRequest().getHeader("User-Agent"))
         }
 
     @Test

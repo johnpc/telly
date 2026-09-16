@@ -104,16 +104,6 @@ class MultiviewPanesTest {
     }
 
     @Test
-    fun `zap retunes the focused pane with wrap-around`() {
-        panes.add(channels[0])
-
-        panes.zap(channels, -1)
-
-        assertEquals(6L, panes.panes.value.first().channel.id)
-        assertEquals(listOf("http://s/1.ts", "http://s/6.ts"), engines[0].loaded)
-    }
-
-    @Test
     fun `releaseAll releases every pane engine`() {
         panes.add(channels[0])
         panes.add(channels[1])

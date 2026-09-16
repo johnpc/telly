@@ -57,6 +57,33 @@ Feature: Block channel
     When I enter the PIN "2468"
     Then playback switches to channel 2 "News One HD"
 
+  # Multiview passes the same gate on EVERY pane tune: the entry pane (the
+  # last-watched channel), a picker pick and the CH+/- zap all prompt over
+  # the multiview layers; a wrong or cancelled PIN never tunes a pane.
+  Scenario: Multiview gates its entry pane behind the blocked channel's PIN
+    Given the channel "News One" is blocked behind the PIN "2468"
+    When I long-press ok
+    And I select "Multiview"
+    Then I see "Enter PIN"
+    And I see 0 multiview panes
+    When I enter the PIN "2468"
+    Then I see 1 multiview pane
+    And the multiview pane "News One" is focused with audio
+
+  Scenario: Picking a blocked channel in multiview is PIN-gated and a wrong PIN never tunes
+    Given the channel "News One HD" is blocked behind the PIN "2468"
+    And I opened multiview
+    When I press ok
+    And I select "Add screen"
+    And I pick the channel "News One HD" in the multiview picker
+    Then I see "Enter PIN"
+    When I enter the PIN "1111"
+    Then I see "Enter PIN"
+    And I see 1 multiview pane
+    When I enter the PIN "2468"
+    Then I see 2 multiview panes
+    And the multiview pane "News One HD" is focused with audio
+
   Scenario: The parental controls pane unblocks after one PIN check
     Given the channel "News One HD" is blocked behind the PIN "2468"
     When I open Settings

@@ -26,7 +26,7 @@ import com.johncorser.telly.features.recording.recordingCenter
 import com.johncorser.telly.features.reminders.remindersHub
 
 /** One block-unlock session per process ("Until app restart" relock). */
-private val sharedBlockSession = BlockSession()
+internal val sharedBlockSession = BlockSession()
 
 /** ONE catch-up hand-off slot: the guide fills it, playback consumes it. */
 private val catchupSession = CatchupSession()

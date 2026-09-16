@@ -30,6 +30,9 @@ class BlockGate(
     /** The blocked channel awaiting a PIN, or null when no prompt is open. */
     val pinPrompt: StateFlow<ChannelEntity?> = pending.asStateFlow()
 
+    /** "PIN input method" = Keyboard swaps the prompt to the masked IME entry. */
+    val keyboardPin: Boolean get() = parental?.usesKeyboardPin == true
+
     /** True when tuning [channel] is gated; the prompt opens instead. */
     fun intercept(channel: ChannelEntity): Boolean {
         if (passOnceId == channel.id) {

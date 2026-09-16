@@ -38,6 +38,7 @@ class MainActivity : ComponentActivity() {
             },
         )
     private val pip = PipActivityBridge(this, PipState.shared, ::pipOnHome, ::playbackIsFullscreen)
+    private val voice = VoiceSearchActivityLauncher(this)
     private val afr by lazy { afrController() }
 
     private fun pipOnHome() = ServiceLocator.settingsRepository(this).get(TellySettings.PIP_ON_HOME)
@@ -84,7 +85,7 @@ class MainActivity : ComponentActivity() {
                 playbackDeps = ServiceLocator.playbackDeps(this, hooks),
                 guideDeps = ServiceLocator.guideDeps(this, hooks) { !startRoute.consumeUntunedStart() },
                 settingsGraph = settingsGraph(fetcher),
-                searchDeps = ServiceLocator.searchDeps(this),
+                searchDeps = ServiceLocator.searchDeps(this, voice = voice.voice),
                 multiviewDeps = ServiceLocator.multiviewDeps(this),
                 vodDeps = ServiceLocator.vodDeps(this),
                 onEnterPip = pip::enter,

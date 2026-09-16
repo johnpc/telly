@@ -71,6 +71,9 @@ class CommonSteps(
     @When("I press dpad up")
     fun pressUp() = world.pressKey(KeyEvent.KEYCODE_DPAD_UP)
 
+    @When("I press dpad up {int} times")
+    fun pressUpTimes(times: Int) = world.pressKey(KeyEvent.KEYCODE_DPAD_UP, times = times)
+
     @When("I press dpad down")
     fun pressDown() = world.pressKey(KeyEvent.KEYCODE_DPAD_DOWN)
 

@@ -6,8 +6,9 @@ import kotlinx.coroutines.flow.asStateFlow
 
 /**
  * The dropdown rows for OK on a programme result — the guide-cell set
- * (capture 27). Each is an unbuilt feature: they route to the branded
- * coming-soon placeholder, exactly like the guide's cells.
+ * (capture 27). They act through [SearchProgramMenu], the same stores the
+ * guide's cell dropdown drives; only Program description keeps the branded
+ * placeholder, exactly like the guide's cells.
  */
 enum class SearchProgramAction(
     val label: String,
@@ -32,6 +33,15 @@ sealed interface SearchOverlay {
     data class ComingSoon(
         val feature: String,
     ) : SearchOverlay
+
+    /** A titled explainer (the DVR's honest HLS message). */
+    data class Message(
+        val title: String,
+        val text: String,
+    ) : SearchOverlay
+
+    /** The DVR custom-recording form ([SearchProgramMenu]'s RecordingMenu owns it). */
+    data object CustomRecording : SearchOverlay
 }
 
 /**

@@ -3,6 +3,7 @@ package com.johncorser.telly.features.recording
 import android.content.Context
 import com.johncorser.telly.core.ServiceLocator
 import com.johncorser.telly.core.db.TellyDatabase
+import com.johncorser.telly.core.streamUserAgentFor
 import com.johncorser.telly.core.tunedEngine
 import com.johncorser.telly.features.epg.EpgRepository
 import com.johncorser.telly.features.epg.ProgramTitle
@@ -39,7 +40,12 @@ fun ServiceLocator.recordingCenter(context: Context): RecordingCenter {
         val existing = runtime?.takeIf { it.db === db }
         existing ?: run {
             runtime?.scope?.cancel()
-            buildRecordingRuntime(context.applicationContext, db, epgRepository(context)).also { runtime = it }
+            buildRecordingRuntime(
+                appContext = context.applicationContext,
+                db = db,
+                epg = epgRepository(context),
+                userAgentFor = streamUserAgentFor(context),
+            ).also { runtime = it }
         }
     }.center
 }
@@ -56,6 +62,7 @@ private fun buildRecordingRuntime(
     appContext: Context,
     db: TellyDatabase,
     epg: EpgRepository,
+    userAgentFor: (streamUrl: String) -> String,
 ): RecordingRuntime {
     val clock = ServiceLocator.clock
     val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
@@ -67,7 +74,9 @@ private fun buildRecordingRuntime(
     val engine =
         RecordingEngine(
             store = store,
-            recorder = OkHttpStreamRecorder(),
+            // Captures send the same per-playlist > global > default stream
+            // UA the player resolves for the identical URLs.
+            recorder = OkHttpStreamRecorder(userAgentFor = userAgentFor),
             files = files,
             scope = scope,
             clock = clock,

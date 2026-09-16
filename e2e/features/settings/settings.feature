@@ -4,8 +4,8 @@ Feature: Settings
   single 360 dp right sheet over the dimmed underlying screen. The root
   sheet lists the captured sections; OK replaces it in place with that
   section's sheet and BACK pops one sheet at a time. Rows render the
-  captured defaults; not-yet-built rows render dimmed with a padlock (no
-  premium wording — telly is fully open source with no premium tier).
+  captured defaults; every row ships unlocked (telly is fully open source
+  with no premium tier, so nothing renders dimmed or padlocked).
   Reference: capture catalogue §6 (screens 18-22, 52-69) + live drive
   (docs/reference/sidebyside/settings-round1/ref).
 
@@ -63,12 +63,6 @@ Feature: Settings
     Then I see "Playlist type"
     And I see "M3U playlist"
 
-  Scenario: Locked rows render dimmed with a padlock and skip focus
-    When I open the "Playback" section
-    Then the row "Auto frame rate (AFR)" is locked
-    And the row "Skip steps" is locked
-    And the row "Buffer size" is not locked
-
   Scenario: The Appearance rows are all unlocked
     When I open the "Appearance" section
     Then the row "TV guide" is not locked
@@ -103,6 +97,7 @@ Feature: Settings
     Then the row "Auto frame rate (AFR)" is not locked
     And the row "Use external player" is not locked
     And the row "Skip steps" is not locked
+    And the row "Buffer size" is not locked
     And the "Auto frame rate (AFR)" row shows "Off"
     And the "Use external player" row shows "Off"
     And the "Skip steps" row shows "10s / 30s / 1m / 5m"

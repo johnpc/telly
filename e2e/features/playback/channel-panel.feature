@@ -44,14 +44,15 @@ Feature: Channel list panel
     And I select "Settings"
     Then I see the sections "General, Playlists, EPG, Appearance, Playback, Remote control, Parental controls, Other, About" in order
 
-  # telly has no premium tier: the reference's paywalled rows share the
-  # branded coming-soon placeholder with the uncaptured rows.
-  Scenario: Formerly-premium sheet rows open the coming-soon placeholder and BACK pops back to the sheet
+  # The sheet's Record row is live DVR (recording slice): it instant-records
+  # the row's channel — fixture News One is a recordable .ts stream — and
+  # the sheet closes back onto the panel. The library flows live in
+  # e2e/features/recording; this asserts the panel sheet's own behavior.
+  Scenario: The sheet's Record row starts recording the channel and lands back on the panel
     When I long-press ok on the row "News One"
     And I select "Record"
-    Then I see "Coming soon to telly"
-    When I press back
-    Then I see the menu rows "Search" and "Settings"
+    Then the groups column lists "Favorites", "All channels", "News", "Sports", "Movies", "Kids", "Music"
+    And a recording of "News One" is in progress
 
   Scenario: Program description shows the row's airing programme synopsis
     When I long-press ok on the row "News One"
