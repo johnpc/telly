@@ -51,10 +51,19 @@ class RecordingsViewModel(
     private val mutablePlaying = MutableStateFlow<RecordingRow?>(null)
     val playing: StateFlow<RecordingRow?> = mutablePlaying.asStateFlow()
 
+    /**
+     * Rows whose Stop confirm was accepted: the UI truth is "stopped" the
+     * moment the user confirms, even while the capture winds down its last
+     * blocking read — an immediate OK on the row must play the capture,
+     * not reopen the stop confirm off the not-yet-finalized RECORDING row.
+     */
+    private val stoppedIds = mutableSetOf<Long>()
+
     /** OK: play DONE captures, confirm stop/cancel/delete for the rest. */
     fun onRowClick(row: RecordingRow) {
+        val status = if (row.entry.id in stoppedIds) RecordingStatus.DONE else row.status
         mutableConfirm.value =
-            when (row.status) {
+            when (status) {
                 RecordingStatus.DONE -> {
                     mutablePlaying.value = row
                     null
@@ -74,6 +83,7 @@ class RecordingsViewModel(
     fun onConfirmAccepted() {
         val pending = mutableConfirm.value ?: return
         mutableConfirm.value = null
+        if (pending is RecordingsConfirm.Stop) stoppedIds += pending.row.entry.id
         scope.launch {
             when (pending) {
                 is RecordingsConfirm.Stop -> center.stop(pending.row.entry.id)

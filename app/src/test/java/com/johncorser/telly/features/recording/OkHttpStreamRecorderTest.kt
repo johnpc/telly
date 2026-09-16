@@ -8,6 +8,8 @@ import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Test
 import java.io.IOException
+import java.util.concurrent.TimeUnit
+import kotlin.system.measureTimeMillis
 
 class OkHttpStreamRecorderTest {
     private val server = MockWebServer()
@@ -85,6 +87,26 @@ class OkHttpStreamRecorderTest {
         }
 
     @Test
+    fun `a user stop cancels a trickling stream read instead of waiting it out`() =
+        runTest {
+            // One byte per 3 s: the trickle keeps resetting the read timeout
+            // and the between-read stop check stays parked inside read() —
+            // only the stop-cancel can land in under one throttle period.
+            server.enqueue(MockResponse().setBody("XXXX").throttleBody(1, 3, TimeUnit.SECONDS))
+            server.start()
+            val stopAtMs = System.currentTimeMillis() + 500
+
+            val elapsedMs =
+                measureTimeMillis {
+                    recorder.copy(server.url("/streams/slow.ts").toString(), sink) {
+                        System.currentTimeMillis() >= stopAtMs
+                    }
+                }
+
+            assertTrue("stop took ${elapsedMs}ms to land", elapsedMs < 2_000)
+        }
+
+    @Test
     fun `an already-satisfied stop copies nothing`() =
         runTest {
             server.enqueue(MockResponse().setBody("tsbytes"))
@@ -93,6 +115,6 @@ class OkHttpStreamRecorderTest {
             val written = recorder.copy(server.url("/streams/news.ts").toString(), sink) { true }
 
             assertEquals(0L, written)
-            assertEquals("", sink.readText())
+            assertEquals(0L, sink.length())
         }
 }

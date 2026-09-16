@@ -2,7 +2,6 @@ package com.johncorser.telly.features.recording
 
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.withContext
 import java.io.File
 import java.io.IOException
@@ -38,28 +37,46 @@ class HlsStreamRecorder(
         shouldStop: () -> Boolean,
     ): Long =
         withContext(dispatcher) {
-            val progress = progressBySink.getOrPut(sink.path) { CaptureProgress() }
-            var written = 0L
-            try {
-                var media = http.mediaPlaylist(url)
-                var live = !shouldStop()
-                while (live) {
-                    written += append(media.playlist, sink, progress, shouldStop)
-                    live = !media.playlist.ended && !shouldStop()
-                    if (live) {
-                        pollDelay(media.playlist.targetDurationMs, shouldStop)
-                        live = !shouldStop()
-                        if (live) media = http.mediaPlaylist(media.url)
-                    }
-                }
-            } catch (e: IOException) {
-                // No progress this attempt -> let the engine count it idle;
-                // otherwise report the bytes and reconnect on the next attempt.
+            val calls = RecordingCalls()
+            cancellingOnStop(calls, shouldStop) { attempt(url, sink, shouldStop, calls) }
+        }
+
+    private suspend fun attempt(
+        url: String,
+        sink: File,
+        shouldStop: () -> Boolean,
+        calls: RecordingCalls,
+    ): Long {
+        val progress = progressBySink.getOrPut(sink.path) { CaptureProgress() }
+        var written = 0L
+        try {
+            var media: ResolvedHlsMedia? = http.mediaPlaylist(url, calls)
+            while (media != null && !shouldStop()) {
+                written += append(media.playlist, sink, progress, shouldStop, calls)
+                media = nextPoll(media, shouldStop, calls)
+            }
+        } catch (e: IOException) {
+            // A stop-cancelled fetch ends the attempt normally. Otherwise no
+            // progress -> let the engine count it idle; progress -> report
+            // the bytes and reconnect on the next attempt.
+            if (!shouldStop()) {
                 if (written == 0L) throw e
                 log("HLS capture interrupted (${e.message}); reconnecting")
             }
-            written
         }
+        return written
+    }
+
+    /** Waits out the target duration, then re-polls the live playlist (null ends the attempt). */
+    private suspend fun nextPoll(
+        media: ResolvedHlsMedia,
+        shouldStop: () -> Boolean,
+        calls: RecordingCalls,
+    ): ResolvedHlsMedia? {
+        if (media.playlist.ended || shouldStop()) return null
+        pollDelay(media.playlist.targetDurationMs, shouldStop)
+        return if (shouldStop()) null else http.mediaPlaylist(media.url, calls)
+    }
 
     /** Appends the init segment (once) plus every not-yet-written segment. */
     private fun append(
@@ -67,13 +84,14 @@ class HlsStreamRecorder(
         sink: File,
         progress: CaptureProgress,
         shouldStop: () -> Boolean,
+        calls: RecordingCalls,
     ): Long {
-        var written = initBytes(playlist, sink, progress)
+        var written = initBytes(playlist, sink, progress, calls)
         val fresh = playlist.segments.filter { it.sequence > progress.lastSequence }
         logMissed(fresh, progress)
         for (segment in fresh) {
             if (shouldStop()) break
-            written += http.appendBody(segment.url, sink)
+            written += http.appendBody(segment.url, sink, calls)
             progress.lastSequence = segment.sequence
         }
         return written
@@ -83,10 +101,11 @@ class HlsStreamRecorder(
         playlist: HlsPlaylist.Media,
         sink: File,
         progress: CaptureProgress,
+        calls: RecordingCalls,
     ): Long {
         val initUrl = playlist.initSegmentUrl
         if (initUrl == null || progress.initWritten) return 0L
-        val written = http.appendBody(initUrl, sink)
+        val written = http.appendBody(initUrl, sink, calls)
         progress.initWritten = true
         return written
     }
@@ -106,21 +125,3 @@ class HlsStreamRecorder(
         private const val NO_SEQUENCE = -1L
     }
 }
-
-/**
- * The default between-polls wait, sliced so a user stop lands promptly —
- * one plain target-duration delay kept the engine's stop() joined for
- * whole seconds while the row still said RECORDING.
- */
-internal suspend fun awaitNextHlsPoll(
-    totalMs: Long,
-    shouldStop: () -> Boolean,
-) {
-    var waitedMs = 0L
-    while (waitedMs < totalMs && !shouldStop()) {
-        delay(HLS_STOP_CHECK_SLICE_MS.coerceAtMost(totalMs - waitedMs))
-        waitedMs += HLS_STOP_CHECK_SLICE_MS
-    }
-}
-
-internal const val HLS_STOP_CHECK_SLICE_MS = 250L

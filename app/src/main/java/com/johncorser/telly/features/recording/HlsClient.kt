@@ -21,56 +21,62 @@ data class ResolvedHlsMedia(
  * [userAgentFor] (the same per-playlist > global > default precedence as
  * [OkHttpStreamRecorder]) and following the same redirects. Failures throw
  * [IOException] so callers keep the engine's reconnect/idle-failure policy.
+ * Every request registers with the caller's [RecordingCalls] so a user
+ * stop can cancel a blocked fetch instead of waiting it out.
  */
 class HlsClient(
-    private val client: OkHttpClient = defaultClient(),
+    private val client: OkHttpClient = recordingHttpClient(),
     private val userAgentFor: (streamUrl: String) -> String = { STREAM_USER_AGENT },
 ) {
     /** Fetches [url] and hops master playlists onto their best variant. */
-    fun mediaPlaylist(url: String): ResolvedHlsMedia =
-        when (val playlist = HlsPlaylistParser.parse(fetchText(url), url)) {
+    fun mediaPlaylist(
+        url: String,
+        calls: RecordingCalls = RecordingCalls(),
+    ): ResolvedHlsMedia =
+        when (val playlist = HlsPlaylistParser.parse(fetchText(url, calls), url)) {
             is HlsPlaylist.Media -> ResolvedHlsMedia(url, playlist)
-            is HlsPlaylist.Master -> variantMedia(playlist)
+            is HlsPlaylist.Master -> variantMedia(playlist, calls)
         }
 
     /** Appends the body of [url] onto [sink]; returns the bytes written. */
     fun appendBody(
         url: String,
         sink: File,
+        calls: RecordingCalls = RecordingCalls(),
     ): Long =
-        fetch(url).use { response ->
+        fetch(url, calls).use { response ->
             val body = response.body ?: return@use 0L
             body.byteStream().use { stream ->
                 FileOutputStream(sink, true).use { out -> stream.copyTo(out) }
             }
         }
 
-    private fun variantMedia(master: HlsPlaylist.Master): ResolvedHlsMedia {
+    private fun variantMedia(
+        master: HlsPlaylist.Master,
+        calls: RecordingCalls,
+    ): ResolvedHlsMedia {
         val variant = master.best() ?: throw IOException("HLS master playlist lists no variants")
         val playlist =
-            HlsPlaylistParser.parse(fetchText(variant.url), variant.url) as? HlsPlaylist.Media
+            HlsPlaylistParser.parse(fetchText(variant.url, calls), variant.url) as? HlsPlaylist.Media
                 ?: throw IOException("HLS variant did not resolve to a media playlist")
         return ResolvedHlsMedia(variant.url, playlist)
     }
 
-    private fun fetchText(url: String): String = fetch(url).use { it.body?.string().orEmpty() }
+    private fun fetchText(
+        url: String,
+        calls: RecordingCalls,
+    ): String = fetch(url, calls).use { it.body?.string().orEmpty() }
 
-    private fun fetch(url: String): Response {
+    private fun fetch(
+        url: String,
+        calls: RecordingCalls,
+    ): Response {
         val request = Request.Builder().url(url).header("User-Agent", userAgentFor(url)).build()
-        val response = client.newCall(request).execute()
+        val response = calls.track(client.newCall(request)).execute()
         if (!response.isSuccessful) {
             response.close()
             throw IOException("HTTP ${response.code} while recording HLS")
         }
         return response
-    }
-
-    companion object {
-        private fun defaultClient(): OkHttpClient =
-            OkHttpClient
-                .Builder()
-                .followRedirects(true)
-                .followSslRedirects(true)
-                .build()
     }
 }
