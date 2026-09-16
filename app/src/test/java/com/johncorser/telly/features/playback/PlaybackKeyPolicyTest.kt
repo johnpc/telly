@@ -43,6 +43,12 @@ class PlaybackKeyPolicyTest {
     }
 
     @Test
+    fun `down from the info overlay opens the channel panel`() {
+        assertEquals(PlaybackCommand.OpenPanel, at(PlaybackOverlay.Info, PlaybackKey.DOWN))
+        assertEquals(PlaybackCommand.OpenPanel, at(PlaybackOverlay.InfoTransport, PlaybackKey.DOWN))
+    }
+
+    @Test
     fun `a second up expands the transport row and a third does nothing`() {
         assertEquals(PlaybackCommand.ShowTransport, at(PlaybackOverlay.Info, PlaybackKey.UP))
         assertNull(at(PlaybackOverlay.InfoTransport, PlaybackKey.UP))

@@ -30,6 +30,13 @@ Feature: Watch live TV and zap between channels
     And I see the "TV guide" and "History" cards
     And I see "Multiview"
 
+  Scenario: Down from the info overlay opens the channel list panel
+    When I press ok
+    Then I see the bottom info overlay
+    When I press dpad down
+    Then the channel list panel opens over the dimmed video
+    And the focused channel row is number 1 "News One"
+
   Scenario: The info overlay auto-hides after its five-second timeout
     When I press ok
     And I wait 7 seconds

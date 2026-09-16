@@ -84,6 +84,12 @@ object PlaybackKeyPolicy {
         when (key) {
             PlaybackKey.BACK -> PlaybackCommand.Dismiss
             PlaybackKey.UP -> onUp
+            // The shortcut-card row's down chevron promises "more below": DOWN
+            // opens the channel list panel (ux-spec §2.3 "expands to … full
+            // channel list"). The reference shows the current channel's
+            // now/next programme browser; telly's panel is a superset — the
+            // full list plus the focused channel's schedule in its detail card.
+            PlaybackKey.DOWN -> PlaybackCommand.OpenPanel
             PlaybackKey.LONG_OK, PlaybackKey.MENU -> PlaybackCommand.OpenQuickBar
             PlaybackKey.CHANNEL_UP -> PlaybackCommand.Zap(+1)
             PlaybackKey.CHANNEL_DOWN -> PlaybackCommand.Zap(-1)

@@ -88,6 +88,28 @@ Local SDK note: `local.properties` must contain
 
 ## Decisions log
 
+- **2026-09-16** Two Shield-verified parity fixes. **(1) Multiview panes render
+  on a TextureView.** Media3's `PlayerView` defaults to a `SurfaceView`, which
+  punches a hardware video-overlay hole; real TV hardware (Shield/mdarcy) has
+  only a few overlay planes with undefined z-order, so 2-4 stacked panes
+  composited to black (the emulator's software compositor hid this). surface_type
+  is XML-only, so `PlayerScreenSurface` gained a `textureView` flag that inflates
+  `res/layout/player_texture_surface.xml` (texture_view) instead of constructing
+  a default PlayerView; `MultiviewScreenPane` passes `textureView = true`. The
+  single fullscreen player stays on SurfaceView (one plane; better power/HDR).
+  Side effect: TextureView panes are screencap-able (the SurfaceView window read
+  all-black on the Shield) — confirmed a 2-pane grid renders live video on
+  mdarcy. **(2) Info-overlay DOWN opens the channel panel.** DOWN was a dead key
+  (`withinInfoOverlay` `else -> null`, and `PlaybackScreenKeys` never intercepted
+  `DirectionDown`, so Compose focus no-oped it under the shortcut cards).
+  `withinInfoOverlay` now maps `DOWN -> OpenPanel` and `onPreviewKey`/`previewKeyOf`
+  intercept DirectionDown — the down-chevron now expands to the full channel list
+  (ux-spec §2.3). Deviation from TiviMate Pro (device-captured): the reference's
+  DOWN reveals the current channel's now/next programme browser; telly's panel is
+  a superset (full list + the focused channel's schedule in its detail card).
+  e2e: new watch-and-zap scenario "Down from the info overlay opens the channel
+  list panel" (29/29 on the tv34 emulator). Verified on the Shield via screencap
+  (both fixes) + quality.sh.
 - **2026-09-15** v0.2.0 (versionCode 2): the feature-complete milestone after
   29 v0.1.0 releases; README rewritten to the shipped feature surface.
 - **2026-09-15** De-premium milestone: the decorative premium tier is deleted —

@@ -75,8 +75,15 @@ internal fun MultiviewScreenPane(
         Box(Modifier.fillMaxSize()) {
             (pane.engine as? Media3PlayerEngine)?.let {
                 // The panes honor the persisted resize mode like fullscreen
-                // playback does (default Fit = the previous hardcoded value).
-                PlayerScreenSurface(it, Modifier.fillMaxSize(), resizeMode = ResizeModes.of(LocalResizeModeRaw.current))
+                // playback does (default Fit = the previous hardcoded value)
+                // and render on a TextureView so stacked panes don't exhaust
+                // the TV's hardware overlay planes and go black.
+                PlayerScreenSurface(
+                    it,
+                    Modifier.fillMaxSize(),
+                    resizeMode = ResizeModes.of(LocalResizeModeRaw.current),
+                    textureView = true,
+                )
             }
             (state as? PlayerState.Error)?.let { MultiviewScreenPaneError(pane.channel.displayName, it.message) }
         }
