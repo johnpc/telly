@@ -1,5 +1,6 @@
 package com.johncorser.telly.core.ui
 
+import androidx.compose.foundation.basicMarquee
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -52,10 +53,13 @@ fun TellyScreenRowLabel(
     color: Color,
     fontSize: TextUnit,
     modifier: Modifier = Modifier,
+    marquee: Boolean = false,
 ) {
     Text(
         text = text,
-        modifier = modifier,
+        // basicMarquee measures the text at its intrinsic width, so an
+        // overflowing label scrolls instead of ellipsizing while [marquee].
+        modifier = if (marquee) modifier.basicMarquee(iterations = Int.MAX_VALUE) else modifier,
         color = color,
         fontSize = fontSize,
         maxLines = 1,

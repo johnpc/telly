@@ -88,6 +88,12 @@ Local SDK note: `local.properties` must contain
 
 ## Decisions log
 
+- **2026-09-18** Guide channel-name marquee: a name wider than the 190 dp
+  channel column marquees (`Modifier.basicMarquee`, infinite iterations) while
+  D-pad focus is on that row — `TellyScreenRowLabel` gained an opt-in `marquee`
+  flag, driven by `GuideScreenRow`'s existing `focusedCell != null` signal.
+  Unfocused rows keep the ellipsis. Deliberate deviation from TiviMate (which
+  always ellipsizes), per the director's request.
 - **2026-09-16** Live-stream resilience + compressed EPG (Android "done" sweep).
   **(1) Auto-reconnect.** A dropped live stream used to surface `PlayerState.Error`
   on the first `onPlayerError`; it now retries with exponential backoff. New pure

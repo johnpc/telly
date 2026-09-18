@@ -21,11 +21,13 @@ import com.johncorser.telly.features.playlist.db.displayName
 /**
  * The grid row's fixed channel column: number, 45×30 dp logo tile and the
  * (custom) display name, accent blue + ▶ while previewed (capture 32).
+ * A name too long for the column marquees while D-pad focus sits on the row.
  */
 @Composable
 internal fun GuideScreenChannelColumn(
     row: GuideRow,
     playing: Boolean,
+    focused: Boolean,
 ) {
     val accent = LocalAccentColor.current
     Row(
@@ -57,6 +59,7 @@ internal fun GuideScreenChannelColumn(
             color = if (playing) accent else Color.White,
             fontSize = 16.sp,
             modifier = Modifier.weight(1f),
+            marquee = focused,
         )
         if (row.channel.flags.blocked) TellyScreenBlockedLock()
         if (playing) TellyScreenRowLabel(text = "▶", color = accent, fontSize = 10.sp)

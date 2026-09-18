@@ -36,7 +36,7 @@ internal fun GuideScreenRow(
             .height(LocalGuideStyle.current.rowHeightDp.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        GuideScreenChannelColumn(row, playing)
+        GuideScreenChannelColumn(row, playing, focused = focusedCell != null)
         Box(
             Modifier
                 .weight(1f)
