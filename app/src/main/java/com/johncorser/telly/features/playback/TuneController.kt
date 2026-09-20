@@ -49,12 +49,19 @@ class TuneController(
         }
     }
 
-    /** Tunes only the stored last-watched channel (guide preview resume). */
+    /**
+     * Re-tunes the stored last-watched channel for the guide preview. Uses the
+     * cold-start [ChannelZapper.restore] fallback so a stale stored id (row ids
+     * are reassigned on every playlist re-import) still tunes the first channel
+     * rather than leaving a rebuilt engine idle — the black preview after the
+     * engine is released and re-leased, e.g. a Search round trip. A never-set
+     * id resumes nothing (fresh install has no channel to restore).
+     */
     fun resumeStored() {
         scope.launch {
             val list = channels.first { it.isNotEmpty() }
             val storedId = store.getLong(LAST_CHANNEL_KEY) ?: return@launch
-            list.firstOrNull { it.id == storedId }?.let { tune(it, allowExternal = false) }
+            ChannelZapper.restore(list, storedId)?.let { tune(it, allowExternal = false) }
         }
     }
 

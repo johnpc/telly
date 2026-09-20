@@ -47,6 +47,40 @@ class TuneControllerTest {
         }
 
     @Test
+    fun `resumeStored re-tunes the stored channel`() =
+        runTest {
+            store.putLong(TuneController.LAST_CHANNEL_KEY, 2)
+            val tuner = controller()
+
+            tuner.resumeStored()
+
+            assertEquals(listOf("http://s/2.ts"), engine.loaded)
+        }
+
+    @Test
+    fun `resumeStored falls back to the first channel when the stored id is stale`() =
+        runTest {
+            // A row id from before a playlist re-import that reassigned ids: the
+            // guide preview must still tune (not leave the engine idle/black).
+            store.putLong(TuneController.LAST_CHANNEL_KEY, 999)
+            val tuner = controller()
+
+            tuner.resumeStored()
+
+            assertEquals(listOf("http://192.168.1.10:4022/udp/239.1.2.3:1234"), engine.loaded)
+        }
+
+    @Test
+    fun `resumeStored tunes nothing when no channel was ever stored`() =
+        runTest {
+            val tuner = controller()
+
+            tuner.resumeStored()
+
+            assertEquals(emptyList<String>(), engine.loaded)
+        }
+
+    @Test
     fun `http streams tune untouched and retune resolves again`() =
         runTest {
             val tuner = controller()
