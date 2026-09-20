@@ -110,7 +110,7 @@ class GuideController(
         menu.remind.reminders = seams.reminders
         menu.onPlayChannel = ::play
         scope.launch { rows.collect { focusEngine.ensureFocus(it, now.value) } }
-        groupMemory.arm(scope, tuner.channels, groups)
+        groupMemory.arm(scope, tuner.channels, groupTools.groups)
         // The guide is reached from playback (BACK / the TV-guide card), where
         // the last channel keeps playing in the preview window; a cold start
         // with "Turn on last channel on app start" OFF instead lands here

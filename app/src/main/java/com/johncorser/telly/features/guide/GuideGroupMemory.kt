@@ -1,6 +1,8 @@
 package com.johncorser.telly.features.guide
 
 import com.johncorser.telly.core.kv.KeyValueStore
+import com.johncorser.telly.features.groups.CustomGroup
+import com.johncorser.telly.features.panel.PanelRows
 import com.johncorser.telly.features.panel.PanelViewModel
 import com.johncorser.telly.features.playlist.db.ChannelEntity
 import kotlinx.coroutines.CoroutineScope
@@ -32,17 +34,22 @@ class GuideGroupMemory(
     /**
      * Drops a restored group the current playlist no longer has (renamed,
      * deleted, or a different playlist) back to All channels — otherwise the
-     * grid filters to nothing and the guide opens empty with no way out.
+     * grid filters to nothing and the guide opens empty with no way out. The
+     * valid set is computed from the channels snapshot we just awaited (not a
+     * separately-derived StateFlow that may not have recomputed yet), so the
+     * fullscreen→back restore can't lose the group to a load-order race.
      */
     fun arm(
         scope: CoroutineScope,
         channels: StateFlow<List<ChannelEntity>>,
-        groups: StateFlow<List<String>>,
+        customGroups: StateFlow<List<CustomGroup>>,
     ) {
         if (selected.value == PanelViewModel.ALL_CHANNELS) return
         scope.launch {
-            channels.first { it.isNotEmpty() }
-            if (selected.value !in groups.value) select(PanelViewModel.ALL_CHANNELS)
+            val loaded = channels.first { it.isNotEmpty() }
+            if (selected.value !in PanelRows.groupNames(loaded, customGroups.value)) {
+                select(PanelViewModel.ALL_CHANNELS)
+            }
         }
     }
 
