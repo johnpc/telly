@@ -30,21 +30,23 @@ class GuideKeyPolicyTest {
     }
 
     @Test
-    fun `back on the grid bubbles up so the app can exit at guide root`() {
-        assertNull(at(GuideLayer.Grid, GuideKey.BACK))
+    fun `back on the grid opens the groups column, mirroring left`() {
+        assertEquals(GuideCommand.OpenGroups, at(GuideLayer.Grid, GuideKey.BACK))
     }
 
     @Test
-    fun `the groups column closes on back or right, per capture 25`() {
-        assertEquals(GuideCommand.CloseLayer, at(GuideLayer.Groups, GuideKey.BACK))
+    fun `the groups column closes on right but leaves back to the ui`() {
+        // BACK in the groups column is owned by GuideScreenGroups (gear vs
+        // exit depends on Compose focus), so the policy leaves it unconsumed.
+        assertNull(at(GuideLayer.Groups, GuideKey.BACK))
         assertEquals(GuideCommand.CloseLayer, at(GuideLayer.Groups, GuideKey.RIGHT))
         assertNull(at(GuideLayer.Groups, GuideKey.UP))
         assertNull(at(GuideLayer.Groups, GuideKey.OK))
     }
 
     @Test
-    fun `long-ok and menu open the row context sheet from the grid`() {
-        assertEquals(GuideCommand.OpenRowMenu, at(GuideLayer.Grid, GuideKey.LONG_OK))
+    fun `long-ok opens the cell dropdown and menu opens the row sheet from the grid`() {
+        assertEquals(GuideCommand.OpenCellMenu, at(GuideLayer.Grid, GuideKey.LONG_OK))
         assertEquals(GuideCommand.OpenRowMenu, at(GuideLayer.Grid, GuideKey.MENU))
     }
 

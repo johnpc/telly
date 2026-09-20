@@ -62,7 +62,8 @@ fun GuideScreen(
     // Background/resume: stop the preview stream on STOP, re-seed the clock
     // and re-tune on the START after it (round7 resume P2).
     ScreenLifecycleStartStop(onStart = controller.lifecycle::onForeground, onStop = controller.lifecycle::onBackground)
-    GuideScreenBackHandlers(deps, controller, layer, settingsOpen)
+    GuideScreenBackHandlers(controller, layer, settingsOpen)
+    val onExit = rememberGuideExit(deps, controller)
     // Returning from the settings sheet lands back on the grid, whose key
     // anchor re-grabs focus when it recomposes.
     LaunchedEffect(settingsOpen) { if (!settingsOpen) controller.menu.reset() }
@@ -74,7 +75,15 @@ fun GuideScreen(
     ) {
         Row(Modifier.fillMaxSize()) {
             if (layer == GuideLayer.Groups) {
-                GuideScreenGroups(controller, onOpenSearch, onOpenSettings, onOpenMyList, onOpenVod, onOpenRecordings)
+                GuideScreenGroups(
+                    controller,
+                    onOpenSearch,
+                    onOpenSettings,
+                    onOpenMyList,
+                    onOpenVod,
+                    onOpenRecordings,
+                    onExit,
+                )
             }
             Box(Modifier.weight(1f)) {
                 Column(Modifier.fillMaxSize()) {

@@ -13,7 +13,7 @@ class GuideCommands(
     private val pastDays: () -> Int,
     /** Appearance -> TV guide -> Number of visible channels (CH± page size). */
     private val visibleRows: () -> Int,
-    /** OK on the focused cell: tune preview / fullscreen / cell dropdown. */
+    /** OK on the focused cell: play the channel / play a catch-up archive. */
     private val activate: () -> Unit,
 ) {
     fun execute(command: GuideCommand) {
@@ -27,6 +27,8 @@ class GuideCommands(
             is GuideCommand.PageRows -> focusEngine.moveVertical(rows(), command.direction * visibleRows())
             GuideCommand.Activate -> activate()
             GuideCommand.OpenRowMenu -> menu.openRowMenu()
+            GuideCommand.OpenCellMenu -> menu.openCellMenu(focusEngine.focus.value?.cell)
+            GuideCommand.OpenGroups -> menu.show(GuideLayer.Groups)
             GuideCommand.CloseLayer -> menu.close()
         }
     }

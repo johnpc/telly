@@ -89,31 +89,34 @@ class GuideCatchupWiringTest {
         }
 
     @Test
-    fun `ok on the same past cell of a plain channel opens the dropdown as today`() =
+    fun `ok on the same past cell of a plain channel plays it live`() =
         runTest {
             val controller = buildController()
             controller.onKey(GuideKey.LONG_LEFT)
             controller.onKey(GuideKey.DOWN)
             assertEquals("Plain Yesterday", controller.focus.value?.cell?.program?.details?.title)
 
-            controller.onKey(GuideKey.OK)
+            assertTrue(controller.onKey(GuideKey.OK))
 
-            assertTrue(controller.layer.value is GuideLayer.CellMenu)
+            // No archive for a plain channel: OK tunes it live + fullscreens.
+            assertEquals(2L, controller.preview.value?.id)
+            assertEquals(1, fullscreens)
             assertNull(session.consume())
-            assertEquals(0, fullscreens)
         }
 
     @Test
-    fun `a past cell beyond the catchup-days horizon keeps the dropdown`() =
+    fun `a past cell beyond the catchup-days horizon plays live`() =
         runTest {
             dao.channels.value =
                 listOf(testChannel(1, 1, "News One").withCatchup(source = "http://s/arc?utc={utc}", days = 0))
             val controller = buildController()
             controller.onKey(GuideKey.LONG_LEFT)
 
-            controller.onKey(GuideKey.OK)
+            assertTrue(controller.onKey(GuideKey.OK))
 
-            assertTrue(controller.layer.value is GuideLayer.CellMenu)
+            // Past the horizon there is no archive: OK falls back to live tune.
+            assertEquals(1L, controller.preview.value?.id)
+            assertEquals(1, fullscreens)
             assertNull(session.consume())
         }
 }

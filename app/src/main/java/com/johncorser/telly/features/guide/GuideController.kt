@@ -108,6 +108,7 @@ class GuideController(
 
     init {
         menu.remind.reminders = seams.reminders
+        menu.onPlayChannel = ::play
         scope.launch { rows.collect { focusEngine.ensureFocus(it, now.value) } }
         groupMemory.arm(scope, tuner.channels, groups)
         // The guide is reached from playback (BACK / the TV-guide card), where
@@ -135,11 +136,15 @@ class GuideController(
     private fun activate() {
         val focused = focus.value ?: return
         val row = focusedRow() ?: return
-        when (val action = GuideActivation.activate(row, focused.cell, now.value, tuner.current.value?.id)) {
-            is GuideAction.TunePreview -> tuner.tune(action.channel)
-            GuideAction.GoFullscreen -> callbacks.onFullscreen()
-            is GuideAction.OpenCellMenu -> menu.show(GuideLayer.CellMenu(action.cell))
+        when (val action = GuideActivation.activate(row, focused.cell, now.value)) {
+            is GuideAction.PlayChannel -> play(action.channel)
             is GuideAction.PlayCatchup -> catchup.play(action.channel, action.cell)
         }
+    }
+
+    /** Regular OK / cell-menu Play channel: tune, then jump to fullscreen. */
+    private fun play(channel: ChannelEntity) {
+        tuner.tune(channel)
+        callbacks.onFullscreen()
     }
 }

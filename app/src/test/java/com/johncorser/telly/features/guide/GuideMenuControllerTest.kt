@@ -521,6 +521,35 @@ class GuideMenuControllerTest {
     }
 
     @Test
+    fun `open cell menu shows the dropdown for a cell and no-ops without one`() {
+        runTest {
+            val menu = build()
+            val cell = GuideCell(5_000L, 6_000L, program = null)
+
+            menu.openCellMenu(null)
+            assertEquals(GuideLayer.Grid, menu.layer.value)
+
+            menu.openCellMenu(cell)
+            assertEquals(GuideLayer.CellMenu(cell), menu.layer.value)
+        }
+    }
+
+    @Test
+    fun `the dropdown's play channel row plays the focused channel and closes`() {
+        runTest {
+            val menu = build()
+            val played = mutableListOf<Long>()
+            menu.onPlayChannel = { played += it.id }
+            menu.show(GuideLayer.CellMenu(GuideCell(5_000L, 6_000L, program = null)))
+
+            menu.onCellAction(GuideCellAction.PLAY_CHANNEL)
+
+            assertEquals(listOf(1L), played)
+            assertEquals(GuideLayer.Grid, menu.layer.value)
+        }
+    }
+
+    @Test
     fun `add to my list on the sheet saves the focused programme and returns to the grid`() {
         runTest {
             val menu = buildOpenSheet()

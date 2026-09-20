@@ -69,7 +69,7 @@ internal fun GuideScreenRail(
             RailTarget(R.drawable.ic_rail_bookmark, onOpenMyList, bookmarkFocus, "My list"),
             RailTarget(R.drawable.ic_rail_movie, onOpenVod, moviesFocus, testTag = "rail-movies"),
             RailTarget(R.drawable.ic_rail_dvr, onOpenRecordings, dvrFocus, "Recordings"),
-            RailTarget(R.drawable.ic_menu_settings, onOpenSettings, gearFocus),
+            RailTarget(R.drawable.ic_menu_settings, onOpenSettings, gearFocus, "Settings"),
         )
     Column(
         Modifier

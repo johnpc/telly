@@ -23,21 +23,25 @@ class GuideDropdownAnchorTest {
 
     @Test
     fun `the dropdown hangs from the focused cell's bottom-left corner`() {
-        val focus = GuideFocus(rowIndex = 1, cell = cell(at(15, 45), at(17, 0)), anchorMs = at(15, 45))
+        // The tall six-row menu clamps below the first visible row, so the
+        // un-clamped hang is exercised on the top row (bottom = one row down).
+        val focus = GuideFocus(rowIndex = 0, cell = cell(at(15, 45), at(17, 0)), anchorMs = at(15, 45))
 
         val anchor = anchorFor(focus)
 
         assertEquals(GuideGeometry.CHANNEL_COLUMN_DP + 400f, anchor.xDp)
-        assertEquals(2 * GuideGeometry.ROW_HEIGHT_DP, anchor.yDp)
+        assertEquals(GuideGeometry.ROW_HEIGHT_DP, anchor.yDp)
     }
 
     @Test
     fun `the anchor tracks the scrolled row window`() {
+        // Absolute row 6 with a matching scroll offset resolves to the top of
+        // the window: yDp reflects the relative row (one row-height), not 7×.
         val focus = GuideFocus(rowIndex = 6, cell = cell(at(14, 30), at(15, 0)), anchorMs = at(14, 38))
 
-        val anchor = anchorFor(focus, firstVisibleRow = 5)
+        val anchor = anchorFor(focus, firstVisibleRow = 6)
 
-        assertEquals(2 * GuideGeometry.ROW_HEIGHT_DP, anchor.yDp)
+        assertEquals(GuideGeometry.ROW_HEIGHT_DP, anchor.yDp)
     }
 
     @Test
@@ -47,6 +51,6 @@ class GuideDropdownAnchorTest {
         val anchor = anchorFor(farRight, firstVisibleRow = 14)
 
         assertEquals(GuideGeometry.CHANNEL_COLUMN_DP + viewport - GuideDropdownAnchor.MENU_WIDTH_DP, anchor.xDp)
-        assertEquals(gridHeight - 5 * GuideDropdownAnchor.MENU_ROW_DP, anchor.yDp)
+        assertEquals(gridHeight - GuideCellAction.entries.size * GuideDropdownAnchor.MENU_ROW_DP, anchor.yDp)
     }
 }

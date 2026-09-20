@@ -15,46 +15,34 @@ class GuideActivationTest {
     private val row = GuideRow(testChannel(2, 2, "News One HD"), 2, listOf(past, airing, future))
 
     @Test
-    fun `ok on an airing programme of another channel tunes the preview`() {
-        val action = GuideActivation.activate(row, airing, nowMs, previewChannelId = 1L)
-
-        assertEquals(GuideAction.TunePreview(row.channel), action)
+    fun `ok on an airing programme plays that row's channel`() {
+        assertEquals(GuideAction.PlayChannel(row.channel), GuideActivation.activate(row, airing, nowMs))
     }
 
     @Test
-    fun `ok with nothing previewed also tunes the preview first`() {
-        assertEquals(GuideAction.TunePreview(row.channel), GuideActivation.activate(row, airing, nowMs, null))
+    fun `ok on a non-airing programme also plays the channel`() {
+        // The dropdown moved to long-OK; a regular OK on any non-catch-up cell
+        // jumps straight to the full player (director round).
+        assertEquals(GuideAction.PlayChannel(row.channel), GuideActivation.activate(row, future, nowMs))
+        assertEquals(GuideAction.PlayChannel(row.channel), GuideActivation.activate(row, past, nowMs))
     }
 
     @Test
-    fun `a second ok on the previewed channel goes fullscreen`() {
-        assertEquals(GuideAction.GoFullscreen, GuideActivation.activate(row, airing, nowMs, previewChannelId = 2L))
-    }
-
-    @Test
-    fun `ok on a non-airing programme opens the premium dropdown`() {
-        assertEquals(GuideAction.OpenCellMenu(future), GuideActivation.activate(row, future, nowMs, 2L))
-        assertEquals(GuideAction.OpenCellMenu(past), GuideActivation.activate(row, past, nowMs, 2L))
-    }
-
-    @Test
-    fun `an airing no-information cell still tunes`() {
+    fun `an airing no-information cell still plays`() {
         val noInfo = GuideCell(at(14, 30), at(15, 0), program = null)
 
-        assertEquals(GuideAction.TunePreview(row.channel), GuideActivation.activate(row, noInfo, nowMs, 1L))
+        assertEquals(GuideAction.PlayChannel(row.channel), GuideActivation.activate(row, noInfo, nowMs))
     }
 
     @Test
     fun `a past cell on a catch-up channel within horizon plays the archive`() {
         val capable = GuideRow(row.channel.withCatchup(days = 7), 2, row.cells)
 
-        val action = GuideActivation.activate(capable, past, nowMs, 2L)
-
-        assertEquals(GuideAction.PlayCatchup(capable.channel, past), action)
-        // A past filler cell and airing/future programmes keep today's map.
+        assertEquals(GuideAction.PlayCatchup(capable.channel, past), GuideActivation.activate(capable, past, nowMs))
+        // A past filler cell (no programme) and airing/future cells just play.
         val filler = GuideCell(at(13, 0), at(13, 30), program = null)
-        assertEquals(GuideAction.OpenCellMenu(filler), GuideActivation.activate(capable, filler, nowMs, 2L))
-        assertEquals(GuideAction.GoFullscreen, GuideActivation.activate(capable, airing, nowMs, 2L))
-        assertEquals(GuideAction.OpenCellMenu(future), GuideActivation.activate(capable, future, nowMs, 2L))
+        assertEquals(GuideAction.PlayChannel(capable.channel), GuideActivation.activate(capable, filler, nowMs))
+        assertEquals(GuideAction.PlayChannel(capable.channel), GuideActivation.activate(capable, airing, nowMs))
+        assertEquals(GuideAction.PlayChannel(capable.channel), GuideActivation.activate(capable, future, nowMs))
     }
 }

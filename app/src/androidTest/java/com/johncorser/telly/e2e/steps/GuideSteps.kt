@@ -187,36 +187,21 @@ class GuideSteps(
         world.pressKey(KeyEvent.KEYCODE_DPAD_CENTER)
     }
 
-    @Then("the preview window plays channel {int} {string}")
-    fun previewSwitches(
-        number: Int,
-        name: String,
-    ) {
-        driver.awaitCondition("play marker moves to $name") { world.rowAligned("▶", name) }
-        driver.currentChannel = FixturePlan.channelNamed(name)
-    }
-
-    @Then("the channel name of row {int} renders in accent blue with a play marker")
-    fun playingRowMarker(number: Int) {
-        driver.awaitCondition("play marker on row $number") {
-            world.rowAligned("▶", FixturePlan.channels[number - 1].name)
-        }
-    }
-
     @Then("playback goes fullscreen on channel {int} {string}")
     fun fullscreenOn(
         number: Int,
         name: String,
     ) = driver.assertPlaybackOn(number, name)
 
-    @Then("a dropdown anchored under the cell lists exactly {string}, {string}, {string}, {string}, {string}")
+    @Then("a dropdown anchored under the cell lists exactly {string}, {string}, {string}, {string}, {string}, {string}")
     fun dropdownLists(
         a: String,
         b: String,
         c: String,
         d: String,
         e: String,
-    ) = listOf(a, b, c, d, e).forEach { world.waitForText(it) }
+        f: String,
+    ) = listOf(a, b, c, d, e, f).forEach { world.waitForText(it) }
 
     @Then("I see the {string} screen")
     fun seeScreen(title: String) = world.waitForText(title)

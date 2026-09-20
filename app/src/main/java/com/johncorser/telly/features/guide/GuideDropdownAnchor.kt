@@ -12,10 +12,10 @@ data class GuideAnchor(
  * the grid viewport.
  */
 object GuideDropdownAnchor {
-    /** 368×(5×78) px in capture 27. */
+    /** 368 px wide in capture 27; one 78 px (39 dp) row per dropdown action. */
     const val MENU_WIDTH_DP = 184f
     const val MENU_ROW_DP = 39f
-    private const val MENU_HEIGHT_DP = 5 * MENU_ROW_DP
+    private val MENU_HEIGHT_DP = GuideCellAction.entries.size * MENU_ROW_DP
 
     fun position(
         focus: GuideFocus,

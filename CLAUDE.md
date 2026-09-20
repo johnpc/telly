@@ -88,6 +88,48 @@ Local SDK note: `local.properties` must contain
 
 ## Decisions log
 
+- **2026-09-20** Guide OK/long-OK redesign (director round, deliberate deviation
+  from both TiviMate and telly's own 2026-09-13 "two-stage OK" reading). **(1)
+  Regular OK jumps straight to the full player.** A plain OK on any guide cell
+  now tunes the row's channel AND fullscreens in one press (`GuideAction.PlayChannel`
+  → `GuideController.play` = `tuner.tune` + `callbacks.onFullscreen`), collapsing
+  the old preview→fullscreen two-stage. The lone exception is unchanged: OK on a
+  PAST cell of a catch-up channel within its `catchup-days` horizon plays the
+  archive (`GuideAction.PlayCatchup`, ux-spec §3.17); a plain/beyond-horizon past
+  cell just tunes live via `PlayChannel` (dispatch in `GuideActivation.activate`).
+  **(2) The cell dropdown moved to long-OK only.** LONG_OK opens the anchored
+  `CellMenu` dropdown; MENU opens the row context sheet. Long-OK NO LONGER pulls
+  up the row sheet/search — the director called that override "busted"; the two
+  triggers are now distinct (`GuideKeyPolicy`: LONG_OK→cell dropdown, MENU→row
+  sheet). **(3) "Play channel" is the TOP dropdown row** (`GuideCellAction`
+  entries: Play channel, Remind, Record, Custom recording, Add to My list,
+  Program description — 6 rows), and it is the one live-tuning row (the rest keep
+  their existing behavior). Play-channel dispatch + the other rows live in the
+  `GuideMenuController.onCellAction` extension (`GuideCellMenuActions.kt`), split
+  off to hold the 100-logic-line file budget and decomposed into per-action
+  helpers to keep every method's CRAP ≤ 15 / Halstead D ≤ 20. Geometry: the
+  6-row menu is `MENU_HEIGHT_DP = 6 × 39 = 234`, so in the 306 dp grid the
+  bottom-anchor clamp caps `yDp` at `306 − 234 = 72` — the dropdown only hangs
+  un-clamped from the first visible row. Verified locally (quality.sh green);
+  on-device acceptance legs pending.
+- **2026-09-20** Guide BACK mirrors LEFT + app-icon rail logo (director round).
+  **BACK chain:** BACK on the bare grid now opens the groups column (same as
+  navigating LEFT), BACK again moves focus to the settings gear (same as LEFT
+  again), and BACK from the gear closes the app — replacing the old "BACK at
+  grid root exits immediately." Routing: the grid→groups leg goes through
+  `GuideKeyPolicy` (`GuideKey.BACK` → open Groups), the groups→gear→exit legs are
+  Compose-spatial focus owned by `GuideScreenGroups` (its own `BackHandler` with a
+  `railFocused` flag; first BACK requests the gear's focus, gear-focused BACK calls
+  `onExit`). The top-level `GuideScreenBackHandlers` is disabled while
+  `layer == Groups` so the groups handler wins. Exit is
+  `rememberGuideExit(deps, controller)` = `{ if (!confirmExit() ||
+  chrome.exit.onBack()) activity.finish() }`, still gated by "Confirm exit by
+  second press Back" when that toggle is on (default-off first-BACK exit
+  unchanged). **Rail logo:** the far-left icon above Settings was a generic "tv"
+  glyph; `GuideScreenRailLogo` now renders the app icon (`R.mipmap.ic_launcher`),
+  and the gear `RailTarget` gained a "Settings" content description so the
+  exit-chain e2e can assert focus on it. Verified locally (quality.sh green);
+  on-device acceptance legs pending.
 - **2026-09-18** Guide channel-name marquee: a name wider than the 190 dp
   channel column marquees (`Modifier.basicMarquee`, infinite iterations) while
   D-pad focus is on that row — `TellyScreenRowLabel` gained an opt-in `marquee`

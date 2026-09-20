@@ -1,10 +1,10 @@
 package com.johncorser.telly.features.guide
 
-import com.johncorser.telly.features.mylist.MyListProgramme
 import com.johncorser.telly.features.playback.PlayerMenuFocus
 import com.johncorser.telly.features.playback.PlayerMenuItem
 import com.johncorser.telly.features.playback.PlayerMenuRoute
 import com.johncorser.telly.features.playback.PlayerMenuRouting
+import com.johncorser.telly.features.playlist.db.ChannelEntity
 import com.johncorser.telly.features.recording.RecordingMenu
 import com.johncorser.telly.features.recording.RecordingPrompt
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -20,7 +20,7 @@ import kotlinx.coroutines.flow.asStateFlow
  */
 class GuideMenuController(
     internal val channelActions: GuideSheetChannelActions,
-    private val focusedRow: () -> GuideRow?,
+    internal val focusedRow: () -> GuideRow?,
     private val info: () -> GuideInfoData?,
     internal val callbacks: GuideCallbacks,
     private val focusMemory: GuideFocusMemory? = null,
@@ -31,6 +31,9 @@ class GuideMenuController(
 
     /** The cell dropdown's live Remind row (reminders slice seam). */
     val remind = GuideRemind(focusedRow) { mutable.value }
+
+    /** The dropdown's "Play channel" row tunes + goes fullscreen (controller seam). */
+    var onPlayChannel: (ChannelEntity) -> Unit = {}
 
     /** Which sheet row BACK from a pushed screen re-focuses. */
     val sheetFocus = PlayerMenuFocus()
@@ -59,6 +62,11 @@ class GuideMenuController(
         show(backOf(current))
     }
 
+    /** Long-OK on a focused cell opens the anchored dropdown (capture 27). */
+    fun openCellMenu(cell: GuideCell?) {
+        if (cell != null) show(GuideLayer.CellMenu(cell))
+    }
+
     /** Long-OK / MENU with a focused row opens the sheet (round3-ref 05). */
     fun openRowMenu() {
         if (focusedRow() == null) return
@@ -67,31 +75,7 @@ class GuideMenuController(
         show(GuideLayer.RowMenu)
     }
 
-    private val recordingActions = GuideRecordingActions(recording, focusedRow, ::show)
-
-    /**
-     * Remind toggles a reminder, "Add to My list" toggles the cell's
-     * programme and the Record rows act through the DVR menu; every other
-     * dropdown row is an unbuilt feature and lands on coming-soon.
-     */
-    fun onCellAction(action: GuideCellAction) {
-        if (action == GuideCellAction.REMIND && remind.toggle()) {
-            reset()
-            return
-        }
-        val programme = (mutable.value as? GuideLayer.CellMenu)?.cell?.program?.let(MyListProgramme::of)
-        val row = focusedRow()
-        if (action == GuideCellAction.ADD_TO_MY_LIST && programme != null && row != null) {
-            channelActions.myList?.menu?.toggle(row.channel, programme)
-            reset()
-            return
-        }
-        when (action) {
-            GuideCellAction.RECORD -> recordingActions.recordCell(mutable.value)
-            GuideCellAction.CUSTOM_RECORDING -> recordingActions.customRecording()
-            else -> show(GuideLayer.ComingSoon(action.label))
-        }
-    }
+    internal val recordingActions = GuideRecordingActions(recording, focusedRow, ::show)
 
     /** The DVR menu's outcomes, mapped onto guide layers. */
     fun onRecordingPrompt(prompt: RecordingPrompt) = show(GuideRecordingPrompts.layerFor(prompt, mutable.value))

@@ -124,13 +124,15 @@ internal fun backOf(layer: GuideLayer): GuideLayer =
 enum class GuideKey { OK, LONG_OK, MENU, BACK, UP, DOWN, LEFT, RIGHT, LONG_LEFT, LONG_RIGHT, CHANNEL_UP, CHANNEL_DOWN }
 
 /**
- * The five rows of the future-cell dropdown, verbatim from capture 27.
- * Record / Custom recording are live (recording slice); the rest open the
- * branded coming-soon placeholder until their slices ship.
+ * The rows of the long-OK cell dropdown. "Play channel" leads (director round:
+ * "in case it ever does pop up and that's what you wanna do"), then the capture-27
+ * rows verbatim. Record / Custom recording are live (recording slice); the rest
+ * open the branded coming-soon placeholder until their slices ship.
  */
 enum class GuideCellAction(
     val label: String,
 ) {
+    PLAY_CHANNEL("Play channel"),
     REMIND("Remind"),
     RECORD("Record"),
     CUSTOM_RECORDING("Custom recording"),

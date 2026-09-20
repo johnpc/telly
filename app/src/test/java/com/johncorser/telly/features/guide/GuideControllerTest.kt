@@ -190,36 +190,35 @@ class GuideControllerTest {
     }
 
     @Test
-    fun `two-stage ok tunes the preview then goes fullscreen`() {
+    fun `ok plays the focused channel and jumps straight to fullscreen`() {
         runTest {
             val controller = buildController()
             controller.onKey(GuideKey.DOWN)
 
             assertTrue(controller.onKey(GuideKey.OK))
 
+            // Regular OK now tunes AND goes fullscreen in one press (director
+            // round): no more two-stage preview-then-fullscreen dance.
             assertEquals(2L, controller.preview.value?.id)
             assertEquals("http://s/2.ts", engine.loaded.last())
             assertEquals(2L, store.getLong(TuneController.LAST_CHANNEL_KEY))
             assertEquals(setOf("tvg-2"), historyDao.events.value.keys)
-            assertEquals(0, fullscreens)
-
-            assertTrue(controller.onKey(GuideKey.OK))
             assertEquals(1, fullscreens)
         }
     }
 
     @Test
-    fun `ok on a future programme opens the dropdown and its rows hit coming-soon`() {
+    fun `long-ok opens the cell dropdown whose rows hit coming-soon`() {
         runTest {
             val controller = buildController()
             controller.onKey(GuideKey.RIGHT)
 
-            controller.onKey(GuideKey.OK)
+            controller.onKey(GuideKey.LONG_OK)
 
             val menu = controller.layer.value as GuideLayer.CellMenu
             assertEquals("Newsroom Live", menu.cell.program?.details?.title)
             assertEquals(
-                listOf("Remind", "Record", "Custom recording", "Add to My list", "Program description"),
+                listOf("Play channel", "Remind", "Record", "Custom recording", "Add to My list", "Program description"),
                 GuideCellAction.entries.map { it.label },
             )
 
@@ -232,18 +231,15 @@ class GuideControllerTest {
     }
 
     @Test
-    fun `long-ok and menu open the row context sheet and back returns to the grid`() {
+    fun `menu opens the row context sheet and back returns to the grid`() {
         runTest {
             val controller = buildController()
 
-            assertTrue(controller.onKey(GuideKey.LONG_OK))
+            assertTrue(controller.onKey(GuideKey.MENU))
             assertEquals(GuideLayer.RowMenu, controller.layer.value)
 
             assertTrue(controller.onKey(GuideKey.BACK))
             assertEquals(GuideLayer.Grid, controller.layer.value)
-
-            assertTrue(controller.onKey(GuideKey.MENU))
-            assertEquals(GuideLayer.RowMenu, controller.layer.value)
         }
     }
 
@@ -256,7 +252,7 @@ class GuideControllerTest {
             val focusBefore = controller.focus.value
             val scrollBefore = controller.scrollX.value
 
-            controller.onKey(GuideKey.LONG_OK)
+            controller.onKey(GuideKey.MENU)
             controller.onKey(GuideKey.BACK)
 
             assertEquals(GuideLayer.Grid, controller.layer.value)
@@ -272,7 +268,7 @@ class GuideControllerTest {
             controller.onKey(GuideKey.DOWN)
             assertEquals("News One HD", focusedChannel(controller))
 
-            controller.onKey(GuideKey.LONG_OK)
+            controller.onKey(GuideKey.MENU)
             // A playlist refresh under the open sheet drops channel 1,
             // sliding another channel into the focused row INDEX.
             dao.channels.value = dao.channels.value.filterNot { it.id == 1L }
@@ -287,7 +283,7 @@ class GuideControllerTest {
     fun `the sheet's favorites row toggles the focused channel and returns to the grid`() {
         runTest {
             val controller = buildController()
-            controller.onKey(GuideKey.LONG_OK)
+            controller.onKey(GuideKey.MENU)
 
             controller.menu.onMenuItem(PlayerMenuItem.ADD_TO_FAVORITES)
 
@@ -301,7 +297,7 @@ class GuideControllerTest {
         runTest {
             store.putLong(TuneController.LAST_CHANNEL_KEY, 1L)
             val controller = buildController()
-            controller.onKey(GuideKey.LONG_OK)
+            controller.onKey(GuideKey.MENU)
 
             controller.menu.onMenuItem(PlayerMenuItem.HIDE_CHANNEL)
 
@@ -315,7 +311,7 @@ class GuideControllerTest {
     fun `program description shows the focused programme's synopsis and back pops to the sheet`() {
         runTest {
             val controller = buildController()
-            controller.onKey(GuideKey.LONG_OK)
+            controller.onKey(GuideKey.MENU)
 
             controller.menu.onMenuItem(PlayerMenuItem.PROGRAM_DESCRIPTION)
 
@@ -326,11 +322,12 @@ class GuideControllerTest {
     }
 
     @Test
-    fun `back on the grid is unconsumed so guide root can exit the app`() {
+    fun `back on the grid opens the groups column, mirroring left`() {
         runTest {
             val controller = buildController()
 
-            assertFalse(controller.onKey(GuideKey.BACK))
+            assertTrue(controller.onKey(GuideKey.BACK))
+            assertEquals(GuideLayer.Groups, controller.layer.value)
         }
     }
 
@@ -463,8 +460,9 @@ class GuideControllerTest {
             val controller = buildController()
 
             assertTrue(controller.onKey(GuideKey.LONG_OK))
-            // Stage-one activation tunes the focused channel's preview.
+            // Activation tunes the focused channel and jumps to fullscreen.
             assertEquals(1L, controller.preview.value?.id)
+            assertEquals(1, fullscreens)
             assertEquals(GuideLayer.Grid, controller.layer.value)
 
             assertTrue(controller.onKey(GuideKey.MENU))

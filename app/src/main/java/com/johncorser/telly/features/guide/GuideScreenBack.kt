@@ -6,24 +6,31 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.platform.LocalContext
 
 /**
- * The guide root's BACK chain: overlaid layers close one at a time; BACK on
- * the bare grid exits the app (the device-verified free-tier behavior),
- * gated by "Confirm exit by second press Back" when that toggle is on. The
- * toggle is read at press time so a fresh change applies immediately: OFF
- * (default) finishes on the first BACK — exactly the exit-with-no-
- * confirmation the e2e suite pins — while ON warns first and exits on a
- * second BACK inside the window.
+ * The guide root's BACK chain (director round: BACK mirrors LEFT). BACK on the
+ * bare grid opens the groups column, and every overlaid layer closes one level
+ * at a time — both routed through the layer policy here. The remaining legs
+ * (groups column → settings gear → exit) are Compose-spatial focus and live in
+ * [GuideScreenGroups]; that layer owns its own BACK, so it is excluded here so
+ * its handler wins.
  */
 @Composable
 internal fun GuideScreenBackHandlers(
-    deps: GuideDeps,
     controller: GuideController,
     layer: GuideLayer,
     settingsOpen: Boolean,
 ) {
-    BackHandler(enabled = layer != GuideLayer.Grid && !settingsOpen) { controller.onKey(GuideKey.BACK) }
+    BackHandler(enabled = layer != GuideLayer.Groups && !settingsOpen) { controller.onKey(GuideKey.BACK) }
+}
+
+/**
+ * The last leg of the LEFT-mirroring chain: BACK on the settings gear exits
+ * the app, gated by "Confirm exit by second press Back" read at press time.
+ */
+@Composable
+internal fun rememberGuideExit(
+    deps: GuideDeps,
+    controller: GuideController,
+): () -> Unit {
     val activity = LocalContext.current as? Activity
-    BackHandler(enabled = layer == GuideLayer.Grid && !settingsOpen) {
-        if (!deps.start.confirmExit() || controller.chrome.exit.onBack()) activity?.finish()
-    }
+    return { if (!deps.start.confirmExit() || controller.chrome.exit.onBack()) activity?.finish() }
 }
