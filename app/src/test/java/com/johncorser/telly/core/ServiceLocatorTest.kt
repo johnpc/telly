@@ -21,9 +21,11 @@ import org.robolectric.RobolectricTestRunner
 class ServiceLocatorTest {
     private val context = ApplicationProvider.getApplicationContext<Context>()
     private val server = MockWebServer()
+    private val realClock = ServiceLocator.clock
 
     @After
     fun tearDown() {
+        ServiceLocator.clock = realClock
         server.shutdown()
     }
 
@@ -32,6 +34,12 @@ class ServiceLocatorTest {
     fun `wires the persistence stack end to end`() =
         runTest {
             assertSame(ServiceLocator.database(context), ServiceLocator.database(context))
+
+            // Pin "now" to the fixture's instant so the post-refresh retention
+            // trim (now − keepDays) never deletes its fixed-date programmes;
+            // otherwise the count below decays as the wall clock drifts past
+            // the fixture (a real time-bomb — already trimming by 2026-09-20).
+            ServiceLocator.clock = { FIXTURE_NOW_MS }
 
             server.start()
             val fixtureXml =
@@ -82,7 +90,7 @@ class ServiceLocatorTest {
             val nowNext =
                 ServiceLocator
                     .epgRepository(context)
-                    .nowNext(listOf("news-one-1.fixture"), atMs = 1_789_302_660_000L)
+                    .nowNext(listOf("news-one-1.fixture"), atMs = FIXTURE_NOW_MS)
                     .first()
             assertEquals("Weather Watch", nowNext.getValue("news-one-1.fixture").now?.details?.title)
         }
@@ -100,5 +108,10 @@ class ServiceLocatorTest {
         assertTrue(deps.sources.channelDao is GroupFilteredChannelDao)
         engine.release()
         assertTrue(deps.clock() > 0)
+    }
+
+    private companion object {
+        /** The fixture EPG's own "now" (2026-09-14); its programmes are fixed-date. */
+        const val FIXTURE_NOW_MS = 1_789_302_660_000L
     }
 }

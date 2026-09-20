@@ -2,6 +2,7 @@ package com.johncorser.telly.core
 
 import android.content.Context
 import android.util.Xml
+import androidx.annotation.VisibleForTesting
 import androidx.room.Room
 import com.johncorser.telly.core.db.TellyDatabase
 import com.johncorser.telly.core.kv.KeyValueStore
@@ -92,6 +93,13 @@ object ServiceLocator {
 
     private const val PREFS_NAME = "telly"
 
-    /** The one wall clock; feature dep bundles (ServiceLocatorDeps) inject it. */
-    internal val clock: () -> Long = { System.currentTimeMillis() }
+    /**
+     * The one wall clock; feature dep bundles (ServiceLocatorDeps) inject it.
+     * Overridable only so the end-to-end persistence test can pin "now" to
+     * its fixed-date EPG fixture — the post-refresh retention trim
+     * (now − keepDays) would otherwise delete fixture programmes once the
+     * wall clock drifts past them, making the assertion date-dependent.
+     */
+    @VisibleForTesting
+    internal var clock: () -> Long = { System.currentTimeMillis() }
 }
