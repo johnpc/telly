@@ -81,6 +81,17 @@ class ProgramDaoTest {
         }
 
     @Test
+    fun `replace-for swaps a channel's schedule and leaves other channels alone`() =
+        runTest {
+            dao.upsertAll(listOf(program("a", 0, 1, "A old"), program("b", 0, 1, "B kept")))
+
+            dao.replaceFor(listOf("a"), listOf(program("a", 1, 2, "A new")))
+
+            val rows = dao.observeWindow(listOf("a", "b"), 0, 3).first()
+            assertEquals(listOf("A new", "B kept"), rows.map { it.details.title })
+        }
+
+    @Test
     fun `pruning drops programmes that ended before the cutoff`() =
         runTest {
             dao.upsertAll(listOf(program("a", 0, 50, "Ended"), program("a", 50, 150, "Still on")))

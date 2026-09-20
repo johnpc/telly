@@ -4,6 +4,7 @@ import androidx.room.Dao
 import androidx.room.Insert
 import androidx.room.OnConflictStrategy
 import androidx.room.Query
+import androidx.room.Transaction
 import kotlinx.coroutines.flow.Flow
 
 /** Persistence for guide programmes, shaped for the guide grid's window. */
@@ -36,6 +37,20 @@ interface ProgramDao {
 
     @Query("DELETE FROM programs WHERE channelTvgId IN (:tvgIds)")
     suspend fun deleteFor(tvgIds: List<String>)
+
+    /**
+     * Atomic per-document schedule swap: without the transaction, observers
+     * re-query between the delete and the (large) insert and the guide
+     * briefly renders every affected channel empty on each EPG refresh.
+     */
+    @Transaction
+    suspend fun replaceFor(
+        tvgIds: List<String>,
+        programs: List<ProgramEntity>,
+    ) {
+        deleteFor(tvgIds)
+        upsertAll(programs)
+    }
 
     /** Trims history; mirrors TiviMate's "past days to keep EPG" setting. */
     @Query("DELETE FROM programs WHERE endMs < :beforeMs")

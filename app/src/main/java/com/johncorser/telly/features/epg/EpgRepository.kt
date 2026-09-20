@@ -87,8 +87,7 @@ class EpgRepository(
                     details = if (keepDescriptions) program.details else program.details.copy(description = null),
                 )
             }
-        programDao.deleteFor(entities.map { it.channelTvgId }.distinct())
-        programDao.upsertAll(entities)
+        programDao.replaceFor(entities.map { it.channelTvgId }.distinct(), entities)
         return entities.size
     }
 }
