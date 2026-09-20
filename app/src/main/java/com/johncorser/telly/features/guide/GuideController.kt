@@ -4,7 +4,6 @@ import com.johncorser.telly.features.catchup.GuideCatchup
 import com.johncorser.telly.features.groups.GroupToolLauncher
 import com.johncorser.telly.features.history.WatchHistory
 import com.johncorser.telly.features.mylist.MyListMenu
-import com.johncorser.telly.features.panel.PanelViewModel
 import com.johncorser.telly.features.playback.PlaybackEnv
 import com.johncorser.telly.features.playback.PlaybackLifecycle
 import com.johncorser.telly.features.playback.TuneBlockPrompt
@@ -13,9 +12,7 @@ import com.johncorser.telly.features.playback.groupTools
 import com.johncorser.telly.features.playlist.db.ChannelEntity
 import com.johncorser.telly.features.recording.RecordingMenu
 import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 
 /**
@@ -34,6 +31,9 @@ class GuideController(
 ) {
     /** 12/24-hour rendering (+ zone) for the header clock and timeline ticks. */
     val clockStyle = env.time.style
+
+    /** Restores the picked group across a fullscreen→back guide rebuild. */
+    private val groupMemory = GuideGroupMemory(env.store)
 
     /** OK on a playable past cell hands the archive to fullscreen playback. */
     private val catchup = GuideCatchup(env.hooks.catchup.session, env.time.clock, callbacks.onFullscreen)
@@ -56,20 +56,19 @@ class GuideController(
 
     /** Background stop + foreground re-seed/re-tune (round7 resume P2). */
     val lifecycle = PlaybackLifecycle(tuner, onForegrounded = ticker::reseed, recover = tuner::retune)
-    private val selected = MutableStateFlow(PanelViewModel.ALL_CHANNELS)
     private val focusEngine =
         GuideFocusEngine(originMs, { GuideWindowMath.scrollFloorDp(pastDays()) }, visibleRows = seams.visibleRows)
 
     /** The shared factory behind the sheet's six group/bulk tool rows. */
     private val groupTools = env.groupTools(scope)
-    private val toolLauncher = GroupToolLauncher(groupTools) { selected.value }
-    private val sources = GuideRowsSources(tuner.channels, selected.asStateFlow(), groupTools.groups)
+    private val toolLauncher = GroupToolLauncher(groupTools) { groupMemory.value }
+    private val sources = GuideRowsSources(tuner.channels, groupMemory.group, groupTools.groups)
     private val feed = guideRowsFeed(env, sources, focusEngine.scrollX, originMs, scope)
 
     val rows: StateFlow<List<GuideRow>> = feed.rows
 
     val groups: StateFlow<List<String>> = feed.groups
-    val selectedGroup: StateFlow<String> = selected.asStateFlow()
+    val selectedGroup: StateFlow<String> = groupMemory.group
     val focus: StateFlow<GuideFocus?> = focusEngine.focus
     val scrollX: StateFlow<Float> = focusEngine.scrollX
     val firstVisibleRow: StateFlow<Int> = focusEngine.firstVisibleRow
@@ -82,7 +81,7 @@ class GuideController(
     /** My-list toggle state: the dropdown/sheet labels flip on its keys. */
     val myList = MyListMenu(seams.myList, env.time.clock, scope)
 
-    private val sheetMyList = guideMyListHost(myList, focus, { selected.value }, callbacks)
+    private val sheetMyList = guideMyListHost(myList, focus, { groupMemory.value }, callbacks)
 
     /** Layers + the long-OK row context sheet (catalogue §3 38-42). */
     val menu =
@@ -110,6 +109,7 @@ class GuideController(
     init {
         menu.remind.reminders = seams.reminders
         scope.launch { rows.collect { focusEngine.ensureFocus(it, now.value) } }
+        groupMemory.arm(scope, tuner.channels, groups)
         // The guide is reached from playback (BACK / the TV-guide card), where
         // the last channel keeps playing in the preview window; a cold start
         // with "Turn on last channel on app start" OFF instead lands here
@@ -123,9 +123,8 @@ class GuideController(
 
     /** OK on a group filters the grid and renumbers from 1 (capture 74). */
     fun selectGroup(group: String) {
-        if (group != selected.value) {
+        if (groupMemory.select(group)) {
             focusEngine.reset()
-            selected.value = group
             focusEngine.ensureFocus(rows.value, now.value)
         }
         menu.reset()

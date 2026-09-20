@@ -482,6 +482,33 @@ class GuideControllerTest {
     }
 
     @Test
+    fun `selecting a group persists it so a fullscreen round trip restores it`() {
+        runTest {
+            buildController().selectGroup("Sports")
+            assertEquals("Sports", store.getString(GuideGroupMemory.GROUP_KEY))
+
+            // A fresh controller (the guide is rebuilt on BACK from fullscreen).
+            val reopened = buildController()
+
+            assertEquals("Sports", reopened.selectedGroup.value)
+            assertEquals(listOf("Sports Arena"), reopened.rows.value.map { it.channel.source.name })
+        }
+    }
+
+    @Test
+    fun `a persisted group the playlist no longer has falls back to all channels`() {
+        runTest {
+            store.putString(GuideGroupMemory.GROUP_KEY, "Ghost group")
+
+            val controller = buildController()
+
+            assertEquals(PanelViewModel.ALL_CHANNELS, controller.selectedGroup.value)
+            assertEquals(4, controller.rows.value.size)
+            assertEquals(PanelViewModel.ALL_CHANNELS, store.getString(GuideGroupMemory.GROUP_KEY))
+        }
+    }
+
+    @Test
     fun `the groups column never lists a history group`() {
         runTest {
             val controller = buildController()

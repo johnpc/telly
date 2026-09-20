@@ -14,4 +14,13 @@ class SharedPrefsKeyValueStore(
     ) {
         prefs.edit().putLong(key, value).apply()
     }
+
+    override fun getString(key: String): String? = prefs.getString(key, null)
+
+    override fun putString(
+        key: String,
+        value: String,
+    ) {
+        prefs.edit().putString(key, value).apply()
+    }
 }

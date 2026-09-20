@@ -12,4 +12,11 @@ interface KeyValueStore {
         key: String,
         value: Long,
     )
+
+    fun getString(key: String): String?
+
+    fun putString(
+        key: String,
+        value: String,
+    )
 }

@@ -20,6 +20,7 @@ class SharedPrefsKeyValueStoreTest {
     @Test
     fun `missing keys read as null`() {
         assertNull(store.getLong("lastChannelId"))
+        assertNull(store.getString("guideGroup"))
     }
 
     @Test
@@ -29,5 +30,14 @@ class SharedPrefsKeyValueStoreTest {
 
         store.putLong("lastChannelId", 0)
         assertEquals(0L, store.getLong("lastChannelId"))
+    }
+
+    @Test
+    fun `strings round-trip and overwrite`() {
+        store.putString("guideGroup", "US ABC")
+        assertEquals("US ABC", store.getString("guideGroup"))
+
+        store.putString("guideGroup", "All channels")
+        assertEquals("All channels", store.getString("guideGroup"))
     }
 }

@@ -263,6 +263,7 @@ class FakeWatchHistoryDao : WatchHistoryDao {
 /** Map-backed [KeyValueStore]. */
 class FakeKeyValueStore : KeyValueStore {
     val values = mutableMapOf<String, Long>()
+    val strings = mutableMapOf<String, String>()
 
     override fun getLong(key: String): Long? = values[key]
 
@@ -271,6 +272,15 @@ class FakeKeyValueStore : KeyValueStore {
         value: Long,
     ) {
         values[key] = value
+    }
+
+    override fun getString(key: String): String? = strings[key]
+
+    override fun putString(
+        key: String,
+        value: String,
+    ) {
+        strings[key] = value
     }
 }
 
