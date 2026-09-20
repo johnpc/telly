@@ -10,7 +10,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.cancel
 
-/** Builds the guide's controller over [engine]; closes it on dispose. */
+/** Builds the guide's controller over the leased [engine]. */
 @Composable
 internal fun rememberGuideController(
     deps: GuideDeps,
@@ -48,10 +48,7 @@ internal fun rememberGuideController(
             )
         }
     DisposableEffect(Unit) {
-        onDispose {
-            controller.close()
-            scope.cancel()
-        }
+        onDispose { scope.cancel() }
     }
     return controller
 }

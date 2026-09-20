@@ -139,8 +139,6 @@ class TuneController(
             ?.let(::tune)
     }
 
-    fun release() = engine.release()
-
     companion object {
         const val LAST_CHANNEL_KEY = "lastChannelId"
     }

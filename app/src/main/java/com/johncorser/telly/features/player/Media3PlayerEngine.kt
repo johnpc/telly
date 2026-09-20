@@ -33,6 +33,7 @@ class Media3PlayerEngine(
     private val mutableState = MutableStateFlow<PlayerState>(PlayerState.Idle)
     private val videoFeed = EngineVideoFeed()
     private val mutablePaused = MutableStateFlow(false)
+    private val reconnector = EngineReconnector(player, reconnect, schedule)
 
     override val state: StateFlow<PlayerState> = mutableState.asStateFlow()
     override val video: StateFlow<VideoDetails?> = videoFeed.video
@@ -45,10 +46,15 @@ class Media3PlayerEngine(
         }
     }
 
+    /** Skips a re-load of the same stream (guide <-> fullscreen hand-over). */
+    private val active = ActiveStream()
+
     override fun load(streamUrl: String) {
+        if (active.isCurrent(streamUrl, mutableState.value, mutablePaused.value)) return
+        active.onLoad(streamUrl)
         mutableState.value = PlayerState.Buffering
         mutablePaused.value = false
-        reconnect.reset()
+        reconnector.reset()
         videoFeed.reset()
         userAgent?.onLoad(streamUrl)
         player.setMediaItem(MediaItem.fromUri(streamUrl))
@@ -57,8 +63,9 @@ class Media3PlayerEngine(
     }
 
     override fun stop() {
+        active.onStop()
         player.stop()
-        reconnect.reset()
+        reconnector.reset()
         mutableState.value = PlayerState.Idle
         mutablePaused.value = false
     }
@@ -89,7 +96,7 @@ class Media3PlayerEngine(
         when (playbackState) {
             Player.STATE_BUFFERING -> mutableState.value = PlayerState.Buffering
             Player.STATE_READY -> {
-                reconnect.reset()
+                reconnector.reset()
                 mutableState.value = PlayerState.Playing
                 videoFeed.onReady(player)
             }
@@ -99,17 +106,7 @@ class Media3PlayerEngine(
     }
 
     override fun onPlayerError(error: PlaybackException) {
-        val delayMs = reconnect.nextDelayMs()
-        if (delayMs == null) {
-            mutableState.value = PlayerState.Error(error.errorCodeName)
-            return
-        }
-        mutableState.value = PlayerState.Reconnecting
-        // A live-window overrun rejoins the edge first; otherwise just re-prepare.
-        schedule(delayMs) {
-            if (error.errorCode == PlaybackException.ERROR_CODE_BEHIND_LIVE_WINDOW) player.seekToDefaultPosition()
-            player.prepare()
-        }
+        mutableState.value = reconnector.onError(error)
     }
 
     companion object {

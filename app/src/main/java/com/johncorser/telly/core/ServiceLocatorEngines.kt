@@ -19,7 +19,8 @@ private fun audioPrefs(settings: SettingsRepository): PlayerAudioPrefs =
  * agent, the audio settings ([PlayerAudioPrefs] — passthrough + surround
  * by default) and the Playback settings ([PlayerTuning] — Buffer size and
  * the decoder preferences), all read at CREATE time. Engines are built per
- * screen, so a changed setting applies the next time a screen builds one.
+ * lease cycle (guide + fullscreen share one; VOD, recordings and multiview
+ * build their own), so a changed setting applies on the next build.
  */
 internal fun ServiceLocator.tunedEngine(
     context: Context,

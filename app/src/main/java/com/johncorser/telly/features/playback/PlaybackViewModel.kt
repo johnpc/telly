@@ -160,10 +160,9 @@ class PlaybackViewModel(
 
     fun onOverlayInteraction() = overlays.keepAlive()
 
-    fun close() {
-        hooks.platform.onPlaybackStopped()
-        tuner.release()
-    }
+    // The screen releases its engine lease; the engine itself is shared
+    // with the guide preview and must survive the route hand-over.
+    fun close() = hooks.platform.onPlaybackStopped()
 
     /** The quick-bar's Channels list opens the panel at the tuned row. */
     fun openPanel() = commands.openPanel()

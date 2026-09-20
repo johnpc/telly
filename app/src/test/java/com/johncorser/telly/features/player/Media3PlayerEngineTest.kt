@@ -221,6 +221,56 @@ class Media3PlayerEngineTest {
     }
 
     @Test
+    fun `re-loading the stream already playing is a no-op (guide hand-over)`() {
+        val engine = engine()
+        engine.load("http://s/1.ts")
+        listener.captured.onPlaybackStateChanged(Player.STATE_READY)
+
+        engine.load("http://s/1.ts")
+
+        assertEquals(PlayerState.Playing, engine.state.value)
+        verify(exactly = 1) { player.setMediaItem(any()) }
+    }
+
+    @Test
+    fun `a different stream still loads over the playing one`() {
+        val engine = engine()
+        engine.load("http://s/1.ts")
+        listener.captured.onPlaybackStateChanged(Player.STATE_READY)
+
+        engine.load("http://s/2.ts")
+
+        assertEquals(PlayerState.Buffering, engine.state.value)
+        verify(exactly = 2) { player.setMediaItem(any()) }
+    }
+
+    @Test
+    fun `the same stream re-loads after a stop (background resume)`() {
+        val engine = engine()
+        engine.load("http://s/1.ts")
+        listener.captured.onPlaybackStateChanged(Player.STATE_READY)
+        engine.stop()
+
+        engine.load("http://s/1.ts")
+
+        assertEquals(PlayerState.Buffering, engine.state.value)
+        verify(exactly = 2) { player.setMediaItem(any()) }
+    }
+
+    @Test
+    fun `a paused stream re-loads so a fresh tune restarts it`() {
+        val engine = engine()
+        engine.load("http://s/1.ts")
+        listener.captured.onPlaybackStateChanged(Player.STATE_READY)
+        engine.pause()
+
+        engine.load("http://s/1.ts")
+
+        assertEquals(false, engine.paused.value)
+        verify(exactly = 2) { player.setMediaItem(any()) }
+    }
+
+    @Test
     fun `stop and release pass through to the player`() {
         val engine = engine()
         engine.load("http://s/1.ts")

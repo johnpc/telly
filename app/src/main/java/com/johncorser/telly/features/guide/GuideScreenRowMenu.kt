@@ -11,6 +11,7 @@ import com.johncorser.telly.features.mylist.MyListKeys
 import com.johncorser.telly.features.panel.ChannelPanelScreenPin
 import com.johncorser.telly.features.playback.PlaybackScreenMenu
 import com.johncorser.telly.features.playback.PlayerMenu
+import com.johncorser.telly.features.playback.PlayerMenuSurface
 import com.johncorser.telly.features.playlist.db.displayName
 import com.johncorser.telly.features.recording.RecordingScreenForm
 import com.johncorser.telly.features.recording.RecordingScreenStopConfirm
@@ -82,3 +83,14 @@ internal fun GuideScreenRowMenuLayers(
         else -> Unit
     }
 }
+
+/** The sheet-vs-pushed surface each guide layer renders the menu on. */
+internal fun guideMenuSurface(layer: GuideLayer): PlayerMenuSurface =
+    when (layer) {
+        GuideLayer.RowMenu -> PlayerMenuSurface.SHEET
+        is GuideLayer.ChannelOptions -> PlayerMenuSurface.CHANNEL_OPTIONS
+        is GuideLayer.Description, is GuideLayer.ComingSoon, is GuideLayer.BlockPin -> PlayerMenuSurface.PUSHED
+        is GuideLayer.RecordingStop, is GuideLayer.CustomRecording -> PlayerMenuSurface.PUSHED
+        is GuideLayer.GroupTool -> PlayerMenuSurface.PUSHED
+        else -> PlayerMenuSurface.NONE
+    }

@@ -80,14 +80,18 @@ fun ServiceLocator.playbackDeps(
             ),
     )
 
-/** Guide slice = the playback bundle + the settings the grid honors. */
+/**
+ * Guide slice = the playback bundle + the settings the grid honors. The
+ * guide REUSES the caller's [playback] bundle: both screens lease the one
+ * engine in PlaybackDeps.engines, so the stream survives the transition.
+ */
 fun ServiceLocator.guideDeps(
     context: Context,
-    hooks: PlaybackHooks = PlaybackHooks(),
+    playback: PlaybackDeps,
     resumePreview: () -> Boolean = { true },
 ): GuideDeps =
     GuideDeps(
-        playback = playbackDeps(context, hooks),
+        playback = playback,
         pastDays = { settingsRepository(context).get(TellySettings.EPG_PAST_DAYS_TO_KEEP) },
         reminders = remindersHub(context).guide,
         visibleRows = { settingsRepository(context).get(TellySettings.GUIDE_VISIBLE_CHANNELS) },

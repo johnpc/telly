@@ -20,6 +20,7 @@ import com.johncorser.telly.features.panel.PanelLock
 import com.johncorser.telly.features.pip.PipState
 import com.johncorser.telly.features.player.PlayerScreenSurface
 import com.johncorser.telly.features.player.ResizeModes
+import com.johncorser.telly.features.player.rememberLeasedEngine
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -50,7 +51,7 @@ fun PlaybackScreen(
     // timeouts, so its coroutines must not run on the composition's frame
     // clock (under UI-test harnesses that clock defers/redirects resumes).
     val scope = remember { CoroutineScope(SupervisorJob() + Dispatchers.Main.immediate) }
-    val engine = remember { deps.engineFactory() }
+    val engine = rememberLeasedEngine(deps.engines)
     val viewModel =
         remember {
             PlaybackViewModel(

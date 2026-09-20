@@ -539,15 +539,4 @@ class GuideControllerTest {
             assertEquals(at(14, 39), controller.now.value)
         }
     }
-
-    @Test
-    fun `close releases the preview engine`() {
-        runTest {
-            val controller = buildController()
-
-            controller.close()
-
-            assertTrue(engine.released)
-        }
-    }
 }

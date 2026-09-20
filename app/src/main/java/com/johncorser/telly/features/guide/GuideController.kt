@@ -131,8 +131,6 @@ class GuideController(
         menu.reset()
     }
 
-    fun close() = tuner.release()
-
     private fun focusedRow(): GuideRow? = focus.value?.let { rows.value.getOrNull(it.rowIndex) }
 
     private fun activate() {

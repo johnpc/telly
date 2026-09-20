@@ -42,5 +42,9 @@ fun PlayerScreenSurface(
             it.player = engine.player
             it.resizeMode = resizeMode
         },
+        // The guide and fullscreen surfaces share one engine across their
+        // crossfade; a departing view must let go of the still-live player
+        // (listener + surface) instead of relying on the engine's release.
+        onRelease = { it.player = null },
     )
 }

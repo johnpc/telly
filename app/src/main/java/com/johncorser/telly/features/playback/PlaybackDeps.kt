@@ -7,6 +7,7 @@ import com.johncorser.telly.features.history.WatchHistory
 import com.johncorser.telly.features.mylist.InMemoryMyListStore
 import com.johncorser.telly.features.mylist.MyListStore
 import com.johncorser.telly.features.player.Media3PlayerEngine
+import com.johncorser.telly.features.player.SharedPlayerEngine
 import com.johncorser.telly.features.playlist.db.ChannelDao
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
@@ -49,8 +50,9 @@ class PlaybackSources(
 
 /**
  * Everything the playback screen needs from the composition root. The engine
- * comes as a factory so each visit to the playback route gets a fresh
- * ExoPlayer that is released when the screen leaves composition.
+ * comes as a factory, but the guide and fullscreen playback lease one shared
+ * build through [engines] so the stream survives the transition between them;
+ * the ExoPlayer is released when the last of the two leaves composition.
  */
 class PlaybackDeps(
     val sources: PlaybackSources,
@@ -63,6 +65,9 @@ class PlaybackDeps(
     val hooks: PlaybackHooks = PlaybackHooks(),
 ) {
     val clock: () -> Long get() = time.clock
+
+    /** The one engine the guide preview and fullscreen playback lease. */
+    val engines: SharedPlayerEngine<Media3PlayerEngine> = SharedPlayerEngine(engineFactory)
 
     /** Saved My-list programmes; shared with the guide via [sources]. */
     val myList: MyListStore get() = sources.myList

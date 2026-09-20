@@ -2,8 +2,8 @@ package com.johncorser.telly.features.player
 
 /**
  * Builds one independent [PlayerEngine] per call. Multiview composes N
- * engines through [PlayerEnginePool]; single fullscreen playback keeps its
- * own engine (PlaybackDeps.engineFactory), untouched by this seam.
+ * engines through [PlayerEnginePool]; the guide preview and fullscreen
+ * playback lease one shared build via [SharedPlayerEngine] instead.
  */
 fun interface PlayerEngineFactory {
     fun create(): PlayerEngine

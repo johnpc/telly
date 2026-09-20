@@ -18,7 +18,7 @@ import com.johncorser.telly.core.ui.ScreenLifecycleStartStop
 import com.johncorser.telly.core.ui.TellyScreenKeyAnchor
 import com.johncorser.telly.features.playback.PlaybackScreenBlockGate
 import com.johncorser.telly.features.playback.PlaybackScreenMenuSurfaceSwitch
-import com.johncorser.telly.features.playback.PlayerMenuSurface
+import com.johncorser.telly.features.player.rememberLeasedEngine
 
 /**
  * The TV guide (capture 24): preview window + info pane on top, the
@@ -42,7 +42,7 @@ fun GuideScreen(
     onOpenReorderChannels: (String) -> Unit = {},
     onOpenNamesEditor: () -> Unit = {},
 ) {
-    val engine = remember { deps.playback.engineFactory() }
+    val engine = rememberLeasedEngine(deps.playback.engines)
     val callbacks =
         remember {
             GuideCallbacks(
@@ -110,13 +110,3 @@ fun GuideScreen(
         }
     }
 }
-
-private fun guideMenuSurface(layer: GuideLayer): PlayerMenuSurface =
-    when (layer) {
-        GuideLayer.RowMenu -> PlayerMenuSurface.SHEET
-        is GuideLayer.ChannelOptions -> PlayerMenuSurface.CHANNEL_OPTIONS
-        is GuideLayer.Description, is GuideLayer.ComingSoon, is GuideLayer.BlockPin -> PlayerMenuSurface.PUSHED
-        is GuideLayer.RecordingStop, is GuideLayer.CustomRecording -> PlayerMenuSurface.PUSHED
-        is GuideLayer.GroupTool -> PlayerMenuSurface.PUSHED
-        else -> PlayerMenuSurface.NONE
-    }

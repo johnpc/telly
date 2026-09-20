@@ -78,13 +78,14 @@ class MainActivity : ComponentActivity() {
         keepEpgFresh()
         keepPlaylistsFresh(fetcher)
         keepConfigBackedUp()
+        val playbackDeps = ServiceLocator.playbackDeps(this, hooks)
         setContent {
             RootScreen(
                 navigator = navigator,
                 repository = repository,
                 fetchPlaylist = fetcher::fetch,
-                playbackDeps = ServiceLocator.playbackDeps(this, hooks),
-                guideDeps = ServiceLocator.guideDeps(this, hooks) { !startRoute.consumeUntunedStart() },
+                playbackDeps = playbackDeps,
+                guideDeps = ServiceLocator.guideDeps(this, playbackDeps) { !startRoute.consumeUntunedStart() },
                 settingsGraph = settingsGraph(fetcher),
                 searchDeps = ServiceLocator.searchDeps(this, voice = voice.voice),
                 multiviewDeps = ServiceLocator.multiviewDeps(this),
