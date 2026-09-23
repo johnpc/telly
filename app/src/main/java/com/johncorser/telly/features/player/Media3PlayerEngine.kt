@@ -2,7 +2,6 @@ package com.johncorser.telly.features.player
 
 import android.content.Context
 import android.os.Handler
-import androidx.media3.common.MediaItem
 import androidx.media3.common.PlaybackException
 import androidx.media3.common.Player
 import androidx.media3.exoplayer.ExoPlayer
@@ -57,7 +56,7 @@ class Media3PlayerEngine(
         reconnector.reset()
         videoFeed.reset()
         userAgent?.onLoad(streamUrl)
-        player.setMediaItem(MediaItem.fromUri(streamUrl))
+        player.setMediaItem(streamMediaItem(streamUrl))
         player.prepare()
         player.play()
     }

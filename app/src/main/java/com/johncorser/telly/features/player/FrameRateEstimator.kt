@@ -11,13 +11,21 @@ class FrameRateEstimator(
 ) {
     private val deltasUs = ArrayDeque<Long>()
     private var lastUs: Long? = null
+    private var estimated = false
 
-    /** Returns the estimated fps once [samples] deltas agree, else null. */
+    /**
+     * Returns the estimated fps once [samples] deltas agree, else null.
+     * One-shot: after the estimate this goes quiet — the caller rides the
+     * playback thread's per-frame callback, so no work past the answer.
+     */
     fun onFrame(presentationTimeUs: Long): Float? {
+        if (estimated) return null
         val previous = lastUs
         lastUs = presentationTimeUs
         previous?.let { record(presentationTimeUs - it) }
-        return if (deltasUs.size >= samples) MICROS_PER_SECOND / median() else null
+        if (deltasUs.size < samples) return null
+        estimated = true
+        return MICROS_PER_SECOND / median()
     }
 
     private fun record(deltaUs: Long) {

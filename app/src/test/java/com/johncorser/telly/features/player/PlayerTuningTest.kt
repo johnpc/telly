@@ -10,20 +10,20 @@ import org.junit.Test
 /** Buffer-size mapping + the settings snapshot the engine factory reads. */
 class PlayerTuningTest {
     @Test
-    fun `small - the captured default - keeps the exact Media3 defaults`() {
+    fun `small keeps the stock target and zap start but restarts stalls with 5s of runway`() {
         assertEquals(
             BufferDurations(
                 minBufferMs = DefaultLoadControl.DEFAULT_MIN_BUFFER_MS,
                 maxBufferMs = DefaultLoadControl.DEFAULT_MAX_BUFFER_MS,
                 bufferForPlaybackMs = DefaultLoadControl.DEFAULT_BUFFER_FOR_PLAYBACK_MS,
-                bufferForPlaybackAfterRebufferMs = DefaultLoadControl.DEFAULT_BUFFER_FOR_PLAYBACK_AFTER_REBUFFER_MS,
+                bufferForPlaybackAfterRebufferMs = 5_000,
             ),
             BufferSizes.durations("Small"),
         )
     }
 
     @Test
-    fun `medium and large scale the target buffer, start thresholds stay stock`() {
+    fun `medium and large scale the target buffer and trade start latency for runway`() {
         val small = BufferSizes.durations("Small")
         val medium = BufferSizes.durations("Medium")
         val large = BufferSizes.durations("Large")
@@ -31,8 +31,10 @@ class PlayerTuningTest {
         assertEquals(small.maxBufferMs * 2, medium.maxBufferMs)
         assertEquals(small.minBufferMs * 4, large.minBufferMs)
         assertEquals(small.maxBufferMs * 4, large.maxBufferMs)
-        assertEquals(small.bufferForPlaybackMs, large.bufferForPlaybackMs)
-        assertEquals(small.bufferForPlaybackAfterRebufferMs, medium.bufferForPlaybackAfterRebufferMs)
+        assertEquals(2_500, medium.bufferForPlaybackMs)
+        assertEquals(2_500, large.bufferForPlaybackMs)
+        assertEquals(5_000, medium.bufferForPlaybackAfterRebufferMs)
+        assertEquals(10_000, large.bufferForPlaybackAfterRebufferMs)
     }
 
     @Test

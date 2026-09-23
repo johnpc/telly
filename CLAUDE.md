@@ -88,6 +88,26 @@ Local SDK note: `local.properties` must contain
 
 ## Decisions log
 
+- **2026-09-22** Live-playback smoothness (director stutter report vs TiviMate).
+  **(1) Live speed pinned to 1.0×.** Every tune now goes through
+  `streamMediaItem` (StreamMediaItems.kt): a bare `MediaItem.fromUri` let
+  Media3 chase the target live offset of live HLS by varying playback speed
+  inside its 0.97–1.03 fallback bounds — every post-jitter catch-up burst
+  read as judder + resampled audio. TiviMate drifts instead of chasing;
+  telly now does too (min/max playback speed 1.0 in the item's
+  LiveConfiguration; non-live sources ignore it). **(2) Post-stall runway.**
+  Media3 1.6.1's stock start thresholds are 1 s first-tune / 2 s
+  post-rebuffer (verified against the real DefaultLoadControl constants —
+  they are NOT ExoPlayer2's 2.5 s/5 s): a jittery stream restarted with 2 s
+  and immediately underran again, reading as continuous stutter. "Small"
+  (the captured default) keeps the stock 50 s target + 1 s zap start but
+  restarts stalls with 5 s; Medium/Large now also raise the start to 2.5 s
+  (and Large restarts with 10 s) instead of only scaling the 50 s target a
+  live stream can never fill. **(3)** `FrameRateEstimator` goes one-shot —
+  it was re-sorting and CAS-ing a StateFlow on every frame of the playback
+  thread's `VideoFrameMetadataListener` forever after its 12-sample warm-up.
+  Verified locally (quality.sh); Shield before/after measurement scheduled
+  off-hours (the device was in use at fix time).
 - **2026-09-20** Guide OK/long-OK redesign (director round, deliberate deviation
   from both TiviMate and telly's own 2026-09-13 "two-stage OK" reading). **(1)
   Regular OK jumps straight to the full player.** A plain OK on any guide cell

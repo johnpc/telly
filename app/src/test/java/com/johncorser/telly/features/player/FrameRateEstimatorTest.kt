@@ -42,6 +42,17 @@ class FrameRateEstimatorTest {
     }
 
     @Test
+    fun `the estimator goes quiet after its one answer`() {
+        val estimator = FrameRateEstimator(samples = 2)
+        estimator.onFrame(0)
+        estimator.onFrame(40_000)
+        assertEquals(25f, estimator.onFrame(80_000)!!, 0.01f)
+
+        assertNull(estimator.onFrame(120_000))
+        assertNull(estimator.onFrame(160_000))
+    }
+
+    @Test
     fun `sixty fps rounds to the badge value`() {
         val estimator = FrameRateEstimator(samples = 3)
         var result: Float? = null

@@ -35,29 +35,46 @@ data class BufferDurations(
 
 /**
  * "Buffer size" (Small/Medium/Large) -> DefaultLoadControl durations.
- * Small — the captured TiviMate default — keeps Media3's stock values
- * (50 s target, 1 s start, 2 s after a rebuffer); Medium and Large
- * double/quadruple the target so flaky IPTV sources ride out longer
- * stalls at the cost of memory and zap latency. Start thresholds stay
- * stock: a bigger pre-play delay would slow every zap.
+ * Small — the captured TiviMate default — keeps Media3's stock 50 s target
+ * and 1 s first-tune start (zap speed untouched) but restarts a stalled
+ * stream only after 5 s: Media3's stock 2 s restart is too thin for jittery
+ * IPTV — a stream that just underran restarts and immediately underruns
+ * again, which reads as continuous stutter. Medium and Large also
+ * double/quadruple the target and accept a slower 2.5 s start (and a 10 s
+ * restart on Large) so flaky sources ride out longer stalls at the cost of
+ * memory and zap latency.
  */
 object BufferSizes {
     const val DEFAULT = "Small"
 
     // Media3 DefaultLoadControl defaults (asserted against the real
-    // constants in BufferSizesTest so a library bump can't drift them).
+    // constants in PlayerTuningTest so a library bump can't drift them).
     private const val MEDIA3_MIN_MS = 50_000
     private const val MEDIA3_MAX_MS = 50_000
     private const val MEDIA3_PLAYBACK_MS = 1_000
-    private const val MEDIA3_REBUFFER_MS = 2_000
 
-    private val small = BufferDurations(MEDIA3_MIN_MS, MEDIA3_MAX_MS, MEDIA3_PLAYBACK_MS, MEDIA3_REBUFFER_MS)
+    private const val REBUFFER_MS = 5_000
+    private const val SLOW_START_MS = 2_500
+    private const val LARGE_REBUFFER_MS = 10_000
+
+    private val small = BufferDurations(MEDIA3_MIN_MS, MEDIA3_MAX_MS, MEDIA3_PLAYBACK_MS, REBUFFER_MS)
 
     /** Unknown raws fall back to the default pick (defensive). */
     fun durations(raw: String): BufferDurations =
         when (raw) {
-            "Medium" -> small.copy(minBufferMs = MEDIA3_MIN_MS * 2, maxBufferMs = MEDIA3_MAX_MS * 2)
-            "Large" -> small.copy(minBufferMs = MEDIA3_MIN_MS * 4, maxBufferMs = MEDIA3_MAX_MS * 4)
+            "Medium" ->
+                small.copy(
+                    minBufferMs = MEDIA3_MIN_MS * 2,
+                    maxBufferMs = MEDIA3_MAX_MS * 2,
+                    bufferForPlaybackMs = SLOW_START_MS,
+                )
+            "Large" ->
+                small.copy(
+                    minBufferMs = MEDIA3_MIN_MS * 4,
+                    maxBufferMs = MEDIA3_MAX_MS * 4,
+                    bufferForPlaybackMs = SLOW_START_MS,
+                    bufferForPlaybackAfterRebufferMs = LARGE_REBUFFER_MS,
+                )
             else -> small
         }
 }
