@@ -36,6 +36,14 @@ Feature: TV guide
     And I press ok on the airing programme
     Then playback goes fullscreen on channel 2 "News One HD"
 
+  Scenario: BACK from fullscreen restores focus to the played channel's row
+    When I press dpad down
+    And I press ok on the airing programme
+    Then playback goes fullscreen on channel 2 "News One HD"
+    When I press back
+    Then the programme grid is focused again
+    And the focused cell is on channel 2 at roughly the same time
+
   # The dropdown moved to long-OK (a regular OK now plays the channel). Play
   # channel is the top row and is live; Remind is live (reminders slice,
   # e2e/features/reminders); the rest open the coming-soon placeholder.

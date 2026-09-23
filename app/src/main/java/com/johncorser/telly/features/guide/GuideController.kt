@@ -112,10 +112,15 @@ class GuideController(
         scope.launch { rows.collect { focusEngine.ensureFocus(it, now.value) } }
         groupMemory.arm(scope, tuner.channels, groupTools.groups)
         // The guide is reached from playback (BACK / the TV-guide card), where
-        // the last channel keeps playing in the preview window; a cold start
-        // with "Turn on last channel on app start" OFF instead lands here
-        // untuned — the preview stays dark until OK tunes a cell.
-        if (seams.resumePreview()) tuner.resumeStored()
+        // the last channel keeps playing in the preview window AND its row
+        // takes the initial focus (the rebuild would otherwise drop focus to
+        // the top of the list); a cold start with "Turn on last channel on
+        // app start" OFF instead lands here untuned — the preview stays dark
+        // until OK tunes a cell and focus starts at the first row.
+        if (seams.resumePreview()) {
+            tuner.resumeStored()
+            GuideFocusResume(focusEngine, env.store, seams.visibleRows).arm(scope, rows) { now.value }
+        }
     }
 
     /** Routes a key through the layer map; true = consumed. */

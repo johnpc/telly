@@ -344,6 +344,44 @@ class GuideControllerTest {
     }
 
     @Test
+    fun `returning from fullscreen focuses the last-tuned channel's row`() {
+        runTest {
+            store.putLong(TuneController.LAST_CHANNEL_KEY, 3L)
+
+            val controller = buildController()
+
+            assertEquals(2, controller.focus.value?.rowIndex)
+            assertEquals("Sports Arena", focusedChannel(controller))
+            assertEquals("Boxing Classics", focusedTitle(controller))
+        }
+    }
+
+    @Test
+    fun `a group switch after the focus resume lands on the group's first row`() {
+        runTest {
+            store.putLong(TuneController.LAST_CHANNEL_KEY, 2L)
+            val controller = buildController()
+            assertEquals(1, controller.focus.value?.rowIndex)
+
+            controller.selectGroup("Sports")
+
+            assertEquals(0, controller.focus.value?.rowIndex)
+            assertEquals("Boxing Classics", focusedTitle(controller))
+        }
+    }
+
+    @Test
+    fun `an untuned cold start keeps the default first-row focus`() {
+        runTest {
+            store.putLong(TuneController.LAST_CHANNEL_KEY, 3L)
+
+            val controller = buildController(resumePreview = { false })
+
+            assertEquals(0, controller.focus.value?.rowIndex)
+        }
+    }
+
+    @Test
     fun `an untuned cold start leaves the preview dark until OK tunes a cell`() {
         runTest {
             store.putLong(TuneController.LAST_CHANNEL_KEY, 3L)
