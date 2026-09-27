@@ -44,7 +44,7 @@ class VodSettingsTest {
             actions =
                 SettingsActions(
                     updater = PlaylistUpdater(fetchPlaylist = { "" }, repository = playlists),
-                    updateEpgNow = {},
+                    updateEpgNow = { 0 },
                     backup = SettingsBackupManager(settings, playlists),
                     clearVodPositions = { cleared++ },
                 ),

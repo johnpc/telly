@@ -16,7 +16,6 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.flowOf
-import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 
 /**
@@ -39,7 +38,7 @@ class SettingsViewModel(
     internal val updater: PlaylistUpdater = graph.actions.updater
     internal val changePlaylistUrl: suspend (oldUrl: String, newUrl: String) -> Boolean =
         graph.actions.changePlaylistUrl
-    internal val updateEpgNow: suspend () -> Unit = graph.actions.updateEpgNow
+    internal val updateEpgNow: suspend () -> Int = graph.actions.updateEpgNow
     internal val backup: SettingsBackupManager = graph.actions.backup
     internal val reminders: ReminderSettingsFeed? = graph.reminders
     internal val clearVodPositions: suspend () -> Unit = graph.actions.clearVodPositions
@@ -52,19 +51,11 @@ class SettingsViewModel(
     internal val mutableState = MutableStateFlow(SettingsUiState())
     val state: StateFlow<SettingsUiState> = mutableState.asStateFlow()
 
-    val playlistItems: StateFlow<List<PlaylistItem>> =
-        playlistRepository.playlists
-            .map { stored ->
-                stored.map {
-                    PlaylistItem(
-                        url = it.sourceUrl,
-                        name = it.name ?: it.sourceUrl,
-                        channelCount = it.playlist.channels.size,
-                        epgUrl = it.playlist.epgUrl,
-                        groups = it.playlist.channels.mapNotNull { channel -> channel.groupTitle }.distinct(),
-                    )
-                }
-            }.stateIn(scope, SharingStarted.Eagerly, emptyList())
+    /** Manual refresh actions: the busy row + transient completion message. */
+    internal val refreshStatus = MutableStateFlow(RefreshStatus())
+    val refreshState: StateFlow<RefreshStatus> = refreshStatus.asStateFlow()
+
+    val playlistItems: StateFlow<List<PlaylistItem>> = playlistItemsFlow()
 
     /** Custom EPG sources, in added order (Settings -> EPG -> EPG sources). */
     val epgSourceItems: StateFlow<List<EpgSource>> =
@@ -84,8 +75,8 @@ class SettingsViewModel(
 
     /** The active sheet's rows (root section list when nothing is pushed). */
     val rows: StateFlow<List<SettingsRow>> =
-        combine(mutableState, playlistItems, feedItems(), rowTicks()) { state, pls, feeds, _ ->
-            activeRows(state.activePane, pls, feeds)
+        combine(mutableState, playlistItems, feedItems(), rowTicks(), refreshStatus) { state, pls, feeds, _, busy ->
+            activeRows(state.activePane, pls, feeds).markBusy(busy.busyRowId)
         }.stateIn(scope, SharingStarted.Eagerly, emptyList())
 
     /** The deeper panes' live lists, joined for the rows combine above. */

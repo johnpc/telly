@@ -14,7 +14,7 @@ internal fun SettingsViewModel.runAction(rowId: String) {
         return
     }
     when (rowId) {
-        RowIds.EPG_UPDATE_NOW -> launch { updateEpgNow() }
+        RowIds.EPG_UPDATE_NOW -> runRefresh(rowId) { updateEpgMessage() }
         RowIds.EPG_ADD_SOURCE -> showOverlay(SettingsOverlay.TextEdit(rowId, title = "EPG URL", value = ""))
         RowIds.EPG_SOURCE_URL -> editEpgSourceUrlOverlay()
         RowIds.EPG_SOURCE_DELETE -> confirmDeleteEpgSourceOverlay()
@@ -57,8 +57,9 @@ private fun pushedPaneFor(rowId: String): SettingsPane? =
 internal fun SettingsViewModel.runPlaylistAction(rowId: String) {
     when (rowId) {
         RowIds.ADD_PLAYLIST -> addPlaylist()
-        RowIds.UPDATE_ALL_PLAYLISTS -> launch { updater.updateAll(playlistItems.value.map { it.url }) }
-        RowIds.PLAYLIST_UPDATE_NOW -> currentDetailUrl()?.let { url -> launch { updater.update(url) } }
+        RowIds.UPDATE_ALL_PLAYLISTS -> runRefresh(rowId) { updateAllPlaylistsMessage() }
+        RowIds.PLAYLIST_UPDATE_NOW ->
+            currentDetailUrl()?.let { url -> runRefresh(rowId) { updatePlaylistMessage(url) } }
         RowIds.PLAYLIST_ENABLE -> currentDetailUrl()?.let { flip(playlistEnabledSetting(it)) }
         RowIds.PLAYLIST_DELETE -> confirmDeleteOverlay()
         RowIds.PLAYLIST_NAME -> renameOverlay()

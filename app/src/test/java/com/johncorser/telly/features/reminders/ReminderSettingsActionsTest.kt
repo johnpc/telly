@@ -53,7 +53,7 @@ class ReminderSettingsActionsTest {
             actions =
                 SettingsActions(
                     updater = PlaylistUpdater(fetchPlaylist = { "" }, repository = playlists),
-                    updateEpgNow = {},
+                    updateEpgNow = { 0 },
                     backup = SettingsBackupManager(settings, playlists),
                 ),
             versionName = "0.1.0",

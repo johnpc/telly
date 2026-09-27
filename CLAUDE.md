@@ -88,6 +88,24 @@ Local SDK note: `local.properties` must contain
 
 ## Decisions log
 
+- **2026-09-23** Manual refresh feedback (director: "the button doesn't work").
+  The three "Update ..." settings actions (Update playlist on the detail
+  pane, Update all playlists, Update EPG) DID run but fire-and-forget with
+  failures swallowed — indistinguishable from a dead button. Now every one
+  routes through `SettingsViewModel.runRefresh` (`SettingsViewModelRefresh.kt`):
+  a `RefreshStatus` StateFlow marks the activated row busy (the sheet's rows
+  combine maps it via `markBusy`, rendering a rotating-arc trailing spinner —
+  tv-material ships no progress indicator, semantics "updating"), then shows
+  a completion message for 4 s in the guide hint-toast treatment, bottom-
+  center (`SettingsScreenRefreshToast`). Messages: "Playlist updated"/
+  "Playlist update failed", "Playlists updated"/"Updated N of M playlists",
+  "EPG updated"/"EPG update failed" — `SettingsActions.updateEpgNow` now
+  returns the refreshed-playlist count (`refreshAllNow().size`) so success is
+  observable. One refresh at a time (re-activations while busy are ignored);
+  a throwing refresher can never strand the spinner (defensive catch →
+  "Update failed"). e2e: three settings scenarios assert the success
+  messages. Verified locally (quality.sh) + settings 27/27 and tv-guide
+  21/21 on the tv34 emulator.
 - **2026-09-22** Live-playback smoothness (director stutter report vs TiviMate).
   **(1) Live speed pinned to 1.0×.** Every tune now goes through
   `streamMediaItem` (StreamMediaItems.kt): a bare `MediaItem.fromUri` let

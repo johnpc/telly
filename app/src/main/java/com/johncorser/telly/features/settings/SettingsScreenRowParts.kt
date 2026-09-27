@@ -82,6 +82,8 @@ internal fun SettingsScreenRowTrailing(
 ) {
     when {
         row is SettingsRow.Toggle -> SettingsScreenSwitch(checked = row.checked, locked = locked)
+        // In-flight manual refresh (Update playlist / EPG): rotating arc.
+        row is SettingsRow.Action && row.busy -> SettingsScreenRowSpinner()
         // Trailing accent check on the selected picker option (ref/09b).
         row is SettingsRow.Value && row.selected ->
             Icon(

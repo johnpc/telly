@@ -31,6 +31,8 @@ sealed interface SettingsRow {
         override val id: String,
         val title: String,
         val locked: Boolean = false,
+        /** In-flight manual refresh: the row renders a trailing spinner. */
+        val busy: Boolean = false,
     ) : SettingsRow
 
     data class Header(

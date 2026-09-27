@@ -48,7 +48,7 @@ class SettingsViewModelPlaylistExtrasTest {
             actions =
                 SettingsActions(
                     updater = PlaylistUpdater(fetch, playlists),
-                    updateEpgNow = {},
+                    updateEpgNow = { 0 },
                     backup = SettingsBackupManager(settings, playlists),
                     changePlaylistUrl =
                         PlaylistUrlChanger(

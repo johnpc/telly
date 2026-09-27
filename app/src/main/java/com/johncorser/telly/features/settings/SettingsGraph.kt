@@ -14,7 +14,8 @@ import kotlinx.coroutines.flow.flowOf
 /** The imperative actions the settings tree can trigger. */
 class SettingsActions(
     val updater: PlaylistUpdater,
-    val updateEpgNow: suspend () -> Unit,
+    /** "Update EPG": refreshes every source; returns the updated-playlist count. */
+    val updateEpgNow: suspend () -> Int,
     val backup: SettingsBackupManager,
     /** Playlist URL edit (PlaylistUrlChanger::change); false keeps the old URL. */
     val changePlaylistUrl: suspend (oldUrl: String, newUrl: String) -> Boolean = { _, _ -> false },

@@ -33,7 +33,7 @@ internal fun MainActivity.settingsGraph(fetcher: M3uFetcher): SettingsGraph {
         actions =
             SettingsActions(
                 updater = PlaylistUpdater(fetcher::fetch, repository),
-                updateEpgNow = { ServiceLocator.epgRefresher(this).refreshAllNow() },
+                updateEpgNow = { ServiceLocator.epgRefresher(this).refreshAllNow().size },
                 backup = SettingsBackupManager(settings, repository, filesDir),
                 changePlaylistUrl =
                     PlaylistUrlChanger(

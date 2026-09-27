@@ -3,8 +3,11 @@ package com.johncorser.telly.features.settings
 import com.johncorser.telly.core.settings.Setting
 import com.johncorser.telly.features.recording.recordingRows
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.merge
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
@@ -22,6 +25,21 @@ internal fun SettingsViewModel.activeRows(
 
 /** Rebuild triggers beyond the feeds: settings edits + the manual bump. */
 internal fun SettingsViewModel.rowTicks(): Flow<Unit> = merge(settings.changes.map { }, refresh.map { })
+
+/** The stored playlists mapped to their settings-tree row items. */
+internal fun SettingsViewModel.playlistItemsFlow(): StateFlow<List<PlaylistItem>> =
+    playlistRepository.playlists
+        .map { stored ->
+            stored.map {
+                PlaylistItem(
+                    url = it.sourceUrl,
+                    name = it.name ?: it.sourceUrl,
+                    channelCount = it.playlist.channels.size,
+                    epgUrl = it.playlist.epgUrl,
+                    groups = it.playlist.channels.mapNotNull { channel -> channel.groupTitle }.distinct(),
+                )
+            }
+        }.stateIn(scope, SharingStarted.Eagerly, emptyList())
 
 /** State-mutation helpers shared by the dispatch extension files. */
 

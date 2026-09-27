@@ -66,7 +66,7 @@ class SettingsViewModelTest {
                             },
                             repository = playlists,
                         ),
-                    updateEpgNow = { epgUpdates++ },
+                    updateEpgNow = { ++epgUpdates },
                     backup = SettingsBackupManager(settings, playlists),
                 ),
             versionName = "0.1.0",

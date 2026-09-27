@@ -159,6 +159,25 @@ Feature: Settings
     And I activate the playlist "10.0.2.2"
     Then the "User-Agent" row shows "telly-e2e-agent"
 
+  # Manual refresh feedback (director round 2026-09-23): the activated
+  # "Update ..." row spins while the fetch runs and a completion message
+  # lands bottom-center; failures report instead of staying silent.
+  Scenario: Update playlist reports success
+    When I open the "Playlists" section
+    And I activate the playlist "10.0.2.2"
+    And I activate "Update playlist"
+    Then I see "Playlist updated"
+
+  Scenario: Update all playlists reports success
+    When I open the "Playlists" section
+    And I activate "Update all playlists"
+    Then I see "Playlists updated"
+
+  Scenario: Update EPG reports success
+    When I open the "EPG" section
+    And I activate "Update EPG"
+    Then I see "EPG updated"
+
   Scenario: The playlist update options persist
     When I open the "Playlists" section
     And I activate the playlist "10.0.2.2"

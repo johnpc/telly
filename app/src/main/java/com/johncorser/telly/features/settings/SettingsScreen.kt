@@ -12,6 +12,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
@@ -72,6 +73,7 @@ fun SettingsScreen(
             }
         }
         SettingsScreenOverlay(model = model, overlay = state.overlay)
+        SettingsScreenRefreshToast(model, Modifier.align(Alignment.BottomCenter))
     }
 }
 
