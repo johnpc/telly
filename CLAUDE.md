@@ -88,6 +88,30 @@ Local SDK note: `local.properties` must contain
 
 ## Decisions log
 
+- **2026-09-27** Stall watchdog (director: playback freezes; only backing out
+  of the player and re-entering fixed it). Auto-reconnect (2026-09-16) only
+  fires on `onPlayerError` — a silently wedged stream (frozen frame at
+  STATE_READY with the position stuck, or STATE_BUFFERING that never
+  resolves) raised no error and played dead forever. Now every prod engine
+  (`EngineSchedulers.forPlayer` in `buildMedia3PlayerEngine` — playback,
+  guide preview, multiview panes, VOD, recordings) runs an
+  `EngineStallWatchdog`: a 2 s self-rescheduling sampler on the player's
+  thread feeding the pure `StallDetector` (frozen = 5 consecutive samples
+  with zero position movement while "playing" ≈ 10 s; wedged buffering = 15
+  samples ≈ 30 s, deliberately past the deepest 30 s reconnect backoff so a
+  recovering stream is never double-kicked; a user pause is never a stall —
+  playWhenReady gates every sample). A stall recovers through the SAME
+  reconnect budget (`EngineReconnector.onStall`): stop() first (the wedged
+  pipeline must drop — plain prepare() is a no-op on a non-idle player),
+  rejoin the live edge via seekToDefaultPosition (finite archives/VOD keep
+  their position: stop() retains it), prepare() — surfacing the existing
+  Reconnecting pill; a spent budget surfaces `Error("STREAM_STALLED")`.
+  READY resets the budget as before. Unit tests opt in via the
+  `EngineSchedulers.stallTicker` seam (null = no watchdog, so the existing
+  `scheduled.single()` reconnect asserts stay untouched); `release()` stops
+  the sampling (multiview pane engines must not leak tickers). No e2e leg:
+  a silent freeze isn't stageable with the MockWebServer fixtures (the
+  reconnect slice set this precedent) — JVM-tested, Shield-verified by use.
 - **2026-09-23** Manual refresh feedback (director: "the button doesn't work").
   The three "Update ..." settings actions (Update playlist on the detail
   pane, Update all playlists, Update EPG) DID run but fire-and-forget with

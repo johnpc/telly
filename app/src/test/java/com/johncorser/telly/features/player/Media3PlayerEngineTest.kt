@@ -37,7 +37,7 @@ class Media3PlayerEngineTest {
         return Media3PlayerEngine(
             player,
             reconnect = policy,
-            schedule = { delayMs, task -> scheduled += delayMs to task },
+            schedulers = EngineSchedulers({ delayMs, task -> scheduled += delayMs to task }),
         )
     }
 
@@ -347,5 +347,82 @@ class Media3PlayerEngineTest {
             player.volume = 0f
             player.volume = 1f
         }
+    }
+
+    // Stall watchdog: sampling ticks post through their own captured seam.
+    private val ticks = mutableListOf<Pair<Long, () -> Unit>>()
+
+    private fun stallEngine(policy: ReconnectPolicy = ReconnectPolicy()): Media3PlayerEngine {
+        every { player.addListener(capture(listener)) } just Runs
+        every { player.setVideoFrameMetadataListener(capture(frameListener)) } just Runs
+        every { player.playWhenReady } returns true
+        every { player.currentPosition } returns 42L
+        return Media3PlayerEngine(
+            player,
+            reconnect = policy,
+            schedulers =
+                EngineSchedulers(
+                    schedule = { delayMs, task -> scheduled += delayMs to task },
+                    stallTicker = { delayMs, task -> ticks += delayMs to task },
+                ),
+        )
+    }
+
+    /** Baseline sample + the frozen run the detector needs to fire. */
+    private fun freezeOut() = repeat(StallDetector.FROZEN_TICKS + 1) { ticks.removeAt(0).second() }
+
+    @Test
+    fun `a silently frozen live stream recovers through the reconnect path`() {
+        val engine = stallEngine()
+        every { player.isCurrentMediaItemLive } returns true
+        listener.captured.onPlaybackStateChanged(Player.STATE_READY)
+
+        freezeOut()
+
+        assertEquals(PlayerState.Reconnecting, engine.state.value)
+        scheduled.single().second() // the recovery drops the wedged pipeline
+        verify {
+            player.stop()
+            player.seekToDefaultPosition()
+            player.prepare()
+        }
+    }
+
+    @Test
+    fun `a frozen archive recovers in place without rejoining a live edge`() {
+        stallEngine()
+        every { player.isCurrentMediaItemLive } returns false
+        listener.captured.onPlaybackStateChanged(Player.STATE_READY)
+
+        freezeOut()
+        scheduled.single().second()
+
+        verify(exactly = 0) { player.seekToDefaultPosition() }
+        verify {
+            player.stop()
+            player.prepare()
+        }
+    }
+
+    @Test
+    fun `a wedged stream with a spent retry budget surfaces a stalled error`() {
+        val engine = stallEngine(policy = ReconnectPolicy(maxAttempts = 0))
+        listener.captured.onPlaybackStateChanged(Player.STATE_READY)
+
+        freezeOut()
+
+        assertEquals(PlayerState.Error(EngineReconnector.STALLED), engine.state.value)
+    }
+
+    @Test
+    fun `release stops the stall watchdog`() {
+        val engine = stallEngine()
+        listener.captured.onPlaybackStateChanged(Player.STATE_READY)
+
+        engine.release()
+        ticks.removeAt(0).second() // the already-posted tick fires after release
+
+        assertEquals(0, ticks.size) // and does not reschedule
+        assertEquals(PlayerState.Playing, engine.state.value)
     }
 }

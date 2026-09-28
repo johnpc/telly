@@ -26,4 +26,25 @@ class EngineReconnector(
         }
         return PlayerState.Reconnecting
     }
+
+    /**
+     * A silently wedged stream (stall watchdog, no error event): the wedged
+     * pipeline must be dropped before re-preparing, so the retry stops the
+     * player, rejoins the live edge (finite archives keep their position)
+     * and prepares again — on the same budget as [onError].
+     */
+    fun onStall(): PlayerState {
+        val delayMs = policy.nextDelayMs() ?: return PlayerState.Error(STALLED)
+        schedule(delayMs) {
+            player.stop()
+            if (player.isCurrentMediaItemLive) player.seekToDefaultPosition()
+            player.prepare()
+        }
+        return PlayerState.Reconnecting
+    }
+
+    companion object {
+        /** Displayable cause once a wedged stream spends the retry budget. */
+        const val STALLED = "STREAM_STALLED"
+    }
 }

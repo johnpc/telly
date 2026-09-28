@@ -47,7 +47,15 @@ internal fun buildMedia3PlayerEngine(
             .setLoadControl(loadControl(BufferSizes.durations(tuning.bufferSize)))
             .build()
     player.disableCaptionsByDefault()
-    return Media3PlayerEngine(player, userAgent, ExoTrackFacade(player, offsets, audio.surroundByDefault), decoders)
+    return Media3PlayerEngine(
+        player = player,
+        userAgent = userAgent,
+        tracks = ExoTrackFacade(player, offsets, audio.surroundByDefault),
+        decoders = decoders,
+        // Real devices get the stall watchdog: it samples on the player's
+        // thread and auto-recovers silently wedged streams.
+        schedulers = EngineSchedulers.forPlayer(player),
+    )
 }
 
 /** The picked buffer durations over Media3's stock DefaultLoadControl. */

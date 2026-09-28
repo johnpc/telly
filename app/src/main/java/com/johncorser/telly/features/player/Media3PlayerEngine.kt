@@ -24,15 +24,18 @@ class Media3PlayerEngine(
     override val tracks: TrackFacade = ExoTrackFacade(player),
     override val decoders: DecoderPreferences = DecoderPreferences.NONE,
     private val reconnect: ReconnectPolicy = ReconnectPolicy(),
-    // Retries post on the player's own (main) thread; tests inject a capturing
-    // scheduler so the reconnect logic runs without a real Handler.
-    private val schedule: (Long, () -> Unit) -> Unit = { d, t -> Handler(player.applicationLooper).postDelayed(t, d) },
+    // Deferred work posts on the player's own (main) thread; tests inject
+    // capturing schedulers so reconnect/watchdog logic runs without a Handler.
+    schedulers: EngineSchedulers =
+        EngineSchedulers({ d, t -> Handler(player.applicationLooper).postDelayed(t, d) }),
 ) : PlayerEngine,
     Player.Listener {
     private val mutableState = MutableStateFlow<PlayerState>(PlayerState.Idle)
     private val videoFeed = EngineVideoFeed()
     private val mutablePaused = MutableStateFlow(false)
-    private val reconnector = EngineReconnector(player, reconnect, schedule)
+    private val reconnector = EngineReconnector(player, reconnect, schedulers.schedule)
+    private val watchdog =
+        schedulers.watchdog(player, { mutableState.value }, { mutableState.value = reconnector.onStall() })
 
     override val state: StateFlow<PlayerState> = mutableState.asStateFlow()
     override val video: StateFlow<VideoDetails?> = videoFeed.video
@@ -43,6 +46,7 @@ class Media3PlayerEngine(
         player.setVideoFrameMetadataListener { presentationTimeUs, _, _, _ ->
             videoFeed.onFrame(presentationTimeUs)
         }
+        watchdog?.start()
     }
 
     /** Skips a re-load of the same stream (guide <-> fullscreen hand-over). */
@@ -70,6 +74,7 @@ class Media3PlayerEngine(
     }
 
     override fun release() {
+        watchdog?.stop()
         player.release()
     }
 
