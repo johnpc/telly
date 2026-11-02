@@ -13,7 +13,9 @@ jobs:
   release:
     name: Publish APK to GitHub Release
     if: github.event.workflow_run.conclusion == 'success'
-    runs-on: ubuntu-latest
+    # Self-hosted Mac Mini. Safe here: only triggers on workflow_run
+    # (post-merge, after CI succeeds) — never on pull_request.
+    runs-on: [self-hosted, mac-mini]
     steps:
       - uses: actions/checkout@v4
         with:

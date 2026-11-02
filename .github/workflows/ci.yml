@@ -9,7 +9,12 @@ on:
 jobs:
   quality:
     name: Quality gates
-    runs-on: ubuntu-latest
+    # Self-hosted Mac Mini. This job also runs on pull_request, and
+    # self-hosted runners on a public repo are unsafe for fork PRs
+    # (arbitrary code execution) — so only run for push-to-main or a PR
+    # authored by the repo owner. Other PRs simply skip this job.
+    if: github.event_name != 'pull_request' || github.event.pull_request.user.login == 'johnpc'
+    runs-on: [self-hosted, mac-mini]
     steps:
       - uses: actions/checkout@v4
 
@@ -72,6 +77,13 @@ jobs:
   acceptance:
     name: Acceptance (${{ matrix.feature }})
     needs: quality
+    # Stays on GitHub-hosted ubuntu-latest: this job needs KVM (hardware-
+    # accelerated Linux virtualization) to run the Android emulator at a
+    # usable speed, and the emulator image here is x86_64-only (see the
+    # comment on TV_API_LEVEL below). Neither KVM nor accelerated x86_64
+    # emulation exists on the Mac Mini (Apple Silicon, no KVM equivalent) —
+    # moving this job there would mean unaccelerated software emulation,
+    # likely too slow to finish in any reasonable time. Not moved.
     runs-on: ubuntu-latest
     timeout-minutes: 90
     strategy:
