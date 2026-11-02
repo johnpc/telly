@@ -193,15 +193,11 @@ class GuideSteps(
         name: String,
     ) = driver.assertPlaybackOn(number, name)
 
-    @Then("a dropdown anchored under the cell lists exactly {string}, {string}, {string}, {string}, {string}, {string}")
-    fun dropdownLists(
-        a: String,
-        b: String,
-        c: String,
-        d: String,
-        e: String,
-        f: String,
-    ) = listOf(a, b, c, d, e, f).forEach { world.waitForText(it) }
+    @Then("^a dropdown anchored under the cell lists exactly (.+)$")
+    fun dropdownLists(rawList: String) {
+        val items = Regex("\"([^\"]+)\"").findAll(rawList).map { it.groupValues[1] }.toList()
+        items.forEach { world.waitForText(it) }
+    }
 
     @Then("I see the {string} screen")
     fun seeScreen(title: String) = world.waitForText(title)
