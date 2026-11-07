@@ -1,8 +1,8 @@
 @my-list
 Feature: My list and favorites management
   The formerly-premium TiviMate rows telly ships for real (ux-spec §3, no
-  captures exist for the free tier): "Add to My list" on the guide dropdown
-  and the shared context sheet, the My List screen behind the guide rail's
+  captures exist for the free tier): "Add to My list" on the guide's long-OK
+  cell dropdown and the MENU context sheet, the My List screen behind the guide rail's
   bookmark icon, and the Manage Favorites / Reorder channels screens.
 
   Background:
@@ -12,23 +12,23 @@ Feature: My list and favorites management
 
   Scenario: Adding a future programme from the dropdown flips its row label
     When I press dpad right
-    And I press ok
+    And I long-press ok
     Then I see "Add to My list"
     When I select "Add to My list"
     Then the programme grid is focused again
-    When I press ok
+    When I long-press ok
     Then I see "Remove from My list"
     When I press back
     Then the programme grid is focused again
 
   Scenario: The rail bookmark opens My List and OK on an airing entry tunes
     When I press dpad down
-    And I long-press ok
+    And I press menu
     And I select "Add to My list"
     Then the programme grid is focused again
     When I press dpad up
     And I press dpad right
-    And I press ok
+    And I long-press ok
     And I select "Add to My list"
     Then the programme grid is focused again
     # first LEFT returns to the airing cell, the second reaches the rail
@@ -41,7 +41,7 @@ Feature: My list and favorites management
 
   Scenario: A future entry shows its description and long-OK removes it
     When I press dpad right
-    And I press ok
+    And I long-press ok
     And I select "Add to My list"
     Then the programme grid is focused again
     # first LEFT returns to the airing cell, the second reaches the rail
@@ -58,7 +58,7 @@ Feature: My list and favorites management
   # LEFT/RIGHT moves the focused row (TiviMate's documented favorites
   # management); the Favorites group in the guide honors the saved order.
   Scenario: Manage Favorites toggles favorites and reorders them persistently
-    When I long-press ok
+    When I press menu
     And I select "Manage Favorites"
     Then I see "Manage Favorites"
     When I select "News One"
@@ -76,7 +76,7 @@ Feature: My list and favorites management
     And the "News One" row shows number 2
 
   Scenario: Reorder channels moves a channel within the current group
-    When I long-press ok
+    When I press menu
     And I select "Reorder channels"
     Then I see "Reorder channels"
     When I focus the channel row "News One"

@@ -19,13 +19,15 @@ class ReminderSteps(
 
     /**
      * Two RIGHTs from the airing cell land on a programme at least ~30 min
-     * out, so the reminder can never fire (default 5-min lead) mid-scenario.
+     * out, so the reminder can never fire (default 5-min lead) mid-scenario;
+     * long-OK there opens the cell dropdown.
      */
     @When("I open the dropdown on a later programme of channel {int}")
     fun openDropdownOnLaterProgramme(number: Int) {
         remembered = futureProgramme(number, skip = 2)
         world.pressKey(KeyEvent.KEYCODE_DPAD_RIGHT, times = 2)
-        world.pressKey(KeyEvent.KEYCODE_DPAD_CENTER)
+        // The cell dropdown lives on long-OK; a plain OK tunes + fullscreens.
+        world.longPressOk()
         // "Record" is label-stable; the Remind row relabels with state.
         world.waitForText("Record")
     }
