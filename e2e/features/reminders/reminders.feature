@@ -2,7 +2,7 @@
 Feature: Reminders
   TiviMate-style programme reminders (premium in the reference; ux-spec:
   a popup appears shortly before the programme starts and can switch to
-  the channel). The guide future-cell dropdown's Remind row schedules one
+  the channel). The guide's long-OK cell dropdown Remind row schedules one
   and relabels to "Remove reminder" while it is set; Settings -> Other ->
   Reminders lists the schedule with the lead-time picker and an OK ->
   delete confirm. The popup itself is wall-clock-driven (the engine ticks
@@ -20,18 +20,18 @@ Feature: Reminders
     Then I see "Remind"
     When I select "Remind"
     Then the programme grid is focused again
-    When I press ok
+    When I long-press ok
     Then I see "Remove reminder"
     When I select "Remove reminder"
     Then the programme grid is focused again
-    When I press ok
+    When I long-press ok
     Then I see "Remind"
 
   Scenario: A scheduled reminder is listed in settings and deleted through the confirm
     When I open the dropdown on a later programme of channel 1
     And I select "Remind"
     Then the programme grid is focused again
-    When I long-press ok
+    When I press menu
     And I select "Settings"
     And I open the "Other" section
     And I activate "Reminders"
@@ -42,7 +42,7 @@ Feature: Reminders
     Then I see "No reminders"
 
   Scenario: The reminder lead time defaults to 5 minutes and persists a new choice
-    When I long-press ok
+    When I press menu
     And I select "Settings"
     And I open the "Other" section
     And I activate "Reminders"

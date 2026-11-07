@@ -5,8 +5,8 @@ Feature: Catch-up playback of already-aired programmes
   guide is playable: OK plays the archived broadcast fullscreen with a seek
   transport, and BACK returns to the guide (ux-spec §2.10/§3.17). The
   fixture playlist marks "News One" catch-up-enabled (2 days); "News One
-  HD" has the same deep-past EPG but no catch-up, so its past cells keep
-  today's dropdown.
+  HD" has the same deep-past EPG but no catch-up, so its past cells only
+  offer the regular long-OK cell dropdown (no archive "Play").
 
   Background:
     Given the fixture playlist and EPG are served from "http://10.0.2.2:8090"
@@ -57,8 +57,8 @@ Feature: Catch-up playback of already-aired programmes
     When I long-press dpad left
     And I press dpad down
     Then the guide shows yesterday's programme on channel 2
-    When I press ok
-    Then a dropdown anchored under the cell lists exactly "Remind", "Record", "Custom recording", "Add to My list", "Program description"
+    When I long-press ok
+    Then a dropdown anchored under the cell lists exactly "Play channel", "Remind", "Record", "Custom recording", "Add to My list", "Program description"
     And the dropdown offers no "Play" action
     When I press back
     Then the programme grid is focused again
