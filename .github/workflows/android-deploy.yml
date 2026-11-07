@@ -35,8 +35,34 @@ jobs:
       - name: Cache Gradle
         uses: gradle/actions/setup-gradle@v4
 
-      - name: Build release APK (unsigned)
+      # Android refuses to install unsigned APKs ("invalid package"), so fail
+      # loudly rather than publish one.
+      - name: Decode release keystore
+        env:
+          TELLY_KEYSTORE_BASE64: ${{ secrets.TELLY_KEYSTORE_BASE64 }}
+        run: |
+          if [ -z "$TELLY_KEYSTORE_BASE64" ]; then
+            echo "::error::TELLY_KEYSTORE_BASE64 secret is not set; refusing to publish an unsigned APK"
+            exit 1
+          fi
+          echo "$TELLY_KEYSTORE_BASE64" | base64 --decode > "$RUNNER_TEMP/telly-release.jks"
+          echo "TELLY_KEYSTORE_PATH=$RUNNER_TEMP/telly-release.jks" >> "$GITHUB_ENV"
+
+      - name: Build signed release APK
+        env:
+          TELLY_KEYSTORE_PASSWORD: ${{ secrets.TELLY_KEYSTORE_PASSWORD }}
+          TELLY_KEY_ALIAS: ${{ secrets.TELLY_KEY_ALIAS }}
+          TELLY_KEY_PASSWORD: ${{ secrets.TELLY_KEY_PASSWORD }}
         run: ./gradlew assembleRelease
+
+      - name: Verify APK signature
+        run: |
+          APKSIGNER=$(ls -d "$ANDROID_HOME"/build-tools/*/apksigner | sort -V | tail -1)
+          "$APKSIGNER" verify --verbose app/build/outputs/apk/release/app-release.apk
+
+      - name: Remove keystore
+        if: always()
+        run: rm -f "$RUNNER_TEMP/telly-release.jks"
 
       - name: Read versionName
         id: version
@@ -47,7 +73,7 @@ jobs:
       - name: Rename APK
         run: |
           mkdir -p dist
-          cp app/build/outputs/apk/release/app-release-unsigned.apk \
+          cp app/build/outputs/apk/release/app-release.apk \
             "dist/telly-v${{ steps.version.outputs.version }}-${{ github.run_number }}.apk"
 
       - name: Create GitHub Release
