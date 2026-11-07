@@ -32,9 +32,24 @@ android {
         getByName("androidTest").assets.srcDir(layout.buildDirectory.dir("generated/e2eAssets"))
     }
 
+    // Release signing comes from env vars (set by the deploy workflow from repo
+    // secrets). Without them, assembleRelease still builds — just unsigned.
+    val releaseKeystore = System.getenv("TELLY_KEYSTORE_PATH")
+    signingConfigs {
+        if (releaseKeystore != null) {
+            create("release") {
+                storeFile = file(releaseKeystore)
+                storePassword = System.getenv("TELLY_KEYSTORE_PASSWORD")
+                keyAlias = System.getenv("TELLY_KEY_ALIAS")
+                keyPassword = System.getenv("TELLY_KEY_PASSWORD")
+            }
+        }
+    }
+
     buildTypes {
         release {
             isMinifyEnabled = false
+            signingConfig = signingConfigs.findByName("release")
             proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
         }
     }
