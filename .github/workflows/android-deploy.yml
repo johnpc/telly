@@ -5,6 +5,9 @@ on:
     workflows: [CI]
     types: [completed]
     branches: [main]
+  # Manual release from main (e.g. when CI is red for unrelated reasons).
+  # Only users with write access can dispatch workflows.
+  workflow_dispatch:
 
 permissions:
   contents: write
@@ -12,14 +15,16 @@ permissions:
 jobs:
   release:
     name: Publish APK to GitHub Release
-    if: github.event.workflow_run.conclusion == 'success'
-    # Self-hosted Mac Mini. Safe here: only triggers on workflow_run
-    # (post-merge, after CI succeeds) — never on pull_request.
+    if: >-
+      (github.event_name == 'workflow_run' && github.event.workflow_run.conclusion == 'success') ||
+      (github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/main')
+    # Self-hosted Mac Mini. Safe here: only triggers on workflow_run (post-merge,
+    # after CI succeeds) or a manual dispatch on main — never on pull_request.
     runs-on: [self-hosted, mac-mini]
     steps:
       - uses: actions/checkout@v4
         with:
-          ref: ${{ github.event.workflow_run.head_sha }}
+          ref: ${{ github.event.workflow_run.head_sha || github.sha }}
 
       - name: Set up JDK 17
         uses: actions/setup-java@v4
