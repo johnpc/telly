@@ -62,6 +62,10 @@ adb exec-out screencap -p > shot.png    # look at the real UI
 adb shell screenrecord --time-limit 30 /sdcard/clip.mp4 && adb pull /sdcard/clip.mp4
 ```
 
+CI's acceptance job runs the same way on the same machine (`scripts/emulator.sh
+start` → `scripts/ci-acceptance.sh <area>` → `scripts/emulator.sh stop`, one
+leg at a time), so a green leg here predicts a green leg there.
+
 Rules of engagement: no `sudo`, no global installs, never touch
 `~/actions-runner-*/_work`, and check `pgrep -fl Runner.Worker || echo idle`
 before a long run. Run long commands detached (`nohup … > /tmp/x.log`) and

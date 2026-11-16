@@ -79,8 +79,10 @@ exist); steps rewrite the dev host `10.0.2.2` in feature text to it.
   -Pandroid.testInstrumentationRunnerArguments.tags=@watch-and-zap
 ```
 
-CI runs the same suite per feature area on an API 36 android-tv x86_64
-emulator (the only 64-bit x86 TV image; API 34 TV is x86-32/arm64 only).
+CI runs the same suite per feature area on the self-hosted Mac mini's
+Android TV API 36 arm64 emulator (AVD `telly-tv36`, booted per leg by
+`scripts/emulator.sh`; one leg at a time, 1–6 min each). The GitHub-hosted
+x86_64 path is gone: its own AVD-snapshot/boot steps failed too often.
 
 Local SDK note: `local.properties` must contain
 `sdk.dir=/opt/homebrew/share/android-commandlinetools` on the primary dev machine
@@ -137,9 +139,13 @@ MockWebServer for CI, GitHub Pages demo site for everyone else).
   the `Demo site` workflow publishes the self-contained demo source to
   GitHub Pages daily (`https://johnpc.github.io/telly/playlist.m3u`) for
   anyone — including App Store review of the Apple port — who cannot use a
-  real provider. The Mac mini runs the Android TV API 36 arm64 emulator
-  fine (Hypervisor.framework; the ci.yml note claiming otherwise was about
-  x86 images); acceptance legs run there in 1–6 min each.
+  real provider (verified live: the emulator app imports it over HTTPS).
+  The Mac mini runs the Android TV API 36 arm64 emulator fine
+  (Hypervisor.framework; the ci.yml note claiming otherwise was about x86
+  images), so the CI acceptance job MOVED there (`scripts/emulator.sh`
+  start/stop per leg, `max-parallel: 1`): the hosted runner's own
+  AVD-snapshot step failed on the very first push of this work, after 16
+  red runs out of 40 in the prior weeks.
 
 - **2026-09-27** Stall watchdog (director: playback freezes; only backing out
   of the player and re-entering fixed it). Auto-reconnect (2026-09-16) only

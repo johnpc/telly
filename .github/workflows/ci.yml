@@ -81,26 +81,24 @@ jobs:
   acceptance:
     name: Acceptance (${{ matrix.feature }})
     needs: quality
-    # Stays on GitHub-hosted ubuntu-latest for PARALLELISM: the 13 legs run
-    # side by side here, while the single Mac Mini would run them one after
-    # another (~35 min). The Mini CAN run the Android TV emulator — the
-    # arm64 API 36 TV image under Hypervisor.framework finishes a leg in
-    # 1–6 min (AVD `telly-tv36`; see AGENTS.md) — so it is the manual
-    # verification box and the fallback if hosted minutes run out again.
-    runs-on: ubuntu-latest
-    timeout-minutes: 90
+    # Self-hosted Mac Mini, one leg at a time on its Android TV emulator
+    # (API 36 arm64 under Hypervisor.framework; 1–6 min per leg). The
+    # GitHub-hosted emulator path failed in its own AVD-snapshot/boot steps
+    # often enough (16 of 40 runs in Nov 2026) that "no flaky tests" was
+    # unreachable there; here the same 13 legs ran 165/165 green.
+    if: github.event_name != 'pull_request' || github.event.pull_request.user.login == 'johnpc'
+    runs-on: [self-hosted, mac-mini]
+    timeout-minutes: 30
     strategy:
       fail-fast: false
+      max-parallel: 1
       matrix:
         # One entry per e2e feature area (cucumber tag = @<feature>).
         # scripts/check-feature-coverage.mjs enforces that every
         # e2e/features/**/*.feature file is listed here.
         feature: [add-playlist, epg-data, watch-and-zap, channel-panel, settings, tv-guide, search, reminders, my-list, vod, recording, block-channel, catch-up]
-    # Emulator image: android-tv system images only ship x86_64 for API 36
-    # (API 34 TV is 32-bit x86 / arm64 only — verified via sdkmanager), so
-    # the acceptance suite runs on the API 36 TV image, matching targetSdk.
     env:
-      TV_API_LEVEL: 36
+      TV_AVD: telly-tv36
     steps:
       - uses: actions/checkout@v4
 
@@ -115,52 +113,21 @@ jobs:
         with:
           packages: platform-tools
 
-      - name: Enable KVM
-        run: |
-          echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' \
-            | sudo tee /etc/udev/rules.d/99-kvm4all.rules
-          sudo udevadm control --reload-rules && sudo udevadm trigger --name-match=kvm
-
       - name: Cache Gradle
         uses: gradle/actions/setup-gradle@v4
 
-      - name: Cache AVD snapshot
-        id: avd-cache
-        uses: actions/cache@v4
-        with:
-          path: |
-            ~/.android/avd/*
-            ~/.android/adb*
-          key: avd-tv-36-${{ matrix.feature }}
-          restore-keys: |
-            avd-tv-36-
-
-      - name: Create AVD snapshot for caching
-        if: steps.avd-cache.outputs.cache-hit != 'true'
-        uses: reactivecircus/android-emulator-runner@v2
-        with:
-          api-level: 36
-          target: android-tv
-          arch: x86_64
-          profile: tv_1080p
-          force-avd-creation: false
-          emulator-options: -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -camera-back none
-          disable-animations: false
-          script: echo "Generated AVD snapshot for caching."
+      - name: Boot the Android TV emulator
+        run: |
+          bash scripts/emulator.sh stop
+          bash scripts/emulator.sh ensure-avd "$TV_AVD"
+          bash scripts/emulator.sh start "$TV_AVD"
 
       - name: Run Gherkin acceptance (@${{ matrix.feature }})
-        uses: reactivecircus/android-emulator-runner@v2
-        with:
-          api-level: 36
-          target: android-tv
-          arch: x86_64
-          profile: tv_1080p
-          force-avd-creation: false
-          emulator-options: -no-snapshot-save -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -camera-back none
-          disable-animations: true
-          # NOTE: the runner action executes each script line as its own
-          # command — keep this a single line (no shell continuations).
-          script: bash scripts/ci-acceptance.sh ${{ matrix.feature }}
+        run: bash scripts/ci-acceptance.sh ${{ matrix.feature }}
+
+      - name: Stop the emulator
+        if: always()
+        run: bash scripts/emulator.sh stop
 
       - name: Upload acceptance artifacts
         if: failure()
