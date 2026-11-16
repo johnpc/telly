@@ -1,0 +1,72 @@
+name: Demo site
+
+# Publishes the self-contained demo IPTV source (playlist + 7-day EPG +
+# test-card streams + logos) to GitHub Pages at
+# https://johnpc.github.io/telly/ — the "fake server" anyone can point telly
+# (or the Apple port, for App Store review) at without a real provider.
+# Regenerated daily so the EPG window always covers "now".
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - e2e/fixtures/**
+      - .github/workflows/demo-site.yml
+  schedule:
+    - cron: "17 3 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  build:
+    # Self-hosted Mac Mini (free minutes). Never runs for pull requests.
+    if: github.repository == 'johnpc/telly'
+    runs-on: [self-hosted, mac-mini]
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Generate the demo site (24 h past, 7 days ahead)
+        run: |
+          rm -rf "$RUNNER_TEMP/demo-site"
+          node e2e/fixtures/gen-fixtures.mjs \
+            --base "https://johnpc.github.io/telly" \
+            --out "$RUNNER_TEMP/demo-site" \
+            --past-hours 24 --future-hours 168
+          # Demo mode writes only into --out; the checked-in fixtures stay
+          # untouched (default mode is what rewrites them, for dev use).
+          test -z "$(git status --short --untracked-files=no)"
+
+      - name: Verify the site is anonymously fetchable content only
+        run: |
+          test -f "$RUNNER_TEMP/demo-site/playlist.m3u"
+          test -f "$RUNNER_TEMP/demo-site/epg.xml"
+          ! grep -rIl -E "AKIA|BEGIN (RSA|OPENSSH) PRIVATE KEY" "$RUNNER_TEMP/demo-site"
+
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: ${{ runner.temp }}/demo-site
+
+  deploy:
+    needs: build
+    runs-on: [self-hosted, mac-mini]
+    timeout-minutes: 10
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4

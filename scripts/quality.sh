@@ -42,4 +42,7 @@ npx -y jscpd app/src
 step "e2e feature coverage mapping"
 node scripts/check-feature-coverage.mjs
 
+step "state-machine catalog (docs/state-machines.md owners + tests exist)"
+node scripts/check-state-machines.mjs
+
 printf '\nAll quality gates passed.\n'

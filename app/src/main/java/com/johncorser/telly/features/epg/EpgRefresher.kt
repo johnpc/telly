@@ -1,6 +1,7 @@
 package com.johncorser.telly.features.epg
 
 import com.johncorser.telly.features.playlist.db.PlaylistDao
+import com.johncorser.telly.features.playlist.db.PlaylistEntity
 import kotlinx.coroutines.CancellationException
 
 /**
@@ -25,11 +26,26 @@ class EpgRefresher(
     private val retention: EpgRetention = EpgRetention(),
     private val customSources: suspend (playlistUrl: String) -> List<String> = { emptyList() },
 ) {
-    /** Refreshes everything due; returns the ids of the playlists updated. */
-    suspend fun refreshDue(): List<Long> = refreshWhere { scheduler.isDue(it, clock()) }
+    /** Playlists whose last scheduled attempt failed, by id -> attempt time. */
+    private val failedAtMs = HashMap<Long, Long>()
 
-    /** Settings -> "Update EPG": refreshes every source regardless of age. */
+    /**
+     * Refreshes everything due; returns the ids of the playlists updated. A
+     * playlist whose sources ALL failed stays due (never stamped) but is
+     * not retried for [RETRY_BACKOFF_MS]: the due check runs every minute
+     * tick and every playlist emission, and a dead `url-tvg` used to cost a
+     * network round-trip plus a trim write on each of them, forever.
+     */
+    suspend fun refreshDue(): List<Long> =
+        refreshWhere { playlist ->
+            scheduler.isDue(playlist.epgLastUpdatedMs, clock()) && !inBackoff(playlist.id)
+        }
+
+    /** Settings -> "Update EPG": refreshes every source regardless of age or backoff. */
     suspend fun refreshAllNow(): List<Long> = refreshWhere { true }
+
+    private fun inBackoff(playlistId: Long): Boolean =
+        failedAtMs[playlistId]?.let { clock() - it < RETRY_BACKOFF_MS } == true
 
     /**
      * A playlists change: "Update EPG on playlists change" ON forces a full
@@ -39,14 +55,18 @@ class EpgRefresher(
     suspend fun onPlaylistsChanged(updateOnChange: Boolean): List<Long> =
         if (updateOnChange) refreshAllNow() else refreshDue()
 
-    private suspend fun refreshWhere(due: (lastUpdatedMs: Long) -> Boolean): List<Long> {
+    private suspend fun refreshWhere(due: (PlaylistEntity) -> Boolean): List<Long> {
         val updated =
             playlistDao
                 .all()
                 .mapNotNull { playlist ->
                     val sources = listOfNotNull(playlist.epgUrl) + customSources(playlist.url)
-                    if (sources.isEmpty() || !due(playlist.epgLastUpdatedMs)) return@mapNotNull null
-                    if (sources.count { refreshSource(it) } == 0) return@mapNotNull null
+                    if (sources.isEmpty() || !due(playlist)) return@mapNotNull null
+                    if (sources.count { refreshSource(it) } == 0) {
+                        failedAtMs[playlist.id] = clock()
+                        return@mapNotNull null
+                    }
+                    failedAtMs.remove(playlist.id)
                     playlistDao.markEpgUpdated(playlist.id, clock())
                     playlist.id
                 }
@@ -64,6 +84,9 @@ class EpgRefresher(
 
     companion object {
         private const val DAY_MS: Long = 24L * 60L * 60L * 1000L
+
+        /** A playlist whose every source failed waits this long before the due loop retries it. */
+        const val RETRY_BACKOFF_MS: Long = 5L * 60L * 1000L
 
         /** Captured default: "Past days to keep EPG" = 7. */
         const val DEFAULT_KEEP_PAST_MS: Long = 7L * DAY_MS

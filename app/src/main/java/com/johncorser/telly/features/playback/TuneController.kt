@@ -6,10 +6,8 @@ import com.johncorser.telly.features.player.PlayerEngine
 import com.johncorser.telly.features.playlist.db.ChannelDao
 import com.johncorser.telly.features.playlist.db.ChannelEntity
 import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
@@ -36,14 +34,17 @@ class TuneController(
     val channels: StateFlow<List<ChannelEntity>> =
         channelDao.observeVisible().stateIn(scope, SharingStarted.Eagerly, emptyList())
 
-    private val mutableCurrent = MutableStateFlow<ChannelEntity?>(null)
-    val current: StateFlow<ChannelEntity?> = mutableCurrent.asStateFlow()
+    private val tuned = TunedStreamState()
+
+    /** The tuned mode — live, archive or external — published once per passed tune. */
+    val playing: StateFlow<TunedStream?> get() = tuned.playing
+    val current: StateFlow<ChannelEntity?> get() = tuned.current
 
     /** Tunes the last-watched channel (or the first) once channels arrive. */
     fun start() {
         scope.launch {
             val list = channels.first { it.isNotEmpty() }
-            if (mutableCurrent.value == null) {
+            if (current.value == null) {
                 ChannelZapper.restore(list, store.getLong(LAST_CHANNEL_KEY))?.let { tune(it, allowExternal = false) }
             }
         }
@@ -88,18 +89,23 @@ class TuneController(
     ) {
         if (gate.intercept(channel)) return pendingCatchup.stash(channel.id, catchupUrl)
         val archiveUrl = pendingCatchup.consume(channel.id, catchupUrl)
-        mutableCurrent.value = channel
         suspended = false
         store.putLong(LAST_CHANNEL_KEY, channel.id)
         // Channel-options decoder overrides apply to this tune's prepare.
         engine.applyDecoderOverridesOf(channel)
         if (archiveUrl != null) {
-            engine.load(archiveUrl)
-            return
+            tuned.publish(TunedStream.Archive(channel, archiveUrl))
+            return engine.load(archiveUrl)
         }
         scope.launch { history.record(channel) }
         val liveUrl = resolveUrl(channel.source.streamUrl)
-        if (!(allowExternal && policies.external.handsOff(channel, liveUrl))) {
+        if (allowExternal && policies.external.handsOff(channel, liveUrl)) {
+            // The external app owns playback now; a stream left running
+            // underneath would keep its audio going until the activity stops.
+            tuned.publish(TunedStream.External(channel))
+            engine.stop()
+        } else {
+            tuned.publish(TunedStream.Live(channel))
             engine.load(liveUrl)
         }
     }
@@ -111,7 +117,7 @@ class TuneController(
 
     /** Activity STOP: stop the stream like the reference does in background. */
     fun suspendPlayback() {
-        if (mutableCurrent.value == null) return
+        if (current.value == null) return
         engine.stop()
         suspended = true
     }
@@ -125,21 +131,21 @@ class TuneController(
 
     /** Re-loads the current channel's stream after a background stop. */
     fun retune() {
-        mutableCurrent.value?.let { engine.load(resolveUrl(it.source.streamUrl)) }
+        current.value?.let { engine.load(resolveUrl(it.source.streamUrl)) }
     }
 
     /** Tunes the channel [delta] steps away (wraps); false when impossible or PIN-gated. */
     fun zap(delta: Int): Boolean {
-        val next = ChannelZapper.neighbour(channels.value, mutableCurrent.value, delta) ?: return false
+        val next = ChannelZapper.neighbour(channels.value, current.value, delta) ?: return false
         tune(next)
-        return mutableCurrent.value?.id == next.id
+        return current.value?.id == next.id
     }
 
     fun byId(channelId: Long): ChannelEntity? = channels.value.firstOrNull { it.id == channelId }
 
     /** Retunes to the next channel when [channel] is about to disappear. */
     fun zapAwayFrom(channel: ChannelEntity) {
-        if (channel.id != mutableCurrent.value?.id) return
+        if (channel.id != current.value?.id) return
         ChannelZapper
             .neighbour(channels.value, channel, +1)
             ?.takeIf { it.id != channel.id }

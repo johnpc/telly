@@ -12,6 +12,7 @@ import com.johncorser.telly.e2e.fixtures.FixtureProgramme
 import com.johncorser.telly.e2e.fixtures.FixtureServer
 import io.cucumber.java.en.Then
 import io.cucumber.java.en.When
+import org.junit.Assert.assertEquals
 
 /** Steps for catch-up playback of already-aired programmes (@catch-up). */
 class CatchupSteps(
@@ -112,6 +113,27 @@ class CatchupSteps(
             FixtureServer.nowProgramme(channel.tvgId, System.currentTimeMillis()).displayTitle,
             substring = true,
         )
+    }
+
+    /**
+     * The sheet's Hide row zapped away WITHOUT the zap overlay (the panel
+     * stays up), so prove live mode through the info overlay: the tuned
+     * channel is the neighbour and the catch-up transport/readout is gone.
+     */
+    @Then("live playback of channel {int} {string} replaces the catch-up transport")
+    fun livePlaybackReplacesCatchup(
+        number: Int,
+        name: String,
+    ) {
+        driver.awaitCondition("catch-up transport gone") {
+            world.nodeCount(hasTestTag(CATCHUP_TRANSPORT_TAG), unmerged = true) == 0
+        }
+        driver.dismissChrome()
+        world.pressKey(KeyEvent.KEYCODE_DPAD_CENTER)
+        world.waitForText(driver.channelLabel(number, name), substring = true)
+        driver.currentChannel = FixturePlan.channelNamed(name)
+        assertEquals(0, world.nodeCount(hasTestTag(CATCHUP_TRANSPORT_TAG), unmerged = true))
+        assertEquals(0, world.nodeCount(world.hasTextMatching(POSITION_READOUT)))
     }
 
     @When("I return from catch-up playback")

@@ -24,6 +24,18 @@ Feature: Catch-up playback of already-aired programmes
     When I return from catch-up playback
     Then the TV guide opens with the programme grid
 
+  # Catch-up mode is derived from what the tuner plays: a live tune that
+  # bypasses the zap overlay (the sheet's Hide channel zaps away) leaves it too.
+  Scenario: Hiding the channel during catch-up returns to live playback
+    When I long-press dpad left
+    Then the guide shows yesterday's programme on channel 1
+    When I press ok
+    Then catch-up playback starts for yesterday's programme on channel 1
+    When I open the channel panel
+    And I long-press ok on the row "News One"
+    And I select "Hide channel"
+    Then live playback of channel 2 "News One HD" replaces the catch-up transport
+
   Scenario: Pause pins the transport and resume releases it
     When I long-press dpad left
     Then the guide shows yesterday's programme on channel 1

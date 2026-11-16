@@ -33,6 +33,21 @@ class PlaybackViewModelHooksTest : PlaybackVmHarness() {
         }
 
     @Test
+    fun `entering pip from HOME drops a sticky overlay too`() =
+        runTest {
+            val pip = PipState()
+            val vm = buildVm(pip = pip)
+            vm.openPanel()
+            assertEquals(PlaybackOverlay.Panel, vm.overlay.value)
+
+            // HOME -> onUserLeaveHint -> the activity enters PIP without the
+            // quick-bar slot's clearChrome; the mode change itself must clear it.
+            pip.setInPip(true)
+
+            assertEquals(PlaybackOverlay.None, vm.overlay.value)
+        }
+
+    @Test
     fun `a background stop is vetoed while the pip window plays`() =
         runTest {
             val pip = PipState()

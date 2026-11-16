@@ -199,12 +199,29 @@ class CatchupPlaybackTest {
     fun `a live tune leaves catch-up mode`() =
         runTest {
             session.set(request)
-            val (catchup, _) = build()
+            val (catchup, tuner) = build()
             catchup.resumePending()
 
-            catchup.onLiveTune()
+            tuner.tune(plainChannel)
 
             assertNull(catchup.state.value)
+            assertEquals(CatchupMode.NONE, catchup.mode())
+        }
+
+    @Test
+    fun `hiding the watched channel zaps away and leaves catch-up mode too`() =
+        runTest {
+            session.set(request)
+            val (catchup, tuner) = build()
+            catchup.resumePending()
+
+            // The sheet's Hide row tunes the neighbour directly, bypassing the
+            // zap overlay path — the mode must follow the tuner regardless.
+            tuner.zapAwayFrom(catchupChannel)
+
+            assertEquals(plainChannel.id, tuner.current.value?.id)
+            assertNull(catchup.state.value)
+            assertFalse(catchup.keys.onKey(PlaybackOverlay.None, PlaybackKey.REWIND))
         }
 
     @Test

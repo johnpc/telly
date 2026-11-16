@@ -1,7 +1,17 @@
 package com.johncorser.telly.features.onboarding
 
 /** Wizard pages, in forward order. */
-enum class WizardStep { TYPE_CHOOSER, URL_ENTRY, PROCESSING, PROCESSED, EPG_URL, DONE }
+enum class WizardStep {
+    TYPE_CHOOSER,
+    URL_ENTRY,
+    PROCESSING,
+    PROCESSED,
+    EPG_URL,
+
+    /** Done pressed on the EPG step; the playlist is being persisted (Done/BACK are inert). */
+    SAVING,
+    DONE,
+}
 
 /** Playlist source kinds offered by the type chooser. */
 enum class PlaylistType { M3U, XTREAM_CODES, STALKER_PORTAL }

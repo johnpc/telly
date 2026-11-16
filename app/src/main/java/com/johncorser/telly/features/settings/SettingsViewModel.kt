@@ -48,7 +48,7 @@ class SettingsViewModel(
     /** Bumped after actions that change derived rows (recording storage). */
     internal val refresh = MutableStateFlow(0)
 
-    internal val mutableState = MutableStateFlow(SettingsUiState())
+    internal val mutableState = MutableStateFlow(SettingsUiState(overlay = entryGate(parental)))
     val state: StateFlow<SettingsUiState> = mutableState.asStateFlow()
 
     /** Manual refresh actions: the busy row + transient completion message. */
@@ -84,6 +84,10 @@ class SettingsViewModel(
         combine(epgSourceItems, reminderItems, blockedItems, autoBackupStatus) { sources, rem, blockedCh, backup ->
             SettingsFeeds(sources, rem, blockedCh, backup)
         }
+
+    /** "Require PIN for Settings": the sheet opens behind a PIN prompt (BACK leaves). */
+    private fun entryGate(parental: ParentalControls): SettingsOverlay? =
+        SettingsOverlay.PinVerify(PinTarget.SETTINGS).takeIf { parental.isSettingsLocked() && parental.hasPin }
 
     /** OK on a row. Locked rows are unfocusable and never reach this. */
     fun activate(rowId: String) {

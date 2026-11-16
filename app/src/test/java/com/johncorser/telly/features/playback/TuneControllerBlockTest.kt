@@ -46,6 +46,22 @@ class TuneControllerBlockTest {
     }
 
     @Test
+    fun `a gated archive tune publishes no mode until the PIN verifies`() {
+        runTest {
+            parental.setPin("2468")
+            val tuner = tuner()
+
+            tuner.tune(blocked, catchupUrl = "http://s/arc.ts")
+            assertNull(tuner.playing.value)
+
+            tuner.gate.unlock("2468")?.let { tuner.tune(it) }
+
+            assertEquals(TunedStream.Archive(blocked, "http://s/arc.ts"), tuner.playing.value)
+            assertEquals(listOf("http://s/arc.ts"), engine.loaded)
+        }
+    }
+
+    @Test
     fun `tuning a blocked channel prompts instead of loading the stream`() {
         runTest {
             parental.setPin("2468")

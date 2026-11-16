@@ -1,6 +1,8 @@
 package com.johncorser.telly.e2e.steps
 
 import android.view.KeyEvent
+import androidx.compose.ui.semantics.SemanticsActions
+import androidx.compose.ui.test.SemanticsMatcher
 import androidx.compose.ui.test.hasTestTag
 import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.isEnabled
@@ -151,6 +153,21 @@ class SettingsSteps(
 
     @Then("the sheet asks for the PIN")
     fun sheetAsksForPin() = world.waitFor(hasTestTag("pin-wheel"))
+
+    /** The master row's title IS its state (capture): a focusable "Off"/"On" row. */
+    @Then("the parental controls master row reads {string}")
+    fun masterRowReads(state: String) =
+        world.waitFor(hasText(state) and SemanticsMatcher.keyIsDefined(SemanticsActions.RequestFocus))
+
+    @Then("parental controls are not enabled in the store")
+    fun parentalNotEnabled() {
+        val parental = ParentalControls(ServiceLocator.settingsRepository(world.targetContext))
+        assertFalse("master toggle persisted on without a PIN", parental.isEnabled)
+        assertFalse("a PIN was stored", parental.hasPin)
+    }
+
+    @Then("no settings sheet is open")
+    fun noSettingsSheet() = world.waitForGone(hasTestTag("settings-sheet"))
 
     // "I enter the PIN {string}" lives in BlockSteps (shared with the
     // block-channel scenarios) — one definition serves every PIN prompt.

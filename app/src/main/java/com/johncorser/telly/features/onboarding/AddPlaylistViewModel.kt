@@ -35,20 +35,9 @@ class AddPlaylistViewModel(
         }
     }
 
-    fun setUrl(url: String) {
-        mutableState.update { it.copy(url = url, error = null) }
-    }
-
-    fun setName(name: String) {
-        mutableState.update { it.copy(name = name) }
-    }
-
-    fun chooseKind(kind: PlaylistKind) {
-        mutableState.update { it.copy(kind = kind) }
-    }
-
     /** Validates the URL (http/https only) and kicks off fetch + parse. */
     fun submitUrl() {
+        if (state.value.step != WizardStep.URL_ENTRY) return
         val url = state.value.url.trim()
         if (url.toHttpUrlOrNull() == null) {
             mutableState.update { it.copy(error = WizardError.INVALID_URL) }
@@ -73,6 +62,7 @@ class AddPlaylistViewModel(
         url: String,
         playlist: M3uPlaylist,
     ) {
+        if (state.value.step != WizardStep.PROCESSING) return
         parsed = playlist
         mutableState.update {
             it.copy(
@@ -88,6 +78,7 @@ class AddPlaylistViewModel(
     /** Next on the processed step: forward to the EPG step (capture 13),
      * with the M3U's url-tvg pre-filled into the URL draft. */
     fun confirm() {
+        if (state.value.step != WizardStep.PROCESSED) return
         val playlist = parsed ?: return
         mutableState.update {
             it.copy(step = WizardStep.EPG_URL, epgUrl = playlist.epgUrl.orEmpty(), error = null)
@@ -115,6 +106,8 @@ class AddPlaylistViewModel(
                 mutableState.update { it.copy(step = WizardStep.PROCESSED, error = null) }
                 true
             }
+            // The add is in flight: swallow BACK so DONE cannot land on an earlier step.
+            WizardStep.SAVING -> true
             else -> false
         }
 }

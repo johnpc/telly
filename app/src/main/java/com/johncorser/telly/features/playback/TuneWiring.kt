@@ -49,18 +49,16 @@ internal fun catchupPlayback(
         exitToGuide = exitToGuide,
     )
 
-/** The command executor's seams over the ViewModel's clock/nav/catch-up. */
+/** The command executor's seams over the ViewModel's clock/nav. */
 internal fun commandSeams(
     env: PlaybackEnv,
     refreshInstant: () -> Unit,
     exitToGuide: () -> Unit,
-    catchup: CatchupPlayback,
 ): PlaybackCommandSeams =
     PlaybackCommandSeams(
         refreshInstant = refreshInstant,
         exitToGuide = exitToGuide,
         timeouts = env.time.panelTimeouts,
-        onLiveTune = catchup::onLiveTune,
     )
 
 /** The live info feed, swapped to the archived programme during catch-up. */

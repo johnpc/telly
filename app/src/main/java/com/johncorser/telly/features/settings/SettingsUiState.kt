@@ -85,18 +85,34 @@ sealed interface SettingsOverlay {
     /** "Delete all recordings?" GuidedStep (Other -> Recording pane). */
     data object ConfirmDeleteRecordings : SettingsOverlay
 
-    data object PinSetup : SettingsOverlay
-
     /**
-     * The ONE PIN-verify overlay: the "Require PIN for" gates carry the
-     * pending [section] to open; null = the blocked-channels pane entry.
+     * "Change PIN" / first-time PIN setup. [armsParental] = the master toggle
+     * was activated without a PIN: parental controls turn on only when this
+     * PIN commits, so BACK here leaves them off (never "on, but no PIN").
      */
+    data class PinSetup(
+        val armsParental: Boolean = false,
+    ) : SettingsOverlay
+
+    /** The ONE PIN-verify overlay; [target] names what a verified PIN opens. */
     data class PinVerify(
-        val section: SettingsSection? = null,
+        val target: PinTarget,
     ) : SettingsOverlay
 
     /** GuidedStep confirm for Other -> Search -> Clear search history. */
     data object ConfirmClearHistory : SettingsOverlay
+}
+
+/** What a verified PIN unlocks (the "Require PIN for …" toggles + the blocked list). */
+enum class PinTarget {
+    /** "Require PIN for Settings": verified = the sheet opens; BACK leaves settings. */
+    SETTINGS,
+
+    /** "Require PIN for Playlists": verified = the Playlists section opens. */
+    PLAYLISTS,
+
+    /** Parental controls -> Blocked channels pane entry (gated while a PIN exists). */
+    BLOCKED_CHANNELS,
 }
 
 /**

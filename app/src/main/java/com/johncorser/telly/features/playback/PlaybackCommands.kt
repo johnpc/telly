@@ -9,8 +9,6 @@ data class PlaybackCommandSeams(
     val exitToGuide: () -> Unit = {},
     /** Appearance -> Player -> Panels timeout, sec (default = today's constants). */
     val timeouts: () -> PanelTimeouts = { PanelTimeouts.DEFAULT },
-    /** Every live tune leaves catch-up mode (zap keys, panel rows, recents). */
-    val onLiveTune: () -> Unit = {},
 )
 
 /**
@@ -50,7 +48,6 @@ class PlaybackCommands(
 
     /** Zap keeps the old frame on screen; the compact overlay identifies the target. */
     fun showZapInfo() {
-        seams.onLiveTune()
         seams.refreshInstant()
         overlays.showAutoHiding(PlaybackOverlay.ZapInfo, seams.timeouts().zapMs)
     }

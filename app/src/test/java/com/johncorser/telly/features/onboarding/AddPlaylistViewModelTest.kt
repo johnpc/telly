@@ -236,6 +236,30 @@ class AddPlaylistViewModelTest {
         }
 
     @Test
+    fun `done is saving until the add lands and a second done or BACK is inert`() =
+        runTest {
+            val vm = viewModel()
+            vm.chooseType(PlaylistType.M3U)
+            vm.setUrl("http://example.com/playlist.m3u")
+            vm.submitUrl()
+            advanceUntilIdle()
+            vm.confirm()
+
+            vm.finishEpg()
+            assertEquals(WizardStep.SAVING, vm.state.value.step)
+            vm.finishEpg() // a double-tap on Done
+            assertTrue("BACK while saving is swallowed", vm.back())
+            assertEquals(WizardStep.SAVING, vm.state.value.step)
+            advanceUntilIdle()
+
+            assertEquals(WizardStep.DONE, vm.state.value.step)
+            assertEquals(1, repository.playlists.value.size)
+            // The terminal step accepts no forward edge either.
+            vm.confirm()
+            assertEquals(WizardStep.DONE, vm.state.value.step)
+        }
+
+    @Test
     fun `fetch failures return to url entry with a load error`() =
         runTest {
             val vm = viewModel(fetch = { throw IOException("boom") })

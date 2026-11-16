@@ -1,5 +1,6 @@
 package com.johncorser.telly.features.playback
 
+import com.johncorser.telly.features.groups.GroupToolSession
 import com.johncorser.telly.features.mylist.MyListMenuHost
 import com.johncorser.telly.features.panel.PanelRow
 import com.johncorser.telly.features.playlist.db.ChannelEntity
@@ -80,7 +81,12 @@ class PlaybackMenuHandler(
         channel: ChannelEntity,
     ) {
         val exit = afterAction(overlays.value)
-        val session = actions.groupTools?.session(route, channel, onDone = { overlays.set(exit) })
+        var session: GroupToolSession? = null
+        // Completion lands only while this tool is still the overlay (see the guide host).
+        session =
+            actions.groupTools?.session(route, channel) {
+                if ((overlays.value as? PlaybackOverlay.GroupTool)?.session === session) overlays.set(exit)
+            }
         if (session == null) {
             push { back -> PlaybackOverlay.ComingSoon(item.label, back) }
         } else {

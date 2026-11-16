@@ -36,9 +36,7 @@ class RecordingSteps(
         // back on the PANEL (PlaybackRecordingPrompts.doneTarget), where
         // long-OK would reopen the row sheet instead of the quick bar —
         // BACK the chrome away first so long-OK opens the quick bar.
-        driver.dismissChrome()
-        world.longPressOk()
-        world.select("Recordings")
+        driver.openQuickBarSlot("Recordings")
     }
 
     @When("I record the playing channel from the context sheet")

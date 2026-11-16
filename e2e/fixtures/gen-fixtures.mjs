@@ -1,16 +1,50 @@
 #!/usr/bin/env node
-// Deterministic IPTV fixture generator for telly e2e / reference capture.
-// Usage: node gen-fixtures.mjs [startEpochMillis]
-//   startEpochMillis: "now" anchor. EPG covers now-6h .. now+24h. Defaults to Date.now().
-// Writes playlist.m3u and epg.xml next to this script.
+// Deterministic IPTV fixture generator for telly e2e / reference capture AND
+// the public demo server (docs: README "Demo playlist").
+//
+// Usage: node gen-fixtures.mjs [startEpochMillis] [--base URL] [--out DIR]
+//                              [--past-hours N] [--future-hours N]
+//   startEpochMillis  "now" anchor; defaults to Date.now().
+//   --base            host every URL in the playlist/EPG points at
+//                     (default http://10.0.2.2:8090 = the dev-time server
+//                     as seen from the Android emulator).
+//   --out             write a SELF-CONTAINED static site there: playlist,
+//                     EPG (+ .gz), logos and the staged stream subset —
+//                     exactly what a plain static host like GitHub Pages
+//                     needs. Default: write next to this script (dev mode).
+//   --past-hours / --future-hours   EPG window (default 6 / 24; the demo
+//                     site uses 24 / 168 and regenerates daily).
 
-import { readFileSync, writeFileSync } from "node:fs";
+import { copyFileSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
+import { gzipSync } from "node:zlib";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 
-const BASE = "http://10.0.2.2:8090";
+const args = process.argv.slice(2);
+const flag = (name, fallback) => {
+  const i = args.indexOf(name);
+  return i >= 0 && args[i + 1] !== undefined ? args[i + 1] : fallback;
+};
+const BASE = flag("--base", "http://10.0.2.2:8090").replace(/\/+$/, "");
 const DIR = dirname(fileURLToPath(import.meta.url));
-const anchor = Number(process.argv[2]) || Date.now();
+const OUT = flag("--out", DIR);
+const PAST_HOURS = Number(flag("--past-hours", 6));
+const FUTURE_HOURS = Number(flag("--future-hours", 24));
+const FLAGS = new Set(["--base", "--out", "--past-hours", "--future-hours"]);
+const positional = args.filter((a, i) => !FLAGS.has(a) && !FLAGS.has(args[i - 1]));
+const anchor = Number(positional[0]) || Date.now();
+
+// Demo mode: the site directory carries its own copies of the static assets
+// (logos + the stream subset the e2e harness stages — never the full-length
+// .mp4 captures, which are dev-only reference material).
+if (OUT !== DIR) {
+  for (const sub of ["logos", "streams"]) mkdirSync(join(OUT, sub), { recursive: true });
+  for (const f of ["kids-zone", "movie-house", "music-box", "news-one", "sports-arena"]) {
+    copyFileSync(join(DIR, "logos", `${f}.png`), join(OUT, "logos", `${f}.png`));
+    copyFileSync(join(DIR, "streams", `${f}.ts`), join(OUT, "streams", `${f}.ts`));
+  }
+  copyFileSync(join(DIR, "streams", "vod-sample.mp4"), join(OUT, "streams", "vod-sample.mp4"));
+}
 
 // ---- deterministic PRNG (mulberry32) seeded per channel ------------------
 function rng(seed) {
@@ -89,14 +123,14 @@ channels.push({
   for (let i = 0; i < SEGMENTS; i++) {
     const name = `hls-live-${i}.ts`;
     names.push(name);
-    writeFileSync(join(DIR, "streams", name), source.subarray(i * per, Math.min((i + 1) * per, source.length)));
+    writeFileSync(join(OUT, "streams", name), source.subarray(i * per, Math.min((i + 1) * per, source.length)));
   }
   writeFileSync(
-    join(DIR, "streams", "hls-live.m3u8"),
+    join(OUT, "streams", "hls-live.m3u8"),
     `#EXTM3U\n#EXT-X-STREAM-INF:BANDWIDTH=1280000,RESOLUTION=1280x720\nhls-live-media.m3u8\n`,
   );
   writeFileSync(
-    join(DIR, "streams", "hls-live-media.m3u8"),
+    join(OUT, "streams", "hls-live-media.m3u8"),
     `#EXTM3U\n#EXT-X-VERSION:3\n#EXT-X-TARGETDURATION:2\n#EXT-X-MEDIA-SEQUENCE:0\n` +
       names.map((n) => `#EXTINF:2.0,\n${n}`).join("\n") + "\n",
   );
@@ -125,7 +159,7 @@ for (const c of channels) {
 for (const v of VOD_ITEMS) {
   m3u += `#EXTINF:-1 tvg-id="${v.id}" tvg-name="${v.name}" tvg-logo="${BASE}/logos/movie-house.png" group-title="${v.group}",${v.name}\n${BASE}/streams/vod-sample.mp4\n`;
 }
-writeFileSync(join(DIR, "playlist.m3u"), m3u);
+writeFileSync(join(OUT, "playlist.m3u"), m3u);
 
 // ---- epg.xml (XMLTV) ------------------------------------------------------
 const fmt = (ms) => {
@@ -135,8 +169,8 @@ const fmt = (ms) => {
 };
 const esc = (s) => s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&apos;");
 
-const startWindow = anchor - 6 * 3600e3;
-const endWindow = anchor + 24 * 3600e3;
+const startWindow = anchor - PAST_HOURS * 3600e3;
+const endWindow = anchor + FUTURE_HOURS * 3600e3;
 // snap window start to a 30-min boundary so guide cells align nicely
 const snapped = Math.floor(startWindow / 1800e3) * 1800e3;
 
@@ -195,7 +229,9 @@ for (const c of channels) {
   }
 }
 xml += `</tv>\n`;
-writeFileSync(join(DIR, "epg.xml"), xml);
+writeFileSync(join(OUT, "epg.xml"), xml);
+// Providers commonly serve compressed XMLTV; the demo offers both forms.
+writeFileSync(join(OUT, "epg.xml.gz"), gzipSync(xml));
 
 // ---- epg-alt.xml: a second, custom-source EPG --------------------------------
 // Covers ONE channel epg.xml misses (sports-arena-1) plus ONE it also covers
@@ -226,6 +262,27 @@ for (const c of channels) {
   }
 }
 altXml += `</tv>\n`;
-writeFileSync(join(DIR, "epg-alt.xml"), altXml);
+writeFileSync(join(OUT, "epg-alt.xml"), altXml);
 
-console.log(`Wrote playlist.m3u (${channels.length} channels), epg.xml and epg-alt.xml (anchor=${new Date(anchor).toISOString()})`);
+if (OUT !== DIR) {
+  // A landing page so the Pages root is not a 404 (and reviewers can read
+  // what they are pointing the app at).
+  writeFileSync(
+    join(OUT, "index.html"),
+    `<!doctype html><meta charset="utf-8"><title>telly demo playlist</title>
+<style>body{font:16px/1.5 system-ui;max-width:48em;margin:3em auto;padding:0 1em;color:#eee;background:#131416}code{background:#222;padding:.1em .3em;border-radius:3px}a{color:#64b5f6}</style>
+<h1>telly demo playlist</h1>
+<p>A self-contained, synthetic IPTV source for trying <a href="https://github.com/johnpc/telly">telly</a>:
+${channels.length} channels over 6 groups (test-card streams), a 7-day EPG regenerated daily, catch-up on
+<em>News One</em>, one live-style HLS channel and two VOD titles. No real broadcasts, no accounts.</p>
+<ul>
+<li>Playlist (M3U): <code>${BASE}/playlist.m3u</code></li>
+<li>EPG (XMLTV): <code>${BASE}/epg.xml</code> or <code>${BASE}/epg.xml.gz</code></li>
+<li>Second EPG source (custom-source demo): <code>${BASE}/epg-alt.xml</code></li>
+</ul>
+<p>Generated ${new Date(anchor).toISOString()} by <code>e2e/fixtures/gen-fixtures.mjs</code>.</p>
+`,
+  );
+}
+
+console.log(`Wrote playlist.m3u (${channels.length} channels), epg.xml and epg-alt.xml to ${OUT} (base=${BASE}, anchor=${new Date(anchor).toISOString()})`);

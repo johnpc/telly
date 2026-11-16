@@ -86,7 +86,60 @@ Local SDK note: `local.properties` must contain
 `sdk.dir=/opt/homebrew/share/android-commandlinetools` on the primary dev machine
 (the `ANDROID_HOME` env var there is stale — do not trust it).
 
+## Agent operating manual
+
+[AGENTS.md](AGENTS.md) carries the operating rules on top of this charter:
+no flaky tests (find the race, never loosen), one-owner state machines
+(catalog in `docs/state-machines.md`, gate-checked), verification on the Mac
+mini with screenshots/recordings, and the fake backend (in-process
+MockWebServer for CI, GitHub Pages demo site for everyone else).
+
 ## Decisions log
+
+- **2026-11-15** Implicit state machines made explicit (director: "find all
+  the implicit state machines; elevate UX, DX and AX without breaking
+  anything"). Four surveys catalogued ~30 machines into
+  `docs/state-machines.md` (owner file + tests per machine, machine-checked
+  by `scripts/check-state-machines.mjs` in quality.sh/CI). Rule: **one
+  mode, one owner** — a sealed/enum value written in one place, readers
+  derive. Converted this round: **(1)** `EngineReconnector` retires its
+  pending retry on every load/stop/release/READY (epoch check inside the
+  posted closure; the scheduler seam is unchanged) — a retry armed during a
+  stall used to fire up to 30 s later on the NEXT channel, or re-prepare a
+  stopped/released player. **(2)** `TunedStream` (Live/Archive/External) is
+  published once per passed tune by `TuneController.tune`; `CatchupPlayback`
+  DERIVES its mode from it (armed request × tuner state), so Hide-channel's
+  zap-away, a PIN-gated archive entry, or any live tune leaves catch-up by
+  construction; the `onLiveTune` seam is gone. An external hand-off now
+  stops the internal engine (its audio used to keep running underneath).
+  **(3)** Parental: `PinSetup(armsParental)` turns the master toggle on
+  only when the PIN commits (BACK leaves it off — "on with no PIN" was
+  reachable); `PinVerify(target)` with `PinTarget` SETTINGS/PLAYLISTS/
+  BLOCKED_CHANNELS replaces the nullable-section encoding, and "Require PIN
+  for Settings" — persisted but enforced nowhere — now gates the sheet on
+  open (BACK on that prompt leaves settings). **(4)** `PipState` becoming
+  true clears the overlay from ANY entry path (HOME used to leave a sticky
+  panel running behind the PIP window). **(5)** Multiview `onPick` ignores
+  picks while the PIN card is up. **(6)** Wizard `SAVING` step: Done is
+  single-shot, BACK during the write is inert, every forward edge checks
+  the step it leaves. **(7)** `ExitConfirm` is one field (toast visible ⇔
+  armed; the two clocks could drift). **(8)** The channel panel honors
+  every focus-command version (target follows real focus). **(9)**
+  `EpgRefresher` backs off 5 min after a playlist whose sources all failed
+  (a dead url-tvg retried on every minute tick + playlist emission).
+  **(10)** Group-tool completion pops the sheet only while that session is
+  still the layer (BACK-then-completion popped twice). Known gaps are
+  listed in the catalog, not hidden. e2e harness: `TellyWorld.pressKey`
+  re-injects a key the input system REFUSED (UiAutomator returns false on a
+  cold emulator's dispatch stall) — the one lost OK behind the intermittent
+  "Playlist is processed" timeout; logged per retry. Fake backend: the
+  fixture generator gained `--base/--out/--past-hours/--future-hours` and
+  the `Demo site` workflow publishes the self-contained demo source to
+  GitHub Pages daily (`https://johnpc.github.io/telly/playlist.m3u`) for
+  anyone — including App Store review of the Apple port — who cannot use a
+  real provider. The Mac mini runs the Android TV API 36 arm64 emulator
+  fine (Hypervisor.framework; the ci.yml note claiming otherwise was about
+  x86 images); acceptance legs run there in 1–6 min each.
 
 - **2026-09-27** Stall watchdog (director: playback freezes; only backing out
   of the player and re-entering fixed it). Auto-reconnect (2026-09-16) only

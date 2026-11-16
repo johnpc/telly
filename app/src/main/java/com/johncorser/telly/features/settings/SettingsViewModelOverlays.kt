@@ -10,6 +10,8 @@ import kotlinx.coroutines.flow.update
 fun SettingsViewModel.back(): Boolean {
     val current = mutableState.value
     return when {
+        // The settings-entry PIN prompt guards the whole sheet: BACK leaves.
+        current.overlay == SettingsOverlay.PinVerify(PinTarget.SETTINGS) -> false
         current.overlay != null -> {
             dismissOverlay()
             true
@@ -66,22 +68,33 @@ fun SettingsViewModel.confirmDeleteRecordings() {
     dismissOverlay()
 }
 
-/** Commits a new parental PIN (salted + hashed; never stored raw). */
+/**
+ * Commits a new parental PIN (salted + hashed; never stored raw); a setup
+ * that was arming the master toggle turns parental controls on with it.
+ */
 fun SettingsViewModel.submitPin(pin: String) {
-    if (pin.isNotEmpty()) parental.setPin(pin)
+    val setup = state.value.overlay as? SettingsOverlay.PinSetup ?: return
+    if (pin.isNotEmpty()) {
+        parental.setPin(pin)
+        if (setup.armsParental) parental.setEnabled(true)
+    }
     dismissOverlay()
 }
 
 /**
- * The ONE PIN-verify commit: a verified PIN opens the pending section
- * ("Require PIN for Settings | Playlists") or, with no section, the
- * blocked-channels pane. A wrong PIN keeps prompting; BACK dismisses.
+ * The ONE PIN-verify commit: a verified PIN opens what its [PinTarget]
+ * names. A wrong PIN keeps prompting; BACK dismisses (or leaves settings
+ * for the settings-entry gate).
  */
 fun SettingsViewModel.submitVerifyPin(pin: String) {
     val verify = state.value.overlay as? SettingsOverlay.PinVerify ?: return
     if (!parental.verifyPin(pin)) return
     dismissOverlay()
-    verify.section?.let(::selectSection) ?: push(SettingsPane.BlockedChannels)
+    when (verify.target) {
+        PinTarget.SETTINGS -> Unit
+        PinTarget.PLAYLISTS -> selectSection(SettingsSection.PLAYLISTS)
+        PinTarget.BLOCKED_CHANNELS -> push(SettingsPane.BlockedChannels)
+    }
 }
 
 /** Restores a backup JSON picked via SAF; no-op for foreign files. */

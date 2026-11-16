@@ -53,8 +53,11 @@ internal fun ChannelPanelScreenList(
         }
     }
     // Group switches / panel opens command the list to scroll + refocus
-    // (per-group focus memory, capture 74 behavior).
-    LaunchedEffect(command) {
+    // (per-group focus memory, capture 74 behavior). Every command version
+    // is honored: `target` tracks where focus really is (see the row's
+    // onFocusChanged), so a command back to a row the user has since left
+    // scrolls + regrabs instead of being mistaken for "already there".
+    LaunchedEffect(command.version) {
         if (command.index != target) wrapTo(command.index)
     }
     LazyColumn(state = listState) {
@@ -70,7 +73,12 @@ internal fun ChannelPanelScreenList(
                     playing = row.channel.id == playingChannelId,
                     modifier =
                         (if (index == target) stickyFocusGrab(requester) else Modifier)
-                            .onFocusChanged { if (it.isFocused) panel.onRowFocused(index) }
+                            .onFocusChanged {
+                                if (it.isFocused) {
+                                    target = index
+                                    panel.onRowFocused(index)
+                                }
+                            }
                             .onPreviewKeyEvent { event ->
                                 wrapIndexFor(event, index, rows.lastIndex)?.let {
                                     wrapTo(it)

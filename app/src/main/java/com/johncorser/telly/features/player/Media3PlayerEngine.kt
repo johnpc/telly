@@ -75,6 +75,7 @@ class Media3PlayerEngine(
 
     override fun release() {
         watchdog?.stop()
+        reconnector.reset()
         player.release()
     }
 

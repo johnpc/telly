@@ -23,12 +23,14 @@ fun AddPlaylistViewModel.pastePlaylistUrl() {
 
 /** Done: persist the playlist with the (possibly edited) EPG URL, finish. */
 fun AddPlaylistViewModel.finishEpg() {
+    if (state.value.step != WizardStep.EPG_URL) return
     val playlist = parsed ?: return
     val epgUrl = state.value.epgUrl.trim()
     if (epgUrl.isNotEmpty() && epgUrl.toHttpUrlOrNull() == null) {
         mutableState.update { it.copy(error = WizardError.INVALID_URL) }
         return
     }
+    mutableState.update { it.copy(step = WizardStep.SAVING) }
     scope.launch {
         repository.add(
             state.value.url.trim(),

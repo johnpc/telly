@@ -2,6 +2,7 @@ package com.johncorser.telly.e2e
 
 import android.content.Context
 import android.os.SystemClock
+import android.util.Log
 import android.view.KeyEvent
 import android.view.WindowInsets
 import androidx.compose.ui.geometry.Rect
@@ -90,9 +91,29 @@ class TellyWorld(
     ) {
         repeat(times) {
             compose.waitForIdle()
-            device.pressKeyCode(keyCode)
+            injectKey(keyCode)
         }
         compose.waitForIdle()
+    }
+
+    /**
+     * Injects one key and insists the input system ACCEPTED it. UiAutomator
+     * reports false when the injection is refused or times out (a cold
+     * emulator's system_server input-dispatch stall right after boot, the
+     * window still re-focusing after the IME closed) — the one key that used
+     * to vanish and leave a scenario waiting 30 s for a screen that never
+     * came. A refused key is re-injected until accepted or the step's
+     * timeout passes; every retry is logged so the rate stays observable.
+     */
+    private fun injectKey(keyCode: Int) {
+        val deadline = SystemClock.uptimeMillis() + DEFAULT_TIMEOUT_MS
+        var attempt = 0
+        while (!device.pressKeyCode(keyCode)) {
+            attempt++
+            Log.w(TAG, "key $keyCode refused by the input system (attempt $attempt); re-injecting")
+            check(SystemClock.uptimeMillis() < deadline) { "key $keyCode was never accepted by the input system" }
+            SystemClock.sleep(KEY_RETRY_MS)
+        }
     }
 
     /** Hold DPAD-center: down, auto-repeats while held, then release. */
@@ -101,18 +122,23 @@ class TellyWorld(
     /** Hold any key: down, auto-repeats while held, then release. */
     fun longPressKey(keyCode: Int) {
         compose.waitForIdle()
-        val instrumentation = InstrumentationRegistry.getInstrumentation()
         val downTime = SystemClock.uptimeMillis()
-        instrumentation.sendKeySync(heldEvent(downTime, KeyEvent.ACTION_DOWN, repeat = 0, keyCode = keyCode))
+        injectHeld(heldEvent(downTime, KeyEvent.ACTION_DOWN, repeat = 0, keyCode = keyCode))
         repeat(LONG_PRESS_REPEATS) { index ->
             SystemClock.sleep(LONG_PRESS_STEP_MS)
-            instrumentation.sendKeySync(
-                heldEvent(downTime, KeyEvent.ACTION_DOWN, repeat = index + 1, keyCode = keyCode),
-            )
+            injectHeld(heldEvent(downTime, KeyEvent.ACTION_DOWN, repeat = index + 1, keyCode = keyCode))
         }
         SystemClock.sleep(LONG_PRESS_STEP_MS)
-        instrumentation.sendKeySync(heldEvent(downTime, KeyEvent.ACTION_UP, repeat = 0, keyCode = keyCode))
+        injectHeld(heldEvent(downTime, KeyEvent.ACTION_UP, repeat = 0, keyCode = keyCode))
         compose.waitForIdle()
+    }
+
+    /** UiAutomation reports whether the system accepted each held event; refusals are logged. */
+    private fun injectHeld(event: KeyEvent) {
+        val accepted = InstrumentationRegistry.getInstrumentation().uiAutomation.injectInputEvent(event, true)
+        if (!accepted) {
+            Log.w(TAG, "held key ${event.keyCode} action=${event.action} repeat=${event.repeatCount} refused")
+        }
     }
 
     private fun heldEvent(
@@ -182,6 +208,28 @@ class TellyWorld(
     }
 
     fun focus(text: String) = focusMatching(hasText(text).or(hasContentDescription(text)))
+
+    /**
+     * Picks a quick-bar slot the way a remote does: D-pad RIGHT until the
+     * slot has focus, then OK. Every key press re-arms the bar's 5 s
+     * auto-hide (keepAlive is wired to key-down); a semantic RequestFocus
+     * never does, so under heavy jank the bar used to vanish between the
+     * focus request and the OK, leaving the step waiting 30 s on a slot
+     * that was gone.
+     */
+    fun selectQuickBarSlot(text: String) {
+        val labelled = hasText(text).or(hasContentDescription(text))
+        val slot = labelled and SemanticsMatcher.keyIsDefined(SemanticsActions.RequestFocus)
+        waitFor(slot)
+        repeat(QUICK_BAR_SLOTS) {
+            if (nodeCount(slot and isFocused()) > 0) {
+                pressKey(KeyEvent.KEYCODE_DPAD_CENTER)
+                return
+            }
+            pressKey(KeyEvent.KEYCODE_DPAD_RIGHT)
+        }
+        error("quick-bar slot '$text' never took focus")
+    }
 
     private fun focusMatching(labelled: SemanticsMatcher) {
         val focusable = labelled and SemanticsMatcher.keyIsDefined(SemanticsActions.RequestFocus)
@@ -259,5 +307,8 @@ class TellyWorld(
         private const val LONG_PRESS_REPEATS = 6
         private const val LONG_PRESS_STEP_MS = 150L
         private const val FOCUS_SETTLE_MS = 350L
+        private const val KEY_RETRY_MS = 100L
+        private const val QUICK_BAR_SLOTS = 9
+        private const val TAG = "TellyE2E"
     }
 }

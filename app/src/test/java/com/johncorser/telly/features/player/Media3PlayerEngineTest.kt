@@ -179,6 +179,49 @@ class Media3PlayerEngineTest {
         }
     }
 
+    @Test
+    fun `a zap during the reconnect backoff retires the pending retry`() {
+        val engine = engine()
+        engine.load("http://s/1.ts")
+        listener.captured.onPlayerError(ioError())
+        assertEquals(PlayerState.Reconnecting, engine.state.value)
+
+        engine.load("http://s/2.ts") // the user moved on before the retry fired
+        scheduled.removeAt(0).second()
+
+        // Only the two loads prepared; the stale retry never re-prepared stream 2.
+        verify(exactly = 2) { player.prepare() }
+        assertEquals(PlayerState.Buffering, engine.state.value)
+    }
+
+    @Test
+    fun `stop retires a pending retry so a backgrounded stream stays stopped`() {
+        val engine = engine()
+        engine.load("http://s/1.ts")
+        listener.captured.onPlayerError(ioError())
+
+        engine.stop()
+        scheduled.removeAt(0).second()
+
+        verify(exactly = 1) { player.prepare() }
+        assertEquals(PlayerState.Idle, engine.state.value)
+    }
+
+    @Test
+    fun `release retires a pending retry so it never touches the released player`() {
+        val engine = engine()
+        engine.load("http://s/1.ts")
+        listener.captured.onPlayerError(
+            PlaybackException("behind", null, PlaybackException.ERROR_CODE_BEHIND_LIVE_WINDOW),
+        )
+
+        engine.release()
+        scheduled.removeAt(0).second()
+
+        verify(exactly = 0) { player.seekToDefaultPosition() }
+        verify(exactly = 1) { player.prepare() }
+    }
+
     private fun ioError() = PlaybackException("boom", null, PlaybackException.ERROR_CODE_IO_UNSPECIFIED)
 
     @Test

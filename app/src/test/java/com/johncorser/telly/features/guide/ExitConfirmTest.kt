@@ -10,12 +10,10 @@ import org.junit.Test
 
 @OptIn(ExperimentalCoroutinesApi::class)
 class ExitConfirmTest {
-    private var now = 0L
-
     @Test
     fun `the first BACK warns instead of exiting and arms the window`() =
         runTest {
-            val exit = ExitConfirm({ now }, this)
+            val exit = ExitConfirm(this)
 
             assertFalse(exit.onBack())
             assertTrue(exit.warning.value)
@@ -24,9 +22,9 @@ class ExitConfirmTest {
     @Test
     fun `a second BACK inside the window exits`() =
         runTest {
-            val exit = ExitConfirm({ now }, this)
+            val exit = ExitConfirm(this)
             exit.onBack()
-            now += ExitConfirm.WINDOW_MS - 1
+            advanceTimeBy(ExitConfirm.WINDOW_MS - 1)
 
             assertTrue(exit.onBack())
         }
@@ -34,18 +32,19 @@ class ExitConfirmTest {
     @Test
     fun `a second BACK after the window warns again`() =
         runTest {
-            val exit = ExitConfirm({ now }, this)
+            val exit = ExitConfirm(this)
             exit.onBack()
-            now += ExitConfirm.WINDOW_MS + 1
+            advanceTimeBy(ExitConfirm.WINDOW_MS + 1)
+            runCurrent()
 
             assertFalse(exit.onBack())
             assertTrue(exit.warning.value)
         }
 
     @Test
-    fun `the warning hides itself after the window`() =
+    fun `the warning hides itself after the window and the exit disarms with it`() =
         runTest {
-            val exit = ExitConfirm({ now }, this)
+            val exit = ExitConfirm(this)
             exit.onBack()
             runCurrent()
 
@@ -53,5 +52,6 @@ class ExitConfirmTest {
             runCurrent()
 
             assertFalse(exit.warning.value)
+            assertFalse("the toast is gone, so BACK warns again instead of exiting", exit.onBack())
         }
 }

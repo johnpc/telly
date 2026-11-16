@@ -22,9 +22,7 @@ class MultiviewSteps(
 ) {
     @Given("I opened multiview")
     fun openedMultiview() {
-        driver.dismissChrome()
-        world.longPressOk()
-        world.select("Multiview")
+        driver.openQuickBarSlot("Multiview")
         world.waitForText("Press OK to show menu")
     }
 

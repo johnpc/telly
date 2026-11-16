@@ -12,7 +12,7 @@ fun SettingsViewModel.selectSection(section: SettingsSection) {
 /** Section entry, gated: "Require PIN for Settings | Playlists" prompts. */
 internal fun SettingsViewModel.openSection(section: SettingsSection) {
     if (section == SettingsSection.PLAYLISTS && parental.isPlaylistsLocked()) {
-        showOverlay(SettingsOverlay.PinVerify(section))
+        showOverlay(SettingsOverlay.PinVerify(PinTarget.PLAYLISTS))
     } else {
         selectSection(section)
     }

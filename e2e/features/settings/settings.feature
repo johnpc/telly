@@ -51,6 +51,31 @@ Feature: Settings
     And entering the PIN "2468" unlocks it
     And opening the group "News" does not require the PIN
 
+  # The master toggle turns on only when its PIN commits: BACK out of the
+  # first-time PIN setup must leave parental controls off, never "on, no PIN".
+  Scenario: Backing out of the first-time PIN setup leaves parental controls off
+    When I open the "Parental controls" section
+    And I activate "Off"
+    Then I see "Change PIN"
+    When I press back
+    Then the parental controls master row reads "Off"
+    And parental controls are not enabled in the store
+
+  # "Require PIN for Settings" gates the whole sheet the next time it opens;
+  # BACK on that prompt leaves settings instead of revealing them.
+  Scenario: Require PIN for Settings gates the sheet on its next open
+    Given parental controls protect telly with the PIN "2468"
+    When I open the "Parental controls" section
+    And I activate "Settings"
+    And I leave settings for fullscreen playback
+    And I open Settings
+    Then the sheet asks for the PIN
+    When I press back
+    Then no settings sheet is open
+    When I open Settings
+    And I enter the PIN "2468"
+    Then I see the sections "General, Playlists, EPG, Appearance, Playback, Remote control, Parental controls, Other, About" in order
+
   Scenario: Renaming a playlist persists
     When I open the "Playlists" section
     And I activate the playlist "10.0.2.2"

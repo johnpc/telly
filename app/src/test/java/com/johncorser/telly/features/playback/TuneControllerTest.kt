@@ -1,6 +1,7 @@
 package com.johncorser.telly.features.playback
 
 import com.johncorser.telly.features.history.WatchHistory
+import com.johncorser.telly.features.player.external.ExternalPlayer
 import com.johncorser.telly.testutil.FakeChannelDao
 import com.johncorser.telly.testutil.FakeKeyValueStore
 import com.johncorser.telly.testutil.FakePlayerEngine
@@ -44,6 +45,39 @@ class TuneControllerTest {
             tuner.tune(multicast)
 
             assertEquals(listOf("http://192.168.1.10:4022/udp/239.1.2.3:1234"), engine.loaded)
+        }
+
+    @Test
+    fun `a live tune publishes the Live mode for its channel`() =
+        runTest {
+            val tuner = controller()
+
+            tuner.tune(multicast)
+
+            assertEquals(TunedStream.Live(multicast), tuner.playing.value)
+        }
+
+    @Test
+    fun `an external hand-off publishes External and stops the internal engine`() =
+        runTest {
+            val news = testChannel(2, 2, "News One")
+            val tuner =
+                TuneController(
+                    engine = engine,
+                    store = store,
+                    scope = CoroutineScope(SupervisorJob() + UnconfinedTestDispatcher(testScheduler)),
+                    channelDao = FakeChannelDao(listOf(multicast, news)),
+                    history = history,
+                    policies = TunePolicies(external = ExternalPlayer(enabledForTuning = { true }, launch = { true })),
+                )
+            tuner.tune(multicast, allowExternal = false)
+
+            tuner.tune(news)
+
+            assertEquals(TunedStream.External(news), tuner.playing.value)
+            assertEquals(news.id, tuner.current.value?.id)
+            assertEquals(1, engine.stops)
+            assertEquals(1, engine.loaded.size)
         }
 
     @Test

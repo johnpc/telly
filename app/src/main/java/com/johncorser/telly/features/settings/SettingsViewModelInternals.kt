@@ -64,11 +64,14 @@ internal fun SettingsViewModel.popDetailPane() {
     }
 }
 
-/** Enabling parental controls without a PIN forces PIN setup first. */
+/**
+ * Enabling parental controls without a PIN forces PIN setup first — and the
+ * toggle only turns on once that PIN commits (see [SettingsOverlay.PinSetup]).
+ */
 internal fun SettingsViewModel.toggleParentalMaster() {
     val enabling = !parental.isEnabled
+    if (enabling && !parental.hasPin) return showOverlay(SettingsOverlay.PinSetup(armsParental = true))
     parental.setEnabled(enabling)
-    if (enabling && !parental.hasPin) showOverlay(SettingsOverlay.PinSetup)
 }
 
 internal fun SettingsViewModel.launch(block: suspend () -> Unit) {

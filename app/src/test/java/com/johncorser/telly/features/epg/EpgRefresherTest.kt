@@ -76,6 +76,37 @@ class EpgRefresherTest {
         }
 
     @Test
+    fun `a playlist whose every source failed backs off from the due loop`() =
+        runTest {
+            coEvery { playlistDao.all() } returns listOf(playlist(1, "http://e/dead.xml"))
+            var attempts = 0
+            var now = nowMs
+            val refresher =
+                EpgRefresher(
+                    playlistDao = playlistDao,
+                    scheduler = RefreshScheduler(),
+                    clock = { now },
+                    fetch =
+                        EpgFetch({
+                            attempts += 1
+                            throw IOException("dead")
+                        }),
+                )
+
+            refresher.refreshDue()
+            refresher.refreshDue() // the next minute tick / playlist emission
+            assertEquals("one attempt inside the backoff window", 1, attempts)
+
+            now += EpgRefresher.RETRY_BACKOFF_MS
+            refresher.refreshDue()
+            assertEquals(2, attempts)
+
+            // "Update EPG" is explicit and never waits.
+            refresher.refreshAllNow()
+            assertEquals(3, attempts)
+        }
+
+    @Test
     fun `custom sources are fetched after the auto-detected url-tvg`() =
         runTest {
             coEvery { playlistDao.all() } returns listOf(playlist(1, "http://e/1.xml"))
@@ -171,21 +202,29 @@ class EpgRefresherTest {
         runTest {
             coEvery { playlistDao.all() } returns listOf(playlist(1, "http://e/1.xml"))
             var failNext = true
+            var now = nowMs
             val refresher =
-                refresher {
-                    if (failNext) throw IOException("transient") else refreshedUrls += it
-                    1
-                }
+                EpgRefresher(
+                    playlistDao = playlistDao,
+                    scheduler = RefreshScheduler(),
+                    clock = { now },
+                    fetch =
+                        EpgFetch({ url ->
+                            if (failNext) throw IOException("transient") else refreshedUrls += url
+                            1
+                        }),
+                )
 
             // First run fails: no stamp, so epgLastUpdatedMs stays 0 and the
-            // scheduler keeps the source due for the next minute tick.
+            // scheduler keeps the source due — after the failure backoff.
             assertEquals(emptyList<Long>(), refresher.refreshDue())
             coVerify(exactly = 0) { playlistDao.markEpgUpdated(any(), any()) }
 
             failNext = false
+            now += EpgRefresher.RETRY_BACKOFF_MS
             assertEquals(listOf(1L), refresher.refreshDue())
             assertEquals(listOf("http://e/1.xml"), refreshedUrls)
-            coVerify(exactly = 1) { playlistDao.markEpgUpdated(1, nowMs) }
+            coVerify(exactly = 1) { playlistDao.markEpgUpdated(1, now) }
         }
 
     @Test

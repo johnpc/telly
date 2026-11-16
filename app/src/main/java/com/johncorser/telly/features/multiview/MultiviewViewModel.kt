@@ -73,9 +73,10 @@ class MultiviewViewModel(
         }
     }
 
-    /** Picker OK: Add fills the next pane, Change retunes the focused one. */
+    /** Picker OK: Add fills the next pane, Change retunes the focused one (PIN card up = ignored). */
     fun onPick(channel: ChannelEntity) {
         val mode = (mutableLayer.value as? MultiviewLayer.Picker)?.mode ?: return
+        if (gate.promptOpen) return
         gate.tune(channel) { unlocked ->
             if (mode == MultiviewPickerMode.ADD) panes.add(unlocked) else panes.change(unlocked)
             mutableLayer.value = MultiviewLayer.Panes

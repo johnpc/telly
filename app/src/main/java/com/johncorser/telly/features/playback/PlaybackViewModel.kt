@@ -11,6 +11,7 @@ import com.johncorser.telly.features.playlist.db.ChannelEntity
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.launch
 
 /**
  * Fullscreen-playback state machine: which channel is tuned, which overlay
@@ -90,12 +91,16 @@ class PlaybackViewModel(
             tuner = tuner,
             overlays = overlays,
             panel = panel,
-            seams = commandSeams(env, { instant.value = clock() }, exitToGuide, catchup),
+            seams = commandSeams(env, { instant.value = clock() }, exitToGuide),
         )
 
     init {
         // The guide's pending catch-up request owns the tune when present.
         if (!catchup.resumePending()) tuner.start()
+        // Entering PIP from ANY path (quick-bar slot or HOME) drops the overlay
+        // state: a sticky layer must not keep running keys/timers behind the
+        // tiny window and pop back when it expands.
+        scope.launch { hooks.pip.inPip.collect { if (it) overlays.set(PlaybackOverlay.None) } }
         // AFR: the engine's detected/estimated frame rate feeds the display
         // mode switch through the hook (MainActivity applies it).
         feedFrameRates(video, scope, hooks.platform.onFrameRateChanged)

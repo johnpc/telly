@@ -341,6 +341,26 @@ class MultiviewViewModelTest {
         }
 
     @Test
+    fun `picking another channel while the PIN card is up is ignored`() =
+        runTest {
+            parental.setPin("2468")
+            val vm = startedVm(lastChannelId = 1L)
+            vm.onMenuAction(MultiviewMenuAction.ADD_SCREEN)
+            vm.onPick(channels[3])
+            assertEquals(4L, vm.gate.pinPrompt.value?.id)
+
+            // An unblocked pick under the card used to close the prompt, add
+            // the pick and leave the stashed blocked add dangling.
+            vm.onPick(channels[2])
+
+            assertEquals(4L, vm.gate.pinPrompt.value?.id)
+            assertEquals(listOf(1L), vm.panes.panes.value.map { it.channel.id })
+
+            vm.gate.submit("2468")
+            assertEquals(listOf(1L, 4L), vm.panes.panes.value.map { it.channel.id })
+        }
+
+    @Test
     fun `zapping onto a blocked channel prompts and further zaps wait for the PIN`() =
         runTest {
             parental.setPin("2468")

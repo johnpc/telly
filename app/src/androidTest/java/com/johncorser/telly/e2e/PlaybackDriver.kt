@@ -177,10 +177,28 @@ class PlaybackDriver(
      * dead-locks the scenarios that hide it and then inspect the panel.
      */
     fun openPanel() {
-        dismissChrome()
-        world.longPressOk()
-        world.select("Channels list")
+        openQuickBarSlot("Channels list")
         world.waitForText("All channels")
+    }
+
+    /**
+     * Long-OK opens the quick-bar over bare playback; keys pick [slot]. The
+     * synthetic hold is re-sent while the screen is still bare: a hold whose
+     * first key-down the system refused never reaches the detector, and the
+     * bar auto-hides after 5 s — both leave bare playback, which is the one
+     * state where another long-OK is the right (idempotent) move.
+     */
+    fun openQuickBarSlot(slot: String) {
+        dismissChrome()
+        awaitCondition("quick-bar open with '$slot'") {
+            if (world.nodeCount(hasText(slot)) > 0) {
+                true
+            } else {
+                if (noChromeNow()) world.longPressOk()
+                false
+            }
+        }
+        world.selectQuickBarSlot(slot)
     }
 
     fun zapBy(delta: Int) {

@@ -75,7 +75,7 @@ private fun WizardScreenStep(
                 modifier = modifier,
             )
         WizardStep.PROCESSING -> WizardScreenProcessing(modifier)
-        WizardStep.EPG_URL ->
+        WizardStep.EPG_URL, WizardStep.SAVING ->
             WizardScreenEpgStep(
                 epgUrl = state.epgUrl,
                 error = state.error,

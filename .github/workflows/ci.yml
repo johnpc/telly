@@ -68,6 +68,9 @@ jobs:
       - name: e2e feature coverage mapping
         run: node scripts/check-feature-coverage.mjs
 
+      - name: State-machine catalog (owners + tests exist)
+        run: node scripts/check-state-machines.mjs
+
       - name: Upload JaCoCo report
         if: always()
         uses: actions/upload-artifact@v4
@@ -78,13 +81,12 @@ jobs:
   acceptance:
     name: Acceptance (${{ matrix.feature }})
     needs: quality
-    # Stays on GitHub-hosted ubuntu-latest: this job needs KVM (hardware-
-    # accelerated Linux virtualization) to run the Android emulator at a
-    # usable speed, and the emulator image here is x86_64-only (see the
-    # comment on TV_API_LEVEL below). Neither KVM nor accelerated x86_64
-    # emulation exists on the Mac Mini (Apple Silicon, no KVM equivalent) —
-    # moving this job there would mean unaccelerated software emulation,
-    # likely too slow to finish in any reasonable time. Not moved.
+    # Stays on GitHub-hosted ubuntu-latest for PARALLELISM: the 13 legs run
+    # side by side here, while the single Mac Mini would run them one after
+    # another (~35 min). The Mini CAN run the Android TV emulator — the
+    # arm64 API 36 TV image under Hypervisor.framework finishes a leg in
+    # 1–6 min (AVD `telly-tv36`; see AGENTS.md) — so it is the manual
+    # verification box and the fallback if hosted minutes run out again.
     runs-on: ubuntu-latest
     timeout-minutes: 90
     strategy:

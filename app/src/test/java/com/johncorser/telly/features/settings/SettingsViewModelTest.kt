@@ -395,15 +395,64 @@ class SettingsViewModelTest {
         runTest {
             val model = model()
             model.activate(RowIds.PARENTAL_MASTER)
-            assertTrue(settings.get(TellySettings.PARENTAL_ENABLED))
-            assertEquals(SettingsOverlay.PinSetup, model.state.value.overlay)
+            assertEquals(SettingsOverlay.PinSetup(armsParental = true), model.state.value.overlay)
+            assertFalse("not on until the PIN commits", settings.get(TellySettings.PARENTAL_ENABLED))
 
             model.submitPin("2468")
             assertNull(model.state.value.overlay)
+            assertTrue(settings.get(TellySettings.PARENTAL_ENABLED))
             assertTrue(ParentalControls(settings).verifyPin("2468"))
 
             model.activate(RowIds.PARENTAL_MASTER)
             assertFalse(settings.get(TellySettings.PARENTAL_ENABLED))
+        }
+
+    @Test
+    fun `backing out of the first-time pin setup leaves parental controls off`() =
+        runTest {
+            val model = model()
+            model.activate(RowIds.PARENTAL_MASTER)
+
+            assertTrue(model.back())
+
+            assertNull(model.state.value.overlay)
+            assertFalse(settings.get(TellySettings.PARENTAL_ENABLED))
+            assertFalse(ParentalControls(settings).hasPin)
+        }
+
+    @Test
+    fun `require PIN for settings gates the whole sheet on open and BACK leaves`() =
+        runTest {
+            ParentalControls(settings).apply {
+                setPin("2468")
+                setEnabled(true)
+            }
+            settings.set(TellySettings.PARENTAL_REQUIRE_FOR_SETTINGS, true)
+
+            val model = model()
+            assertEquals(SettingsOverlay.PinVerify(PinTarget.SETTINGS), model.state.value.overlay)
+
+            model.submitVerifyPin("1111")
+            assertEquals(
+                "a wrong PIN keeps prompting",
+                SettingsOverlay.PinVerify(PinTarget.SETTINGS),
+                model.state.value.overlay,
+            )
+            assertFalse("BACK on the entry gate leaves settings instead of revealing them", model.back())
+
+            model.submitVerifyPin("2468")
+            assertNull(model.state.value.overlay)
+            assertNull(model.state.value.activePane)
+        }
+
+    @Test
+    fun `the settings gate stays off without the toggle or without a pin`() =
+        runTest {
+            settings.set(TellySettings.PARENTAL_REQUIRE_FOR_SETTINGS, true)
+            assertNull("no pin, no gate", model().state.value.overlay)
+
+            ParentalControls(settings).setPin("2468")
+            assertNull("parental off, no gate", model().state.value.overlay)
         }
 
     @Test
@@ -429,13 +478,13 @@ class SettingsViewModelTest {
 
             model.activate(RowIds.SECTION_PREFIX + SettingsSection.PLAYLISTS.name)
 
-            assertEquals(SettingsOverlay.PinVerify(SettingsSection.PLAYLISTS), model.state.value.overlay)
+            assertEquals(SettingsOverlay.PinVerify(PinTarget.PLAYLISTS), model.state.value.overlay)
             assertNull("the section did not open", model.state.value.activePane)
 
             model.submitVerifyPin("1111")
             assertEquals(
                 "a wrong PIN keeps prompting",
-                SettingsOverlay.PinVerify(SettingsSection.PLAYLISTS),
+                SettingsOverlay.PinVerify(PinTarget.PLAYLISTS),
                 model.state.value.overlay,
             )
 
@@ -548,10 +597,10 @@ class SettingsViewModelTest {
             model.submitPin("2468")
 
             model.activate(RowIds.PARENTAL_BLOCKED_CHANNELS)
-            assertEquals(SettingsOverlay.PinVerify(), model.state.value.overlay)
+            assertEquals(SettingsOverlay.PinVerify(PinTarget.BLOCKED_CHANNELS), model.state.value.overlay)
 
             model.submitVerifyPin("1111")
-            assertEquals(SettingsOverlay.PinVerify(), model.state.value.overlay)
+            assertEquals(SettingsOverlay.PinVerify(PinTarget.BLOCKED_CHANNELS), model.state.value.overlay)
 
             model.submitVerifyPin("2468")
             assertNull(model.state.value.overlay)

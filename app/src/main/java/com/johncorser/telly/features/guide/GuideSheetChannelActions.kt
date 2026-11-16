@@ -1,6 +1,7 @@
 package com.johncorser.telly.features.guide
 
 import com.johncorser.telly.features.groups.GroupToolLauncher
+import com.johncorser.telly.features.groups.GroupToolSession
 import com.johncorser.telly.features.mylist.MyListMenuHost
 import com.johncorser.telly.features.playback.ChannelActions
 import com.johncorser.telly.features.playback.ChannelBlocker
@@ -65,7 +66,13 @@ internal fun GuideMenuController.openGroupTool(
     item: PlayerMenuItem,
     channel: ChannelEntity,
 ) {
-    val session = channelActions.groupTools?.session(route, channel, onDone = ::reset)
+    var session: GroupToolSession? = null
+    // The async completion lands only while this tool is still the layer: a
+    // BACK that already popped it must not make onDone pop the sheet too.
+    session =
+        channelActions.groupTools?.session(route, channel) {
+            if ((layer.value as? GuideLayer.GroupTool)?.session === session) reset()
+        }
     show(session?.let { GuideLayer.GroupTool(it) } ?: GuideLayer.ComingSoon(item.label, back = GuideLayer.RowMenu))
 }
 
