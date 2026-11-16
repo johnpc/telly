@@ -77,6 +77,25 @@ CI's acceptance job runs the same way on the same machine (`scripts/emulator.sh
 start` → `scripts/ci-acceptance.sh <area>` → `scripts/emulator.sh stop`, one
 leg at a time), so a green leg here predicts a green leg there.
 
+**The runners are not services you start.** `~/ci-coordinator.sh` (root,
+launchd `com.johnpc.ci-coordinator`) owns every runner on the Mini: it
+starts exactly one runner when GitHub has a queued job for it and stops it
+(`launchctl bootout`) when the work is done. So GitHub listing `mac-mini`
+as **offline** and `launchctl print system/com.johnpc.github-runner-telly`
+saying "could not find service" are the normal idle state, not an outage.
+Never ask anyone to bootstrap or kickstart a runner: a manually started
+runner is killed mid-job by the coordinator's next `kickstart -k`, and the
+coordinator then backs telly off for 30 minutes (this happened on
+2026-11-16). If a queued telly job seems stuck, read the backoff stamps in
+`~/.ci-coordinator/` and wait; cancelled legs are re-run with
+`gh run rerun <id> --failed`, which needs no access to the Mini.
+
+**Manual emulator work and CI share one machine.** Before booting the
+emulator or running Gradle on the Mini, check
+`pgrep -fl 'Runner.Worker'`: if any repo's job is running, wait. A CI leg's
+`scripts/emulator.sh stop` kills every emulator on the box, and a second
+emulator makes every bare `adb` call fail ("more than one device").
+
 The SDK's `platform-tools` is PINNED at adb 35.0.2: 37.0.1 crash-loops on
 macOS 27 while enumerating a USB stick (`usb_osx.cpp: Unable to create an
 interface plug-in`), which showed up as the emulator flapping "offline"
