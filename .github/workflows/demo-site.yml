@@ -56,9 +56,19 @@ jobs:
           test -f "$RUNNER_TEMP/demo-site/epg.xml"
           ! grep -rIl -E "AKIA|BEGIN (RSA|OPENSSH) PRIVATE KEY" "$RUNNER_TEMP/demo-site"
 
-      - uses: actions/upload-pages-artifact@v3
+      # upload-pages-artifact@v3 shells out to GNU `gtar`, which the Mac Mini
+      # does not have (no brew/sudo on the runner). deploy-pages only needs an
+      # artifact named github-pages holding a tar of the site, so build it
+      # with the system tar and upload it with the generic action.
+      - name: Archive the site as the github-pages artifact
+        run: tar -cf "$RUNNER_TEMP/artifact.tar" -C "$RUNNER_TEMP/demo-site" .
+
+      - uses: actions/upload-artifact@v4
         with:
-          path: ${{ runner.temp }}/demo-site
+          name: github-pages
+          path: ${{ runner.temp }}/artifact.tar
+          retention-days: 1
+          if-no-files-found: error
 
   deploy:
     needs: build
