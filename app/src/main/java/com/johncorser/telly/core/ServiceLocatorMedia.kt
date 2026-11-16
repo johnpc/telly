@@ -26,7 +26,11 @@ fun ServiceLocator.multiviewDeps(context: Context): MultiviewDeps =
             MultiviewTune(
                 engines = { tunedEngine(context, handleAudioFocus = false) },
                 resolveUrl = proxyResolve(settingsRepository(context)),
-                gate = BlockGate(ParentalControls(settingsRepository(context)), sharedBlockSession),
+                gate =
+                    BlockGate(
+                        ParentalControls(settingsRepository(context), relock = sharedBlockSession::relock),
+                        sharedBlockSession,
+                    ),
             ),
     )
 

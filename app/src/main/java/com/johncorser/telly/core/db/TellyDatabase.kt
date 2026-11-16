@@ -37,7 +37,7 @@ import com.johncorser.telly.features.vod.db.VodPositionEntity
         MyListEntity::class, VodItemEntity::class, VodPositionEntity::class,
         RecordingEntity::class, CustomGroupEntity::class, CustomGroupMemberEntity::class,
     ],
-    version = 12,
+    version = 13,
     exportSchema = true,
 )
 abstract class TellyDatabase : RoomDatabase() {

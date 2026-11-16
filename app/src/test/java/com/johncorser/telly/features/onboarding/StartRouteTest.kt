@@ -3,6 +3,7 @@ package com.johncorser.telly.features.onboarding
 import com.johncorser.telly.core.navigation.Route
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
+import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
 
@@ -10,16 +11,16 @@ class StartRouteTest {
     @Test
     fun `a fresh install lands on the welcome flow once the count resolves`() {
         val start = StartRoute()
-        assertEquals(Route.Welcome, start.forChannelCount(0))
+        assertEquals(StartDecision.Welcome, start.decide(0))
         assertEquals(Route.Welcome, start.forChannelCount(-1))
-        assertFalse(start.consumeUntunedStart())
+        assertTrue(start.guideTunesPreview())
     }
 
     @Test
     fun `persisted channels go straight to playback by default (last channel on start)`() {
         val start = StartRoute()
         assertEquals(Route.Playback, start.forChannelCount(30))
-        assertFalse(start.consumeUntunedStart())
+        assertTrue(start.guideTunesPreview())
     }
 
     @Test
@@ -28,8 +29,9 @@ class StartRouteTest {
 
         assertEquals(Route.Guide, start.forChannelCount(30))
 
-        assertTrue(start.consumeUntunedStart())
-        assertFalse("one-shot: later guide entries resume the preview", start.consumeUntunedStart())
+        assertFalse("the cold-start guide skips its preview tune", start.guideTunesPreview())
+        assertTrue("later guide entries resume the preview", start.guideTunesPreview())
+        assertNull("the decision was handed over exactly once", start.claimForGuide())
     }
 
     @Test
@@ -45,6 +47,17 @@ class StartRouteTest {
     fun `a fresh install never routes to the guide even with the toggle off`() {
         val start = StartRoute(lastChannelOnStart = { false })
         assertEquals(Route.Welcome, start.forChannelCount(0))
-        assertFalse(start.consumeUntunedStart())
+        assertTrue(start.guideTunesPreview())
+    }
+
+    @Test
+    fun `a later decision replaces an unclaimed one`() {
+        var on = false
+        val start = StartRoute(lastChannelOnStart = { on })
+        start.forChannelCount(5) // untuned guide decided, nobody claimed it
+        on = true
+        start.forChannelCount(5) // e.g. a restore landed on playback
+
+        assertTrue(start.guideTunesPreview())
     }
 }

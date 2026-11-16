@@ -1,5 +1,6 @@
 package com.johncorser.telly.e2e.steps
 
+import android.view.KeyEvent
 import androidx.compose.ui.semantics.SemanticsActions
 import androidx.compose.ui.test.SemanticsMatcher
 import androidx.compose.ui.test.SemanticsNodeInteraction
@@ -36,8 +37,24 @@ class SearchSteps(
     private var selectedCardName: String? = null
     private var airingsTitle: String = "Newsroom Live"
 
+    /**
+     * The quick-bar auto-hides after 5 s and only key presses keep it alive:
+     * re-open it with MENU while the screen is bare, then walk to [slot]
+     * with the D-pad (TellyWorld.selectQuickBarSlot) instead of a semantic
+     * focus request that the timer can race.
+     */
     @When("I press ok on the quick-bar {string} slot")
-    fun okOnQuickBarSlot(slot: String) = world.select(slot)
+    fun okOnQuickBarSlot(slot: String) {
+        driver.awaitCondition("quick-bar open with '$slot'") {
+            if (world.nodeCount(hasText(slot)) > 0) {
+                true
+            } else {
+                if (driver.noChromeNow()) world.pressKey(KeyEvent.KEYCODE_MENU)
+                false
+            }
+        }
+        world.selectQuickBarSlot(slot)
+    }
 
     @Then("the voice orb is focused")
     fun voiceOrbFocused() = world.waitFor(hasContentDescription("Voice search") and isFocused())

@@ -1,10 +1,13 @@
 package com.johncorser.telly.features.settings
 
+import com.johncorser.telly.core.state.StateMachine
+
 /**
  * Transient state of the manual "Update ..." action rows (Update playlist /
  * Update all playlists / Update EPG): the row whose work is in flight, and
  * the completion message shown briefly once it lands.
  */
+@StateMachine("Manual refresh")
 data class RefreshStatus(
     val busyRowId: String? = null,
     val message: String? = null,

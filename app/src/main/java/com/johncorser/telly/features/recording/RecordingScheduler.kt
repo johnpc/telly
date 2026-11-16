@@ -32,7 +32,7 @@ class RecordingScheduler(
         val now = clock()
         due.forEach { entry ->
             when {
-                entry.plannedEndMs <= now -> store.fail(entry.id)
+                entry.plannedEndMs <= now -> store.failMissed(entry.id)
                 entry.startMs <= now && !engine.isActive(entry.id) -> engine.start(entry)
             }
         }

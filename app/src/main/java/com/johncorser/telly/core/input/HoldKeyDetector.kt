@@ -1,11 +1,14 @@
 package com.johncorser.telly.core.input
 
+import com.johncorser.telly.core.state.StateMachine
+
 /**
  * Splits a key's down/up events into a tap or a hold: the first auto-repeat
  * of a held key fires [hold] once; a release without repeats fires [tap].
  * Pure logic so key mappings stay unit-testable. A null [hold] swallows the
  * long press entirely (the tap still doesn't fire after a hold).
  */
+@StateMachine("Long-press detection")
 class HoldKeyDetector<T : Any>(
     private val tap: T,
     private val hold: T?,

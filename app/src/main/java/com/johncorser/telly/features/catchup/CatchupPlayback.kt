@@ -1,5 +1,6 @@
 package com.johncorser.telly.features.catchup
 
+import com.johncorser.telly.core.state.StateMachine
 import com.johncorser.telly.features.playback.PlaybackEnv
 import com.johncorser.telly.features.playback.TuneController
 import com.johncorser.telly.features.playback.TunedStream
@@ -33,6 +34,7 @@ data class CatchupState(
  * and ANY live tune — zap, panel row, recents, Hide channel's zap-away —
  * leaves the mode without anyone having to remember to say so.
  */
+@StateMachine("Catch-up mode")
 class CatchupPlayback(
     private val env: PlaybackEnv,
     private val tuner: TuneController,

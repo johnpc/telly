@@ -111,6 +111,31 @@ class RecordingEngineTest {
         }
 
     @Test
+    fun `a row cancelled before its capture launches records nothing and finishes nothing`() =
+        runTest(StandardTestDispatcher()) {
+            val file = captureFile("News One")
+            val entry = store.schedule(recordingEntity(filePath = file.path, plannedEndMs = Long.MAX_VALUE))!!
+            var copies = 0
+            val engine =
+                engine(
+                    StreamRecorder { _, _, _ ->
+                        copies++
+                        0L
+                    },
+                )
+
+            // The scheduler's sweep saw the row, the user cancelled it a beat later.
+            engine.start(entry)
+            store.delete(entry.id)
+            advanceUntilIdle()
+
+            assertEquals(0, copies)
+            assertFalse(engine.isActive(entry.id))
+            assertEquals(emptyList<Any>(), dao.rows.value)
+            assertTrue("the foreground service ended up with no session", service.synced.last().isEmpty())
+        }
+
+    @Test
     fun `recoverStale finalizes rows left RECORDING by a killed process`() =
         runTest(StandardTestDispatcher()) {
             val file = captureFile("News One").apply { writeText("partial") }

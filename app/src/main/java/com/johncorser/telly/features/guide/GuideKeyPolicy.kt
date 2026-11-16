@@ -1,5 +1,7 @@
 package com.johncorser.telly.features.guide
 
+import com.johncorser.telly.core.state.StateMachine
+
 /** What a key press should do given the active guide layer. */
 sealed interface GuideCommand {
     data object FocusLeft : GuideCommand
@@ -52,6 +54,7 @@ sealed interface GuideCommand {
  * Channel options pane replaced the sheet, so it pops straight to the grid —
  * ref-round6 §A).
  */
+@StateMachine("Guide keys")
 object GuideKeyPolicy {
     private const val DAY = 1
 

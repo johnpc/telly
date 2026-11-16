@@ -1,5 +1,6 @@
 package com.johncorser.telly.features.pip
 
+import com.johncorser.telly.core.state.StateMachine
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -12,6 +13,7 @@ import kotlinx.coroutines.flow.asStateFlow
  * instance both sides agree on (the app has no DI container — cf.
  * ServiceLocator).
  */
+@StateMachine("Picture-in-picture")
 class PipState {
     private val mutableInPip = MutableStateFlow(false)
 

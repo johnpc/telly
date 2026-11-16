@@ -66,14 +66,13 @@ class RecordingEngine(
     private suspend fun run(capture: Active) {
         val entry = capture.entry
         try {
-            store.markStarted(entry.id)
+            // A row cancelled or deleted between the scheduler's sweep and this
+            // launch is no longer SCHEDULED: nothing to record, nothing to finish.
+            if (!store.markStarted(entry.id)) return
             var idleAttempts = 0
-            while (!capture.stopped && clock() < entry.plannedEndMs && idleAttempts < MAX_IDLE_ATTEMPTS) {
-                val written = attempt(capture)
-                idleAttempts = if (written > 0) 0 else idleAttempts + 1
-                if (!capture.stopped && clock() < entry.plannedEndMs && idleAttempts < MAX_IDLE_ATTEMPTS) {
-                    awaitRetry(capture)
-                }
+            while (keepGoing(capture, idleAttempts)) {
+                idleAttempts = if (attempt(capture) > 0) 0 else idleAttempts + 1
+                if (keepGoing(capture, idleAttempts)) awaitRetry(capture)
             }
             finish(entry)
         } finally {
@@ -81,6 +80,12 @@ class RecordingEngine(
             syncService()
         }
     }
+
+    /** The loop runs until a user stop, the planned end, or three idle attempts in a row. */
+    private fun keepGoing(
+        capture: Active,
+        idleAttempts: Int,
+    ): Boolean = !capture.stopped && clock() < capture.entry.plannedEndMs && idleAttempts < MAX_IDLE_ATTEMPTS
 
     /** One copy attempt; connection errors count as an idle attempt. */
     private suspend fun attempt(capture: Active): Long {

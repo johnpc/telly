@@ -28,6 +28,14 @@ sealed interface PlaybackCommand {
 
     /** Open the channel panel (the "Open channels list" key remap). */
     data object OpenPanel : PlaybackCommand
+
+    /** Show a sticky overlay (sheet, picker, pushed screen, prompt); cancels any auto-hide. */
+    data class Show(
+        val overlay: PlaybackOverlay,
+    ) : PlaybackCommand
+
+    /** D-pad browsing inside a transient overlay restarts its auto-hide countdown. */
+    data object KeepAlive : PlaybackCommand
 }
 
 /**

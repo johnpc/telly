@@ -38,15 +38,15 @@ fun SettingsViewModel.submitText(value: String) {
     val edit = state.value.overlay as? SettingsOverlay.TextEdit ?: return
     when (edit.rowId) {
         RowIds.PLAYLIST_NAME ->
-            currentDetailUrl()?.let { url ->
+            edit.playlistUrl?.let { url ->
                 launch { playlistRepository.rename(url, value.trim().ifEmpty { url }) }
             }
         RowIds.USER_AGENT -> settings.set(TellySettings.USER_AGENT, value.trim())
         RowIds.UDP_PROXY -> settings.set(TellySettings.UDP_PROXY, value.trim())
         RowIds.EPG_ADD_SOURCE -> addEpgSource(value)
         RowIds.EPG_SOURCE_URL -> setEpgSourceUrl(value)
-        RowIds.PLAYLIST_USER_AGENT -> submitPlaylistUserAgent(value)
-        RowIds.PLAYLIST_URL -> submitPlaylistUrl(value)
+        RowIds.PLAYLIST_USER_AGENT -> edit.playlistUrl?.let { submitPlaylistUserAgent(it, value) }
+        RowIds.PLAYLIST_URL -> edit.playlistUrl?.let { submitPlaylistUrl(it, value) }
     }
     dismissOverlay()
 }

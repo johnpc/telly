@@ -2,6 +2,7 @@ package com.johncorser.telly.features.player
 
 import androidx.media3.common.PlaybackException
 import androidx.media3.exoplayer.ExoPlayer
+import com.johncorser.telly.core.state.StateMachine
 
 /**
  * Auto-reconnect for dropped live streams: while the [policy]'s backoff
@@ -15,6 +16,7 @@ import androidx.media3.exoplayer.ExoPlayer
  * touch a released player. Retirement is an epoch check inside the posted
  * closure — the scheduler seam stays a plain post with no cancel handle.
  */
+@StateMachine("Engine connection")
 class EngineReconnector(
     private val player: ExoPlayer,
     private val policy: ReconnectPolicy,

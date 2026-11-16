@@ -14,7 +14,10 @@ data class PlaybackCommandSeams(
 /**
  * Executes [PlaybackCommand]s against the tuner and overlay state — the
  * transition half of the playback state machine, split from the ViewModel
- * so each stays small and directly testable.
+ * so each stays small and directly testable. It is the ONE writer of
+ * [OverlayState] (docs/state-machines.md; `scripts/check-state-machines.mjs`
+ * fails the gate on any other caller): the menu handler, track pickers,
+ * recording prompts and PIP all express their overlay moves as commands.
  */
 class PlaybackCommands(
     private val tuner: TuneController,
@@ -37,8 +40,13 @@ class PlaybackCommands(
             PlaybackCommand.Dismiss -> overlays.set(PlaybackOverlay.None)
             PlaybackCommand.BackToPanel -> overlays.set(PlaybackOverlay.Panel)
             is PlaybackCommand.PopTo -> overlays.set(command.overlay)
+            is PlaybackCommand.Show -> overlays.set(command.overlay)
+            PlaybackCommand.KeepAlive -> overlays.keepAlive()
         }
     }
+
+    /** The overlay currently up (readers derive from this; writers go through [execute]). */
+    val overlay: PlaybackOverlay get() = overlays.value
 
     /** The quick-bar's Channels list opens the panel at the tuned row. */
     fun openPanel() {

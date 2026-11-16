@@ -1,5 +1,6 @@
 package com.johncorser.telly.features.search
 
+import com.johncorser.telly.core.state.StateMachine
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -21,6 +22,7 @@ enum class SearchProgramAction(
 }
 
 /** What covers the search screen: nothing, the dropdown, or a placeholder. */
+@StateMachine("Search overlay")
 sealed interface SearchOverlay {
     data object None : SearchOverlay
 

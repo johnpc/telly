@@ -1,5 +1,7 @@
 package com.johncorser.telly.features.settings
 
+import com.johncorser.telly.core.state.StateMachine
+
 /** One pushed sheet: a section, or a deeper sub-sheet. */
 sealed interface SettingsPane {
     data class Section(
@@ -52,6 +54,7 @@ sealed interface SettingsPane {
 }
 
 /** Modal state over the sheet stack. */
+@StateMachine("Settings sheet")
 sealed interface SettingsOverlay {
     data class Picker(
         val spec: PickerSpec,
@@ -62,6 +65,8 @@ sealed interface SettingsOverlay {
         val rowId: String,
         val title: String,
         val value: String,
+        /** The playlist a per-playlist edit belongs to, captured when the editor opened. */
+        val playlistUrl: String? = null,
     ) : SettingsOverlay
 
     data class ConfirmDelete(
@@ -104,6 +109,7 @@ sealed interface SettingsOverlay {
 }
 
 /** What a verified PIN unlocks (the "Require PIN for …" toggles + the blocked list). */
+@StateMachine("Parental PIN gates")
 enum class PinTarget {
     /** "Require PIN for Settings": verified = the sheet opens; BACK leaves settings. */
     SETTINGS,

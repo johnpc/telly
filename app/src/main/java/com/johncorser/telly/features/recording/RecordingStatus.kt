@@ -1,8 +1,10 @@
 package com.johncorser.telly.features.recording
 
+import com.johncorser.telly.core.state.StateMachine
 import com.johncorser.telly.features.recording.db.RecordingEntity
 
 /** Lifecycle of a DVR entry; persisted by name in the recordings table. */
+@StateMachine("Recording row")
 enum class RecordingStatus {
     /** Waiting for its start time (custom/programme recordings). */
     SCHEDULED,

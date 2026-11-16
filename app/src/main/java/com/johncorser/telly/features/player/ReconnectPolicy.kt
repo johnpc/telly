@@ -1,5 +1,7 @@
 package com.johncorser.telly.features.player
 
+import com.johncorser.telly.core.state.StateMachine
+
 /**
  * Live-stream auto-reconnect budget. On each player error the engine asks for
  * the [nextDelayMs] backoff — 1s, 2s, 4s, 8s… doubling and capped at
@@ -9,6 +11,7 @@ package com.johncorser.telly.features.player
  * drops again hours later gets a fresh budget. Pure logic, no clock or Android
  * types — the engine owns the actual scheduling so this stays JVM-testable.
  */
+@StateMachine("Reconnect budget")
 class ReconnectPolicy(
     private val maxAttempts: Int = 6,
     private val baseDelayMs: Long = 1_000L,

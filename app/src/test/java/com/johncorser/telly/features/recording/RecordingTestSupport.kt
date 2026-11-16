@@ -49,21 +49,36 @@ class FakeRecordingDao : RecordingDao {
 
     override suspend fun finish(
         id: Long,
+        from: String,
         status: String,
         endMs: Long,
         sizeBytes: Long,
-    ) {
-        rows.update { list ->
-            list.map { if (it.id == id) it.copy(status = status, endMs = endMs, sizeBytes = sizeBytes) else it }
-        }
-    }
+    ): Int = guarded(id, RecordingStatus.of(from)) { it.copy(status = status, endMs = endMs, sizeBytes = sizeBytes) }
 
     override suspend fun markStarted(
         id: Long,
         status: String,
         startMs: Long,
-    ) {
-        rows.update { list -> list.map { if (it.id == id) it.copy(status = status, startMs = startMs) else it } }
+    ): Int = guarded(id, RecordingStatus.SCHEDULED) { it.copy(status = status, startMs = startMs) }
+
+    /** Mirrors the SQL `WHERE id = :id AND status = :from` guard; returns rows changed. */
+    private fun guarded(
+        id: Long,
+        from: RecordingStatus,
+        change: (RecordingEntity) -> RecordingEntity,
+    ): Int {
+        var changed = 0
+        rows.update { list ->
+            list.map {
+                if (it.id == id && it.status == from.name) {
+                    changed++
+                    change(it)
+                } else {
+                    it
+                }
+            }
+        }
+        return changed
     }
 
     override suspend fun delete(id: Long) {

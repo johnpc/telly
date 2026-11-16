@@ -18,7 +18,7 @@ import com.johncorser.telly.features.recording.RecordingPrompt
  */
 class PlaybackMenuHandler(
     internal val actions: SheetActions,
-    internal val overlays: OverlayState,
+    internal val commands: PlaybackCommands,
     internal val tuner: TuneController,
     internal val hooks: PlaybackHooks = PlaybackHooks(),
     private val rowOf: (Long) -> PanelRow? = { null },
@@ -27,10 +27,15 @@ class PlaybackMenuHandler(
     /** Which sheet row BACK from a pushed screen re-focuses. */
     val sheetFocus = PlayerMenuFocus()
 
+    /** The overlay up right now (read-only; every write is a [PlaybackCommand]). */
+    internal val overlay: PlaybackOverlay get() = commands.overlay
+
+    internal fun show(next: PlaybackOverlay) = commands.execute(PlaybackCommand.Show(next))
+
     /** Long-OK on a panel row: a fresh sheet, focus reset to the first row. */
     fun openChannelMenu(channelId: Long) {
         sheetFocus.clear()
-        overlays.set(PlaybackOverlay.ChannelMenu(channelId))
+        show(PlaybackOverlay.ChannelMenu(channelId))
     }
 
     /**
@@ -39,7 +44,7 @@ class PlaybackMenuHandler(
      */
     fun menuChannel(): ChannelEntity? {
         val id =
-            (overlays.value as? PlaybackOverlay.ChannelMenu)?.channelId
+            (overlay as? PlaybackOverlay.ChannelMenu)?.channelId
                 ?: tuner.current.value?.id
                 ?: return null
         return tuner.byId(id) ?: tuner.current.value
@@ -55,15 +60,15 @@ class PlaybackMenuHandler(
             PlayerMenuRoute.HIDE_CHANNEL -> hide(channel)
             // The row fires the chooser regardless of the tune-time setting.
             PlayerMenuRoute.EXTERNAL_PLAYER -> {
-                val next = afterAction(overlays.value)
+                val next = afterAction(overlay)
                 hooks.platform.external.open(channel.source.streamUrl)
-                overlays.set(next)
+                show(next)
             }
             PlayerMenuRoute.TOGGLE_BLOCK ->
                 push { back -> PlaybackOverlay.BlockPin(channel, actions.blocker.mode(), back) }
             PlayerMenuRoute.DESCRIPTION -> push { back -> description(rowOf(channel.id), back) }
             PlayerMenuRoute.CHANNEL_OPTIONS ->
-                overlays.set(PlaybackOverlay.ChannelOptions(channel, back = afterAction(overlays.value)))
+                show(PlaybackOverlay.ChannelOptions(channel, back = afterAction(overlay)))
             PlayerMenuRoute.MY_LIST_TOGGLE, PlayerMenuRoute.MANAGE_FAVORITES, PlayerMenuRoute.REORDER_CHANNELS ->
                 runMyList(route, channel)
             PlayerMenuRoute.RECORD -> record { it.onRecord(channel) }
@@ -80,12 +85,12 @@ class PlaybackMenuHandler(
         route: PlayerMenuRoute,
         channel: ChannelEntity,
     ) {
-        val exit = afterAction(overlays.value)
+        val exit = afterAction(overlay)
         var session: GroupToolSession? = null
         // Completion lands only while this tool is still the overlay (see the guide host).
         session =
             actions.groupTools?.session(route, channel) {
-                if ((overlays.value as? PlaybackOverlay.GroupTool)?.session === session) overlays.set(exit)
+                if ((overlay as? PlaybackOverlay.GroupTool)?.session === session) show(exit)
             }
         if (session == null) {
             push { back -> PlaybackOverlay.ComingSoon(item.label, back) }
@@ -109,18 +114,18 @@ class PlaybackMenuHandler(
 
     /** Maps DVR prompts onto overlays (the guide's controller does its own). */
     fun onRecordingPrompt(prompt: RecordingPrompt) {
-        overlays.set(PlaybackRecordingPrompts.overlayFor(prompt, overlays.value))
+        show(PlaybackRecordingPrompts.overlayFor(prompt, overlay))
     }
 
     /** Pushed screens remember the overlay behind them; BACK pops to it. */
-    internal fun push(next: (back: PlaybackOverlay) -> PlaybackOverlay) = overlays.set(next(overlays.value))
+    internal fun push(next: (back: PlaybackOverlay) -> PlaybackOverlay) = show(next(overlay))
 
     /**
      * Search and the settings sheet open over bare playback (no stale
      * panel/menu chrome behind the scrim).
      */
     internal fun openScreen(open: () -> Unit) {
-        overlays.set(PlaybackOverlay.None)
+        commands.execute(PlaybackCommand.Dismiss)
         open()
     }
 }

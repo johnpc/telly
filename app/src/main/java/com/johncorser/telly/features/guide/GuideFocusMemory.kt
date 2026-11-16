@@ -1,5 +1,7 @@
 package com.johncorser.telly.features.guide
 
+import com.johncorser.telly.core.state.StateMachine
+
 /** One settable unit of engine state: focus (null = none) + scroll. */
 data class GuideFocusState(
     val focus: GuideFocus?,
@@ -23,6 +25,7 @@ data class GuideFocusSnapshot(
  * vanished channel (hidden from its own sheet) keeps the engine's
  * index-resolved fallback.
  */
+@StateMachine("Guide focus memory")
 class GuideFocusMemory(
     private val engine: GuideFocusEngine,
     private val visibleRows: () -> Int = { GuideGeometry.VISIBLE_ROWS },

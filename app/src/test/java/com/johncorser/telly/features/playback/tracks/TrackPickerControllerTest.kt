@@ -1,34 +1,33 @@
 package com.johncorser.telly.features.playback.tracks
 
-import com.johncorser.telly.features.playback.OverlayState
+import com.johncorser.telly.features.playback.PlaybackCommand
 import com.johncorser.telly.features.playback.PlaybackOverlay
 import com.johncorser.telly.features.playback.QuickBarAction
 import com.johncorser.telly.features.player.tracks.TextTrack
 import com.johncorser.telly.features.player.tracks.TrackSnapshot
 import com.johncorser.telly.testutil.FakeTrackFacade
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
 import org.junit.Assert.assertEquals
 import org.junit.Test
 
 class TrackPickerControllerTest {
-    private val overlays = OverlayState(CoroutineScope(Dispatchers.Unconfined))
+    /** The picker expresses every overlay move as a command (the one overlay writer executes them). */
+    private val commands = mutableListOf<PlaybackCommand>()
     private val tracks = FakeTrackFacade(TrackSnapshot(texts = listOf(TextTrack("2:0", "en"))))
-    private val controller = TrackPickerController(tracks, overlays)
+    private val controller = TrackPickerController(tracks) { commands += it }
 
     @Test
     fun `each stream slot opens its picker overlay`() {
         controller.open(QuickBarAction.RESOLUTION)
-        assertEquals(PlaybackOverlay.TrackPicker(TrackPickerKind.VIDEO), overlays.value)
+        assertEquals(PlaybackCommand.Show(PlaybackOverlay.TrackPicker(TrackPickerKind.VIDEO)), commands.last())
 
         controller.open(QuickBarAction.AUDIO)
-        assertEquals(PlaybackOverlay.TrackPicker(TrackPickerKind.AUDIO), overlays.value)
+        assertEquals(PlaybackCommand.Show(PlaybackOverlay.TrackPicker(TrackPickerKind.AUDIO)), commands.last())
 
         controller.open(QuickBarAction.LATENCY)
-        assertEquals(PlaybackOverlay.TrackPicker(TrackPickerKind.SYNC), overlays.value)
+        assertEquals(PlaybackCommand.Show(PlaybackOverlay.TrackPicker(TrackPickerKind.SYNC)), commands.last())
 
         controller.open(QuickBarAction.SUBTITLES)
-        assertEquals(PlaybackOverlay.TrackPicker(TrackPickerKind.SUBTITLES), overlays.value)
+        assertEquals(PlaybackCommand.Show(PlaybackOverlay.TrackPicker(TrackPickerKind.SUBTITLES)), commands.last())
     }
 
     @Test
@@ -38,7 +37,7 @@ class TrackPickerControllerTest {
         controller.onRow(TrackPickerKind.SUBTITLES, "2:0")
 
         assertEquals(listOf("2:0"), tracks.textSelections)
-        assertEquals(PlaybackOverlay.None, overlays.value)
+        assertEquals(PlaybackCommand.Dismiss, commands.last())
         assertEquals("English", controller.subtitleLabel())
     }
 
@@ -49,7 +48,7 @@ class TrackPickerControllerTest {
 
         controller.onRow(TrackPickerKind.SYNC, plus50)
 
-        assertEquals(PlaybackOverlay.TrackPicker(TrackPickerKind.SYNC), overlays.value)
+        assertEquals(PlaybackCommand.Show(PlaybackOverlay.TrackPicker(TrackPickerKind.SYNC)), commands.last())
         assertEquals("+50 ms", controller.syncLabel())
     }
 

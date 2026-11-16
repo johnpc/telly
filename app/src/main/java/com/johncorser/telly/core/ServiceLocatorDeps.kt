@@ -62,12 +62,12 @@ fun ServiceLocator.playbackDeps(
                     PanelTimeouts.forSeconds(settingsRepository(context).get(TellySettings.PLAYER_PANEL_TIMEOUT_SEC))
                 },
             ),
-        parental = ParentalControls(settingsRepository(context)),
+        parental = ParentalControls(settingsRepository(context), relock = sharedBlockSession::relock),
         hooks =
             hooks.copy(
                 playerKeymap = { PlayerKeymap.from(settingsRepository(context)) },
                 recording = recordingCenter(context),
-                parental = ParentalControls(settingsRepository(context)),
+                parental = ParentalControls(settingsRepository(context), relock = sharedBlockSession::relock),
                 blockSession = sharedBlockSession,
                 catchup =
                     CatchupDeps(

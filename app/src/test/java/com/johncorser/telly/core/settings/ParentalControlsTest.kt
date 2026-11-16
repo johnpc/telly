@@ -111,4 +111,17 @@ class ParentalControlsTest {
         settings.set(TellySettings.PARENTAL_PIN_INPUT_METHOD, "Picker")
         assertFalse(parental.usesKeyboardPin)
     }
+
+    @Test
+    fun `turning parental off or changing the pin relocks the session`() {
+        var relocks = 0
+        val parental = ParentalControls(SettingsRepository(InMemoryKeyValueStore()), relock = { relocks++ })
+
+        parental.setEnabled(true)
+        assertEquals("enabling grants nothing to drop", 0, relocks)
+        parental.setPin("2468")
+        assertEquals("a new PIN ends any session unlock", 1, relocks)
+        parental.setEnabled(false)
+        assertEquals(2, relocks)
+    }
 }

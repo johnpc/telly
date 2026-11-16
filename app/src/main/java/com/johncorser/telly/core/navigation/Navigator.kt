@@ -1,5 +1,6 @@
 package com.johncorser.telly.core.navigation
 
+import com.johncorser.telly.core.state.StateMachine
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -9,6 +10,7 @@ import kotlinx.coroutines.flow.update
  * Hand-rolled typed back stack (see CLAUDE.md decisions log). The UI renders
  * the top of [stack]; BACK pops one entry via [pop].
  */
+@StateMachine("Navigator")
 class Navigator(
     start: Route = Route.Welcome,
 ) {

@@ -38,6 +38,17 @@ Before adding a boolean, a nullable "pending" field, a counter or a
 its sealed type and the transition to its owner instead. If the machine is
 not in the catalog yet, add a row (status `implicit`) first, then convert.
 
+Mechanics the gate enforces:
+- An `explicit` row's owner type carries `@StateMachine("<row name>")`
+  (`core/state/StateMachine.kt`); markers and rows must match both ways.
+- The fullscreen overlay has one writer: `OverlayState` mutators are called
+  only from `PlaybackCommands.kt`. Express a new overlay move as a
+  `PlaybackCommand`, never as a direct `overlays.set`.
+- A class-level `consume*()` or `var pending` in a file the catalog does not
+  cite fails the gate: add the row (hand-off mailboxes count) or convert.
+- Persisted modes get a guarded SQL transition (`WHERE status = :from`) that
+  reports whether it happened; callers branch on the result.
+
 ## 3. Verification happens on the Mac mini
 
 The Mac mini (`johns-Mac-Mini.local`, user `john`, Apple Silicon) is the
@@ -65,6 +76,14 @@ adb shell screenrecord --time-limit 30 /sdcard/clip.mp4 && adb pull /sdcard/clip
 CI's acceptance job runs the same way on the same machine (`scripts/emulator.sh
 start` → `scripts/ci-acceptance.sh <area>` → `scripts/emulator.sh stop`, one
 leg at a time), so a green leg here predicts a green leg there.
+
+The SDK's `platform-tools` is PINNED at adb 35.0.2: 37.0.1 crash-loops on
+macOS 27 while enumerating a USB stick (`usb_osx.cpp: Unable to create an
+interface plug-in`), which showed up as the emulator flapping "offline"
+between legs. The 37.0.1 directory sits beside it as
+`platform-tools-37.0.1-crashes-on-macos27`. Never run `sdkmanager
+platform-tools` or `android-actions/setup-android` on the Mini (the
+self-hosted CI jobs deliberately skip that step).
 
 Rules of engagement: no `sudo`, no global installs, never touch
 `~/actions-runner-*/_work`, and check `pgrep -fl Runner.Worker || echo idle`

@@ -85,7 +85,7 @@ class MainActivity : ComponentActivity() {
                 repository = repository,
                 fetchPlaylist = fetcher::fetch,
                 playbackDeps = playbackDeps,
-                guideDeps = ServiceLocator.guideDeps(this, playbackDeps) { !startRoute.consumeUntunedStart() },
+                guideDeps = ServiceLocator.guideDeps(this, playbackDeps, startRoute::guideTunesPreview),
                 settingsGraph = settingsGraph(fetcher),
                 searchDeps = ServiceLocator.searchDeps(this, voice = voice.voice),
                 multiviewDeps = ServiceLocator.multiviewDeps(this),

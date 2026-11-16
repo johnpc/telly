@@ -5,6 +5,7 @@ import com.johncorser.telly.core.epgRefresher
 import com.johncorser.telly.core.searchHistoryStore
 import com.johncorser.telly.core.settings.ParentalControls
 import com.johncorser.telly.core.settings.TellySettings
+import com.johncorser.telly.core.sharedBlockSession
 import com.johncorser.telly.features.playlist.M3uFetcher
 import com.johncorser.telly.features.playlist.PlaylistUrlChanger
 import com.johncorser.telly.features.recording.RecordingSettingsHook
@@ -29,7 +30,7 @@ internal fun MainActivity.settingsGraph(fetcher: M3uFetcher): SettingsGraph {
     return SettingsGraph(
         settings = settings,
         playlists = repository,
-        parental = ParentalControls(settings),
+        parental = ParentalControls(settings, relock = sharedBlockSession::relock),
         actions =
             SettingsActions(
                 updater = PlaylistUpdater(fetcher::fetch, repository),

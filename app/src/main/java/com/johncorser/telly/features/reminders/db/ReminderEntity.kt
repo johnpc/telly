@@ -21,4 +21,6 @@ data class ReminderEntity(
     val title: String,
     val startMs: Long,
     val stopMs: Long,
+    /** v13: the clock when the popup was claimed (0 = not yet); a claimed row never fires again. */
+    val firedAtMs: Long = 0,
 )

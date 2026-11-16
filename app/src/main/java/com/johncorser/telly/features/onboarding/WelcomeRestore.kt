@@ -1,8 +1,10 @@
 package com.johncorser.telly.features.onboarding
 
 import com.johncorser.telly.core.settings.BackupCodec
+import com.johncorser.telly.core.state.StateMachine
 
 /** The welcome screen's "Restore previous setup" affordance state. */
+@StateMachine("Welcome restore offer")
 sealed interface RestoreOffer {
     /** No backup anywhere we can see: the plain two-button welcome. */
     data object None : RestoreOffer

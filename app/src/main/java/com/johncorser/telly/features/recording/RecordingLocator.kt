@@ -9,6 +9,7 @@ import com.johncorser.telly.core.tunedEngine
 import com.johncorser.telly.features.epg.EpgRepository
 import com.johncorser.telly.features.epg.ProgramTitle
 import com.johncorser.telly.features.playback.PlaybackTime
+import kotlinx.coroutines.CoroutineExceptionHandler
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -17,22 +18,9 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import java.io.File
 
-/**
- * The recording slice's composition root, keyed by the app database so a
- * fresh database (the e2e harness resets it per scenario) rebuilds the
- * runtime instead of leaking a closed one. The center is app-scoped: a
- * capture keeps running while the user navigates routes or the activity
- * backgrounds (the foreground service holds the process).
- */
-private class RecordingRuntime(
-    val db: TellyDatabase,
-    val scope: CoroutineScope,
-    val center: RecordingCenter,
-)
-
 @Volatile
-private var runtime: RecordingRuntime? = null
-private val runtimeLock = Any()
+internal var runtime: RecordingRuntime? = null
+internal val runtimeLock = Any()
 
 /** The app-scoped DVR facade, rebuilt when the app database is swapped. */
 fun ServiceLocator.recordingCenter(context: Context): RecordingCenter {
@@ -66,7 +54,9 @@ private fun buildRecordingRuntime(
     userAgentFor: (streamUrl: String) -> String,
 ): RecordingRuntime {
     val clock = ServiceLocator.clock
-    val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
+    // A failed recovery sweep or scheduler tick is logged, never a crash.
+    val failures = CoroutineExceptionHandler { _, e -> Log.w(LOG_TAG, "recording runtime failed", e) }
+    val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO + failures)
     val store = RecordingStore(db.recordingDao, clock)
     val hlsClient = HlsClient(userAgentFor = userAgentFor)
     val files =

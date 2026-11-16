@@ -4,6 +4,7 @@ import android.content.Context
 import android.util.Xml
 import androidx.annotation.VisibleForTesting
 import androidx.room.Room
+import com.johncorser.telly.core.db.StateMigrations
 import com.johncorser.telly.core.db.TellyDatabase
 import com.johncorser.telly.core.kv.KeyValueStore
 import com.johncorser.telly.core.kv.SharedPrefsKeyValueStore
@@ -59,6 +60,7 @@ object ServiceLocator {
                     CatchupMigration.MIGRATION_9_10,
                     ChannelOptionsMigration.MIGRATION_10_11,
                     CustomGroupsMigration.MIGRATION_11_12,
+                    StateMigrations.MIGRATION_12_13,
                 )
                 .build()
                 .also { database = it }

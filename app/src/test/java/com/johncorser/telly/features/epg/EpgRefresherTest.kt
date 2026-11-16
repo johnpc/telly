@@ -32,12 +32,14 @@ class EpgRefresherTest {
         id: Long,
         epgUrl: String?,
         epgLastUpdatedMs: Long = 0,
+        epgFailedAtMs: Long = 0,
     ) = PlaylistEntity(
         id = id,
         name = "p$id",
         url = "http://p/$id.m3u",
         epgUrl = epgUrl,
         epgLastUpdatedMs = epgLastUpdatedMs,
+        epgFailedAtMs = epgFailedAtMs,
     )
 
     @Test
@@ -76,16 +78,15 @@ class EpgRefresherTest {
         }
 
     @Test
-    fun `a playlist whose every source failed backs off from the due loop`() =
+    fun `a playlist whose every source failed is stamped failed and backs off`() =
         runTest {
             coEvery { playlistDao.all() } returns listOf(playlist(1, "http://e/dead.xml"))
             var attempts = 0
-            var now = nowMs
             val refresher =
                 EpgRefresher(
                     playlistDao = playlistDao,
                     scheduler = RefreshScheduler(),
-                    clock = { now },
+                    clock = { nowMs },
                     fetch =
                         EpgFetch({
                             attempts += 1
@@ -93,17 +94,19 @@ class EpgRefresherTest {
                         }),
                 )
 
-            refresher.refreshDue()
-            refresher.refreshDue() // the next minute tick / playlist emission
-            assertEquals("one attempt inside the backoff window", 1, attempts)
+            assertEquals(emptyList<Long>(), refresher.refreshDue())
 
-            now += EpgRefresher.RETRY_BACKOFF_MS
-            refresher.refreshDue()
-            assertEquals(2, attempts)
+            assertEquals(1, attempts)
+            coVerify(exactly = 1) { playlistDao.markEpgFailed(1, nowMs) }
+            coVerify(exactly = 0) { playlistDao.markEpgUpdated(any(), any()) }
 
-            // "Update EPG" is explicit and never waits.
+            // The persisted stamp keeps the due loop away until the backoff passes…
+            coEvery { playlistDao.all() } returns listOf(playlist(1, "http://e/dead.xml", epgFailedAtMs = nowMs))
+            refresher.refreshDue()
+            assertEquals("inside the backoff window", 1, attempts)
+            // …but "Update EPG" is explicit and never waits.
             refresher.refreshAllNow()
-            assertEquals(3, attempts)
+            assertEquals(2, attempts)
         }
 
     @Test
@@ -215,13 +218,15 @@ class EpgRefresherTest {
                         }),
                 )
 
-            // First run fails: no stamp, so epgLastUpdatedMs stays 0 and the
-            // scheduler keeps the source due — after the failure backoff.
+            // First run fails: no success stamp, a failure stamp, so the source
+            // stays due — after the failure backoff.
             assertEquals(emptyList<Long>(), refresher.refreshDue())
             coVerify(exactly = 0) { playlistDao.markEpgUpdated(any(), any()) }
+            coVerify(exactly = 1) { playlistDao.markEpgFailed(1, now) }
 
             failNext = false
-            now += EpgRefresher.RETRY_BACKOFF_MS
+            coEvery { playlistDao.all() } returns listOf(playlist(1, "http://e/1.xml", epgFailedAtMs = now))
+            now += EpgFreshness.RETRY_BACKOFF_MS
             assertEquals(listOf(1L), refresher.refreshDue())
             assertEquals(listOf("http://e/1.xml"), refreshedUrls)
             coVerify(exactly = 1) { playlistDao.markEpgUpdated(1, now) }

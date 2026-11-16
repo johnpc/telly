@@ -40,17 +40,6 @@ class RecordingsViewModel(
     zone: TimeZone,
     private val scope: CoroutineScope,
 ) {
-    val rows: StateFlow<List<RecordingRow>> =
-        center.recordings
-            .map { entries -> RecordingRows.rows(entries, zone) }
-            .stateIn(scope, SharingStarted.Eagerly, emptyList())
-
-    private val mutableConfirm = MutableStateFlow<RecordingsConfirm?>(null)
-    val confirm: StateFlow<RecordingsConfirm?> = mutableConfirm.asStateFlow()
-
-    private val mutablePlaying = MutableStateFlow<RecordingRow?>(null)
-    val playing: StateFlow<RecordingRow?> = mutablePlaying.asStateFlow()
-
     /**
      * Rows whose Stop confirm was accepted: the UI truth is "stopped" the
      * moment the user confirms, even while the capture winds down its last
@@ -58,6 +47,24 @@ class RecordingsViewModel(
      * not reopen the stop confirm off the not-yet-finalized RECORDING row.
      */
     private val stoppedIds = mutableSetOf<Long>()
+
+    val rows: StateFlow<List<RecordingRow>> =
+        center.recordings
+            .map { entries ->
+                // The optimistic "stopped" marks live only until Room shows the
+                // row finalized; a mark can never outlive its RECORDING row.
+                stoppedIds.retainAll { id ->
+                    entries.any { it.id == id && it.recordingStatus == RecordingStatus.RECORDING }
+                }
+                RecordingRows.rows(entries, zone)
+            }
+            .stateIn(scope, SharingStarted.Eagerly, emptyList())
+
+    private val mutableConfirm = MutableStateFlow<RecordingsConfirm?>(null)
+    val confirm: StateFlow<RecordingsConfirm?> = mutableConfirm.asStateFlow()
+
+    private val mutablePlaying = MutableStateFlow<RecordingRow?>(null)
+    val playing: StateFlow<RecordingRow?> = mutablePlaying.asStateFlow()
 
     /** OK: play DONE captures, confirm stop/cancel/delete for the rest. */
     fun onRowClick(row: RecordingRow) {

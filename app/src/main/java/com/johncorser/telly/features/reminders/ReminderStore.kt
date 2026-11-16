@@ -38,6 +38,12 @@ class ReminderStore(
         }
     }
 
+    /** Claims the popup for [id] at [atMs]; false when it was already claimed. */
+    suspend fun markFired(
+        id: Long,
+        atMs: Long,
+    ): Boolean = dao.markFired(id, atMs) > 0
+
     /** Deletes one reminder (settings confirm; engine after firing). */
     suspend fun remove(id: Long) = dao.delete(id)
 }

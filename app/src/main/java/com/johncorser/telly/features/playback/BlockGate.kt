@@ -1,6 +1,7 @@
 package com.johncorser.telly.features.playback
 
 import com.johncorser.telly.core.settings.ParentalControls
+import com.johncorser.telly.core.state.StateMachine
 import com.johncorser.telly.features.playlist.db.ChannelEntity
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -9,10 +10,23 @@ import kotlinx.coroutines.flow.asStateFlow
 /**
  * One process-wide "already unlocked" bit shared by every [BlockGate]
  * (guide preview + fullscreen playback build their own tuners), honored
- * only while "Don't require PIN after unlocking" says so.
+ * only while "Don't require PIN after unlocking" says so. [relock] is wired
+ * into [ParentalControls]: disabling parental controls or changing the PIN
+ * ends the session's unlock — a stale unlock can no longer outlive the
+ * settings that granted it.
  */
+@StateMachine("Block session")
 class BlockSession {
     var unlocked: Boolean = false
+        private set
+
+    fun unlock() {
+        unlocked = true
+    }
+
+    fun relock() {
+        unlocked = false
+    }
 }
 
 /**
@@ -20,6 +34,7 @@ class BlockSession {
  * channels stay listed but are PIN-gated to play). Pure logic — the wheel
  * dialog lives in the UI layer; wrong or cancelled PINs never tune.
  */
+@StateMachine("Blocked-channel gate")
 class BlockGate(
     private val parental: ParentalControls? = null,
     private val session: BlockSession = BlockSession(),
@@ -51,7 +66,7 @@ class BlockGate(
     fun unlock(pin: String): ChannelEntity? {
         val channel = pending.value ?: return null
         if (parental?.verifyPin(pin) != true) return null
-        if (parental.relocksAfterUnlock().not()) session.unlocked = true
+        if (parental.relocksAfterUnlock().not()) session.unlock()
         pending.value = null
         passOnceId = channel.id
         return channel

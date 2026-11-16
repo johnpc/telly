@@ -1,5 +1,7 @@
 package com.johncorser.telly.features.playback
 
+import com.johncorser.telly.core.state.StateMachine
+
 /**
  * Foreground/background transitions for a screen that owns the tuner.
  * Activity STOP stops the stream — the reference abandons audio focus and
@@ -15,6 +17,7 @@ package com.johncorser.telly.features.playback
  * picture-in-picture window the video must keep playing, so its host passes
  * a predicate that vetoes the stop for that state (PipState, features/pip).
  */
+@StateMachine("Background suspend")
 class PlaybackLifecycle(
     private val tuner: TuneController,
     private val onForegrounded: () -> Unit = {},

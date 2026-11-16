@@ -1,6 +1,9 @@
 package com.johncorser.telly.features.multiview
 
+import com.johncorser.telly.core.state.StateMachine
+
 /** Which layer covers the multiview grid (spec: panes -> menu -> picker). */
+@StateMachine("Multiview")
 sealed interface MultiviewLayer {
     /** The bare pane grid (single pane = the captured teaser framing). */
     data object Panes : MultiviewLayer

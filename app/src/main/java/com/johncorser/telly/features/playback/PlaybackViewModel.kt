@@ -53,6 +53,15 @@ class PlaybackViewModel(
     /** My-list toggle state; the sheet labels flip on its keys (mylist). */
     val myList = MyListMenu(env.hooks.myList.store, clock, scope)
 
+    /** The ONE overlay writer: every overlay move is a [PlaybackCommand] through here. */
+    private val commands =
+        PlaybackCommands(
+            tuner = tuner,
+            overlays = overlays,
+            panel = panel,
+            seams = commandSeams(env, { instant.value = clock() }, exitToGuide),
+        )
+
     /** Executes context-menu rows; also resolves the channel they act on. */
     val menu: PlaybackMenuHandler =
         PlaybackMenuHandler(
@@ -60,7 +69,7 @@ class PlaybackViewModel(
                 sheetActionsFor(env, scope, panelMyListHost(myList, panel, env.hooks), groupTools) {
                     panel.selectedGroup.value
                 },
-            overlays = overlays,
+            commands = commands,
             tuner = tuner,
             hooks = hooks.copy(onOpenSearch = openSearch),
             rowOf = { id -> panel.rows.value.firstOrNull { it.channel.id == id } },
@@ -86,28 +95,21 @@ class PlaybackViewModel(
     /** During catch-up the overlay swaps to the archived programme + position. */
     val info: StateFlow<PlaybackInfoData?> = catchupInfoFeed(env, tuner, instant, catchup, scope)
 
-    private val commands =
-        PlaybackCommands(
-            tuner = tuner,
-            overlays = overlays,
-            panel = panel,
-            seams = commandSeams(env, { instant.value = clock() }, exitToGuide),
-        )
-
     init {
         // The guide's pending catch-up request owns the tune when present.
         if (!catchup.resumePending()) tuner.start()
         // Entering PIP from ANY path (quick-bar slot or HOME) drops the overlay
         // state: a sticky layer must not keep running keys/timers behind the
         // tiny window and pop back when it expands.
-        scope.launch { hooks.pip.inPip.collect { if (it) overlays.set(PlaybackOverlay.None) } }
+        scope.launch { hooks.pip.inPip.collect { if (it) commands.execute(PlaybackCommand.Dismiss) } }
         // AFR: the engine's detected/estimated frame rate feeds the display
         // mode switch through the hook (MainActivity applies it).
         feedFrameRates(video, scope, hooks.platform.onFrameRateChanged)
     }
 
     /** Quick-bar PIP: clear the chrome first, then the activity swaps windows. */
-    val enterPip = PipEnterAction(clearChrome = { overlays.set(PlaybackOverlay.None) }, enter = env.hooks.onEnterPip)
+    val enterPip =
+        PipEnterAction(clearChrome = { commands.execute(PlaybackCommand.Dismiss) }, enter = env.hooks.onEnterPip)
 
     /** The info-row recent-channel cards + Clear (history-round2 §1). */
     val recents =
@@ -116,7 +118,7 @@ class PlaybackViewModel(
             history = history,
             scope = scope,
             tuneAndZap = { card -> tuneFromPanel(card.channel) },
-            keepAlive = overlays::keepAlive,
+            keepAlive = { commands.execute(PlaybackCommand.KeepAlive) },
         )
 
     /**
@@ -151,19 +153,19 @@ class PlaybackViewModel(
 
     fun showChannelMenu(channel: ChannelEntity) = menu.openChannelMenu(channel.id)
 
-    fun showComingSoon(feature: String) = overlays.set(PlaybackOverlay.ComingSoon(feature))
+    fun showComingSoon(feature: String) = commands.execute(PlaybackCommand.Show(PlaybackOverlay.ComingSoon(feature)))
 
     /** The quick-bar's Recordings slot opens the DVR library route. */
     val openRecordings: () -> Unit = env.hooks.onOpenRecordings
 
     /** Quick-bar track pickers: video / audio / audio-sync / CC dialogs (ux-spec §3.14). */
-    val trackPickers = TrackPickerController(env.engine.tracks, overlays)
+    val trackPickers = TrackPickerController(env.engine.tracks) { commands.execute(it) }
 
     /** The nine quick-bar slots with live stream labels (round3-ref 07). */
     fun quickBarItems(): List<QuickBarItem> =
         QuickBar.items(video.value, trackPickers.syncLabel(), trackPickers.subtitleLabel())
 
-    fun onOverlayInteraction() = overlays.keepAlive()
+    fun onOverlayInteraction() = commands.execute(PlaybackCommand.KeepAlive)
 
     // The screen releases its engine lease; the engine itself is shared
     // with the guide preview and must survive the route hand-over.

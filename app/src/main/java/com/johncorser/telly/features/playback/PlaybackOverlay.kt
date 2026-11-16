@@ -1,10 +1,12 @@
 package com.johncorser.telly.features.playback
 
+import com.johncorser.telly.core.state.StateMachine
 import com.johncorser.telly.features.groups.GroupToolSession
 import com.johncorser.telly.features.playback.tracks.TrackPickerKind
 import com.johncorser.telly.features.playlist.db.ChannelEntity
 
 /** Which layer currently covers the fullscreen video. */
+@StateMachine("Fullscreen overlay")
 sealed interface PlaybackOverlay {
     /** Bare playback: zero chrome (capture 33). */
     data object None : PlaybackOverlay

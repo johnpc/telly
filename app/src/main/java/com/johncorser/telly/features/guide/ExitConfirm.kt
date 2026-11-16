@@ -1,5 +1,6 @@
 package com.johncorser.telly.features.guide
 
+import com.johncorser.telly.core.state.StateMachine
 import com.johncorser.telly.features.playback.PlaybackEnv
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
@@ -34,6 +35,7 @@ class GuideChrome(
  * so the window the user sees and the window the policy honors can never
  * drift apart (they used to be timed by two different clocks).
  */
+@StateMachine("Exit confirm")
 class ExitConfirm(
     private val scope: CoroutineScope,
 ) {

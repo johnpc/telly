@@ -1,5 +1,7 @@
 package com.johncorser.telly.features.player
 
+import com.johncorser.telly.core.state.StateMachine
+
 /**
  * Detects a silently wedged stream from periodic playback samples — the
  * failure auto-reconnect can't see because no onPlayerError ever fires:
@@ -8,6 +10,7 @@ package com.johncorser.telly.features.player
  * resolves. Pure logic: the watchdog owns the sampling cadence, so the
  * thresholds are consecutive tick counts, not wall time.
  */
+@StateMachine("Stall detector")
 class StallDetector(
     private val frozenTicks: Int = FROZEN_TICKS,
     private val bufferingTicks: Int = BUFFERING_TICKS,

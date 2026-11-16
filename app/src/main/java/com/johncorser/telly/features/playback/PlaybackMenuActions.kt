@@ -7,17 +7,17 @@ import com.johncorser.telly.features.playlist.db.ChannelEntity
 
 /** Favorite toggling persists and dismisses the sheet. */
 internal fun PlaybackMenuHandler.toggleFavorite(channel: ChannelEntity) {
-    val next = afterAction(overlays.value)
+    val next = afterAction(overlay)
     actions.channels.toggleFavorite(channel)
-    overlays.set(next)
+    show(next)
 }
 
 /** Hiding the watched channel zaps away first, then persists the flag. */
 internal fun PlaybackMenuHandler.hide(channel: ChannelEntity) {
-    val next = afterAction(overlays.value)
+    val next = afterAction(overlay)
     tuner.zapAwayFrom(channel)
     actions.channels.hide(channel)
-    overlays.set(next)
+    show(next)
 }
 
 /**
@@ -30,9 +30,9 @@ internal fun PlaybackMenuHandler.runMyList(
     channel: ChannelEntity,
 ) {
     if (route == PlayerMenuRoute.MY_LIST_TOGGLE) {
-        val next = afterAction(overlays.value)
+        val next = afterAction(overlay)
         actions.myList?.toggleFor(channel)
-        overlays.set(next)
+        show(next)
     } else {
         openScreen { actions.myList?.run(route, channel) }
     }
@@ -44,9 +44,9 @@ internal fun PlaybackMenuHandler.runMyList(
  * dialog up.
  */
 fun PlaybackMenuHandler.submitBlockPin(pin: String) {
-    val dialog = overlays.value as? PlaybackOverlay.BlockPin ?: return
+    val dialog = overlay as? PlaybackOverlay.BlockPin ?: return
     if (actions.blocker.submit(pin, dialog.mode, dialog.channel)) {
-        overlays.set(afterAction(dialog.back))
+        show(afterAction(dialog.back))
     }
 }
 

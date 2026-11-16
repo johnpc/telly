@@ -1,6 +1,9 @@
 package com.johncorser.telly.features.onboarding
 
+import com.johncorser.telly.core.state.StateMachine
+
 /** Wizard pages, in forward order. */
+@StateMachine("Onboarding wizard")
 enum class WizardStep {
     TYPE_CHOOSER,
     URL_ENTRY,

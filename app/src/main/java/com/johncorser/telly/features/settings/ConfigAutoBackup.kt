@@ -1,5 +1,6 @@
 package com.johncorser.telly.features.settings
 
+import com.johncorser.telly.core.state.StateMachine
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.NonCancellable
@@ -17,6 +18,7 @@ import kotlinx.coroutines.withContext
  * skipped by hash, and every failure is logged and swallowed — a broken
  * export must never take the app down.
  */
+@StateMachine("Auto backup")
 class ConfigAutoBackup(
     private val enabled: () -> Boolean,
     /** The backup JSON, or null when there is nothing worth backing up. */

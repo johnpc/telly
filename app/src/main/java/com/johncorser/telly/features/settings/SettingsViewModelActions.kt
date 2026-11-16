@@ -80,7 +80,14 @@ private fun SettingsViewModel.confirmDeleteOverlay() {
 
 private fun SettingsViewModel.renameOverlay() {
     val item = currentDetailItem() ?: return
-    showOverlay(SettingsOverlay.TextEdit(rowId = RowIds.PLAYLIST_NAME, title = "Playlist name", value = item.name))
+    showOverlay(
+        SettingsOverlay.TextEdit(
+            rowId = RowIds.PLAYLIST_NAME,
+            title = "Playlist name",
+            value = item.name,
+            playlistUrl = item.url,
+        ),
+    )
 }
 
 private fun SettingsViewModel.textEditOverlay(

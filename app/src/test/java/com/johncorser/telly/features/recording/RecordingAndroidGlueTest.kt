@@ -20,6 +20,9 @@ class RecordingAndroidGlueTest {
 
     @After
     fun tearDown() {
+        // The runtime's recovery sweep runs on IO; stop it BEFORE the database
+        // it reads goes away, or its "no such table" surfaces in another test.
+        ServiceLocator.resetRecordingRuntime()
         // Drop the ServiceLocator singletons the locator built.
         listOf("database", "settings").forEach { name ->
             val field = ServiceLocator::class.java.getDeclaredField(name)

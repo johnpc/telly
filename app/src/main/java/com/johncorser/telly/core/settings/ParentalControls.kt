@@ -10,20 +10,25 @@ import kotlin.random.Random
 class ParentalControls(
     private val settings: SettingsRepository,
     private val random: Random = Random.Default,
+    /** Ends any "until app restart" unlock; wired to the shared block session. */
+    private val relock: () -> Unit = {},
 ) {
     val isEnabled: Boolean get() = settings.get(TellySettings.PARENTAL_ENABLED)
 
     val hasPin: Boolean get() = settings.get(TellySettings.PARENTAL_PIN_HASH).isNotEmpty()
 
+    /** Turning parental controls off also drops any session unlock they granted. */
     fun setEnabled(enabled: Boolean) {
         settings.set(TellySettings.PARENTAL_ENABLED, enabled)
+        if (!enabled) relock()
     }
 
-    /** Stores a fresh salt + hash; the raw PIN is never persisted. */
+    /** Stores a fresh salt + hash; the raw PIN is never persisted. A new PIN relocks. */
     fun setPin(pin: String) {
         val salt = PinHasher.newSalt(random)
         settings.set(TellySettings.PARENTAL_PIN_SALT, salt)
         settings.set(TellySettings.PARENTAL_PIN_HASH, PinHasher.hash(pin, salt))
+        relock()
     }
 
     fun verifyPin(pin: String): Boolean =

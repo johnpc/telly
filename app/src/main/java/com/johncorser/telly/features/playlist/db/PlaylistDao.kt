@@ -22,10 +22,18 @@ interface PlaylistDao {
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun upsert(playlist: PlaylistEntity): Long
 
-    @Query("UPDATE playlists SET epgLastUpdatedMs = :updatedMs WHERE id = :id")
+    /** A successful EPG run: fresh stamp, failure cleared. */
+    @Query("UPDATE playlists SET epgLastUpdatedMs = :updatedMs, epgFailedAtMs = 0 WHERE id = :id")
     suspend fun markEpgUpdated(
         id: Long,
         updatedMs: Long,
+    )
+
+    /** An EPG run where every source failed (the freshness state backs off from it). */
+    @Query("UPDATE playlists SET epgFailedAtMs = :failedAtMs WHERE id = :id")
+    suspend fun markEpgFailed(
+        id: Long,
+        failedAtMs: Long,
     )
 
     @Query("UPDATE playlists SET name = :name WHERE url = :url")

@@ -26,26 +26,19 @@ class EpgRefresher(
     private val retention: EpgRetention = EpgRetention(),
     private val customSources: suspend (playlistUrl: String) -> List<String> = { emptyList() },
 ) {
-    /** Playlists whose last scheduled attempt failed, by id -> attempt time. */
-    private val failedAtMs = HashMap<Long, Long>()
-
     /**
-     * Refreshes everything due; returns the ids of the playlists updated. A
-     * playlist whose sources ALL failed stays due (never stamped) but is
-     * not retried for [RETRY_BACKOFF_MS]: the due check runs every minute
-     * tick and every playlist emission, and a dead `url-tvg` used to cost a
-     * network round-trip plus a trim write on each of them, forever.
+     * Refreshes everything due per [EpgFreshness]; returns the ids of the
+     * playlists updated. A playlist whose sources ALL failed is stamped
+     * failed (persisted, so the backoff survives a restart) and stays due
+     * once [EpgFreshness.RETRY_BACKOFF_MS] has passed — the due check runs
+     * every minute tick and every playlist emission, and a dead `url-tvg`
+     * used to cost a network round-trip plus a trim write on each of them.
      */
     suspend fun refreshDue(): List<Long> =
-        refreshWhere { playlist ->
-            scheduler.isDue(playlist.epgLastUpdatedMs, clock()) && !inBackoff(playlist.id)
-        }
+        refreshWhere { playlist -> EpgFreshness.isDue(EpgFreshness.of(playlist), clock(), scheduler) }
 
     /** Settings -> "Update EPG": refreshes every source regardless of age or backoff. */
     suspend fun refreshAllNow(): List<Long> = refreshWhere { true }
-
-    private fun inBackoff(playlistId: Long): Boolean =
-        failedAtMs[playlistId]?.let { clock() - it < RETRY_BACKOFF_MS } == true
 
     /**
      * A playlists change: "Update EPG on playlists change" ON forces a full
@@ -63,10 +56,9 @@ class EpgRefresher(
                     val sources = listOfNotNull(playlist.epgUrl) + customSources(playlist.url)
                     if (sources.isEmpty() || !due(playlist)) return@mapNotNull null
                     if (sources.count { refreshSource(it) } == 0) {
-                        failedAtMs[playlist.id] = clock()
+                        playlistDao.markEpgFailed(playlist.id, clock())
                         return@mapNotNull null
                     }
-                    failedAtMs.remove(playlist.id)
                     playlistDao.markEpgUpdated(playlist.id, clock())
                     playlist.id
                 }
@@ -84,9 +76,6 @@ class EpgRefresher(
 
     companion object {
         private const val DAY_MS: Long = 24L * 60L * 60L * 1000L
-
-        /** A playlist whose every source failed waits this long before the due loop retries it. */
-        const val RETRY_BACKOFF_MS: Long = 5L * 60L * 1000L
 
         /** Captured default: "Past days to keep EPG" = 7. */
         const val DEFAULT_KEEP_PAST_MS: Long = 7L * DAY_MS

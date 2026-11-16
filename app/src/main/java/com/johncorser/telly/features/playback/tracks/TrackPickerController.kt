@@ -1,6 +1,6 @@
 package com.johncorser.telly.features.playback.tracks
 
-import com.johncorser.telly.features.playback.OverlayState
+import com.johncorser.telly.features.playback.PlaybackCommand
 import com.johncorser.telly.features.playback.PlaybackOverlay
 import com.johncorser.telly.features.playback.QuickBarAction
 import com.johncorser.telly.features.player.tracks.TrackFacade
@@ -13,9 +13,10 @@ import com.johncorser.telly.features.player.tracks.TrackFacade
  */
 class TrackPickerController(
     val tracks: TrackFacade,
-    private val overlays: OverlayState,
+    private val execute: (PlaybackCommand) -> Unit,
 ) {
-    fun open(action: QuickBarAction) = overlays.set(PlaybackOverlay.TrackPicker(TrackPickerKind.of(action)))
+    fun open(action: QuickBarAction) =
+        execute(PlaybackCommand.Show(PlaybackOverlay.TrackPicker(TrackPickerKind.of(action))))
 
     fun rows(kind: TrackPickerKind): List<TrackPickerRow> = TrackPickerRows.of(kind, tracks.snapshot.value)
 
@@ -23,7 +24,7 @@ class TrackPickerController(
         kind: TrackPickerKind,
         rowId: String,
     ) {
-        if (TrackPickerRows.apply(kind, rowId, tracks)) overlays.set(PlaybackOverlay.None)
+        if (TrackPickerRows.apply(kind, rowId, tracks)) execute(PlaybackCommand.Dismiss)
     }
 
     /** The quick-bar's audio-sync slot label ("0 ms", "+150 ms"). */

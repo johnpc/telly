@@ -60,6 +60,36 @@ class ReminderEngineTest {
         }
 
     @Test
+    fun `a popup claimed by a dead process is removed on restart instead of firing again`() =
+        runTest {
+            // The previous process claimed the popup (firedAtMs set) and died
+            // before its delete landed.
+            dao.upsert(testReminder(1, startMs = 10 * minute).copy(firedAtMs = 5 * minute))
+            nowMs = 6 * minute
+            start()
+
+            assertTrue(due.isEmpty())
+            assertTrue(dao.rows.value.isEmpty())
+        }
+
+    @Test
+    fun `the claim is persisted before the popup fires`() =
+        runTest {
+            dao.upsert(testReminder(1, startMs = 10 * minute))
+            nowMs = 6 * minute
+            var firedAtClaim = 0L
+            ReminderEngine(
+                store = store,
+                clock = { nowMs },
+                leadMinutes = { leadMinutes },
+                onDue = { firedAtClaim = dao.rows.value.firstOrNull { r -> r.id == it.id }?.firedAtMs ?: -1L },
+            ).startIn(CoroutineScope(UnconfinedTestDispatcher(testScheduler)), ticks)
+
+            assertEquals("the row was marked fired when the popup callback ran", 6 * minute, firedAtClaim)
+            assertTrue(dao.rows.value.isEmpty())
+        }
+
+    @Test
     fun `honors the configured lead time`() =
         runTest {
             leadMinutes = 30

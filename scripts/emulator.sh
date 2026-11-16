@@ -22,6 +22,9 @@ case "${1:-}" in
     ;;
   start)
     log="${RUNNER_TEMP:-/tmp}/emulator-$AVD.log"
+    # One adb server up front: platform-tools 37's server has crashed and
+    # restarted on every poll while the emulator was still half up (macOS 27).
+    adb start-server >/dev/null 2>&1 || true
     # No nohup: under launchd/the Actions runner there is no controlling
     # console and nohup exits with "can't detach from console" WITHOUT running
     # the command (the emulator never started and the old adb wait-for-device
@@ -36,7 +39,7 @@ case "${1:-}" in
         tail -20 "$log" >&2 || true
         exit 1
       fi
-      if adb devices | grep -q '^emulator-[0-9]*[[:space:]]*device' &&
+      if adb devices 2>/dev/null | grep -q '^emulator-[0-9]*[[:space:]]*device' &&
         [ "$(adb shell getprop sys.boot_completed 2>/dev/null | tr -d '\r')" = "1" ]; then
         adb shell settings put global window_animation_scale 0 >/dev/null
         adb shell settings put global transition_animation_scale 0 >/dev/null

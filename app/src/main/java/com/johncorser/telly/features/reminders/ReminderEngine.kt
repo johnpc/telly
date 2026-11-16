@@ -12,8 +12,11 @@ import kotlinx.coroutines.launch
  * Watches the injected clock (a minute tick, the GuideNow pattern) and the
  * upcoming reminders; when a reminder's programme is within the configured
  * lead time it emits [onDue] EXACTLY once and deletes the row — the
- * TiviMate popup appears once. Reminders whose programme already ended are
- * dropped silently. No wall-clock reads: clock and ticks are injected.
+ * TiviMate popup appears once. The claim is PERSISTED first
+ * (`firedAtMs`, a guarded PENDING -> FIRED update), so a process that dies
+ * between popup and delete removes the row on restart instead of firing it
+ * again. Reminders whose programme already ended are dropped silently. No
+ * wall-clock reads: clock and ticks are injected.
  */
 class ReminderEngine(
     private val store: ReminderStore,
@@ -39,16 +42,25 @@ class ReminderEngine(
         val now = clock()
         val leadMs = leadMinutes() * ReminderDue.MINUTE_MS
         reminders.filterNot { it.id in handled }.forEach { reminder ->
-            when (ReminderDue.stateOf(reminder, now, leadMs)) {
-                ReminderDue.State.DUE -> fire(reminder)
-                ReminderDue.State.EXPIRED -> drop(reminder)
-                ReminderDue.State.PENDING -> Unit
+            when {
+                // Claimed by a previous process that died before the delete.
+                reminder.firedAtMs != 0L -> drop(reminder)
+                else ->
+                    when (ReminderDue.stateOf(reminder, now, leadMs)) {
+                        ReminderDue.State.DUE -> fire(reminder, now)
+                        ReminderDue.State.EXPIRED -> drop(reminder)
+                        ReminderDue.State.PENDING -> Unit
+                    }
             }
         }
     }
 
-    private suspend fun fire(reminder: ReminderEntity) {
+    private suspend fun fire(
+        reminder: ReminderEntity,
+        now: Long,
+    ) {
         handled += reminder.id
+        if (!store.markFired(reminder.id, now)) return
         onDue(reminder)
         store.remove(reminder.id)
     }

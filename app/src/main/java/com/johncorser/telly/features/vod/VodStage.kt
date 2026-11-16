@@ -1,6 +1,9 @@
 package com.johncorser.telly.features.vod
 
+import com.johncorser.telly.core.state.StateMachine
+
 /** Where VOD playback is: loading the item, the resume prompt, or playing. */
+@StateMachine("VOD playback")
 sealed interface VodStage {
     data object Loading : VodStage
 

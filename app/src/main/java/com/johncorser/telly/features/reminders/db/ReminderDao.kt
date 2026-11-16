@@ -21,6 +21,16 @@ interface ReminderDao {
     @Query("SELECT * FROM reminders ORDER BY startMs, id")
     fun observeUpcoming(): Flow<List<ReminderEntity>>
 
+    /**
+     * Claims the popup: PENDING -> FIRED, exactly once (0 rows when another
+     * sweep — or a previous process — already claimed it).
+     */
+    @Query("UPDATE reminders SET firedAtMs = :atMs WHERE id = :id AND firedAtMs = 0")
+    suspend fun markFired(
+        id: Long,
+        atMs: Long,
+    ): Int
+
     /** The reminder set for one programme, if any (dropdown toggle). */
     @Query("SELECT * FROM reminders WHERE channelId = :channelId AND startMs = :startMs AND title = :title LIMIT 1")
     suspend fun find(

@@ -98,6 +98,38 @@ MockWebServer for CI, GitHub Pages demo site for everyone else).
 
 ## Decisions log
 
+- **2026-11-16** State machines, second pass (director: "do all of that
+  now" after the honest grading). **(1) One overlay writer:**
+  `PlaybackCommand.Show`/`KeepAlive` joined the vocabulary and the menu
+  handler, track pickers, recording prompts, PIP and coming-soon all go
+  through `PlaybackCommands.execute`; the gate fails any other
+  `OverlayState` mutator call. **(2) Recording transitions are SQL-guarded**
+  (`RecordingStoreTransitions.kt`: `WHERE status = :from`, Boolean result)
+  — a cancel racing a start records nothing, a finish on a DONE/deleted row
+  is a no-op, a missed window fails only a SCHEDULED row; the recordings
+  runtime logs instead of crashing on a failed sweep and tests reset it
+  (`resetRecordingRuntime`) before swapping the database. **(3) Room v13**
+  (`StateMigrations.MIGRATION_12_13`): `playlists.epgFailedAtMs` feeds the
+  `EpgFreshness` classifier (NeverFetched/Fresh/Failed — the backoff
+  survives restarts, the `0 = never` sentinel is read in one place) and
+  `reminders.firedAtMs` is a guarded PENDING → FIRED claim persisted BEFORE
+  the popup, so a crash can never fire a reminder twice. **(4)**
+  `StartDecision` (Welcome/Playback/GuideUntuned with `tunesPreview`)
+  replaces the consume-flag; the first guide claims it. **(5)**
+  `BlockSession.relock()` is wired from `ParentalControls`: turning
+  parental off or changing the PIN ends an "until restart" unlock.
+  **(6)** Settings `TextEdit` carries the playlist it opened on. **(7)**
+  `@StateMachine("<row>")` marks every explicit owner (`core/state`);
+  `scripts/check-state-machines.mjs` now cross-checks markers ↔ catalog
+  rows both ways, enforces the overlay funnel, and flags any class-level
+  `consume*()`/`var pending` in a file the catalog does not cite — it
+  immediately surfaced five uncatalogued one-shots, now rows. Mini
+  environment: adb 37.0.1 crash-looped on macOS 27 (USB enumeration), the
+  cause of the "device offline" flaps; `platform-tools` is pinned at 35.0.2
+  and the self-hosted CI jobs no longer run `setup-android` (it would
+  reinstall latest). Verified on the mini: quality.sh green; acceptance
+  suite green on the new build.
+
 - **2026-11-15** Implicit state machines made explicit (director: "find all
   the implicit state machines; elevate UX, DX and AX without breaking
   anything"). Four surveys catalogued ~30 machines into

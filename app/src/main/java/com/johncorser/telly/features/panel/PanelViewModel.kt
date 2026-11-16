@@ -1,5 +1,6 @@
 package com.johncorser.telly.features.panel
 
+import com.johncorser.telly.core.state.StateMachine
 import com.johncorser.telly.features.epg.EpgRepository
 import com.johncorser.telly.features.playback.ClockStyle
 import com.johncorser.telly.features.playback.ProgramTimes
@@ -28,6 +29,7 @@ data class PanelFocusCommand(
  * selected group with their now/next programmes, per-group focus memory,
  * and the parental gate on locked groups.
  */
+@StateMachine("Panel focus")
 class PanelViewModel(
     channelDao: ChannelDao,
     private val epgRepository: EpgRepository,

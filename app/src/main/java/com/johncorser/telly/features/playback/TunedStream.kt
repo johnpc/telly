@@ -1,5 +1,6 @@
 package com.johncorser.telly.features.playback
 
+import com.johncorser.telly.core.state.StateMachine
 import com.johncorser.telly.features.playlist.db.ChannelEntity
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -13,6 +14,7 @@ import kotlinx.coroutines.flow.asStateFlow
  * that passed the blocked-channel gate, so a gated or cancelled tune never
  * changes the mode.
  */
+@StateMachine("Tuned stream")
 sealed interface TunedStream {
     val channel: ChannelEntity
 

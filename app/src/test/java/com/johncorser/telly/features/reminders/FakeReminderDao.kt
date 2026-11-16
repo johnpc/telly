@@ -32,6 +32,24 @@ class FakeReminderDao : ReminderDao {
     ): ReminderEntity? =
         rows.value.firstOrNull { it.channelId == channelId && it.startMs == startMs && it.title == title }
 
+    override suspend fun markFired(
+        id: Long,
+        atMs: Long,
+    ): Int {
+        var changed = 0
+        rows.update { list ->
+            list.map {
+                if (it.id == id && it.firedAtMs == 0L) {
+                    changed++
+                    it.copy(firedAtMs = atMs)
+                } else {
+                    it
+                }
+            }
+        }
+        return changed
+    }
+
     override suspend fun delete(id: Long) {
         rows.update { list -> list.filterNot { it.id == id } }
     }

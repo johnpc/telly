@@ -1,5 +1,6 @@
 package com.johncorser.telly.features.guide
 
+import com.johncorser.telly.core.state.StateMachine
 import com.johncorser.telly.features.epg.db.ProgramEntity
 import com.johncorser.telly.features.groups.GroupToolSession
 import com.johncorser.telly.features.playback.BlockPinMode
@@ -37,6 +38,7 @@ data class GuideFocus(
 )
 
 /** Which interaction layer owns the D-pad on the guide screen. */
+@StateMachine("Guide layer")
 sealed interface GuideLayer {
     /** The grid itself (default). */
     data object Grid : GuideLayer

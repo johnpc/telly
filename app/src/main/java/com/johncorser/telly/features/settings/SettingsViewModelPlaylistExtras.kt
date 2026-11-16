@@ -16,13 +16,14 @@ internal fun SettingsViewModel.runPlaylistExtrasAction(rowId: String) {
     val url = currentDetailUrl() ?: return
     when (rowId) {
         RowIds.PLAYLIST_URL ->
-            showOverlay(SettingsOverlay.TextEdit(rowId = rowId, title = "Playlist URL", value = url))
+            showOverlay(SettingsOverlay.TextEdit(rowId = rowId, title = "Playlist URL", value = url, playlistUrl = url))
         RowIds.PLAYLIST_USER_AGENT ->
             showOverlay(
                 SettingsOverlay.TextEdit(
                     rowId = rowId,
                     title = "User-Agent",
                     value = settings.get(playlistUserAgentSetting(url)),
+                    playlistUrl = url,
                 ),
             )
         RowIds.PLAYLIST_MANAGE_GROUPS -> push(SettingsPane.PlaylistGroups(url))
@@ -43,9 +44,12 @@ private fun SettingsViewModel.flipPlaylistGroup(group: String) {
     flip(playlistGroupEnabledSetting(pane.url, group))
 }
 
-/** Commits the User-Agent TextEdit ("" clears back to "Not set"). */
-internal fun SettingsViewModel.submitPlaylistUserAgent(value: String) {
-    currentDetailUrl()?.let { url -> settings.set(playlistUserAgentSetting(url), value.trim()) }
+/** Commits the User-Agent TextEdit for the playlist the editor opened on ("" clears back to "Not set"). */
+internal fun SettingsViewModel.submitPlaylistUserAgent(
+    url: String,
+    value: String,
+) {
+    settings.set(playlistUserAgentSetting(url), value.trim())
 }
 
 /**
@@ -54,8 +58,10 @@ internal fun SettingsViewModel.submitPlaylistUserAgent(value: String) {
  * keeps the old URL, the update-playlist idiom. On success the open detail
  * pane is re-targeted so it keeps rendering the moved playlist.
  */
-internal fun SettingsViewModel.submitPlaylistUrl(raw: String) {
-    val oldUrl = currentDetailUrl() ?: return
+internal fun SettingsViewModel.submitPlaylistUrl(
+    oldUrl: String,
+    raw: String,
+) {
     val newUrl = raw.trim()
     if (newUrl.isEmpty() || newUrl == oldUrl) return
     launch {

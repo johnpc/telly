@@ -34,20 +34,31 @@ interface RecordingDao {
         startMs: Long,
     ): Int
 
-    @Query("UPDATE recordings SET status = :status, endMs = :endMs, sizeBytes = :sizeBytes WHERE id = :id")
+    /**
+     * [from] -> [status] with the end stamp and size; returns the rows
+     * changed (0 = the row was not in [from]: cancelled, deleted, already
+     * finished). RECORDING -> DONE | FAILED for a finished capture,
+     * SCHEDULED -> FAILED for a missed window.
+     */
+    @Query(
+        "UPDATE recordings SET status = :status, endMs = :endMs, sizeBytes = :sizeBytes " +
+            "WHERE id = :id AND status = :from",
+    )
     suspend fun finish(
         id: Long,
+        from: String,
         status: String,
         endMs: Long,
         sizeBytes: Long,
-    )
+    ): Int
 
-    @Query("UPDATE recordings SET status = :status, startMs = :startMs WHERE id = :id")
+    /** SCHEDULED -> RECORDING; returns the rows changed (0 = cancelled/deleted/already started). */
+    @Query("UPDATE recordings SET status = :status, startMs = :startMs WHERE id = :id AND status = 'SCHEDULED'")
     suspend fun markStarted(
         id: Long,
         status: String,
         startMs: Long,
-    )
+    ): Int
 
     @Query("DELETE FROM recordings WHERE id = :id")
     suspend fun delete(id: Long)
