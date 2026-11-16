@@ -12,6 +12,13 @@ mkdir -p artifacts
 # A device that is momentarily "offline" (adb reconnecting after the previous
 # leg) must not turn into a failed leg: wait for it to come back first.
 adb wait-for-device
+# Shared storage outlives the app: a backup an earlier leg auto-exported would
+# make this leg's "fresh install" offer "Restore previous setup" (the harness
+# cannot delete another owner's file under scoped storage, adb shell can).
+# Drop the file AND its MediaStore rows, which the welcome probe also reads.
+adb shell rm -rf /sdcard/Documents/telly >/dev/null 2>&1 || true
+adb shell content delete --uri content://media/external/file \
+  --where "\"relative_path LIKE 'Documents/telly/%'\"" >/dev/null 2>&1 || true
 adb logcat -c || true
 adb logcat > "artifacts/logcat-$FEATURE.txt" 2>&1 &
 LOGCAT_PID=$!
