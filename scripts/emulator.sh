@@ -21,11 +21,23 @@ case "${1:-}" in
     fi
     ;;
   start)
-    nohup emulator -avd "$AVD" -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim \
-      -no-snapshot-save -no-snapshot-load > "${RUNNER_TEMP:-/tmp}/emulator-$AVD.log" 2>&1 &
-    adb wait-for-device
+    log="${RUNNER_TEMP:-/tmp}/emulator-$AVD.log"
+    # No nohup: under launchd/the Actions runner there is no controlling
+    # console and nohup exits with "can't detach from console" WITHOUT running
+    # the command (the emulator never started and the old adb wait-for-device
+    # blocked a CI leg for 20 min). A disowned background process survives the
+    # step; stdin from /dev/null so it never waits on a terminal.
+    emulator -avd "$AVD" -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim \
+      -no-snapshot-save -no-snapshot-load < /dev/null > "$log" 2>&1 &
+    disown
     for _ in $(seq 1 100); do
-      if [ "$(adb shell getprop sys.boot_completed 2>/dev/null | tr -d '\r')" = "1" ]; then
+      if ! kill -0 "$!" 2>/dev/null; then
+        echo "emulator $AVD exited early" >&2
+        tail -20 "$log" >&2 || true
+        exit 1
+      fi
+      if adb devices | grep -q '^emulator-[0-9]*[[:space:]]*device' &&
+        [ "$(adb shell getprop sys.boot_completed 2>/dev/null | tr -d '\r')" = "1" ]; then
         adb shell settings put global window_animation_scale 0 >/dev/null
         adb shell settings put global transition_animation_scale 0 >/dev/null
         adb shell settings put global animator_duration_scale 0 >/dev/null
@@ -35,7 +47,8 @@ case "${1:-}" in
       sleep 3
     done
     echo "emulator $AVD did not boot in time" >&2
-    tail -20 "${RUNNER_TEMP:-/tmp}/emulator-$AVD.log" >&2 || true
+    tail -20 "$log" >&2 || true
+    "$0" stop
     exit 1
     ;;
   stop)
