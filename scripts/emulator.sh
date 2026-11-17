@@ -22,6 +22,17 @@ case "${1:-}" in
     ;;
   start)
     log="${RUNNER_TEMP:-/tmp}/emulator-$AVD.log"
+    # The Mini is shared: other repos' runners start at boot outside the CI
+    # coordinator, so an iOS build (xcodebuild + simulators) can overlap this
+    # leg. On 16 GB that pushes the machine deep into swap and the emulator
+    # stalls (2026-11-16: a 6.8 s video freeze, an 8 s activity launch and a
+    # failed channel-panel leg). Yield until no xcodebuild is running (at most
+    # 30 min) so the leg starts on a quiet machine.
+    for i in $(seq 1 180); do
+      pgrep -q xcodebuild || break
+      [ "$i" = 1 ] && echo "waiting for another repo's xcodebuild on this machine to finish..."
+      sleep 10
+    done
     # One adb server up front: platform-tools 37's server has crashed and
     # restarted on every poll while the emulator was still half up (macOS 27).
     adb start-server >/dev/null 2>&1 || true

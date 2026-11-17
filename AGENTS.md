@@ -90,6 +90,17 @@ coordinator then backs telly off for 30 minutes (this happened on
 `~/.ci-coordinator/` and wait; cancelled legs are re-run with
 `gh run rerun <id> --failed`, which needs no access to the Mini.
 
+**Other repos' runners overlap telly's.** Only telly's runner is started
+and stopped by the coordinator; the other repos' runners are launchd
+services with RunAtLoad/KeepAlive, so an iOS build and its simulators can
+run at the same time as an acceptance leg. On 16 GB that drives the Mini
+deep into swap and the emulator stalls: the playback telemetry shows it as
+VIDEO FROZEN, audio underruns and multi-second decoder inits. When a leg
+fails, look for that signature in `artifacts/logcat-*.txt` first.
+`scripts/emulator.sh start` waits for any running `xcodebuild` to finish,
+but it cannot stop one that starts mid-leg. The real fix is a one-time
+change on the Mini: let the coordinator own every runner.
+
 **Manual emulator work and CI share one machine.** Before booting the
 emulator or running Gradle on the Mini, check
 `pgrep -fl 'Runner.Worker'`: if any repo's job is running, wait. A CI leg's
