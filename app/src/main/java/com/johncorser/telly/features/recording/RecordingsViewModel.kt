@@ -66,8 +66,14 @@ class RecordingsViewModel(
     private val mutablePlaying = MutableStateFlow<RecordingRow?>(null)
     val playing: StateFlow<RecordingRow?> = mutablePlaying.asStateFlow()
 
-    /** OK: play DONE captures, confirm stop/cancel/delete for the rest. */
-    fun onRowClick(row: RecordingRow) {
+    /**
+     * OK: play DONE captures, confirm stop/cancel/delete for the rest. The
+     * clicked [drawn] row is the one the screen last drew, which can trail
+     * Room by a frame (the stop mark retires the moment Room shows DONE), so
+     * its status is re-read from the latest rows by id.
+     */
+    fun onRowClick(drawn: RecordingRow) {
+        val row = rows.value.firstOrNull { it.entry.id == drawn.entry.id } ?: drawn
         val status = if (row.entry.id in stoppedIds) RecordingStatus.DONE else row.status
         mutableConfirm.value =
             when (status) {

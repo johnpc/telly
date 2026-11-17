@@ -91,6 +91,27 @@ class RecordingsViewModelTest {
         }
 
     @Test
+    fun `OK on a stale row drawn before the capture finalized still plays it`() =
+        runTest(UnconfinedTestDispatcher()) {
+            val id = seed(RecordingStatus.RECORDING)
+            val vm = viewModel()
+            advanceUntilIdle()
+            // The row object the screen drew while the capture was running.
+            val drawn = vm.rows.value.single()
+            vm.onRowClick(drawn)
+            vm.onConfirmAccepted()
+
+            // Room reports DONE (the stop mark is retired) one frame before
+            // the list redraws: the OK lands on the still-RECORDING row.
+            store.complete(id, sizeBytes = 1)
+            advanceUntilIdle()
+            vm.onRowClick(drawn)
+
+            assertNull(vm.confirm.value)
+            assertEquals(RecordingStatus.DONE, vm.playing.value?.status)
+        }
+
+    @Test
     fun `long-OK on any row confirms delete and accepting removes it`() =
         runTest(UnconfinedTestDispatcher()) {
             seed(RecordingStatus.DONE)
