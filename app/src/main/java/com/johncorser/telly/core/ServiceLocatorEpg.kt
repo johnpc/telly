@@ -28,7 +28,9 @@ fun ServiceLocator.epgRefresher(context: Context): EpgRefresher {
         fetch =
             EpgFetch(
                 refresh = repository::refresh,
-                warn = { message, cause -> Log.w("telly", message, cause) },
+                warn = { message, cause -> Log.w(REFRESH_LOG_TAG, message, cause) },
+                info = { Log.i(REFRESH_LOG_TAG, it) },
+                gate = sharedRefreshGate,
             ),
         retention =
             EpgRetention(

@@ -1,6 +1,5 @@
 package com.johncorser.telly.features.player
 
-import android.content.Context
 import android.os.Handler
 import androidx.media3.common.PlaybackException
 import androidx.media3.common.Player
@@ -36,6 +35,7 @@ class Media3PlayerEngine(
     private val reconnector = EngineReconnector(player, reconnect, schedulers.schedule)
     private val watchdog =
         schedulers.watchdog(player, { mutableState.value }, { mutableState.value = reconnector.onStall() })
+    private val telemetry = schedulers.telemetry
 
     override val state: StateFlow<PlayerState> = mutableState.asStateFlow()
     override val video: StateFlow<VideoDetails?> = videoFeed.video
@@ -45,6 +45,7 @@ class Media3PlayerEngine(
         player.addListener(this)
         player.setVideoFrameMetadataListener { presentationTimeUs, _, _, _ ->
             videoFeed.onFrame(presentationTimeUs)
+            telemetry?.onVideoFrame()
         }
         watchdog?.start()
     }
@@ -114,23 +115,6 @@ class Media3PlayerEngine(
         mutableState.value = reconnector.onError(error)
     }
 
-    companion object {
-        /**
-         * Built in [buildMedia3PlayerEngine] so devices get audio focus and
-         * TV-ready defaults. Multiview panes pass [handleAudioFocus] = false:
-         * N players each grabbing focus would pause one another, so the
-         * pool's engines share the app's focus and the focused pane owns
-         * audio by mute state instead. Single fullscreen keeps the default.
-         * [audio] carries the persisted surround-by-default + passthrough
-         * choices (defaults off = the previous behavior); [tuning] the
-         * Playback buffer-size + decoder rows read at build time.
-         */
-        fun create(
-            context: Context,
-            handleAudioFocus: Boolean = true,
-            userAgentFor: (streamUrl: String) -> String = { STREAM_USER_AGENT },
-            audio: PlayerAudioPrefs = PlayerAudioPrefs(),
-            tuning: PlayerTuning = PlayerTuning(),
-        ): Media3PlayerEngine = buildMedia3PlayerEngine(context, handleAudioFocus, userAgentFor, audio, tuning)
-    }
+    /** Construction lives in Media3PlayerEngineFactory.kt (`Media3PlayerEngine.create`). */
+    companion object
 }

@@ -9,6 +9,7 @@ import android.provider.Settings
 import android.util.Log
 import com.johncorser.telly.core.ServiceLocator
 import com.johncorser.telly.core.settings.TellySettings
+import com.johncorser.telly.core.sharedRefreshGate
 import com.johncorser.telly.features.onboarding.OnboardingRestore
 import com.johncorser.telly.features.onboarding.RestoreRunner
 import com.johncorser.telly.features.onboarding.WelcomeRestore
@@ -83,7 +84,10 @@ internal fun MainActivity.onboardingRestore(fetcher: M3uFetcher): OnboardingRest
         RestoreRunner(
             importJson = SettingsBackupManager(settings, repository)::importJson,
             playlistUrls = { repository.playlists.first().map { it.sourceUrl } },
-            updatePlaylists = { urls -> PlaylistUpdater(fetcher::fetch, repository).updateAll(urls) },
+            updatePlaylists = {
+                    urls ->
+                PlaylistUpdater(fetcher::fetch, repository, sharedRefreshGate).updateAll(urls)
+            },
             channelCount = { ServiceLocator.database(this).channelDao().totalCount() },
         )
     return OnboardingRestore(

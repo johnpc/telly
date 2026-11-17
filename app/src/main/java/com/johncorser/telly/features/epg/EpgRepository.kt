@@ -14,6 +14,7 @@ import okhttp3.OkHttpClient
 import okhttp3.Request
 import org.xmlpull.v1.XmlPullParser
 import java.io.IOException
+import java.util.concurrent.TimeUnit
 
 /**
  * Fetches XMLTV over HTTP (the playlist's url-tvg), streams it through
@@ -23,10 +24,12 @@ import java.io.IOException
 class EpgRepository(
     private val programDao: ProgramDao,
     private val newParser: () -> XmlPullParser,
-    private val client: OkHttpClient = OkHttpClient(),
+    private val client: OkHttpClient = boundedClient(),
     private val storeDescriptions: () -> Boolean = { true },
     /** Per-channel "EPG time offset" (tvgId -> ms); lookups shift by it. */
     private val offsets: Flow<Map<String, Long>> = flowOf(emptyMap()),
+    /** Phase log (download / parse / store) so a slow or stuck step is visible. */
+    private val trace: (String) -> Unit = {},
 ) {
     /** Downloads + stores the EPG at [epgUrl]; returns the programme count. */
     suspend fun refresh(epgUrl: String): Int =
@@ -36,7 +39,10 @@ class EpgRepository(
                 if (!response.isSuccessful) {
                     throw IOException("HTTP ${response.code} while downloading EPG")
                 }
-                store(XmltvParser.parse(newParser(), CompressedXmltv.reader(response.body?.byteStream())))
+                trace("EPG $epgUrl: HTTP ${response.code}, parsing")
+                val document = XmltvParser.parse(newParser(), CompressedXmltv.reader(response.body?.byteStream()))
+                trace("EPG $epgUrl: parsed ${document.programs.size} programmes, storing")
+                store(document)
             }
         }
 
@@ -91,3 +97,13 @@ class EpgRepository(
         return entities.size
     }
 }
+
+/**
+ * A whole EPG download (connect + body) may take at most [EPG_CALL_TIMEOUT_MIN]
+ * minutes: OkHttp's per-read timeout alone lets a trickling server hold the
+ * refresh — and every refresh queued behind it — indefinitely.
+ */
+private fun boundedClient(): OkHttpClient =
+    OkHttpClient.Builder().callTimeout(EPG_CALL_TIMEOUT_MIN, TimeUnit.MINUTES).build()
+
+private const val EPG_CALL_TIMEOUT_MIN = 5L

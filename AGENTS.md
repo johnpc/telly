@@ -123,7 +123,25 @@ Screenshots are written to AGP's `additionalTestOutputDir`, which the
 connected-test task pulls out BEFORE uninstalling the app (the old
 external-files location was wiped by that uninstall, so CI never kept one).
 
-## 4. The fake backend
+## 4. Field diagnostics on the director's Shield
+
+- **Install:** `adb connect 192.168.4.241:5555`, then
+  `adb -s 192.168.4.241:5555 install -r app-debug.apk` with a debug APK
+  built ON THE MINI (its debug key is the one the Shield's install is signed
+  with since 2026-11-16; any other key forces an uninstall, which wipes the
+  director's data). The app is debuggable, so data can be backed up first:
+  `adb exec-out run-as com.johncorser.telly tar -cf - databases shared_prefs files > backup.tar`.
+- **Logs:** `adb logcat -v time -s telly-play telly-refresh` — playback
+  health (rebuffers, VIDEO FROZEN, dropped frames, underruns, decoders)
+  and every background refresh that did real work (or timed out).
+- **Freeze measurement that is fair to both apps:** `adb shell screenrecord
+  --size 1280x720 --time-limit 180 /sdcard/x.mp4`, then
+  `ffmpeg -i x.mp4 -vf "freezedetect=n=-60dB:d=0.4" -map 0:v -f null -`;
+  look at the frames of every hit, static ad cards register as freezes.
+- **The TV is in use:** say what you are about to do before switching apps
+  or relaunching, keep it short, and put it back on telly when done.
+
+## 5. The fake backend
 
 - **CI / e2e:** a `MockWebServer` inside the instrumentation process
   (`app/src/androidTest/.../fixtures/FixtureServer.kt`) serves the playlist,
@@ -138,7 +156,7 @@ external-files location was wiped by that uninstall, so CI never kept one).
   Store reviewer — at it when a real provider cannot be shared. It is
   public, synthetic content: never put anything private in `e2e/fixtures/`.
 
-## 5. Conventions in brief
+## 6. Conventions in brief
 
 - Conventional commits; PR title `type(scope): what`; demo artifact on UI PRs.
 - Composables thin and named `*Screen*.kt`; logic in plain JVM-tested classes.

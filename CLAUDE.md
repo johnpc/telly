@@ -98,6 +98,39 @@ MockWebServer for CI, GitHub Pages demo site for everyone else).
 
 ## Decisions log
 
+- **2026-11-16** Shield field fixes (director: "the EPG is empty" + "playback
+  freezes randomly where TiviMate doesn't"). Diagnosed on the director's
+  Shield with a debugger, logcat and A/B screen recordings. **(1) EPG refresh
+  feedback loop — root cause of a refresh storm.** "Update EPG on playlists
+  change" reacted to EVERY `playlists` emission, and every EPG refresh writes
+  its own timestamp to that table, so each refresh triggered the next: on the
+  Shield a full 6 MB / 20k-programme download + rewrite ran every ~6 s,
+  forever, and playback froze (1.3 s) and rebuffered (4.3 s) under it. Now
+  only EPG-relevant changes count (`EpgTriggers.epgRelevantChanges`: the set
+  of (playlist URL, EPG URL) pairs, distinctUntilChanged); e2e `@epg-data`
+  "Update EPG on playlists change does not re-trigger itself" fails if any
+  extra download happens within 20 s. **(2) One gate for background
+  refreshes** (`core/refresh/RefreshGate`, one shared instance): EPG
+  refreshes and playlist imports run one at a time, each bounded by 10 min
+  on wall time (Dispatchers.Default — under a caller's virtual clock the
+  bound fired instantly), with an OkHttp callTimeout (5 min) on the EPG
+  download so a trickling server cannot hold it. The Shield's EPG had not
+  refreshed since Oct 21 with no error logged; the exact wedge was not
+  reproduced after the loop fix, so the gate + timeout + logs are the
+  guarantee it cannot stick silently again. **(3) Playback telemetry**
+  (`PlaybackTelemetry`, `adb logcat -s telly-play`): state changes with
+  durations (rebuffers), VIDEO FROZEN when no frame renders for 1 s while
+  the audio clock advances (invisible to the position-based StallDetector),
+  dropped-frame bursts, audio underruns, load/player errors, decoders and
+  format per tune; one `[eN]` prefix per engine. Refresh runs that did real
+  work log under `telly-refresh`. **TiviMate comparison on the Shield:**
+  same playlist, same settings (Buffer Small, hardware decoders, AFR off),
+  same decoders (OMX.Nvidia.h264.decode + OMX.google.aac.decoder). 3-minute
+  ESPN recordings through ffmpeg `freezedetect`: telly 0 freezes after the
+  fix; TiviMate's 3 hits were a static ad card. Deploying to the Shield:
+  see AGENTS.md (debug builds are signed with the Mini's debug key and
+  install in place).
+
 - **2026-11-16** State machines, second pass (director: "do all of that
   now" after the honest grading). **(1) One overlay writer:**
   `PlaybackCommand.Show`/`KeepAlive` joined the vocabulary and the menu

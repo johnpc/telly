@@ -1,6 +1,8 @@
 package com.johncorser.telly.features.player
 
 import android.content.Context
+import android.os.SystemClock
+import android.util.Log
 import androidx.media3.common.AudioAttributes
 import androidx.media3.common.C
 import androidx.media3.exoplayer.DefaultLoadControl
@@ -9,6 +11,24 @@ import com.johncorser.telly.features.player.tracks.AudioOffsetHolder
 import com.johncorser.telly.features.player.tracks.ExoTrackFacade
 import com.johncorser.telly.features.player.tracks.OffsetRenderersFactory
 import com.johncorser.telly.features.player.tracks.disableCaptionsByDefault
+
+/**
+ * Built in [buildMedia3PlayerEngine] so devices get audio focus and
+ * TV-ready defaults. Multiview panes pass [handleAudioFocus] = false:
+ * N players each grabbing focus would pause one another, so the
+ * pool's engines share the app's focus and the focused pane owns
+ * audio by mute state instead. Single fullscreen keeps the default.
+ * [audio] carries the persisted surround-by-default + passthrough
+ * choices (defaults off = the previous behavior); [tuning] the
+ * Playback buffer-size + decoder rows read at build time.
+ */
+fun Media3PlayerEngine.Companion.create(
+    context: Context,
+    handleAudioFocus: Boolean = true,
+    userAgentFor: (streamUrl: String) -> String = { STREAM_USER_AGENT },
+    audio: PlayerAudioPrefs = PlayerAudioPrefs(),
+    tuning: PlayerTuning = PlayerTuning(),
+): Media3PlayerEngine = buildMedia3PlayerEngine(context, handleAudioFocus, userAgentFor, audio, tuning)
 
 /**
  * Builds the real ExoPlayer behind [Media3PlayerEngine.create]: audio focus
@@ -47,6 +67,9 @@ internal fun buildMedia3PlayerEngine(
             .setLoadControl(loadControl(BufferSizes.durations(tuning.bufferSize)))
             .build()
     player.disableCaptionsByDefault()
+    val telemetry = engineTelemetry()
+    player.addAnalyticsListener(TelemetryAnalytics(telemetry, player))
+    player.addAnalyticsListener(TelemetryCodecAnalytics(telemetry))
     return Media3PlayerEngine(
         player = player,
         userAgent = userAgent,
@@ -54,8 +77,19 @@ internal fun buildMedia3PlayerEngine(
         decoders = decoders,
         // Real devices get the stall watchdog: it samples on the player's
         // thread and auto-recovers silently wedged streams.
-        schedulers = EngineSchedulers.forPlayer(player),
+        schedulers = EngineSchedulers.forPlayer(player, telemetry),
     )
+}
+
+/** logcat tag for playback health (`adb logcat -s telly-play`). */
+internal const val PLAY_LOG_TAG = "telly-play"
+
+private var engineCount = 0
+
+/** One telemetry per engine, its lines prefixed `[eN]` (guide preview, fullscreen and panes interleave). */
+private fun engineTelemetry(): PlaybackTelemetry {
+    val id = ++engineCount
+    return PlaybackTelemetry(SystemClock::elapsedRealtime) { Log.i(PLAY_LOG_TAG, "[e$id] $it") }
 }
 
 /** The picked buffer durations over Media3's stock DefaultLoadControl. */

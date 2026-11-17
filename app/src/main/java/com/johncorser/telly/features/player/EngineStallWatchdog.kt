@@ -12,18 +12,28 @@ import androidx.media3.exoplayer.ExoPlayer
 class EngineSchedulers(
     val schedule: (Long, () -> Unit) -> Unit,
     val stallTicker: ((Long, () -> Unit) -> Unit)? = null,
+    /** The engine's observation seam: playback health log (prod builds wire one). */
+    val telemetry: PlaybackTelemetry? = null,
 ) {
-    /** The engine's watchdog when the ticker seam is wired, else null. */
+    /** The engine's watchdog when the ticker seam is wired, else null; each sample also feeds [telemetry]. */
     fun watchdog(
         player: ExoPlayer,
         stateOf: () -> PlayerState,
         onStall: () -> Unit,
-    ): EngineStallWatchdog? = stallTicker?.let { EngineStallWatchdog(player, StallDetector(), it, stateOf, onStall) }
+    ): EngineStallWatchdog? =
+        stallTicker?.let {
+            EngineStallWatchdog(player, StallDetector(), it, stateOf, onStall) {
+                telemetry?.onSample(player.isPlaying, player.currentPosition, player.totalBufferedDuration)
+            }
+        }
 
     companion object {
-        fun forPlayer(player: ExoPlayer): EngineSchedulers {
+        fun forPlayer(
+            player: ExoPlayer,
+            telemetry: PlaybackTelemetry? = null,
+        ): EngineSchedulers {
             val post: (Long, () -> Unit) -> Unit = { d, t -> Handler(player.applicationLooper).postDelayed(t, d) }
-            return EngineSchedulers(schedule = post, stallTicker = post)
+            return EngineSchedulers(schedule = post, stallTicker = post, telemetry = telemetry)
         }
     }
 }
@@ -41,7 +51,8 @@ class EngineStallWatchdog(
     private val schedule: (Long, () -> Unit) -> Unit,
     private val stateOf: () -> PlayerState,
     private val onStall: () -> Unit,
-    private val tickMs: Long = TICK_MS,
+    /** Each sample also feeds the playback telemetry (frozen-video check). */
+    private val onSample: () -> Unit = {},
 ) {
     private var stopped = false
 
@@ -53,8 +64,9 @@ class EngineStallWatchdog(
     }
 
     private fun tick() {
-        schedule(tickMs) {
+        schedule(TICK_MS) {
             if (stopped) return@schedule
+            onSample()
             if (detector.onSample(stateOf(), player.playWhenReady, player.currentPosition)) onStall()
             tick()
         }

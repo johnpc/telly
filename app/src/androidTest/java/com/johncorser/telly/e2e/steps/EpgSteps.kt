@@ -1,7 +1,9 @@
 package com.johncorser.telly.e2e.steps
 
+import android.os.SystemClock
 import com.johncorser.telly.core.ServiceLocator
 import com.johncorser.telly.core.db.TellyDatabase
+import com.johncorser.telly.core.settings.TellySettings
 import com.johncorser.telly.e2e.PlaybackDriver
 import com.johncorser.telly.e2e.TellyWorld
 import com.johncorser.telly.e2e.fixtures.FixturePlan
@@ -31,6 +33,25 @@ class EpgSteps(
         driver.awaitCondition("EPG programmes stored", timeoutMs = 60_000L) {
             runBlocking { database.programDao().count() } > 0
         }
+    }
+
+    @Given("\"Update EPG on playlists change\" is on")
+    fun updateEpgOnPlaylistsChangeOn() {
+        ServiceLocator.settingsRepository(world.targetContext).set(TellySettings.EPG_UPDATE_ON_PLAYLISTS_CHANGE, true)
+    }
+
+    /**
+     * The refresh loop re-fetched the EPG every few seconds; a healthy app
+     * fetches it once after the playlist lands and then stays idle until the
+     * interval or a real playlist change. The window is a fixed observation
+     * period, not a wait for a condition: absence is what is asserted.
+     */
+    @Then("the EPG is not downloaded again within {int} seconds")
+    fun epgNotDownloadedAgain(seconds: Int) {
+        val settled = FixtureServer.requestsFor("/epg.xml")
+        SystemClock.sleep(seconds * 1_000L)
+        val more = FixtureServer.requestsFor("/epg.xml") - settled
+        assertEquals("EPG re-downloaded $more time(s) after the first refresh", 0, more)
     }
 
     @Then("the guide data contains program titles from {string} for channel {string}")

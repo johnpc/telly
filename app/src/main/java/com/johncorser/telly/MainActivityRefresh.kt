@@ -5,6 +5,7 @@ import com.johncorser.telly.core.ServiceLocator
 import com.johncorser.telly.core.epgRefresher
 import com.johncorser.telly.core.playlistRefresher
 import com.johncorser.telly.core.settings.TellySettings
+import com.johncorser.telly.features.epg.epgRelevantChanges
 import com.johncorser.telly.features.playback.PlaybackTime
 import com.johncorser.telly.features.playlist.M3uFetcher
 import kotlinx.coroutines.flow.collectIndexed
@@ -22,7 +23,8 @@ internal fun MainActivity.keepPlaylistsFresh(fetcher: M3uFetcher) {
 
 /**
  * Refresh due EPG on start, playlist changes and per-minute ticks. When
- * the playlists CHANGE (any emission after the first), "Update EPG on
+ * the playlists CHANGE (an EPG-relevant change after the first value —
+ * never the refresher's own timestamp writes, see epgRelevantChanges), "Update EPG on
  * playlists change" decides between a forced full refresh (ON) and the
  * due-only policy (OFF, the captured default — never-fetched sources such
  * as a freshly added playlist's EPG are always due).
@@ -32,7 +34,10 @@ internal fun MainActivity.keepEpgFresh() {
     val settings = ServiceLocator.settingsRepository(this)
     lifecycleScope.launch {
         if (settings.get(TellySettings.EPG_UPDATE_ON_APP_START)) refresher.refreshAllNow()
-        ServiceLocator.database(this@keepEpgFresh).playlistDao().observeAll().collectIndexed { index, _ ->
+        ServiceLocator.database(this@keepEpgFresh).playlistDao().observeAll().epgRelevantChanges().collectIndexed {
+                index,
+                _,
+            ->
             if (index == 0) {
                 refresher.refreshDue()
             } else {

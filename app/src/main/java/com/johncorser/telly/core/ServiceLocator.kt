@@ -1,6 +1,7 @@
 package com.johncorser.telly.core
 
 import android.content.Context
+import android.util.Log
 import android.util.Xml
 import androidx.annotation.VisibleForTesting
 import androidx.room.Room
@@ -88,6 +89,7 @@ object ServiceLocator {
             storeDescriptions = { settingsRepository(context).get(TellySettings.EPG_STORE_DESCRIPTIONS) },
             // Channel-options "EPG time offset": lookups shift per channel.
             offsets = database(context).channelDao().observeEpgOffsets().map(EpgOffsets::ofMinutes),
+            trace = { Log.i(REFRESH_LOG_TAG, it) },
         )
 
     fun keyValueStore(context: Context): KeyValueStore =

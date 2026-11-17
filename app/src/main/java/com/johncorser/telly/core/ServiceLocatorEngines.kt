@@ -6,6 +6,7 @@ import com.johncorser.telly.core.settings.TellySettings
 import com.johncorser.telly.features.player.Media3PlayerEngine
 import com.johncorser.telly.features.player.PlayerAudioPrefs
 import com.johncorser.telly.features.player.PlayerTuning
+import com.johncorser.telly.features.player.create
 
 /** Surround-by-default + passthrough, read from the store per engine. */
 private fun audioPrefs(settings: SettingsRepository): PlayerAudioPrefs =

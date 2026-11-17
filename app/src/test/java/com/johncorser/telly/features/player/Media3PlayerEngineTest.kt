@@ -222,6 +222,33 @@ class Media3PlayerEngineTest {
         verify(exactly = 1) { player.prepare() }
     }
 
+    @Test
+    fun `rendered frames and watchdog samples feed the playback telemetry`() {
+        val lines = mutableListOf<String>()
+        var now = 0L
+        val ticks = mutableListOf<Pair<Long, () -> Unit>>()
+        every { player.addListener(capture(listener)) } just Runs
+        every { player.setVideoFrameMetadataListener(capture(frameListener)) } just Runs
+        every { player.isPlaying } returns true
+        every { player.currentPosition } returnsMany listOf(1_000L, 1_000L, 4_000L, 4_000L)
+        Media3PlayerEngine(
+            player,
+            schedulers =
+                EngineSchedulers(
+                    { _, _ -> },
+                    stallTicker = { d, t -> ticks += d to t },
+                    telemetry = PlaybackTelemetry({ now }) { lines += it },
+                ),
+        )
+        frameListener.captured.onVideoFrameAboutToBeRendered(0L, 0L, Format.Builder().build(), null)
+
+        ticks.removeAt(0).second() // baseline sample
+        now = 3_000L
+        ticks.removeAt(0).second() // audio advanced, no frame for 3 s
+
+        assertEquals(listOf("VIDEO FROZEN: no frame for 3000ms while audio advances, 0ms buffered"), lines)
+    }
+
     private fun ioError() = PlaybackException("boom", null, PlaybackException.ERROR_CODE_IO_UNSPECIFIED)
 
     @Test

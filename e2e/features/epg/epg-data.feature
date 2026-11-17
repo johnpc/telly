@@ -21,6 +21,17 @@ Feature: EPG data foundation
     Then the guide data contains program titles from "epg.xml" for channel "News One"
     And the program for "News One" airing now has a start time, an end time and a description
 
+  # "Update EPG on playlists change" must react to real playlist changes only.
+  # Every EPG refresh writes its own timestamp to the playlists table; that
+  # write once counted as a change and re-triggered the refresh in a loop
+  # (on the Shield: a full EPG download + rewrite every ~6 s, and playback
+  # froze under it). Once the first refresh lands, the EPG stays quiet.
+  Scenario: Update EPG on playlists change does not re-trigger itself
+    Given "Update EPG on playlists change" is on
+    And I added the playlist "http://10.0.2.2:8090/playlist.m3u"
+    When the EPG update completes
+    Then the EPG is not downloaded again within 20 seconds
+
   Scenario: Channel numbers follow playlist order
     Given I added the playlist "http://10.0.2.2:8090/playlist.m3u"
     Then channel "News One" has number 1

@@ -53,7 +53,7 @@ fun ServiceLocator.playlistRefresher(
 ): PlaylistRefresher =
     PlaylistRefresher(
         playlistDao = database(context).playlistDao(),
-        update = PlaylistUpdater(fetchPlaylist, playlistRepository(context))::update,
+        update = PlaylistUpdater(fetchPlaylist, playlistRepository(context), sharedRefreshGate)::update,
         intervalHours = { settingsRepository(context).get(playlistUpdateIntervalSetting(it)) },
         updateOnStart = { settingsRepository(context).get(playlistUpdateOnStartSetting(it)) },
         clock = clock,

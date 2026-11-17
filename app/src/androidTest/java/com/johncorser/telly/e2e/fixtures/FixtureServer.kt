@@ -36,6 +36,7 @@ object FixtureServer {
     fun reset(anchorMs: Long = System.currentTimeMillis()) {
         programmes = FixturePlan.schedule(anchorMs)
         altProgrammes = FixturePlan.altSchedule(anchorMs)
+        hits.clear()
         if (server == null) {
             server =
                 MockWebServer().apply {
@@ -58,9 +59,15 @@ object FixtureServer {
         atMs: Long,
     ): FixtureProgramme = programmes.filter { it.channelTvgId == tvgId }.first { it.startMs > atMs }
 
+    /** How many times each path was requested since the last [reset] (refresh-storm checks). */
+    private val hits = java.util.concurrent.ConcurrentHashMap<String, Int>()
+
+    fun requestsFor(path: String): Int = hits[path] ?: 0
+
     private class FixtureDispatcher : Dispatcher() {
         override fun dispatch(request: RecordedRequest): MockResponse {
             val path = request.path.orEmpty().substringBefore('?')
+            hits.merge(path, 1, Int::plus)
             return when {
                 path == "/playlist.m3u" -> text(FixturePlan.m3u(baseUrl), "audio/x-mpegurl")
                 path == "/epg.xml" -> text(FixturePlan.xmltv(baseUrl, programmes), "application/xml")

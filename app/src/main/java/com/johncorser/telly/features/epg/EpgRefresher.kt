@@ -1,5 +1,6 @@
 package com.johncorser.telly.features.epg
 
+import com.johncorser.telly.core.refresh.RefreshGate
 import com.johncorser.telly.features.playlist.db.PlaylistDao
 import com.johncorser.telly.features.playlist.db.PlaylistEntity
 import kotlinx.coroutines.CancellationException
@@ -48,7 +49,10 @@ class EpgRefresher(
     suspend fun onPlaylistsChanged(updateOnChange: Boolean): List<Long> =
         if (updateOnChange) refreshAllNow() else refreshDue()
 
-    private suspend fun refreshWhere(due: (PlaylistEntity) -> Boolean): List<Long> {
+    private suspend fun refreshWhere(due: (PlaylistEntity) -> Boolean): List<Long> =
+        fetch.gate.run("EPG refresh", onTimeout = emptyList()) { refreshEach(due) }
+
+    private suspend fun refreshEach(due: (PlaylistEntity) -> Boolean): List<Long> {
         val updated =
             playlistDao
                 .all()
@@ -68,6 +72,7 @@ class EpgRefresher(
 
     private suspend fun refreshSource(url: String): Boolean =
         runCatching { fetch.refresh(url) }
+            .onSuccess { fetch.info("EPG source $url: $it programmes stored") }
             .onFailure {
                 if (it is CancellationException) throw it
                 fetch.warn("EPG refresh failed for $url", it)
@@ -85,11 +90,16 @@ class EpgRefresher(
     }
 }
 
-/** The per-source fetch seam plus its failure diagnostics. */
+/**
+ * The per-source fetch seam, its diagnostics, and the [gate] every run goes
+ * through (shared with playlist imports, so the two never contend).
+ */
 class EpgFetch(
     val refresh: suspend (epgUrl: String) -> Int,
     /** Failure log seam; ServiceLocator wires android.util.Log. */
     val warn: (message: String, cause: Throwable) -> Unit = { _, _ -> },
+    val info: (message: String) -> Unit = {},
+    val gate: RefreshGate = RefreshGate(),
 )
 
 /** The "Past days to keep EPG" horizon and the trim that enforces it. */
