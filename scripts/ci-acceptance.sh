@@ -14,11 +14,36 @@ mkdir -p artifacts
 adb wait-for-device
 # Shared storage outlives the app: a backup an earlier leg auto-exported would
 # make this leg's "fresh install" offer "Restore previous setup" (the harness
-# cannot delete another owner's file under scoped storage, adb shell can).
-# Drop the file AND its MediaStore rows, which the welcome probe also reads.
-adb shell rm -rf /sdcard/Documents/telly >/dev/null 2>&1 || true
+# cannot delete another owner's file under scoped storage, adb shell can), and
+# that pill then holds the initial focus "Add playlist" expects (run
+# 44133018036: the welcome scenario timed out on focus; the failure screenshot
+# showed the restore pill). The first version of this wipe ran blind right
+# after boot and swallowed its errors; it left the file behind. Shared storage
+# (FUSE, user 0) comes up a little after sys.boot_completed, so wait until a
+# shell write to /sdcard works, then wipe the file AND its MediaStore rows
+# (the welcome probe reads both) and VERIFY, failing loudly instead of leaving
+# a 30 s focus timeout to explain.
+BACKUP_DIR=/sdcard/Documents/telly
+for _ in $(seq 1 60); do
+  adb shell 'touch /sdcard/.telly-ci-probe && rm /sdcard/.telly-ci-probe' >/dev/null 2>&1 && break
+  sleep 1
+done
+adb shell "rm -rf $BACKUP_DIR"
 adb shell content delete --uri content://media/external/file \
-  --where "\"relative_path LIKE 'Documents/telly/%'\"" >/dev/null 2>&1 || true
+  --where "\"relative_path LIKE 'Documents/telly/%'\"" || true
+if adb shell "ls $BACKUP_DIR" >/dev/null 2>&1; then
+  echo "::error::$BACKUP_DIR survived the pre-leg wipe; the welcome screen would offer 'Restore previous setup'" >&2
+  adb shell "ls -la $BACKUP_DIR" >&2 || true
+  exit 1
+fi
+ROWS=$(adb shell content query --uri content://media/external/file --projection _display_name:relative_path \
+  --where "\"relative_path LIKE 'Documents/telly/%'\"" 2>&1 | tr -d '\r')
+if echo "$ROWS" | grep -q '^Row:'; then
+  echo "::error::MediaStore still lists Documents/telly rows after the pre-leg wipe (the welcome probe counts them): $ROWS" >&2
+  exit 1
+elif ! echo "$ROWS" | grep -q 'No result found'; then
+  echo "::warning::could not verify MediaStore rows for Documents/telly: $ROWS" >&2
+fi
 adb logcat -c || true
 adb logcat > "artifacts/logcat-$FEATURE.txt" 2>&1 &
 LOGCAT_PID=$!

@@ -69,8 +69,12 @@ class TellyWorld(
         listOf("telly-settings", "telly", "telly-search").forEach { name ->
             targetContext.getSharedPreferences(name, Context.MODE_PRIVATE).edit().clear().commit()
         }
-        // Shared storage outlives app data by design; scenarios must not.
+        // Shared storage outlives app data by design; scenarios must not. The
+        // store can only delete files this install owns; a previous install's
+        // orphan needs the shell user (same rights as `adb shell`, which the
+        // CI script also uses before each leg).
         runCatching { MediaStoreBackupDocuments(targetContext).delete() }
+        runCatching { device.executeShellCommand("rm -rf /sdcard/Documents/telly") }
     }
 
     private fun resetServiceLocatorField(
